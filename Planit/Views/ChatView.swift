@@ -62,17 +62,6 @@ struct ChatView: View {
             Spacer()
 
             switch aiService.provider {
-            case .gemini:
-                Image(systemName: "person.crop.circle.badge.checkmark")
-                    .font(.system(size: 28))
-                    .foregroundStyle(.secondary)
-                Text("Google 로그인이 필요합니다")
-                    .font(.system(size: 13, weight: .medium))
-                Text("Google 계정으로 로그인하면\nGemini가 자동 연결됩니다")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-
             case .claude:
                 Image(systemName: "terminal")
                     .font(.system(size: 28))
@@ -98,12 +87,23 @@ struct ChatView: View {
                     .textSelection(.enabled)
             }
 
-            Button { showSettings = true } label: {
-                Text("다른 AI 선택")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.purple)
+            HStack(spacing: 12) {
+                Button {
+                    aiService.recheckCLI()
+                } label: {
+                    Text("다시 감지")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.blue)
+                }
+                .buttonStyle(.plain)
+
+                Button { showSettings = true } label: {
+                    Text("다른 AI 선택")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.purple)
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
 
             Spacer()
         }
@@ -324,7 +324,7 @@ struct ChatBubble: View {
 
 struct AISettingsPopover: View {
     @ObservedObject var aiService: AIService
-    @State private var tempProvider: AIProvider = .gemini
+    @State private var tempProvider: AIProvider = .claude
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -375,7 +375,6 @@ struct ProviderRow: View {
 
     private var isAvailable: Bool {
         switch provider {
-        case .gemini: return true  // Always available if logged in
         case .claude: return aiService.claudeAvailable
         case .codex: return aiService.codexAvailable
         }
@@ -383,7 +382,6 @@ struct ProviderRow: View {
 
     private var statusText: String {
         switch provider {
-        case .gemini: return "Google 로그인으로 자동 연결"
         case .claude: return aiService.claudeAvailable ? "설치됨 — 바로 사용 가능" : "미설치"
         case .codex: return aiService.codexAvailable ? "설치됨 — 바로 사용 가능" : "미설치"
         }

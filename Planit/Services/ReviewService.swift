@@ -3,8 +3,8 @@ import Foundation
 // MARK: - Review Mode
 
 enum ReviewMode: String {
-    case morning   // 아침 브리핑
-    case evening   // 저녁 리뷰
+    case daily     // 일일 조정 (항상 활성)
+    case evening   // 저녁 리뷰 (과거 이벤트 완료 체크)
     case none      // 일반 (채팅)
 }
 
@@ -14,7 +14,7 @@ enum ReviewMode: String {
 final class ReviewService: ObservableObject {
     @Published var currentMode: ReviewMode = .none
     @Published var suggestions: [ReviewSuggestion] = []
-    @Published var morningDoneToday: Bool = false
+    @Published var dailyDoneToday: Bool = false
     @Published var eveningDoneToday: Bool = false
     @Published var tomorrowPlanResult: TomorrowPlanResult?
 
@@ -22,43 +22,63 @@ final class ReviewService: ObservableObject {
     private let calendarService: GoogleCalendarService?
     private var tomorrowPlanner: TomorrowPlannerService?
 
+    /// Persisted date key to prevent re-running daily adjustment on same day
+    private var lastDailyKey: String {
+        get { UserDefaults.standard.string(forKey: "calen.review.lastDailyKey") ?? "" }
+        set { UserDefaults.standard.set(newValue, forKey: "calen.review.lastDailyKey") }
+    }
+
     init(goalService: GoalService, calendarService: GoogleCalendarService?) {
         self.goalService = goalService
         self.calendarService = calendarService
         self.tomorrowPlanner = TomorrowPlannerService(goalService: goalService, calendarService: calendarService)
+
+        // Check if daily adjustment was already done today (persists across app restarts)
+        let todayKey = Self.dateKey(for: Date())
+        if lastDailyKey == todayKey {
+            dailyDoneToday = true
+        }
     }
 
-    // MARK: - Auto Mode Detection
+    private static func dateKey(for date: Date) -> String {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM-dd"
+        fmt.timeZone = TimeZone(identifier: "Asia/Seoul")
+        return fmt.string(from: date)
+    }
 
+    // MARK: - Always-On Daily Adjustment
+
+    /// Called on every app launch / popover open.
+    /// Runs daily adjustment regardless of time — the core loop.
     func checkAndActivate() {
         guard goalService.profile.onboardingDone else { return }
 
         let cal = Calendar.current
-        let now = Date()
-        let hour = cal.component(.hour, from: now)
-
-        let mStart = goalService.profile.morningBriefHour
+        let hour = cal.component(.hour, from: Date())
         let eStart = goalService.profile.eveningReviewHour
 
-        if hour >= mStart && hour < mStart + 2 && !morningDoneToday {
-            if currentMode != .morning {
-                currentMode = .morning
-                Task { await generateMorningSuggestions() }
+        // 1. Daily adjustment — runs once per day, any time
+        if !dailyDoneToday {
+            if currentMode != .daily {
+                currentMode = .daily
+                Task { await generateDailySuggestions() }
             }
-        } else if hour >= eStart && hour < eStart + 3 && !eveningDoneToday {
+            return
+        }
+
+        // 2. Evening review — only if daily is already done
+        if hour >= eStart && hour < eStart + 3 && !eveningDoneToday {
             if currentMode != .evening {
                 currentMode = .evening
                 Task { await generateEveningSuggestions() }
             }
         }
-        // Don't auto-switch to .none — let user manually go back to chat
     }
 
-    /// Call this to finalize evening review and generate tomorrow plan.
-    /// The plan is generated BEFORE dismiss so the UI can show the result.
-    func finalizeEveningAndPlan() async {
-        // Auto-record remaining unreviewed events as "moved"
-        for suggestion in suggestions {
+    /// Finalize review: record unreviewed as "moved", optionally plan tomorrow
+    func finalizeAndPlan() async {
+        for suggestion in suggestions where suggestion.status == .pending {
             let minutes = Int((suggestion.proposedEnd ?? Date()).timeIntervalSince(suggestion.proposedStart ?? Date()) / 60)
             goalService.markCompletion(
                 eventId: suggestion.proposedTitle ?? suggestion.title,
@@ -68,12 +88,17 @@ final class ReviewService: ObservableObject {
             )
         }
 
-        // Generate tomorrow plan while still in evening mode (UI visible)
-        await generateTomorrowPlan()
+        // Generate tomorrow plan in evening mode
+        if currentMode == .evening {
+            await generateTomorrowPlan()
+        }
     }
 
     func dismissReview() {
-        if currentMode == .morning { morningDoneToday = true }
+        if currentMode == .daily {
+            dailyDoneToday = true
+            lastDailyKey = Self.dateKey(for: Date())
+        }
         if currentMode == .evening { eveningDoneToday = true }
         currentMode = .none
         suggestions = []
@@ -87,23 +112,29 @@ final class ReviewService: ObservableObject {
         tomorrowPlanResult = planner.lastResult
     }
 
-    /// Inject auto-created + suggested items into morning briefing
-    func injectTomorrowPlanIntoMorning() {
-        guard let planner = tomorrowPlanner else { return }
-        let planSuggestions = planner.suggestionsFromLastResult()
-        if !planSuggestions.isEmpty {
-            suggestions.insert(contentsOf: planSuggestions, at: 0)
-        }
-    }
+    // MARK: - Daily Suggestions (Always-On Core Loop)
 
-    // MARK: - Morning Suggestions
-
-    func generateMorningSuggestions() async {
+    /// Generates suggestions any time of day:
+    /// 1. Carryover incomplete tasks from yesterday
+    /// 2. Deadline-approaching goals
+    /// 3. Weekly habit gaps
+    /// 4. Capacity check — warns if today is overloaded
+    func generateDailySuggestions() async {
         var items: [ReviewSuggestion] = []
 
         let activeGoals = goalService.activeGoals()
         let todayEvents = await fetchTodayEvents()
         let freeSlots = findFreeSlots(events: todayEvents)
+
+        // Calculate today's total scheduled minutes for capacity check
+        let scheduledMinutes = todayEvents
+            .filter { !$0.isAllDay }
+            .reduce(0) { $0 + Int($1.endDate.timeIntervalSince($1.startDate) / 60) }
+        let cal = Calendar.current
+        let isWeekend = cal.isDateInWeekend(Date())
+        let capacityMinutes = isWeekend
+            ? goalService.profile.weekendCapacityMinutes
+            : goalService.profile.weekdayCapacityMinutes
 
         // 1. Carryover: yesterday's incomplete
         let yesterdayIncomplete = findYesterdayIncomplete()
@@ -111,7 +142,7 @@ final class ReviewService: ObservableObject {
             if let slot = bestSlot(for: 60, from: freeSlots, goalId: goalId) {
                 items.append(ReviewSuggestion(
                     type: .carryover,
-                    title: "어제 '\(eventTitle)'을 놓쳤어요",
+                    title: "미완료: '\(eventTitle)'",
                     description: "오늘 \(formatTime(slot.0))에 다시 잡을까요?",
                     goalId: goalId,
                     proposedStart: slot.0,
@@ -164,21 +195,41 @@ final class ReviewService: ObservableObject {
             }
         }
 
-        // Cap at 5
-        suggestions = Array(items.prefix(5))
+        // 4. Capacity warning — if today is overloaded
+        if scheduledMinutes > capacityMinutes && capacityMinutes > 0 {
+            let overMinutes = scheduledMinutes - capacityMinutes
+            items.insert(ReviewSuggestion(
+                type: .focusQuota,
+                title: "오늘 일정 초과 (+\(overMinutes)분)",
+                description: "용량 \(capacityMinutes)분 대비 \(scheduledMinutes)분 예정. 조정이 필요해요.",
+                goalId: nil
+            ), at: 0)
+        }
 
-        // Inject any auto-planned items from last night
-        injectTomorrowPlanIntoMorning()
+        // Cap at 7
+        suggestions = Array(items.prefix(7))
+
+        // Inject any auto-planned items from last night's tomorrow plan
+        if let planner = tomorrowPlanner {
+            let planSuggestions = planner.suggestionsFromLastResult()
+            if !planSuggestions.isEmpty {
+                suggestions.insert(contentsOf: planSuggestions, at: 0)
+            }
+        }
     }
 
-    // MARK: - Evening Suggestions
+    // MARK: - Evening Suggestions (Completion Check)
 
     func generateEveningSuggestions() async {
         var items: [ReviewSuggestion] = []
         let todayEvents = await fetchTodayEvents()
 
-        // Generate completion check cards for each event
+        var seenIds = Set<String>()
+
         for event in todayEvents where !event.isAllDay {
+            guard !seenIds.contains(event.id) else { continue }
+            seenIds.insert(event.id)
+
             let hasRecord = goalService.completionFor(eventId: event.id) != nil
             if !hasRecord && event.endDate < Date() {
                 items.append(ReviewSuggestion(
@@ -188,7 +239,7 @@ final class ReviewService: ObservableObject {
                     goalId: nil,
                     proposedStart: event.startDate,
                     proposedEnd: event.endDate,
-                    proposedTitle: event.title
+                    proposedTitle: event.id
                 ))
             }
         }
@@ -258,7 +309,11 @@ final class ReviewService: ObservableObject {
 
     private func fetchTodayEvents() async -> [CalendarEvent] {
         guard let service = calendarService else { return [] }
-        return (try? await service.fetchEvents(for: Date())) ?? []
+        let allEvents = (try? await service.fetchEvents(for: Date())) ?? []
+        let cal = Calendar.current
+        let todayStart = cal.startOfDay(for: Date())
+        let tomorrowStart = cal.date(byAdding: .day, value: 1, to: todayStart)!
+        return allEvents.filter { $0.startDate >= todayStart && $0.startDate < tomorrowStart }
     }
 
     private func todayHasGoalBlock(_ goalId: String, events: [CalendarEvent]) -> Bool {

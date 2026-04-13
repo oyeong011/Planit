@@ -12,7 +12,7 @@ struct OnboardingView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text("Planit 설정")
+                Text("Calen 설정")
                     .font(.system(size: 13, weight: .bold))
                 Spacer()
                 Text("\(step + 1)/4")

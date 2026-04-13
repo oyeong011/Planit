@@ -3,13 +3,11 @@ import Foundation
 // MARK: - Provider
 
 enum AIProvider: String, CaseIterable, Codable {
-    case gemini = "Gemini"
     case claude = "Claude Code"
     case codex = "Codex"
 
     var icon: String {
         switch self {
-        case .gemini: return "g.circle.fill"
         case .claude: return "c.circle.fill"
         case .codex: return "o.circle.fill"
         }
@@ -17,7 +15,6 @@ enum AIProvider: String, CaseIterable, Codable {
 
     var defaultModel: String {
         switch self {
-        case .gemini: return "gemini-2.0-flash"
         case .claude: return "claude-sonnet-4-20250514"
         case .codex: return "gpt-5.4"
         }
@@ -63,7 +60,7 @@ struct AIResponseWithActions: Codable {
 
 @MainActor
 final class AIService: ObservableObject {
-    @Published var provider: AIProvider = .gemini
+    @Published var provider: AIProvider = .claude
     @Published var isLoading: Bool = false
     @Published var claudeAvailable: Bool = false
     @Published var codexAvailable: Bool = false
@@ -86,7 +83,6 @@ final class AIService: ObservableObject {
 
     var isConfigured: Bool {
         switch provider {
-        case .gemini: return authManager.isAuthenticated
         case .claude: return claudeAvailable
         case .codex: return codexAvailable
         }
@@ -101,6 +97,11 @@ final class AIService: ObservableObject {
 
     // MARK: - CLI Detection (resolve absolute paths, no login shell)
 
+    /// 외부에서 CLI 재감지 요청 (설정 화면 등)
+    func recheckCLI() {
+        checkCLIAvailability()
+    }
+
     private func checkCLIAvailability() {
         Task.detached { [weak self] in
             let claudeResolved = Self.resolvePath("claude")
@@ -114,9 +115,11 @@ final class AIService: ObservableObject {
         }
     }
 
-    /// Resolve absolute path for a command without login shell (uses /usr/bin/which + common paths)
+    /// Resolve absolute path for a command without login shell.
+    /// Searches known directories in priority order (system-managed first).
     nonisolated private static func resolvePath(_ cmd: String) -> String? {
-        // Check common paths directly — no shell involved
+        guard cmd == "claude" || cmd == "codex" else { return nil }
+
         let searchPaths = [
             "/opt/homebrew/bin",
             "/usr/local/bin",
@@ -125,6 +128,7 @@ final class AIService: ObservableObject {
             NSHomeDirectory() + "/.npm-global/bin",
             NSHomeDirectory() + "/.nvm/current/bin",
         ]
+
         for dir in searchPaths {
             let full = "\(dir)/\(cmd)"
             if FileManager.default.isExecutableFile(atPath: full) {
@@ -132,36 +136,6 @@ final class AIService: ObservableObject {
             }
         }
 
-        // Fallback: use /usr/bin/which with minimal environment and timeout
-        let proc = Process()
-        proc.executableURL = URL(fileURLWithPath: "/usr/bin/which")
-        proc.arguments = [cmd]
-        proc.environment = [
-            "PATH": searchPaths.joined(separator: ":") + ":/usr/bin:/bin",
-            "HOME": NSHomeDirectory(),
-        ]
-        let pipe = Pipe()
-        proc.standardOutput = pipe
-        proc.standardError = FileHandle.nullDevice
-        do {
-            try proc.run()
-            // 2-second timeout for which
-            let timer = DispatchSource.makeTimerSource(queue: .global())
-            timer.schedule(deadline: .now() + 2)
-            timer.setEventHandler { if proc.isRunning { proc.terminate() } }
-            timer.resume()
-            proc.waitUntilExit()
-            timer.cancel()
-            if proc.terminationStatus == 0 {
-                let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                let path = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
-                if let path, FileManager.default.isExecutableFile(atPath: path) {
-                    return path
-                }
-            }
-        } catch {}
-
-        // No login shell fallback — avoids executing arbitrary RC files
         return nil
     }
 
@@ -243,7 +217,7 @@ final class AIService: ObservableObject {
         let now = dateFormatter.string(from: Date())
 
         return """
-        너는 Planit 캘린더 앱의 AI 어시스턴트야. 한국어로 답변해.
+        너는 Calen 캘린더 앱의 AI 어시스턴트야. 한국어로 답변해.
         현재 시각: \(now), 타임존: Asia/Seoul
 
         \(calendarContext)
@@ -462,16 +436,31 @@ final class AIService: ObservableObject {
         knownEventIds = eventIds
         let systemPrompt = buildSystemPrompt(calendarContext: calContext)
 
+        // CLI 경로가 없으면 한 번 재감지 시도
+        if (provider == .claude && claudePath == nil) || (provider == .codex && codexPath == nil) {
+            await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
+                Task.detached { [weak self] in
+                    let claudeResolved = Self.resolvePath("claude")
+                    let codexResolved = Self.resolvePath("codex")
+                    await MainActor.run {
+                        self?.claudePath = claudeResolved
+                        self?.claudeAvailable = claudeResolved != nil
+                        self?.codexPath = codexResolved
+                        self?.codexAvailable = codexResolved != nil
+                        cont.resume()
+                    }
+                }
+            }
+        }
+
         let rawResponse: String
         switch provider {
-        case .gemini:
-            rawResponse = await sendGemini(system: systemPrompt, userMessage: userMessage, history: history)
         case .claude:
-            guard let path = claudePath else { return [ChatMessage(role: .assistant, content: "Claude Code가 설치되지 않았습니다.")] }
+            guard let path = claudePath else { return [ChatMessage(role: .assistant, content: "Claude Code가 설치되지 않았습니다. /opt/homebrew/bin 또는 ~/.local/bin에 claude가 있는지 확인하세요.")] }
             rawResponse = await sendCLI(executablePath: path, args: ["-p", "--output-format", "text"],
                                          system: systemPrompt, userMessage: userMessage, history: history)
         case .codex:
-            guard let path = codexPath else { return [ChatMessage(role: .assistant, content: "Codex CLI가 설치되지 않았습니다.")] }
+            guard let path = codexPath else { return [ChatMessage(role: .assistant, content: "Codex CLI가 설치되지 않았습니다. /opt/homebrew/bin 또는 ~/.local/bin에 codex가 있는지 확인하세요.")] }
             rawResponse = await sendCLI(executablePath: path, args: ["exec", "--sandbox", "read-only", "--skip-git-repo-check"],
                                          system: systemPrompt, userMessage: userMessage, history: history,
                                          isCodex: true)
@@ -533,7 +522,7 @@ final class AIService: ObservableObject {
         // Minimal environment — only what CLIs need
         let homeDir = NSHomeDirectory()
         proc.environment = [
-            "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:\(homeDir)/.local/bin",
+            "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
             "HOME": homeDir,
             "NO_COLOR": "1",
             "TERM": "dumb",
@@ -670,51 +659,4 @@ final class AIService: ObservableObject {
         return resultLines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    // MARK: - Gemini (Google OAuth token)
-
-    private func sendGemini(system: String, userMessage: String, history: [ChatMessage]) async -> String {
-        guard let token = try? await authManager.getValidToken() else {
-            return "Google 로그인이 필요합니다."
-        }
-
-        let url = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(provider.defaultModel):generateContent")!
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.timeoutInterval = 30
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        var contents: [[String: Any]] = []
-        for msg in history {
-            switch msg.role {
-            case .user: contents.append(["role": "user", "parts": [["text": msg.content]]])
-            case .assistant: contents.append(["role": "model", "parts": [["text": msg.content]]])
-            default: break
-            }
-        }
-        contents.append(["role": "user", "parts": [["text": userMessage]]])
-
-        let body: [String: Any] = [
-            "system_instruction": ["parts": [["text": system]]],
-            "contents": contents,
-        ]
-        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
-
-        do {
-            let (data, _) = try await URLSession.shared.data(for: request)
-            guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let candidates = json["candidates"] as? [[String: Any]],
-                  let content = candidates.first?["content"] as? [String: Any],
-                  let parts = content["parts"] as? [[String: Any]] else {
-                let errJson = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-                let errMsg = (errJson?["error"] as? [String: Any])?["message"] as? String ?? "알 수 없는 오류"
-                return "오류: \(errMsg)"
-            }
-
-            let texts = parts.compactMap { $0["text"] as? String }
-            return texts.joined(separator: "\n")
-        } catch {
-            return "오류: \(error.localizedDescription)"
-        }
-    }
 }

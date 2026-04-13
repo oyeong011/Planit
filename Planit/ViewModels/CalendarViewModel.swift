@@ -13,6 +13,8 @@ final class CalendarViewModel: ObservableObject {
     @Published var calendarEvents: [CalendarEvent] = []
     @Published var completedEventIDs: Set<String> = []
     @Published var categories: [TodoCategory] = []
+    @Published var isOffline: Bool = false
+    @Published var pendingEditsCount: Int = 0
 
     // MARK: - Services
 
@@ -34,6 +36,8 @@ final class CalendarViewModel: ObservableObject {
     private var todosPath: URL { appSupportDir.appendingPathComponent("todos.json") }
     private var completedEventsPath: URL { appSupportDir.appendingPathComponent("completed_events.json") }
     private var categoriesPath: URL { appSupportDir.appendingPathComponent("categories.json") }
+    private var eventCachePath: URL { appSupportDir.appendingPathComponent("events_cache.json") }
+    private var pendingEditsPath: URL { appSupportDir.appendingPathComponent("pending_edits.json") }
 
     // MARK: - Init
 
@@ -46,9 +50,12 @@ final class CalendarViewModel: ObservableObject {
         loadCategories()
         loadTodos()
         loadCompletedEvents()
+        loadPendingEdits()
         startPeriodicRefresh()
 
-        // If Google is authenticated, fetch from API; otherwise use EventKit
+        // Load cached events first (instant display), then try network
+        loadCachedEvents()
+
         if authManager.isAuthenticated {
             fetchEventsFromGoogle(for: currentMonth)
         } else {
@@ -86,12 +93,18 @@ final class CalendarViewModel: ObservableObject {
 
     func fetchEventsFromGoogle(for month: Date) {
         Task {
+            // Try syncing pending edits first
+            await syncPendingEdits()
+
             do {
                 let events = try await googleService.fetchEvents(for: month)
                 self.calendarEvents = events
+                self.isOffline = false
+                cacheEvents(events)
             } catch {
-                print("[Planit] Google Calendar fetch failed: \(error) — falling back to EventKit")
-                fetchEventsFromEventKit(for: month)
+                print("[Calen] Google Calendar fetch failed — using cached data")
+                self.isOffline = true
+                loadCachedEvents()
             }
         }
     }
@@ -102,7 +115,17 @@ final class CalendarViewModel: ObservableObject {
                 let _ = try await googleService.createEvent(title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
                 fetchEventsFromGoogle(for: currentMonth)
             } catch {
-                print("[Planit] Failed to create Google event: \(error)")
+                print("[Calen] Offline — queuing create event")
+                queuePendingEdit(PendingCalendarEdit(
+                    action: "create", title: title, startDate: startDate,
+                    endDate: endDate, isAllDay: isAllDay))
+                // Optimistic local update
+                let tempEvent = CalendarEvent(
+                    id: "pending-\(UUID().uuidString)", title: title,
+                    startDate: startDate, endDate: endDate,
+                    color: .blue, isAllDay: isAllDay)
+                calendarEvents.append(tempEvent)
+                cacheEvents(calendarEvents)
             }
         }
     }
@@ -113,7 +136,18 @@ final class CalendarViewModel: ObservableObject {
                 _ = try await googleService.updateEvent(eventID: eventID, title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
                 fetchEventsFromGoogle(for: currentMonth)
             } catch {
-                print("[Planit] Failed to update Google event: \(error)")
+                print("[Calen] Offline — queuing update event")
+                queuePendingEdit(PendingCalendarEdit(
+                    action: "update", title: title, startDate: startDate,
+                    endDate: endDate, isAllDay: isAllDay, eventId: eventID))
+                // Optimistic local update
+                if let idx = calendarEvents.firstIndex(where: { $0.id == eventID }) {
+                    calendarEvents[idx].title = title
+                    calendarEvents[idx].startDate = startDate
+                    calendarEvents[idx].endDate = endDate
+                    calendarEvents[idx].isAllDay = isAllDay
+                    cacheEvents(calendarEvents)
+                }
             }
         }
     }
@@ -126,7 +160,14 @@ final class CalendarViewModel: ObservableObject {
                 saveCompletedEvents()
                 fetchEventsFromGoogle(for: currentMonth)
             } catch {
-                print("[Planit] Failed to delete Google event: \(error)")
+                print("[Calen] Offline — queuing delete event")
+                queuePendingEdit(PendingCalendarEdit(
+                    action: "delete", eventId: eventID))
+                // Optimistic local removal
+                calendarEvents.removeAll { $0.id == eventID }
+                completedEventIDs.remove(eventID)
+                saveCompletedEvents()
+                cacheEvents(calendarEvents)
             }
         }
     }
@@ -203,7 +244,7 @@ final class CalendarViewModel: ObservableObject {
             fetchEventsFromEventKit(for: currentMonth)
             return true
         } catch {
-            print("[Planit] Failed to create event: \(error)")
+            print("[Calen] Failed to create event: \(error)")
             return false
         }
     }
@@ -335,10 +376,36 @@ final class CalendarViewModel: ObservableObject {
         todos.filter { calendar.isDate($0.date, inSameDayAs: date) }
     }
 
+    // MARK: - Todo Bulk Sync
+
+    /// Sync all existing todos that don't have a googleEventId to Google Calendar
+    func syncAllTodosToGoogle() async -> Int {
+        guard authManager.isAuthenticated else { return 0 }
+        var synced = 0
+        for i in todos.indices {
+            guard todos[i].googleEventId == nil else { continue }
+            let todo = todos[i]
+            let startOfDay = calendar.startOfDay(for: todo.date)
+            let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+            let prefix = todo.isCompleted ? "✅ " : ""
+            if let event = try? await googleService.createEvent(
+                title: "\(prefix)\(todo.title)", startDate: startOfDay,
+                endDate: endOfDay, isAllDay: true) {
+                todos[i].googleEventId = event.id
+                synced += 1
+            }
+        }
+        if synced > 0 {
+            saveTodos()
+            refreshEvents()
+        }
+        return synced
+    }
+
     // MARK: - Todo CRUD
 
     func addTodo(title: String, categoryID: UUID? = nil, date: Date? = nil, isRepeating: Bool = false) {
-        let todo = TodoItem(
+        var todo = TodoItem(
             title: title,
             categoryID: categoryID ?? defaultCategoryID,
             date: date ?? selectedDate,
@@ -346,15 +413,50 @@ final class CalendarViewModel: ObservableObject {
         )
         todos.append(todo)
         saveTodos()
+
+        // Sync to Google Calendar
+        if authManager.isAuthenticated {
+            Task {
+                let startOfDay = Calendar.current.startOfDay(for: todo.date)
+                let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay)!
+                if let event = try? await googleService.createEvent(title: title, startDate: startOfDay, endDate: endOfDay, isAllDay: true) {
+                    if let idx = self.todos.firstIndex(where: { $0.id == todo.id }) {
+                        self.todos[idx].googleEventId = event.id
+                        self.saveTodos()
+                        self.refreshEvents()
+                    }
+                }
+            }
+        }
     }
 
     func toggleTodo(id: UUID) {
         guard let index = todos.firstIndex(where: { $0.id == id }) else { return }
         todos[index].isCompleted.toggle()
         saveTodos()
+
+        if authManager.isAuthenticated, let eventId = todos[index].googleEventId {
+            let todo = todos[index]
+            let prefix = todo.isCompleted ? "✅ " : ""
+            let cleanTitle = todo.title.replacingOccurrences(of: "✅ ", with: "")
+            Task {
+                let startOfDay = Calendar.current.startOfDay(for: todo.date)
+                let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay)!
+                _ = try? await googleService.updateEvent(eventID: eventId, title: "\(prefix)\(cleanTitle)", startDate: startOfDay, endDate: endOfDay, isAllDay: true)
+                self.refreshEvents()
+            }
+        }
     }
 
     func deleteTodo(id: UUID) {
+        if let todo = todos.first(where: { $0.id == id }),
+           let eventId = todo.googleEventId,
+           authManager.isAuthenticated {
+            Task {
+                _ = try? await googleService.deleteEvent(eventID: eventId)
+                self.refreshEvents()
+            }
+        }
         todos.removeAll { $0.id == id }
         saveTodos()
     }
@@ -364,6 +466,17 @@ final class CalendarViewModel: ObservableObject {
         todos[index].title = title
         todos[index].categoryID = categoryID
         saveTodos()
+
+        if authManager.isAuthenticated, let eventId = todos[index].googleEventId {
+            let todo = todos[index]
+            let prefix = todo.isCompleted ? "✅ " : ""
+            Task {
+                let startOfDay = Calendar.current.startOfDay(for: todo.date)
+                let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay)!
+                _ = try? await googleService.updateEvent(eventID: eventId, title: "\(prefix)\(title)", startDate: startOfDay, endDate: endOfDay, isAllDay: true)
+                self.refreshEvents()
+            }
+        }
     }
 
     // MARK: - Category CRUD
@@ -413,7 +526,7 @@ final class CalendarViewModel: ObservableObject {
         do {
             let data = try JSONEncoder().encode(todos)
             try data.write(to: todosPath, options: .atomic)
-        } catch { print("[Planit] Failed to save todos: \(error)") }
+        } catch { print("[Calen] Failed to save todos: \(error)") }
     }
 
     func loadTodos() {
@@ -421,14 +534,14 @@ final class CalendarViewModel: ObservableObject {
         do {
             let data = try Data(contentsOf: todosPath)
             todos = try JSONDecoder().decode([TodoItem].self, from: data)
-        } catch { print("[Planit] Failed to load todos: \(error)") }
+        } catch { print("[Calen] Failed to load todos: \(error)") }
     }
 
     private func saveCompletedEvents() {
         do {
             let data = try JSONEncoder().encode(Array(completedEventIDs))
             try data.write(to: completedEventsPath, options: .atomic)
-        } catch { print("[Planit] Failed to save completed events: \(error)") }
+        } catch { print("[Calen] Failed to save completed events: \(error)") }
     }
 
     private func loadCompletedEvents() {
@@ -437,14 +550,14 @@ final class CalendarViewModel: ObservableObject {
             let data = try Data(contentsOf: completedEventsPath)
             let ids = try JSONDecoder().decode([String].self, from: data)
             completedEventIDs = Set(ids)
-        } catch { print("[Planit] Failed to load completed events: \(error)") }
+        } catch { print("[Calen] Failed to load completed events: \(error)") }
     }
 
     func saveCategories() {
         do {
             let data = try JSONEncoder().encode(categories)
             try data.write(to: categoriesPath, options: .atomic)
-        } catch { print("[Planit] Failed to save categories: \(error)") }
+        } catch { print("[Calen] Failed to save categories: \(error)") }
     }
 
     func loadCategories() {
@@ -453,7 +566,7 @@ final class CalendarViewModel: ObservableObject {
                 let data = try Data(contentsOf: categoriesPath)
                 categories = try JSONDecoder().decode([TodoCategory].self, from: data)
                 return
-            } catch { print("[Planit] Failed to load categories: \(error)") }
+            } catch { print("[Calen] Failed to load categories: \(error)") }
         }
         categories = TodoCategory.defaults
         saveCategories()
@@ -463,5 +576,90 @@ final class CalendarViewModel: ObservableObject {
         eventStore.calendars(for: .event)
             .filter { $0.allowsContentModifications }
             .map { ($0.title, $0.calendarIdentifier) }
+    }
+
+    // MARK: - Event Cache (Offline Support)
+
+    private func cacheEvents(_ events: [CalendarEvent]) {
+        let cached = events.map { CachedCalendarEvent.from($0) }
+        do {
+            let data = try JSONEncoder().encode(cached)
+            try data.write(to: eventCachePath, options: .atomic)
+        } catch { print("[Calen] Failed to cache events") }
+    }
+
+    private func loadCachedEvents() {
+        guard fileManager.fileExists(atPath: eventCachePath.path) else { return }
+        do {
+            let data = try Data(contentsOf: eventCachePath)
+            let cached = try JSONDecoder().decode([CachedCalendarEvent].self, from: data)
+            // Only use cache if we don't already have live data
+            if calendarEvents.isEmpty {
+                calendarEvents = cached.map { $0.toCalendarEvent() }
+            }
+        } catch { print("[Calen] Failed to load cached events") }
+    }
+
+    // MARK: - Pending Edits Queue (Offline Sync)
+
+    private var pendingEdits: [PendingCalendarEdit] = []
+
+    private func queuePendingEdit(_ edit: PendingCalendarEdit) {
+        pendingEdits.append(edit)
+        pendingEditsCount = pendingEdits.count
+        savePendingEdits()
+    }
+
+    private func savePendingEdits() {
+        do {
+            let data = try JSONEncoder().encode(pendingEdits)
+            try data.write(to: pendingEditsPath, options: .atomic)
+        } catch { print("[Calen] Failed to save pending edits") }
+    }
+
+    private func loadPendingEdits() {
+        guard fileManager.fileExists(atPath: pendingEditsPath.path) else { return }
+        do {
+            let data = try Data(contentsOf: pendingEditsPath)
+            pendingEdits = try JSONDecoder().decode([PendingCalendarEdit].self, from: data)
+            pendingEditsCount = pendingEdits.count
+        } catch { print("[Calen] Failed to load pending edits") }
+    }
+
+    /// Sync all pending offline edits to Google Calendar
+    func syncPendingEdits() async {
+        guard !pendingEdits.isEmpty, authManager.isAuthenticated else { return }
+
+        var remaining: [PendingCalendarEdit] = []
+
+        for edit in pendingEdits {
+            do {
+                switch edit.action {
+                case "create":
+                    _ = try await googleService.createEvent(
+                        title: edit.title, startDate: edit.startDate,
+                        endDate: edit.endDate, isAllDay: edit.isAllDay)
+                case "update":
+                    if let eventId = edit.eventId {
+                        _ = try await googleService.updateEvent(
+                            eventID: eventId, title: edit.title,
+                            startDate: edit.startDate, endDate: edit.endDate,
+                            isAllDay: edit.isAllDay)
+                    }
+                case "delete":
+                    if let eventId = edit.eventId {
+                        _ = try await googleService.deleteEvent(eventID: eventId)
+                    }
+                default: break
+                }
+            } catch {
+                // Keep failed edits for next sync attempt
+                remaining.append(edit)
+            }
+        }
+
+        pendingEdits = remaining
+        pendingEditsCount = remaining.count
+        savePendingEdits()
     }
 }

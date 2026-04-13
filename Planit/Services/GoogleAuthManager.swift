@@ -30,14 +30,15 @@ final class GoogleAuthManager: ObservableObject {
     @Published var userEmail: String?
     @Published var errorMessage: String?
 
+    // Google Desktop OAuth credentials (non-confidential per Google's documentation).
+    // Desktop app client_secrets are NOT treated as confidential by Google;
+    // protection relies on PKCE + loopback redirect URI validation.
     private var clientID: String = ""
     private var clientSecret: String = ""
 
     private var accessToken: String?
     private var refreshToken: String?
     private var tokenExpiry: Date?
-
-    private static let credentialsFileName = "google_credentials.json"
 
     init() {
         // Suppress SIGPIPE process-wide (socket writes to closed connections)
@@ -50,45 +51,51 @@ final class GoogleAuthManager: ObservableObject {
 
     // MARK: - Credentials
 
-    private var credentialsPath: URL {
-        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        return support.appendingPathComponent("Planit/\(Self.credentialsFileName)")
-    }
-
     private func loadCredentials() {
-        if let data = try? Data(contentsOf: credentialsPath),
-           let json = try? JSONSerialization.jsonObject(with: data) as? [String: String],
-           let id = json["client_id"], let secret = json["client_secret"] {
+        // 1. Try Keychain (preferred)
+        if let id = KeychainHelper.load(key: "planit.oauth.clientId"),
+           let secret = KeychainHelper.load(key: "planit.oauth.clientSecret") {
             clientID = id
             clientSecret = secret
             return
         }
+
+        // 2. Migrate from legacy plaintext file to Keychain
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let legacyPath = support.appendingPathComponent("Planit/google_credentials.json")
+        if let data = try? Data(contentsOf: legacyPath),
+           let json = try? JSONSerialization.jsonObject(with: data) as? [String: String],
+           let id = json["client_id"], let secret = json["client_secret"] {
+            clientID = id
+            clientSecret = secret
+            // Save to Keychain; only remove plaintext file if both writes succeed
+            let savedId = KeychainHelper.save(key: "planit.oauth.clientId", value: id)
+            let savedSecret = KeychainHelper.save(key: "planit.oauth.clientSecret", value: secret)
+            if savedId && savedSecret {
+                try? FileManager.default.removeItem(at: legacyPath)
+            }
+            return
+        }
+
+        // 3. Check bundle (development only)
+        #if DEBUG
         if let bundlePath = Bundle.main.path(forResource: "google_credentials", ofType: "json"),
            let data = try? Data(contentsOf: URL(fileURLWithPath: bundlePath)),
            let json = try? JSONSerialization.jsonObject(with: data) as? [String: String],
            let id = json["client_id"], let secret = json["client_secret"] {
             clientID = id
             clientSecret = secret
-            saveCredentialsToAppSupport(id: id, secret: secret)
+            KeychainHelper.save(key: "planit.oauth.clientId", value: id)
+            KeychainHelper.save(key: "planit.oauth.clientSecret", value: secret)
         }
-    }
-
-    private func saveCredentialsToAppSupport(id: String, secret: String) {
-        let dir = credentialsPath.deletingLastPathComponent()
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true,
-                                                  attributes: [.posixPermissions: 0o700])
-        let json: [String: String] = ["client_id": id, "client_secret": secret]
-        if let data = try? JSONSerialization.data(withJSONObject: json) {
-            try? data.write(to: credentialsPath, options: .atomic)
-            // Set restrictive file permissions (owner read/write only)
-            try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: credentialsPath.path)
-        }
+        #endif
     }
 
     func setupCredentials(clientID: String, clientSecret: String) {
         self.clientID = clientID
         self.clientSecret = clientSecret
-        saveCredentialsToAppSupport(id: clientID, secret: clientSecret)
+        KeychainHelper.save(key: "planit.oauth.clientId", value: clientID)
+        KeychainHelper.save(key: "planit.oauth.clientSecret", value: clientSecret)
     }
 
     var hasCredentials: Bool { !clientID.isEmpty && !clientSecret.isEmpty }
@@ -149,7 +156,7 @@ final class GoogleAuthManager: ObservableObject {
 
     func startOAuthFlow() async {
         guard hasCredentials else {
-            errorMessage = "자격증명이 없습니다. google_credentials.json을 설정하세요."
+            errorMessage = "자격증명이 없습니다. 설정에서 Google OAuth 클라이언트를 등록하세요."
             return
         }
         errorMessage = nil
@@ -169,7 +176,7 @@ final class GoogleAuthManager: ObservableObject {
                 URLQueryItem(name: "client_id", value: clientID),
                 URLQueryItem(name: "redirect_uri", value: redirectURI),
                 URLQueryItem(name: "response_type", value: "code"),
-                URLQueryItem(name: "scope", value: "openid email https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/generative-language"),
+                URLQueryItem(name: "scope", value: "https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/userinfo.email"),
                 URLQueryItem(name: "access_type", value: "offline"),
                 URLQueryItem(name: "prompt", value: "consent"),
                 URLQueryItem(name: "state", value: state),
@@ -299,7 +306,7 @@ final class GoogleAuthManager: ObservableObject {
                     return
                 }
 
-                Self.sendHTTPResponse(fd: clientFd, body: "<h1>Planit 인증 완료!</h1><p>이 창을 닫아도 됩니다.</p>")
+                Self.sendHTTPResponse(fd: clientFd, body: "<h1>Calen 인증 완료!</h1><p>이 창을 닫아도 됩니다.</p>")
                 continuation.resume(returning: code)
             }
         }
@@ -307,7 +314,7 @@ final class GoogleAuthManager: ObservableObject {
 
     private static func sendHTTPResponse(fd: Int32, body: String) {
         let html = "<html><body style='font-family:system-ui;text-align:center;padding:60px'>\(body)</body></html>"
-        let response = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: \(html.utf8.count)\r\nConnection: close\r\n\r\n\(html)"
+        let response = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: \(html.utf8.count)\r\nConnection: close\r\nCache-Control: no-store\r\nX-Content-Type-Options: nosniff\r\nX-Frame-Options: DENY\r\n\r\n\(html)"
         let bytes = Array(response.utf8)
         var totalWritten = 0
         while totalWritten < bytes.count {

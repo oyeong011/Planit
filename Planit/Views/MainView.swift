@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 
 struct MainView: View {
     @StateObject private var authManager = GoogleAuthManager()
@@ -32,6 +33,7 @@ struct MainCalendarView: View {
     @StateObject private var aiService: AIService
     @StateObject private var goalService = GoalService()
     @StateObject private var reviewService: ReviewService
+    @StateObject private var notificationService = NotificationService()
     @State private var showLeftPanel: Bool = true
     @State private var leftPanelMode: LeftPanelMode = .chat
 
@@ -61,18 +63,22 @@ struct MainCalendarView: View {
             }
 
             CalendarGridView(viewModel: viewModel, showChat: $showLeftPanel)
-                .frame(width: showLeftPanel ? 510 : 570)
+                .frame(width: showLeftPanel ? 560 : 620)
 
             DailyDetailView(viewModel: viewModel, newTodoTitle: $newTodoTitle)
                 .frame(width: 310)
         }
-        .frame(width: showLeftPanel ? 1100 : 880, height: 700)
+        .frame(width: showLeftPanel ? 1150 : 930, height: 780)
         .background(Color(nsColor: .controlBackgroundColor))
         .onChange(of: authManager.isAuthenticated) { _ in
             viewModel.refreshEvents()
         }
         .onAppear {
             checkLeftPanelMode()
+            scheduleNotifications()
+        }
+        .onChange(of: viewModel.calendarEvents) { _ in
+            updateEventReminders()
         }
     }
 
@@ -157,6 +163,23 @@ struct MainCalendarView: View {
             leftPanelMode = .review
         }
     }
+
+    // MARK: - Notifications
+
+    private func scheduleNotifications() {
+        notificationService.scheduleDailyBriefing(hour: goalService.profile.morningBriefHour)
+        notificationService.scheduleEveningReview(hour: goalService.profile.eveningReviewHour)
+        updateEventReminders()
+    }
+
+    private func updateEventReminders() {
+        let today = Calendar.current.startOfDay(for: Date())
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today)!
+        let todayEvents = viewModel.calendarEvents
+            .filter { $0.startDate >= today && $0.startDate < tomorrow && !$0.isAllDay }
+            .map { (id: $0.id, title: $0.title, startDate: $0.startDate) }
+        notificationService.scheduleRemindersForEvents(todayEvents)
+    }
 }
 
 // MARK: - Calendar Grid
@@ -240,7 +263,7 @@ struct CalendarGridView: View {
                                 .onTapGesture { viewModel.selectedDate = date }
                             } else {
                                 VStack { Spacer() }
-                                    .frame(maxWidth: .infinity, minHeight: 90)
+                                    .frame(maxWidth: .infinity, minHeight: 105)
                             }
                         }
                     }
@@ -297,31 +320,35 @@ struct DayCellView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 ForEach(Array(events.prefix(3).enumerated()), id: \.offset) { _, event in
-                    Text(event.title)
+                    Text(event.title.count > 10 ? String(event.title.prefix(10)) : event.title)
                         .font(.system(size: 9))
                         .lineLimit(1)
-                        .padding(.horizontal, 4)
+                        .padding(.horizontal, 3)
                         .padding(.vertical, 1)
-                        .background(RoundedRectangle(cornerRadius: 3).fill(event.color.opacity(0.2)))
-                        .foregroundStyle(isCurrentMonth ? event.color : .secondary.opacity(0.3))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(RoundedRectangle(cornerRadius: 3).fill(event.color.opacity(0.15)))
+                        .foregroundStyle(isCurrentMonth ? event.color.opacity(0.85) : .secondary.opacity(0.3))
                 }
                 ForEach(Array(todos.prefix(max(0, 3 - events.count)).enumerated()), id: \.offset) { _, todo in
                     let cat = categoryFor(todo.categoryID)
                     HStack(spacing: 2) {
-                        Circle().fill(cat.color).frame(width: 5, height: 5)
-                        Text(todo.title).font(.system(size: 9)).lineLimit(1)
+                        Circle().fill(cat.color.opacity(0.7)).frame(width: 4, height: 4)
+                        Text(todo.title.count > 10 ? String(todo.title.prefix(10)) : todo.title)
+                            .font(.system(size: 9))
+                            .lineLimit(1)
                     }
-                    .padding(.horizontal, 4)
+                    .padding(.horizontal, 3)
                     .padding(.vertical, 1)
-                    .background(RoundedRectangle(cornerRadius: 3).fill(cat.color.opacity(0.12)))
-                    .foregroundStyle(isCurrentMonth ? cat.color : .secondary.opacity(0.3))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(RoundedRectangle(cornerRadius: 3).fill(cat.color.opacity(0.1)))
+                    .foregroundStyle(isCurrentMonth ? cat.color.opacity(0.85) : .secondary.opacity(0.3))
                 }
             }
 
             Spacer(minLength: 0)
         }
-        .padding(4)
-        .frame(maxWidth: .infinity, minHeight: 90, alignment: .topLeading)
+        .padding(5)
+        .frame(maxWidth: .infinity, minHeight: 105, alignment: .topLeading)
         .background(RoundedRectangle(cornerRadius: 6).fill(isSelected ? Color.blue.opacity(0.08) : Color.clear))
         .contentShape(Rectangle())
     }
@@ -339,7 +366,6 @@ struct DailyDetailView: View {
     @State private var showAddForm = false
     @State private var tappedTodo: TodoItem? = nil
     @State private var tappedEvent: CalendarEvent? = nil
-    @State private var syncToCalendar = false
     @State private var addTitle = ""
     @State private var addCategoryID: UUID?
     @State private var addType: TodoType = .normal
@@ -459,13 +485,8 @@ struct DailyDetailView: View {
                     InlineAddTodoForm(
                         viewModel: viewModel,
                         selectedDate: viewModel.selectedDate,
-                        onAdd: { title, categoryID, date, isRepeat, sync in
+                        onAdd: { title, categoryID, date, isRepeat in
                             viewModel.addTodo(title: title, categoryID: categoryID, date: date, isRepeating: isRepeat)
-                            if sync {
-                                let startOfDay = Calendar.current.startOfDay(for: date)
-                                let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay)!
-                                _ = viewModel.addEventToCalendar(title: title, startDate: startOfDay, endDate: endOfDay, isAllDay: true)
-                            }
                             showAddForm = false
                         },
                         onCancel: { showAddForm = false }
@@ -904,13 +925,12 @@ enum TodoType: String, CaseIterable {
 struct InlineAddTodoForm: View {
     @ObservedObject var viewModel: CalendarViewModel
     let selectedDate: Date
-    let onAdd: (_ title: String, _ categoryID: UUID, _ date: Date, _ isRepeat: Bool, _ syncToCalendar: Bool) -> Void
+    let onAdd: (_ title: String, _ categoryID: UUID, _ date: Date, _ isRepeat: Bool) -> Void
     let onCancel: () -> Void
 
     @State private var title = ""
     @State private var categoryID: UUID?
     @State private var todoType: TodoType = .normal
-    @State private var syncToCalendar = false
 
     private var effectiveCategoryID: UUID {
         categoryID ?? viewModel.defaultCategoryID
@@ -952,16 +972,6 @@ struct InlineAddTodoForm: View {
                     .background(RoundedRectangle(cornerRadius: 5).fill(todoType == .repeating ? Color.blue.opacity(0.1) : Color.clear))
                 }.buttonStyle(.plain)
 
-                Button { syncToCalendar.toggle() } label: {
-                    HStack(spacing: 3) {
-                        Image(systemName: "calendar.badge.plus").font(.system(size: 10))
-                        Text("캘린더 동기화").font(.system(size: 10))
-                    }
-                    .foregroundStyle(syncToCalendar ? .blue : .secondary.opacity(0.6))
-                    .padding(.horizontal, 8).padding(.vertical, 4)
-                    .background(RoundedRectangle(cornerRadius: 5).fill(syncToCalendar ? Color.blue.opacity(0.1) : Color.clear))
-                }.buttonStyle(.plain)
-
                 Spacer()
             }
 
@@ -992,7 +1002,7 @@ struct InlineAddTodoForm: View {
     private func submit() {
         let trimmed = title.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
-        onAdd(trimmed, effectiveCategoryID, selectedDate, todoType == .repeating, syncToCalendar)
+        onAdd(trimmed, effectiveCategoryID, selectedDate, todoType == .repeating)
     }
 }
 

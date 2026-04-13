@@ -28,10 +28,10 @@ struct ReviewView: View {
 
     private var header: some View {
         HStack {
-            Image(systemName: reviewService.currentMode == .morning ? "sun.max.fill" : "moon.fill")
+            Image(systemName: reviewService.currentMode == .daily ? "calendar.badge.clock" : "moon.fill")
                 .font(.system(size: 14))
-                .foregroundStyle(reviewService.currentMode == .morning ? .orange : .indigo)
-            Text(reviewService.currentMode == .morning ? "아침 브리핑" : "저녁 리뷰")
+                .foregroundStyle(reviewService.currentMode == .daily ? .purple : .indigo)
+            Text(reviewService.currentMode == .daily ? "오늘의 조정" : "저녁 리뷰")
                 .font(.system(size: 14, weight: .bold))
 
             if !reviewService.suggestions.isEmpty {
@@ -76,8 +76,8 @@ struct ReviewView: View {
     private var suggestionList: some View {
         ScrollView {
             LazyVStack(spacing: 8) {
-                // Weekly progress bar (morning only)
-                if reviewService.currentMode == .morning {
+                // Weekly progress bar (daily mode)
+                if reviewService.currentMode == .daily {
                     weeklyProgressCard
                 }
 
@@ -308,7 +308,7 @@ struct ReviewView: View {
                     Button {
                         isFinalizingEvening = true
                         Task {
-                            await reviewService.finalizeEveningAndPlan()
+                            await reviewService.finalizeAndPlan()
                             isFinalizingEvening = false
                             // Don't dismiss yet — show plan summary, user taps again to close
                         }

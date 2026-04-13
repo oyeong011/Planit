@@ -1,5 +1,6 @@
 import SwiftUI
 import EventKit
+import UserNotifications
 
 @main
 struct PlanitApp: App {
@@ -18,19 +19,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var eventMonitor: Any?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Initialize NotificationService early so it becomes the UNUserNotificationCenter delegate
+        _ = NotificationService()
+
         // Hide dock icon
         NSApp.setActivationPolicy(.accessory)
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "calendar", accessibilityDescription: "Planit")
+            button.image = NSImage(systemSymbolName: "calendar", accessibilityDescription: "Calen")
             button.target = self
             button.action = #selector(togglePopover)
         }
 
         popover = NSPopover()
-        popover.contentSize = NSSize(width: 1100, height: 700)
+        popover.contentSize = NSSize(width: 1150, height: 780)
         popover.behavior = .transient
         popover.contentViewController = NSHostingController(rootView: MainView())
 

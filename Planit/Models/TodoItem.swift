@@ -74,8 +74,9 @@ struct TodoItem: Identifiable, Codable {
     var date: Date
     var isRepeating: Bool
     var endDate: Date?
+    var googleEventId: String?
 
-    init(id: UUID = UUID(), title: String, categoryID: UUID, isCompleted: Bool = false, date: Date = Date(), isRepeating: Bool = false, endDate: Date? = nil) {
+    init(id: UUID = UUID(), title: String, categoryID: UUID, isCompleted: Bool = false, date: Date = Date(), isRepeating: Bool = false, endDate: Date? = nil, googleEventId: String? = nil) {
         self.id = id
         self.title = title
         self.categoryID = categoryID
@@ -83,6 +84,7 @@ struct TodoItem: Identifiable, Codable {
         self.date = date
         self.isRepeating = isRepeating
         self.endDate = endDate
+        self.googleEventId = googleEventId
     }
 }
 
@@ -98,4 +100,77 @@ struct CalendarEvent: Identifiable, Hashable {
     var color: Color
     var isAllDay: Bool
     var calendarName: String = ""
+}
+
+// MARK: - Offline Cache Models
+
+/// Codable version of CalendarEvent for local caching
+struct CachedCalendarEvent: Codable, Identifiable {
+    let id: String
+    var title: String
+    var startDate: Date
+    var endDate: Date
+    var colorHex: String
+    var isAllDay: Bool
+    var calendarName: String
+
+    func toCalendarEvent() -> CalendarEvent {
+        CalendarEvent(
+            id: id,
+            title: title,
+            startDate: startDate,
+            endDate: endDate,
+            color: Color(hex: colorHex) ?? .blue,
+            isAllDay: isAllDay,
+            calendarName: calendarName
+        )
+    }
+
+    static func from(_ event: CalendarEvent) -> CachedCalendarEvent {
+        CachedCalendarEvent(
+            id: event.id,
+            title: event.title,
+            startDate: event.startDate,
+            endDate: event.endDate,
+            colorHex: event.color.toHex(),
+            isAllDay: event.isAllDay,
+            calendarName: event.calendarName
+        )
+    }
+}
+
+/// Offline edit operation queued for sync when back online
+struct PendingCalendarEdit: Codable, Identifiable {
+    let id: UUID
+    let action: String  // "create", "update", "delete"
+    var title: String
+    var startDate: Date
+    var endDate: Date
+    var isAllDay: Bool
+    var eventId: String?  // for update/delete
+    let createdAt: Date
+
+    init(action: String, title: String = "", startDate: Date = Date(), endDate: Date = Date(),
+         isAllDay: Bool = false, eventId: String? = nil) {
+        self.id = UUID()
+        self.action = action
+        self.title = title
+        self.startDate = startDate
+        self.endDate = endDate
+        self.isAllDay = isAllDay
+        self.eventId = eventId
+        self.createdAt = Date()
+    }
+}
+
+// MARK: - Color to Hex
+
+extension Color {
+    func toHex() -> String {
+        guard let components = NSColor(self).usingColorSpace(.sRGB) else { return "#6699FF" }
+        let r = Int(components.redComponent * 255)
+        let g = Int(components.greenComponent * 255)
+        let b = Int(components.blueComponent * 255)
+        return String(format: "#%02X%02X%02X", r, g, b)
+    }
 }

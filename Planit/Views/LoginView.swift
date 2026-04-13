@@ -16,7 +16,7 @@ struct LoginView: View {
                     .font(.system(size: 48))
                     .foregroundStyle(.blue)
 
-                Text("Planit")
+                Text("Calen")
                     .font(.system(size: 28, weight: .bold))
 
                 Text("Google 캘린더와 연동하여\n일정을 관리하세요")

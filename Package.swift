@@ -2,18 +2,23 @@
 import PackageDescription
 
 let package = Package(
-    name: "Planit",
+    name: "Calen",
     platforms: [
         .macOS(.v14)
     ],
     targets: [
         .executableTarget(
-            name: "Planit",
+            name: "Calen",
             path: "Planit",
             exclude: ["Info.plist", "Planit.entitlements"],
             resources: [
-                .copy("Resources/PrivacyInfo.xcprivacy")
+                .copy("Resources/PrivacyInfo.xcprivacy"),
+                .copy("Resources/AppIcon.icns")
             ]
+        ),
+        .testTarget(
+            name: "CalenTests",
+            path: "Tests"
         )
     ]
 )
