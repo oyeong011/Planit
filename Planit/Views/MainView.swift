@@ -1,8 +1,32 @@
 import SwiftUI
 
 struct MainView: View {
-    @StateObject private var viewModel = CalendarViewModel()
+    @StateObject private var authManager = GoogleAuthManager()
     @State private var newTodoTitle: String = ""
+
+    private var shouldShowLogin: Bool {
+        !authManager.isAuthenticated && !UserDefaults.standard.bool(forKey: "planit.skipGoogleAuth")
+    }
+
+    var body: some View {
+        if shouldShowLogin {
+            LoginView(authManager: authManager)
+        } else {
+            MainCalendarView(authManager: authManager, newTodoTitle: $newTodoTitle)
+        }
+    }
+}
+
+struct MainCalendarView: View {
+    @ObservedObject var authManager: GoogleAuthManager
+    @Binding var newTodoTitle: String
+    @StateObject private var viewModel: CalendarViewModel
+
+    init(authManager: GoogleAuthManager, newTodoTitle: Binding<String>) {
+        self.authManager = authManager
+        self._newTodoTitle = newTodoTitle
+        self._viewModel = StateObject(wrappedValue: CalendarViewModel(authManager: authManager))
+    }
 
     var body: some View {
         HStack(spacing: 0) {
@@ -14,6 +38,9 @@ struct MainView: View {
         }
         .frame(width: 880, height: 700)
         .background(Color(nsColor: .controlBackgroundColor))
+        .onChange(of: authManager.isAuthenticated) { _ in
+            viewModel.refreshEvents()
+        }
     }
 }
 
@@ -25,9 +52,18 @@ struct CalendarGridView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
+            // Header with connection status
             HStack {
                 Text(viewModel.monthTitle())
                     .font(.system(size: 28, weight: .bold))
+
+                if viewModel.authManager.isAuthenticated {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.green)
+                        .help("Google Calendar 연동됨")
+                }
+
                 Spacer()
                 HStack(spacing: 12) {
                     Button(action: viewModel.previousMonth) {
@@ -180,7 +216,6 @@ struct DailyDetailView: View {
     @State private var tappedTodo: TodoItem? = nil
     @State private var tappedEvent: CalendarEvent? = nil
     @State private var syncToCalendar = false
-    // Add form fields
     @State private var addTitle = ""
     @State private var addCategoryID: UUID?
     @State private var addType: TodoType = .normal
@@ -197,27 +232,55 @@ struct DailyDetailView: View {
 
     var body: some View {
         ZStack {
-            // Main content
             VStack(alignment: .leading, spacing: 0) {
                 // Header
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(viewModel.formattedDate(viewModel.selectedDate))
                             .font(.system(size: 18, weight: .bold))
-                        Text(dDayText)
-                            .font(.system(size: 13))
-                            .foregroundStyle(.secondary)
+                        HStack(spacing: 8) {
+                            Text(dDayText)
+                                .font(.system(size: 13))
+                                .foregroundStyle(.secondary)
+                            if viewModel.authManager.isAuthenticated {
+                                Text("Google")
+                                    .font(.system(size: 10, weight: .medium))
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(RoundedRectangle(cornerRadius: 4).fill(Color.green.opacity(0.15)))
+                                    .foregroundStyle(.green)
+                            }
+                        }
                     }
                     Spacer()
 
-                    Button { showCategoryManager.toggle() } label: {
-                        Image(systemName: "slider.horizontal.3")
-                            .font(.system(size: 16))
-                            .foregroundStyle(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                    .popover(isPresented: $showCategoryManager) {
-                        CategoryManagerView(viewModel: viewModel)
+                    HStack(spacing: 8) {
+                        // Settings menu
+                        Menu {
+                            Button { showCategoryManager.toggle() } label: {
+                                Label("카테고리 관리", systemImage: "tag")
+                            }
+                            if viewModel.authManager.isAuthenticated {
+                                Button {
+                                    viewModel.authManager.logout()
+                                } label: {
+                                    Label("Google 로그아웃", systemImage: "person.crop.circle.badge.minus")
+                                }
+                            } else {
+                                Button {
+                                    UserDefaults.standard.removeObject(forKey: "planit.skipGoogleAuth")
+                                    viewModel.authManager.objectWillChange.send()
+                                } label: {
+                                    Label("Google 로그인", systemImage: "person.crop.circle.badge.plus")
+                                }
+                            }
+                        } label: {
+                            Image(systemName: "gearshape")
+                                .font(.system(size: 16))
+                                .foregroundStyle(.secondary)
+                        }
+                        .menuStyle(.borderlessButton)
+                        .frame(width: 24)
                     }
                 }
                 .padding(.horizontal, 20)
@@ -276,7 +339,7 @@ struct DailyDetailView: View {
                             viewModel.addTodo(title: title, categoryID: categoryID, date: date, isRepeating: isRepeat)
                             if sync {
                                 let startOfDay = Calendar.current.startOfDay(for: date)
-                                let endOfDay = Calendar.current.date(byAdding: .hour, value: 1, to: startOfDay)!
+                                let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay)!
                                 _ = viewModel.addEventToCalendar(title: title, startDate: startOfDay, endDate: endOfDay, isAllDay: true)
                             }
                             showAddForm = false
@@ -339,6 +402,9 @@ struct DailyDetailView: View {
             }
         }
         .background(Color(nsColor: .windowBackgroundColor).opacity(0.5))
+        .popover(isPresented: $showCategoryManager) {
+            CategoryManagerView(viewModel: viewModel)
+        }
     }
 }
 
@@ -354,7 +420,6 @@ struct CategoryManagerView: View {
             Text("카테고리 관리")
                 .font(.system(size: 14, weight: .bold))
 
-            // Existing categories
             ForEach(viewModel.categories) { cat in
                 HStack(spacing: 8) {
                     Circle().fill(cat.color).frame(width: 12, height: 12)
@@ -375,12 +440,10 @@ struct CategoryManagerView: View {
 
             Divider()
 
-            // Add new category
             Text("새 카테고리")
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(.secondary)
 
-            // Color picker
             HStack(spacing: 6) {
                 ForEach(CategoryColor.presets) { preset in
                     Circle()
@@ -450,7 +513,6 @@ struct ModalEventDetail: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Header
             HStack {
                 Text("일정 상세").font(.system(size: 15, weight: .bold))
                 Spacer()
@@ -509,7 +571,6 @@ struct ModalEventDetail: View {
             Spacer(minLength: 0)
             Divider()
 
-            // Buttons
             if isEditing {
                 HStack(spacing: 12) {
                     Button { isEditing = false } label: {
@@ -733,18 +794,14 @@ struct InlineAddTodoForm: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Title input
             HStack(spacing: 8) {
                 Circle().fill(viewModel.category(for: effectiveCategoryID).color).frame(width: 8, height: 8)
                 TextField("할 일을 입력하세요", text: $title)
                     .textFieldStyle(.plain)
                     .font(.system(size: 13, weight: .medium))
-                    .onSubmit {
-                        submit()
-                    }
+                    .onSubmit { submit() }
             }
 
-            // Category pills
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 5) {
                     ForEach(viewModel.categories) { cat in
@@ -760,9 +817,7 @@ struct InlineAddTodoForm: View {
                 }
             }
 
-            // Options row
             HStack(spacing: 12) {
-                // Type toggle
                 Button { todoType = todoType == .normal ? .repeating : .normal } label: {
                     HStack(spacing: 3) {
                         Image(systemName: "arrow.triangle.2.circlepath").font(.system(size: 10))
@@ -773,7 +828,6 @@ struct InlineAddTodoForm: View {
                     .background(RoundedRectangle(cornerRadius: 5).fill(todoType == .repeating ? Color.blue.opacity(0.1) : Color.clear))
                 }.buttonStyle(.plain)
 
-                // Sync toggle
                 Button { syncToCalendar.toggle() } label: {
                     HStack(spacing: 3) {
                         Image(systemName: "calendar.badge.plus").font(.system(size: 10))
@@ -787,7 +841,6 @@ struct InlineAddTodoForm: View {
                 Spacer()
             }
 
-            // Buttons
             HStack(spacing: 8) {
                 Spacer()
                 Button { onCancel() } label: {
@@ -849,18 +902,20 @@ struct EventRowView: View {
 
             Spacer()
 
-            ZStack {
-                Circle()
-                    .stroke(isCompleted ? event.color : Color.secondary.opacity(0.4), lineWidth: 2)
-                    .frame(width: 22, height: 22)
-                if isCompleted {
-                    Circle().fill(event.color.opacity(0.15)).frame(width: 22, height: 22)
-                    Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundStyle(event.color)
+            Button { onToggle?() } label: {
+                ZStack {
+                    Circle()
+                        .stroke(isCompleted ? event.color : Color.secondary.opacity(0.4), lineWidth: 2)
+                        .frame(width: 22, height: 22)
+                    if isCompleted {
+                        Circle().fill(event.color.opacity(0.15)).frame(width: 22, height: 22)
+                        Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundStyle(event.color)
+                    }
                 }
+                .frame(width: 32, height: 32)
+                .contentShape(Rectangle())
             }
-            .frame(width: 32, height: 32)
-            .contentShape(Rectangle())
-            .onTapGesture { onToggle?() }
+            .buttonStyle(.plain)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
@@ -903,18 +958,20 @@ struct TodoRowView: View {
 
             Spacer()
 
-            ZStack {
-                Circle()
-                    .stroke(todo.isCompleted ? category.color : Color.secondary.opacity(0.4), lineWidth: 2)
-                    .frame(width: 22, height: 22)
-                if todo.isCompleted {
-                    Circle().fill(category.color.opacity(0.15)).frame(width: 22, height: 22)
-                    Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundStyle(category.color)
+            Button { onToggle() } label: {
+                ZStack {
+                    Circle()
+                        .stroke(todo.isCompleted ? category.color : Color.secondary.opacity(0.4), lineWidth: 2)
+                        .frame(width: 22, height: 22)
+                    if todo.isCompleted {
+                        Circle().fill(category.color.opacity(0.15)).frame(width: 22, height: 22)
+                        Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundStyle(category.color)
+                    }
                 }
+                .frame(width: 32, height: 32)
+                .contentShape(Rectangle())
             }
-            .frame(width: 32, height: 32)
-            .contentShape(Rectangle())
-            .onTapGesture { onToggle() }
+            .buttonStyle(.plain)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)

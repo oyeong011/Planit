@@ -14,8 +14,10 @@ final class CalendarViewModel: ObservableObject {
     @Published var completedEventIDs: Set<String> = []
     @Published var categories: [TodoCategory] = []
 
-    // MARK: - Private
+    // MARK: - Services
 
+    let authManager: GoogleAuthManager
+    private lazy var googleService = GoogleCalendarService(auth: authManager)
     private let eventStore = EKEventStore()
     private let calendar = Calendar.current
     private let fileManager = FileManager.default
@@ -37,35 +39,212 @@ final class CalendarViewModel: ObservableObject {
 
     private var refreshTimer: Timer?
 
-    init() {
+    private var notificationObserver: Any?
+
+    init(authManager: GoogleAuthManager) {
+        self.authManager = authManager
         loadCategories()
         loadTodos()
         loadCompletedEvents()
-        requestCalendarAccess()
-        observeCalendarChanges()
         startPeriodicRefresh()
+
+        // If Google is authenticated, fetch from API; otherwise use EventKit
+        if authManager.isAuthenticated {
+            fetchEventsFromGoogle(for: currentMonth)
+        } else {
+            requestCalendarAccess()
+            observeCalendarChanges()
+        }
     }
 
-    /// Listen for EventKit changes (external edits from Google Calendar, MCP, etc.)
+    deinit {
+        refreshTimer?.invalidate()
+        refreshTimer = nil
+        if let observer = notificationObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+    }
+
+    /// Periodic refresh every 15 seconds
+    private func startPeriodicRefresh() {
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.refreshEvents()
+            }
+        }
+    }
+
+    func refreshEvents() {
+        if authManager.isAuthenticated {
+            fetchEventsFromGoogle(for: currentMonth)
+        } else {
+            fetchEventsFromEventKit(for: currentMonth)
+        }
+    }
+
+    // MARK: - Google Calendar API
+
+    func fetchEventsFromGoogle(for month: Date) {
+        Task {
+            do {
+                let events = try await googleService.fetchEvents(for: month)
+                self.calendarEvents = events
+            } catch {
+                print("[Planit] Google Calendar fetch failed: \(error) — falling back to EventKit")
+                fetchEventsFromEventKit(for: month)
+            }
+        }
+    }
+
+    func addEventToGoogleCalendar(title: String, startDate: Date, endDate: Date, isAllDay: Bool) {
+        Task {
+            do {
+                let _ = try await googleService.createEvent(title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
+                fetchEventsFromGoogle(for: currentMonth)
+            } catch {
+                print("[Planit] Failed to create Google event: \(error)")
+            }
+        }
+    }
+
+    func updateGoogleEvent(eventID: String, title: String, startDate: Date, endDate: Date, isAllDay: Bool) {
+        Task {
+            do {
+                _ = try await googleService.updateEvent(eventID: eventID, title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
+                fetchEventsFromGoogle(for: currentMonth)
+            } catch {
+                print("[Planit] Failed to update Google event: \(error)")
+            }
+        }
+    }
+
+    func deleteGoogleEvent(eventID: String) {
+        Task {
+            do {
+                _ = try await googleService.deleteEvent(eventID: eventID)
+                completedEventIDs.remove(eventID)
+                saveCompletedEvents()
+                fetchEventsFromGoogle(for: currentMonth)
+            } catch {
+                print("[Planit] Failed to delete Google event: \(error)")
+            }
+        }
+    }
+
+    // MARK: - EventKit (fallback when not using Google API)
+
     private func observeCalendarChanges() {
-        NotificationCenter.default.addObserver(
+        notificationObserver = NotificationCenter.default.addObserver(
             forName: .EKEventStoreChanged,
             object: eventStore,
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
-                self?.fetchEvents(for: self?.currentMonth ?? Date())
+                self?.fetchEventsFromEventKit(for: self?.currentMonth ?? Date())
             }
         }
     }
 
-    /// Periodic refresh every 30 seconds to catch external changes
-    private func startPeriodicRefresh() {
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
-            Task { @MainActor in
-                self?.fetchEvents(for: self?.currentMonth ?? Date())
+    func requestCalendarAccess() {
+        if #available(macOS 14.0, *) {
+            eventStore.requestFullAccessToEvents { [weak self] granted, error in
+                guard granted, error == nil else { return }
+                Task { @MainActor in
+                    self?.fetchEventsFromEventKit(for: self?.currentMonth ?? Date())
+                }
+            }
+        } else {
+            eventStore.requestAccess(to: .event) { [weak self] granted, error in
+                guard granted, error == nil else { return }
+                Task { @MainActor in
+                    self?.fetchEventsFromEventKit(for: self?.currentMonth ?? Date())
+                }
             }
         }
+    }
+
+    func fetchEventsFromEventKit(for month: Date) {
+        guard let monthInterval = calendar.dateInterval(of: .month, for: month) else { return }
+        let predicate = eventStore.predicateForEvents(
+            withStart: monthInterval.start,
+            end: monthInterval.end,
+            calendars: nil
+        )
+        let ekEvents = eventStore.events(matching: predicate)
+        calendarEvents = ekEvents.map { event in
+            let cgColor = event.calendar.cgColor ?? CGColor(red: 0.4, green: 0.6, blue: 1.0, alpha: 1.0)
+            return CalendarEvent(
+                id: event.eventIdentifier,
+                title: event.title ?? "",
+                startDate: event.startDate,
+                endDate: event.endDate,
+                color: Color(cgColor: cgColor),
+                isAllDay: event.isAllDay,
+                calendarName: event.calendar.title
+            )
+        }
+    }
+
+    // EventKit write methods (fallback)
+    func addEventToCalendar(title: String, startDate: Date, endDate: Date, isAllDay: Bool) -> Bool {
+        if authManager.isAuthenticated {
+            addEventToGoogleCalendar(title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
+            return true
+        }
+        guard let cal = writableCalendar else { return false }
+        let ekEvent = EKEvent(eventStore: eventStore)
+        ekEvent.title = title
+        ekEvent.startDate = startDate
+        ekEvent.endDate = endDate
+        ekEvent.isAllDay = isAllDay
+        ekEvent.calendar = cal
+        do {
+            try eventStore.save(ekEvent, span: .thisEvent)
+            fetchEventsFromEventKit(for: currentMonth)
+            return true
+        } catch {
+            print("[Planit] Failed to create event: \(error)")
+            return false
+        }
+    }
+
+    func updateCalendarEvent(eventID: String, title: String, startDate: Date, endDate: Date, isAllDay: Bool) -> Bool {
+        if authManager.isAuthenticated {
+            updateGoogleEvent(eventID: eventID, title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
+            return true
+        }
+        guard let ekEvent = eventStore.event(withIdentifier: eventID) else { return false }
+        ekEvent.title = title
+        ekEvent.startDate = startDate
+        ekEvent.endDate = endDate
+        ekEvent.isAllDay = isAllDay
+        do {
+            try eventStore.save(ekEvent, span: .thisEvent)
+            fetchEventsFromEventKit(for: currentMonth)
+            return true
+        } catch { return false }
+    }
+
+    func deleteCalendarEvent(eventID: String) -> Bool {
+        if authManager.isAuthenticated {
+            deleteGoogleEvent(eventID: eventID)
+            return true
+        }
+        guard let ekEvent = eventStore.event(withIdentifier: eventID) else { return false }
+        do {
+            try eventStore.remove(ekEvent, span: .thisEvent)
+            completedEventIDs.remove(eventID)
+            saveCompletedEvents()
+            fetchEventsFromEventKit(for: currentMonth)
+            return true
+        } catch { return false }
+    }
+
+    private var writableCalendar: EKCalendar? {
+        if let google = eventStore.calendars(for: .event).first(where: {
+            $0.source.sourceType == .calDAV && $0.allowsContentModifications
+        }) { return google }
+        return eventStore.defaultCalendarForNewEvents
     }
 
     // MARK: - Category Helpers
@@ -85,7 +264,6 @@ final class CalendarViewModel: ObservableObject {
               let monthRange = calendar.range(of: .day, in: .month, for: currentMonth) else {
             return Array(repeating: nil, count: 42)
         }
-
         let firstDay = monthInterval.start
         let firstWeekday = calendar.component(.weekday, from: firstDay)
         let leadingNils = firstWeekday - 1
@@ -101,25 +279,20 @@ final class CalendarViewModel: ObservableObject {
         return slots
     }
 
-    func monthTitle() -> String {
-        "\(calendar.component(.month, from: currentMonth))월"
-    }
-
-    func yearTitle() -> String {
-        "\(calendar.component(.year, from: currentMonth))"
-    }
+    func monthTitle() -> String { "\(calendar.component(.month, from: currentMonth))월" }
+    func yearTitle() -> String { "\(calendar.component(.year, from: currentMonth))" }
 
     func previousMonth() {
         if let prev = calendar.date(byAdding: .month, value: -1, to: currentMonth) {
             currentMonth = prev
-            fetchEvents(for: currentMonth)
+            refreshEvents()
         }
     }
 
     func nextMonth() {
         if let next = calendar.date(byAdding: .month, value: 1, to: currentMonth) {
             currentMonth = next
-            fetchEvents(for: currentMonth)
+            refreshEvents()
         }
     }
 
@@ -146,9 +319,15 @@ final class CalendarViewModel: ObservableObject {
     func eventsForDate(_ date: Date) -> [CalendarEvent] {
         calendarEvents.filter { event in
             let eventStart = calendar.startOfDay(for: event.startDate)
-            let eventEnd = calendar.startOfDay(for: event.endDate)
             let target = calendar.startOfDay(for: date)
-            return target >= eventStart && target <= eventEnd
+            if event.isAllDay {
+                // Google all-day events use exclusive end date
+                let eventEnd = calendar.startOfDay(for: event.endDate)
+                return target >= eventStart && target < eventEnd
+            } else {
+                let eventEnd = calendar.startOfDay(for: event.endDate)
+                return target >= eventStart && target <= eventEnd
+            }
         }
     }
 
@@ -196,7 +375,6 @@ final class CalendarViewModel: ObservableObject {
     }
 
     func deleteCategory(id: UUID) {
-        // Move todos in this category to first available category
         if let fallback = categories.first(where: { $0.id != id }) {
             for i in todos.indices where todos[i].categoryID == id {
                 todos[i].categoryID = fallback.id
@@ -235,9 +413,7 @@ final class CalendarViewModel: ObservableObject {
         do {
             let data = try JSONEncoder().encode(todos)
             try data.write(to: todosPath, options: .atomic)
-        } catch {
-            print("[Planit] Failed to save todos: \(error)")
-        }
+        } catch { print("[Planit] Failed to save todos: \(error)") }
     }
 
     func loadTodos() {
@@ -245,18 +421,14 @@ final class CalendarViewModel: ObservableObject {
         do {
             let data = try Data(contentsOf: todosPath)
             todos = try JSONDecoder().decode([TodoItem].self, from: data)
-        } catch {
-            print("[Planit] Failed to load todos: \(error)")
-        }
+        } catch { print("[Planit] Failed to load todos: \(error)") }
     }
 
     private func saveCompletedEvents() {
         do {
             let data = try JSONEncoder().encode(Array(completedEventIDs))
             try data.write(to: completedEventsPath, options: .atomic)
-        } catch {
-            print("[Planit] Failed to save completed events: \(error)")
-        }
+        } catch { print("[Planit] Failed to save completed events: \(error)") }
     }
 
     private func loadCompletedEvents() {
@@ -265,18 +437,14 @@ final class CalendarViewModel: ObservableObject {
             let data = try Data(contentsOf: completedEventsPath)
             let ids = try JSONDecoder().decode([String].self, from: data)
             completedEventIDs = Set(ids)
-        } catch {
-            print("[Planit] Failed to load completed events: \(error)")
-        }
+        } catch { print("[Planit] Failed to load completed events: \(error)") }
     }
 
     func saveCategories() {
         do {
             let data = try JSONEncoder().encode(categories)
             try data.write(to: categoriesPath, options: .atomic)
-        } catch {
-            print("[Planit] Failed to save categories: \(error)")
-        }
+        } catch { print("[Planit] Failed to save categories: \(error)") }
     }
 
     func loadCategories() {
@@ -285,122 +453,12 @@ final class CalendarViewModel: ObservableObject {
                 let data = try Data(contentsOf: categoriesPath)
                 categories = try JSONDecoder().decode([TodoCategory].self, from: data)
                 return
-            } catch {
-                print("[Planit] Failed to load categories: \(error)")
-            }
+            } catch { print("[Planit] Failed to load categories: \(error)") }
         }
-        // First launch: use defaults
         categories = TodoCategory.defaults
         saveCategories()
     }
 
-    // MARK: - EventKit
-
-    func requestCalendarAccess() {
-        if #available(macOS 14.0, *) {
-            eventStore.requestFullAccessToEvents { [weak self] granted, error in
-                guard granted, error == nil else { return }
-                Task { @MainActor in
-                    self?.fetchEvents(for: self?.currentMonth ?? Date())
-                }
-            }
-        } else {
-            eventStore.requestAccess(to: .event) { [weak self] granted, error in
-                guard granted, error == nil else { return }
-                Task { @MainActor in
-                    self?.fetchEvents(for: self?.currentMonth ?? Date())
-                }
-            }
-        }
-    }
-
-    func fetchEvents(for month: Date) {
-        guard let monthInterval = calendar.dateInterval(of: .month, for: month) else { return }
-        let predicate = eventStore.predicateForEvents(
-            withStart: monthInterval.start,
-            end: monthInterval.end,
-            calendars: nil
-        )
-        let ekEvents = eventStore.events(matching: predicate)
-        calendarEvents = ekEvents.map { event in
-            let cgColor = event.calendar.cgColor ?? CGColor(red: 0.4, green: 0.6, blue: 1.0, alpha: 1.0)
-            return CalendarEvent(
-                id: event.eventIdentifier,
-                title: event.title ?? "",
-                startDate: event.startDate,
-                endDate: event.endDate,
-                color: Color(cgColor: cgColor),
-                isAllDay: event.isAllDay,
-                calendarName: event.calendar.title
-            )
-        }
-    }
-
-    // MARK: - EventKit Write (Google Calendar Sync)
-
-    /// Default writable calendar (prefers Google, falls back to default)
-    private var writableCalendar: EKCalendar? {
-        // Prefer Google calendar
-        if let google = eventStore.calendars(for: .event).first(where: {
-            $0.source.sourceType == .calDAV && $0.allowsContentModifications
-        }) {
-            return google
-        }
-        return eventStore.defaultCalendarForNewEvents
-    }
-
-    /// Create a new event in the system calendar (syncs to Google)
-    func addEventToCalendar(title: String, startDate: Date, endDate: Date, isAllDay: Bool) -> Bool {
-        guard let cal = writableCalendar else { return false }
-        let ekEvent = EKEvent(eventStore: eventStore)
-        ekEvent.title = title
-        ekEvent.startDate = startDate
-        ekEvent.endDate = endDate
-        ekEvent.isAllDay = isAllDay
-        ekEvent.calendar = cal
-        do {
-            try eventStore.save(ekEvent, span: .thisEvent)
-            fetchEvents(for: currentMonth)
-            return true
-        } catch {
-            print("[Planit] Failed to create event: \(error)")
-            return false
-        }
-    }
-
-    /// Update an existing calendar event
-    func updateCalendarEvent(eventID: String, title: String, startDate: Date, endDate: Date, isAllDay: Bool) -> Bool {
-        guard let ekEvent = eventStore.event(withIdentifier: eventID) else { return false }
-        ekEvent.title = title
-        ekEvent.startDate = startDate
-        ekEvent.endDate = endDate
-        ekEvent.isAllDay = isAllDay
-        do {
-            try eventStore.save(ekEvent, span: .thisEvent)
-            fetchEvents(for: currentMonth)
-            return true
-        } catch {
-            print("[Planit] Failed to update event: \(error)")
-            return false
-        }
-    }
-
-    /// Delete a calendar event
-    func deleteCalendarEvent(eventID: String) -> Bool {
-        guard let ekEvent = eventStore.event(withIdentifier: eventID) else { return false }
-        do {
-            try eventStore.remove(ekEvent, span: .thisEvent)
-            completedEventIDs.remove(eventID)
-            saveCompletedEvents()
-            fetchEvents(for: currentMonth)
-            return true
-        } catch {
-            print("[Planit] Failed to delete event: \(error)")
-            return false
-        }
-    }
-
-    /// Get list of writable calendar names
     var writableCalendars: [(name: String, identifier: String)] {
         eventStore.calendars(for: .event)
             .filter { $0.allowsContentModifications }

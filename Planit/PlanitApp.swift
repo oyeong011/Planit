@@ -25,6 +25,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         if let button = statusItem.button {
             button.image = NSImage(systemSymbolName: "calendar", accessibilityDescription: "Planit")
+            button.target = self
             button.action = #selector(togglePopover)
         }
 

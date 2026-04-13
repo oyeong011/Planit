@@ -4,3 +4,6 @@
 xcuserdata/
 DerivedData/
 .DS_Store
+google_credentials.json
+*credentials*.json
+.omx/
