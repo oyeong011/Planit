@@ -21,22 +21,36 @@ struct MainCalendarView: View {
     @ObservedObject var authManager: GoogleAuthManager
     @Binding var newTodoTitle: String
     @StateObject private var viewModel: CalendarViewModel
+    @StateObject private var aiService: AIService
+    @State private var showChat: Bool = true
 
     init(authManager: GoogleAuthManager, newTodoTitle: Binding<String>) {
         self.authManager = authManager
         self._newTodoTitle = newTodoTitle
-        self._viewModel = StateObject(wrappedValue: CalendarViewModel(authManager: authManager))
+        let vm = CalendarViewModel(authManager: authManager)
+        self._viewModel = StateObject(wrappedValue: vm)
+        self._aiService = StateObject(wrappedValue: AIService(
+            authManager: authManager,
+            calendarService: authManager.isAuthenticated ? vm.googleService : nil
+        ))
     }
 
     var body: some View {
         HStack(spacing: 0) {
-            CalendarGridView(viewModel: viewModel)
-                .frame(width: 570)
+            if showChat {
+                ChatView(aiService: aiService, viewModel: viewModel)
+                    .frame(width: 280)
+
+                Divider()
+            }
+
+            CalendarGridView(viewModel: viewModel, showChat: $showChat)
+                .frame(width: showChat ? 510 : 570)
 
             DailyDetailView(viewModel: viewModel, newTodoTitle: $newTodoTitle)
                 .frame(width: 310)
         }
-        .frame(width: 880, height: 700)
+        .frame(width: showChat ? 1100 : 880, height: 700)
         .background(Color(nsColor: .controlBackgroundColor))
         .onChange(of: authManager.isAuthenticated) { _ in
             viewModel.refreshEvents()
@@ -48,12 +62,21 @@ struct MainCalendarView: View {
 
 struct CalendarGridView: View {
     @ObservedObject var viewModel: CalendarViewModel
+    @Binding var showChat: Bool
     private let weekdays = ["일", "월", "화", "수", "목", "금", "토"]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Header with connection status
             HStack {
+                Button { withAnimation(.easeInOut(duration: 0.2)) { showChat.toggle() } } label: {
+                    Image(systemName: showChat ? "bubble.left.fill" : "bubble.left")
+                        .font(.system(size: 14))
+                        .foregroundStyle(showChat ? .purple : .secondary)
+                }
+                .buttonStyle(.plain)
+                .help("AI 채팅")
+
                 Text(viewModel.monthTitle())
                     .font(.system(size: 28, weight: .bold))
 

@@ -17,7 +17,7 @@ final class CalendarViewModel: ObservableObject {
     // MARK: - Services
 
     let authManager: GoogleAuthManager
-    private lazy var googleService = GoogleCalendarService(auth: authManager)
+    lazy var googleService = GoogleCalendarService(auth: authManager)
     private let eventStore = EKEventStore()
     private let calendar = Calendar.current
     private let fileManager = FileManager.default

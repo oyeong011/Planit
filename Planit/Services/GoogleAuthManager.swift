@@ -167,7 +167,7 @@ final class GoogleAuthManager: ObservableObject {
                 URLQueryItem(name: "client_id", value: clientID),
                 URLQueryItem(name: "redirect_uri", value: redirectURI),
                 URLQueryItem(name: "response_type", value: "code"),
-                URLQueryItem(name: "scope", value: "https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email"),
+                URLQueryItem(name: "scope", value: "https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/generative-language https://www.googleapis.com/auth/cloud-platform"),
                 URLQueryItem(name: "access_type", value: "offline"),
                 URLQueryItem(name: "prompt", value: "consent"),
                 URLQueryItem(name: "state", value: state),
