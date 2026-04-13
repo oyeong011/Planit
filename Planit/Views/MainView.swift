@@ -1,0 +1,929 @@
+import SwiftUI
+
+struct MainView: View {
+    @StateObject private var viewModel = CalendarViewModel()
+    @State private var newTodoTitle: String = ""
+
+    var body: some View {
+        HStack(spacing: 0) {
+            CalendarGridView(viewModel: viewModel)
+                .frame(width: 570)
+
+            DailyDetailView(viewModel: viewModel, newTodoTitle: $newTodoTitle)
+                .frame(width: 310)
+        }
+        .frame(width: 880, height: 700)
+        .background(Color(nsColor: .controlBackgroundColor))
+    }
+}
+
+// MARK: - Calendar Grid
+
+struct CalendarGridView: View {
+    @ObservedObject var viewModel: CalendarViewModel
+    private let weekdays = ["일", "월", "화", "수", "목", "금", "토"]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text(viewModel.monthTitle())
+                    .font(.system(size: 28, weight: .bold))
+                Spacer()
+                HStack(spacing: 12) {
+                    Button(action: viewModel.previousMonth) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                    }.buttonStyle(.plain)
+                    Button(action: viewModel.nextMonth) {
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                    }.buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+
+            HStack(spacing: 0) {
+                ForEach(Array(weekdays.enumerated()), id: \.offset) { index, day in
+                    Text(day)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(
+                            index == 0 ? Color.red.opacity(0.7) :
+                            index == 6 ? Color.blue.opacity(0.7) :
+                            Color.secondary
+                        )
+                        .frame(maxWidth: .infinity)
+                }
+            }.padding(.horizontal, 12)
+
+            let days = viewModel.daysInMonth()
+            let rows = stride(from: 0, to: days.count, by: 7).map { Array(days[$0..<min($0+7, days.count)]) }
+
+            VStack(spacing: 0) {
+                ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                    HStack(spacing: 0) {
+                        ForEach(Array(row.enumerated()), id: \.offset) { _, date in
+                            if let date = date {
+                                DayCellView(
+                                    date: date,
+                                    isSelected: Calendar.current.isDate(date, inSameDayAs: viewModel.selectedDate),
+                                    isToday: viewModel.isToday(date),
+                                    isSunday: viewModel.isSunday(date),
+                                    isSaturday: viewModel.isSaturday(date),
+                                    isCurrentMonth: viewModel.isCurrentMonth(date),
+                                    events: viewModel.eventsForDate(date),
+                                    todos: viewModel.todosForDate(date),
+                                    categoryFor: { viewModel.category(for: $0) }
+                                )
+                                .onTapGesture { viewModel.selectedDate = date }
+                            } else {
+                                VStack { Spacer() }
+                                    .frame(maxWidth: .infinity, minHeight: 90)
+                            }
+                        }
+                    }
+                }
+            }.padding(.horizontal, 8)
+
+            Spacer(minLength: 0)
+        }
+    }
+}
+
+// MARK: - Day Cell
+
+struct DayCellView: View {
+    let date: Date
+    let isSelected: Bool
+    let isToday: Bool
+    let isSunday: Bool
+    let isSaturday: Bool
+    let isCurrentMonth: Bool
+    let events: [CalendarEvent]
+    let todos: [TodoItem]
+    let categoryFor: (UUID) -> TodoCategory
+
+    private var dayNumber: String {
+        "\(Calendar.current.component(.day, from: date))"
+    }
+
+    private var textColor: Color {
+        if !isCurrentMonth { return .secondary.opacity(0.35) }
+        if isToday { return .white }
+        if isSunday { return Color.red.opacity(0.85) }
+        if isSaturday { return Color.blue.opacity(0.85) }
+        return .primary
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack {
+                if isToday {
+                    Text(dayNumber)
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 26, height: 26)
+                        .background(Circle().fill(Color.blue))
+                } else {
+                    Text(dayNumber)
+                        .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
+                        .foregroundStyle(textColor)
+                        .frame(width: 26, height: 26)
+                }
+                Spacer()
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(Array(events.prefix(3).enumerated()), id: \.offset) { _, event in
+                    Text(event.title)
+                        .font(.system(size: 9))
+                        .lineLimit(1)
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 1)
+                        .background(RoundedRectangle(cornerRadius: 3).fill(event.color.opacity(0.2)))
+                        .foregroundStyle(isCurrentMonth ? event.color : .secondary.opacity(0.3))
+                }
+                ForEach(Array(todos.prefix(max(0, 3 - events.count)).enumerated()), id: \.offset) { _, todo in
+                    let cat = categoryFor(todo.categoryID)
+                    HStack(spacing: 2) {
+                        Circle().fill(cat.color).frame(width: 5, height: 5)
+                        Text(todo.title).font(.system(size: 9)).lineLimit(1)
+                    }
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 1)
+                    .background(RoundedRectangle(cornerRadius: 3).fill(cat.color.opacity(0.12)))
+                    .foregroundStyle(isCurrentMonth ? cat.color : .secondary.opacity(0.3))
+                }
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(4)
+        .frame(maxWidth: .infinity, minHeight: 90, alignment: .topLeading)
+        .background(RoundedRectangle(cornerRadius: 6).fill(isSelected ? Color.blue.opacity(0.08) : Color.clear))
+        .contentShape(Rectangle())
+    }
+}
+
+// MARK: - Daily Detail
+
+struct DailyDetailView: View {
+    @ObservedObject var viewModel: CalendarViewModel
+    @Binding var newTodoTitle: String
+
+    @State private var selectedCategoryID: UUID?
+    @State private var isRepeating: Bool = false
+    @State private var showCategoryManager = false
+    @State private var showAddForm = false
+    @State private var tappedTodo: TodoItem? = nil
+    @State private var tappedEvent: CalendarEvent? = nil
+    @State private var syncToCalendar = false
+    // Add form fields
+    @State private var addTitle = ""
+    @State private var addCategoryID: UUID?
+    @State private var addType: TodoType = .normal
+
+    private var dDayText: String {
+        let diff = viewModel.daysSinceToday(viewModel.selectedDate)
+        if diff == 0 { return "오늘" }
+        return diff > 0 ? "D - \(diff)" : "D + \(abs(diff))"
+    }
+
+    private var showModal: Bool {
+        tappedTodo != nil || tappedEvent != nil
+    }
+
+    var body: some View {
+        ZStack {
+            // Main content
+            VStack(alignment: .leading, spacing: 0) {
+                // Header
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(viewModel.formattedDate(viewModel.selectedDate))
+                            .font(.system(size: 18, weight: .bold))
+                        Text(dDayText)
+                            .font(.system(size: 13))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+
+                    Button { showCategoryManager.toggle() } label: {
+                        Image(systemName: "slider.horizontal.3")
+                            .font(.system(size: 16))
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .popover(isPresented: $showCategoryManager) {
+                        CategoryManagerView(viewModel: viewModel)
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 20)
+                .padding(.bottom, 16)
+
+                // Events & Todos list
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 8) {
+                        let events = viewModel.eventsForDate(viewModel.selectedDate)
+                        ForEach(events) { event in
+                            EventRowView(
+                                event: event,
+                                isCompleted: viewModel.isEventCompleted(event.id),
+                                onTap: {
+                                    tappedEvent = event
+                                    tappedTodo = nil
+                                },
+                                onToggle: { viewModel.toggleEventCompleted(event.id) }
+                            )
+                        }
+
+                        let todos = viewModel.todosForDate(viewModel.selectedDate)
+                        ForEach(todos) { todo in
+                            let cat = viewModel.category(for: todo.categoryID)
+                            TodoRowView(
+                                todo: todo,
+                                category: cat,
+                                onTap: {
+                                    tappedTodo = todo
+                                    tappedEvent = nil
+                                },
+                                onToggle: { viewModel.toggleTodo(id: todo.id) }
+                            )
+                        }
+
+                        if events.isEmpty && todos.isEmpty && !showAddForm {
+                            Text("일정이 없습니다")
+                                .font(.system(size: 13))
+                                .foregroundStyle(.tertiary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.top, 40)
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                }
+
+                Spacer(minLength: 0)
+
+                // Add form
+                if showAddForm {
+                    InlineAddTodoForm(
+                        viewModel: viewModel,
+                        selectedDate: viewModel.selectedDate,
+                        onAdd: { title, categoryID, date, isRepeat, sync in
+                            viewModel.addTodo(title: title, categoryID: categoryID, date: date, isRepeating: isRepeat)
+                            if sync {
+                                let startOfDay = Calendar.current.startOfDay(for: date)
+                                let endOfDay = Calendar.current.date(byAdding: .hour, value: 1, to: startOfDay)!
+                                _ = viewModel.addEventToCalendar(title: title, startDate: startOfDay, endDate: endOfDay, isAllDay: true)
+                            }
+                            showAddForm = false
+                        },
+                        onCancel: { showAddForm = false }
+                    )
+                } else {
+                    Button {
+                        showAddForm = true
+                        tappedTodo = nil
+                        tappedEvent = nil
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "plus.circle.fill").font(.system(size: 16))
+                            Text("할 일 추가").font(.system(size: 13, weight: .medium))
+                            Spacer()
+                        }
+                        .foregroundStyle(Color.blue)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        .background(RoundedRectangle(cornerRadius: 10).fill(Color.blue.opacity(0.08)))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 16)
+                }
+            }
+
+            // Modal overlay
+            if showModal {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        tappedTodo = nil
+                        tappedEvent = nil
+                    }
+
+                VStack {
+                    Spacer()
+                    if let event = tappedEvent {
+                        ModalEventDetail(
+                            viewModel: viewModel,
+                            event: event,
+                            onClose: { tappedEvent = nil }
+                        )
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                    if let todo = tappedTodo {
+                        ModalTodoDetail(
+                            viewModel: viewModel,
+                            todo: todo,
+                            onClose: { tappedTodo = nil }
+                        )
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                    Spacer()
+                }
+                .animation(.easeInOut(duration: 0.2), value: tappedTodo?.id)
+                .animation(.easeInOut(duration: 0.2), value: tappedEvent?.id)
+            }
+        }
+        .background(Color(nsColor: .windowBackgroundColor).opacity(0.5))
+    }
+}
+
+// MARK: - Category Manager (Popover)
+
+struct CategoryManagerView: View {
+    @ObservedObject var viewModel: CalendarViewModel
+    @State private var newName = ""
+    @State private var newColorHex = CategoryColor.presets[0].hex
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("카테고리 관리")
+                .font(.system(size: 14, weight: .bold))
+
+            // Existing categories
+            ForEach(viewModel.categories) { cat in
+                HStack(spacing: 8) {
+                    Circle().fill(cat.color).frame(width: 12, height: 12)
+                    Text(cat.name).font(.system(size: 13))
+                    Spacer()
+                    if viewModel.categories.count > 1 {
+                        Button {
+                            viewModel.deleteCategory(id: cat.id)
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 14))
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+
+            Divider()
+
+            // Add new category
+            Text("새 카테고리")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.secondary)
+
+            // Color picker
+            HStack(spacing: 6) {
+                ForEach(CategoryColor.presets) { preset in
+                    Circle()
+                        .fill(Color(hex: preset.hex) ?? .blue)
+                        .frame(width: 20, height: 20)
+                        .overlay(
+                            Circle().stroke(Color.white, lineWidth: newColorHex == preset.hex ? 2 : 0)
+                        )
+                        .onTapGesture { newColorHex = preset.hex }
+                }
+            }
+
+            HStack(spacing: 8) {
+                TextField("이름", text: $newName)
+                    .textFieldStyle(.roundedBorder)
+                    .font(.system(size: 12))
+
+                Button {
+                    let trimmed = newName.trimmingCharacters(in: .whitespaces)
+                    if !trimmed.isEmpty {
+                        viewModel.addCategory(name: trimmed, colorHex: newColorHex)
+                        newName = ""
+                    }
+                } label: {
+                    Text("추가")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(RoundedRectangle(cornerRadius: 6).fill(Color.blue))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(16)
+        .frame(width: 280)
+    }
+}
+
+// MARK: - Modal Event Detail (overlay)
+
+struct ModalEventDetail: View {
+    @ObservedObject var viewModel: CalendarViewModel
+    let event: CalendarEvent
+    let onClose: () -> Void
+
+    @State private var isEditing = false
+    @State private var editTitle = ""
+    @State private var editIsAllDay = false
+    @State private var editStartDate = Date()
+    @State private var editEndDate = Date()
+
+    private var timeText: String {
+        if event.isAllDay { return "종일" }
+        let fmt = DateFormatter()
+        fmt.locale = Locale(identifier: "ko_KR")
+        fmt.dateFormat = "HH:mm"
+        return "\(fmt.string(from: event.startDate)) – \(fmt.string(from: event.endDate))"
+    }
+
+    private var dateText: String {
+        let fmt = DateFormatter()
+        fmt.locale = Locale(identifier: "ko_KR")
+        fmt.dateFormat = "M월 d일 (E)"
+        return fmt.string(from: event.startDate)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Header
+            HStack {
+                Text("일정 상세").font(.system(size: 15, weight: .bold))
+                Spacer()
+                Button { onClose() } label: {
+                    Image(systemName: "xmark.circle.fill").font(.system(size: 18)).foregroundStyle(.secondary)
+                }.buttonStyle(.plain)
+            }
+            .padding(.horizontal, 20).padding(.top, 16).padding(.bottom, 12)
+
+            Divider()
+
+            VStack(alignment: .leading, spacing: 12) {
+                if isEditing {
+                    TextField("제목", text: $editTitle)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 15, weight: .medium))
+                        .padding(10)
+                        .background(RoundedRectangle(cornerRadius: 8).fill(Color(nsColor: .textBackgroundColor).opacity(0.5)))
+
+                    Toggle("종일", isOn: $editIsAllDay).font(.system(size: 13))
+
+                    if !editIsAllDay {
+                        DatePicker("시작", selection: $editStartDate, displayedComponents: [.date, .hourAndMinute]).font(.system(size: 12))
+                        DatePicker("종료", selection: $editEndDate, displayedComponents: [.date, .hourAndMinute]).font(.system(size: 12))
+                    }
+                } else {
+                    HStack(spacing: 10) {
+                        RoundedRectangle(cornerRadius: 3).fill(event.color).frame(width: 5)
+                        Text(event.title).font(.system(size: 16, weight: .semibold))
+                    }.frame(height: 24)
+
+                    HStack(spacing: 8) {
+                        Image(systemName: "calendar").font(.system(size: 13)).foregroundStyle(.secondary)
+                        Text(dateText).font(.system(size: 13)).foregroundStyle(.secondary)
+                    }
+                    HStack(spacing: 8) {
+                        Image(systemName: "clock").font(.system(size: 13)).foregroundStyle(.secondary)
+                        Text(timeText).font(.system(size: 13)).foregroundStyle(.secondary)
+                    }
+                    if !event.calendarName.isEmpty {
+                        HStack(spacing: 8) {
+                            Image(systemName: "tray").font(.system(size: 13)).foregroundStyle(.secondary)
+                            Text(event.calendarName).font(.system(size: 13)).foregroundStyle(.secondary)
+                        }
+                    }
+                    HStack(spacing: 8) {
+                        Image(systemName: viewModel.isEventCompleted(event.id) ? "checkmark.circle.fill" : "circle")
+                            .font(.system(size: 13))
+                            .foregroundStyle(viewModel.isEventCompleted(event.id) ? .green : .secondary)
+                        Text(viewModel.isEventCompleted(event.id) ? "완료됨" : "미완료").font(.system(size: 13)).foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .padding(.horizontal, 20).padding(.vertical, 14)
+
+            Spacer(minLength: 0)
+            Divider()
+
+            // Buttons
+            if isEditing {
+                HStack(spacing: 12) {
+                    Button { isEditing = false } label: {
+                        Text("취소").font(.system(size: 13)).foregroundStyle(.secondary).frame(maxWidth: .infinity).padding(.vertical, 10)
+                    }.buttonStyle(.plain)
+                    Button {
+                        let t = editTitle.trimmingCharacters(in: .whitespaces)
+                        if !t.isEmpty {
+                            let end = editIsAllDay ? Calendar.current.date(byAdding: .day, value: 1, to: editStartDate)! : editEndDate
+                            _ = viewModel.updateCalendarEvent(eventID: event.id, title: t, startDate: editStartDate, endDate: end, isAllDay: editIsAllDay)
+                        }
+                        onClose()
+                    } label: {
+                        Text("저장").font(.system(size: 13, weight: .semibold)).foregroundStyle(.white).frame(maxWidth: .infinity).padding(.vertical, 10)
+                            .background(RoundedRectangle(cornerRadius: 8).fill(Color.blue))
+                    }.buttonStyle(.plain)
+                }.padding(.horizontal, 20).padding(.vertical, 12)
+            } else {
+                HStack(spacing: 8) {
+                    Button { viewModel.toggleEventCompleted(event.id); onClose() } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: viewModel.isEventCompleted(event.id) ? "arrow.uturn.backward" : "checkmark").font(.system(size: 12))
+                            Text(viewModel.isEventCompleted(event.id) ? "미완료" : "완료").font(.system(size: 13))
+                        }.foregroundStyle(.green).frame(maxWidth: .infinity).padding(.vertical, 10)
+                            .background(RoundedRectangle(cornerRadius: 8).fill(Color.green.opacity(0.1)))
+                    }.buttonStyle(.plain)
+
+                    Button {
+                        editTitle = event.title; editStartDate = event.startDate; editEndDate = event.endDate; editIsAllDay = event.isAllDay
+                        isEditing = true
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "pencil").font(.system(size: 12))
+                            Text("수정").font(.system(size: 13))
+                        }.foregroundStyle(.blue).frame(maxWidth: .infinity).padding(.vertical, 10)
+                            .background(RoundedRectangle(cornerRadius: 8).fill(Color.blue.opacity(0.1)))
+                    }.buttonStyle(.plain)
+
+                    Button {
+                        _ = viewModel.deleteCalendarEvent(eventID: event.id)
+                        onClose()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "trash").font(.system(size: 12))
+                            Text("삭제").font(.system(size: 13))
+                        }.foregroundStyle(.red).frame(maxWidth: .infinity).padding(.vertical, 10)
+                            .background(RoundedRectangle(cornerRadius: 8).fill(Color.red.opacity(0.1)))
+                    }.buttonStyle(.plain)
+                }.padding(.horizontal, 20).padding(.vertical, 12)
+            }
+        }
+        .frame(width: 280, height: 320)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Color(nsColor: .windowBackgroundColor)))
+        .shadow(color: .black.opacity(0.2), radius: 20, y: 5)
+    }
+}
+
+// MARK: - Modal Todo Detail (overlay)
+
+struct ModalTodoDetail: View {
+    @ObservedObject var viewModel: CalendarViewModel
+    let todo: TodoItem
+    let onClose: () -> Void
+
+    @State private var isEditing = false
+    @State private var editTitle = ""
+    @State private var editCategoryID = UUID()
+
+    private var category: TodoCategory {
+        viewModel.category(for: isEditing ? editCategoryID : todo.categoryID)
+    }
+
+    private var dateText: String {
+        let fmt = DateFormatter()
+        fmt.locale = Locale(identifier: "ko_KR")
+        fmt.dateFormat = "M월 d일 (E)"
+        return fmt.string(from: todo.date)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text("할 일 상세").font(.system(size: 15, weight: .bold))
+                Spacer()
+                Button { onClose() } label: {
+                    Image(systemName: "xmark.circle.fill").font(.system(size: 18)).foregroundStyle(.secondary)
+                }.buttonStyle(.plain)
+            }
+            .padding(.horizontal, 20).padding(.top, 16).padding(.bottom, 12)
+
+            Divider()
+
+            VStack(alignment: .leading, spacing: 12) {
+                if isEditing {
+                    HStack(spacing: 10) {
+                        Circle().fill(category.color).frame(width: 10, height: 10)
+                        TextField("제목", text: $editTitle)
+                            .textFieldStyle(.plain).font(.system(size: 15, weight: .medium))
+                    }
+                    .padding(10)
+                    .background(RoundedRectangle(cornerRadius: 8).fill(Color(nsColor: .textBackgroundColor).opacity(0.5)))
+
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 5) {
+                            ForEach(viewModel.categories) { cat in
+                                Button { editCategoryID = cat.id } label: {
+                                    Text(cat.name).font(.system(size: 11, weight: .medium))
+                                        .padding(.horizontal, 8).padding(.vertical, 5)
+                                        .background(RoundedRectangle(cornerRadius: 6).fill(editCategoryID == cat.id ? cat.color.opacity(0.25) : Color(nsColor: .controlBackgroundColor)))
+                                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(editCategoryID == cat.id ? cat.color : Color.clear, lineWidth: 1))
+                                        .foregroundStyle(editCategoryID == cat.id ? cat.color : .secondary)
+                                }.buttonStyle(.plain)
+                            }
+                        }
+                    }
+                } else {
+                    HStack(spacing: 10) {
+                        Circle().fill(category.color).frame(width: 10, height: 10)
+                        Text(todo.title).font(.system(size: 15, weight: .medium))
+                            .strikethrough(todo.isCompleted)
+                            .foregroundStyle(todo.isCompleted ? .secondary : .primary)
+                    }
+
+                    HStack(spacing: 8) {
+                        Image(systemName: "calendar").font(.system(size: 13)).foregroundStyle(.secondary)
+                        Text(dateText).font(.system(size: 13)).foregroundStyle(.secondary)
+                        if todo.isRepeating {
+                            Image(systemName: "arrow.triangle.2.circlepath").font(.system(size: 11)).foregroundStyle(.blue)
+                        }
+                    }
+                    HStack(spacing: 8) {
+                        Image(systemName: "tag").font(.system(size: 13)).foregroundStyle(.secondary)
+                        Text(category.name).font(.system(size: 13))
+                            .padding(.horizontal, 8).padding(.vertical, 4)
+                            .background(RoundedRectangle(cornerRadius: 6).fill(category.color.opacity(0.15)))
+                            .foregroundStyle(category.color)
+                    }
+                    HStack(spacing: 8) {
+                        Image(systemName: todo.isCompleted ? "checkmark.circle.fill" : "circle").font(.system(size: 13))
+                            .foregroundStyle(todo.isCompleted ? .green : .secondary)
+                        Text(todo.isCompleted ? "완료됨" : "미완료").font(.system(size: 13)).foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .padding(.horizontal, 20).padding(.vertical, 14)
+
+            Spacer(minLength: 0)
+            Divider()
+
+            if isEditing {
+                HStack(spacing: 12) {
+                    Button { isEditing = false } label: {
+                        Text("취소").font(.system(size: 13)).foregroundStyle(.secondary).frame(maxWidth: .infinity).padding(.vertical, 10)
+                    }.buttonStyle(.plain)
+                    Button {
+                        let t = editTitle.trimmingCharacters(in: .whitespaces)
+                        if !t.isEmpty { viewModel.updateTodo(id: todo.id, title: t, categoryID: editCategoryID) }
+                        onClose()
+                    } label: {
+                        Text("저장").font(.system(size: 13, weight: .semibold)).foregroundStyle(.white).frame(maxWidth: .infinity).padding(.vertical, 10)
+                            .background(RoundedRectangle(cornerRadius: 8).fill(Color.blue))
+                    }.buttonStyle(.plain)
+                }.padding(.horizontal, 20).padding(.vertical, 12)
+            } else {
+                HStack(spacing: 8) {
+                    Button { viewModel.toggleTodo(id: todo.id); onClose() } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: todo.isCompleted ? "arrow.uturn.backward" : "checkmark").font(.system(size: 12))
+                            Text(todo.isCompleted ? "미완료" : "완료").font(.system(size: 13))
+                        }.foregroundStyle(.green).frame(maxWidth: .infinity).padding(.vertical, 10)
+                            .background(RoundedRectangle(cornerRadius: 8).fill(Color.green.opacity(0.1)))
+                    }.buttonStyle(.plain)
+
+                    Button {
+                        editTitle = todo.title; editCategoryID = todo.categoryID; isEditing = true
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "pencil").font(.system(size: 12))
+                            Text("수정").font(.system(size: 13))
+                        }.foregroundStyle(.blue).frame(maxWidth: .infinity).padding(.vertical, 10)
+                            .background(RoundedRectangle(cornerRadius: 8).fill(Color.blue.opacity(0.1)))
+                    }.buttonStyle(.plain)
+
+                    Button { viewModel.deleteTodo(id: todo.id); onClose() } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "trash").font(.system(size: 12))
+                            Text("삭제").font(.system(size: 13))
+                        }.foregroundStyle(.red).frame(maxWidth: .infinity).padding(.vertical, 10)
+                            .background(RoundedRectangle(cornerRadius: 8).fill(Color.red.opacity(0.1)))
+                    }.buttonStyle(.plain)
+                }.padding(.horizontal, 20).padding(.vertical, 12)
+            }
+        }
+        .frame(width: 280, height: 300)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Color(nsColor: .windowBackgroundColor)))
+        .shadow(color: .black.opacity(0.2), radius: 20, y: 5)
+    }
+}
+
+// MARK: - Inline Add Todo Form
+
+enum TodoType: String, CaseIterable {
+    case normal = "일반"
+    case repeating = "반복"
+}
+
+struct InlineAddTodoForm: View {
+    @ObservedObject var viewModel: CalendarViewModel
+    let selectedDate: Date
+    let onAdd: (_ title: String, _ categoryID: UUID, _ date: Date, _ isRepeat: Bool, _ syncToCalendar: Bool) -> Void
+    let onCancel: () -> Void
+
+    @State private var title = ""
+    @State private var categoryID: UUID?
+    @State private var todoType: TodoType = .normal
+    @State private var syncToCalendar = false
+
+    private var effectiveCategoryID: UUID {
+        categoryID ?? viewModel.defaultCategoryID
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Title input
+            HStack(spacing: 8) {
+                Circle().fill(viewModel.category(for: effectiveCategoryID).color).frame(width: 8, height: 8)
+                TextField("할 일을 입력하세요", text: $title)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 13, weight: .medium))
+                    .onSubmit {
+                        submit()
+                    }
+            }
+
+            // Category pills
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 5) {
+                    ForEach(viewModel.categories) { cat in
+                        Button { categoryID = cat.id } label: {
+                            Text(cat.name)
+                                .font(.system(size: 10, weight: .medium))
+                                .padding(.horizontal, 7).padding(.vertical, 4)
+                                .background(RoundedRectangle(cornerRadius: 5).fill(effectiveCategoryID == cat.id ? cat.color.opacity(0.25) : Color(nsColor: .controlBackgroundColor)))
+                                .overlay(RoundedRectangle(cornerRadius: 5).stroke(effectiveCategoryID == cat.id ? cat.color : Color.clear, lineWidth: 1))
+                                .foregroundStyle(effectiveCategoryID == cat.id ? cat.color : .secondary)
+                        }.buttonStyle(.plain)
+                    }
+                }
+            }
+
+            // Options row
+            HStack(spacing: 12) {
+                // Type toggle
+                Button { todoType = todoType == .normal ? .repeating : .normal } label: {
+                    HStack(spacing: 3) {
+                        Image(systemName: "arrow.triangle.2.circlepath").font(.system(size: 10))
+                        Text("반복").font(.system(size: 10))
+                    }
+                    .foregroundStyle(todoType == .repeating ? .blue : .secondary.opacity(0.6))
+                    .padding(.horizontal, 8).padding(.vertical, 4)
+                    .background(RoundedRectangle(cornerRadius: 5).fill(todoType == .repeating ? Color.blue.opacity(0.1) : Color.clear))
+                }.buttonStyle(.plain)
+
+                // Sync toggle
+                Button { syncToCalendar.toggle() } label: {
+                    HStack(spacing: 3) {
+                        Image(systemName: "calendar.badge.plus").font(.system(size: 10))
+                        Text("캘린더 동기화").font(.system(size: 10))
+                    }
+                    .foregroundStyle(syncToCalendar ? .blue : .secondary.opacity(0.6))
+                    .padding(.horizontal, 8).padding(.vertical, 4)
+                    .background(RoundedRectangle(cornerRadius: 5).fill(syncToCalendar ? Color.blue.opacity(0.1) : Color.clear))
+                }.buttonStyle(.plain)
+
+                Spacer()
+            }
+
+            // Buttons
+            HStack(spacing: 8) {
+                Spacer()
+                Button { onCancel() } label: {
+                    Text("취소").font(.system(size: 11)).foregroundStyle(.secondary)
+                }.buttonStyle(.plain)
+
+                Button { submit() } label: {
+                    Text("추가").font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 14).padding(.vertical, 5)
+                        .background(RoundedRectangle(cornerRadius: 6).fill(Color.blue))
+                }.buttonStyle(.plain)
+            }
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.blue.opacity(0.04))
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.blue.opacity(0.15), lineWidth: 1))
+        )
+        .padding(.horizontal, 16)
+        .padding(.bottom, 12)
+    }
+
+    private func submit() {
+        let trimmed = title.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return }
+        onAdd(trimmed, effectiveCategoryID, selectedDate, todoType == .repeating, syncToCalendar)
+    }
+}
+
+// MARK: - Event Row
+
+struct EventRowView: View {
+    let event: CalendarEvent
+    var isCompleted: Bool = false
+    var onTap: () -> Void = {}
+    var onToggle: (() -> Void)? = nil
+
+    private var timeText: String {
+        if event.isAllDay { return "종일" }
+        let fmt = DateFormatter()
+        fmt.locale = Locale(identifier: "ko_KR")
+        fmt.dateFormat = "HH:mm"
+        return "\(fmt.string(from: event.startDate)) – \(fmt.string(from: event.endDate))"
+    }
+
+    var body: some View {
+        HStack(spacing: 10) {
+            RoundedRectangle(cornerRadius: 2).fill(event.color).frame(width: 4)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(event.title)
+                    .font(.system(size: 14, weight: .medium))
+                    .strikethrough(isCompleted)
+                    .foregroundStyle(isCompleted ? .secondary : .primary)
+                Text(timeText).font(.system(size: 11)).foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            ZStack {
+                Circle()
+                    .stroke(isCompleted ? event.color : Color.secondary.opacity(0.4), lineWidth: 2)
+                    .frame(width: 22, height: 22)
+                if isCompleted {
+                    Circle().fill(event.color.opacity(0.15)).frame(width: 22, height: 22)
+                    Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundStyle(event.color)
+                }
+            }
+            .frame(width: 32, height: 32)
+            .contentShape(Rectangle())
+            .onTapGesture { onToggle?() }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color(nsColor: .controlBackgroundColor))
+                .shadow(color: .black.opacity(0.04), radius: 2, y: 1)
+        )
+        .contentShape(Rectangle())
+        .onTapGesture { onTap() }
+    }
+}
+
+// MARK: - Todo Row
+
+struct TodoRowView: View {
+    let todo: TodoItem
+    let category: TodoCategory
+    var isSelected: Bool = false
+    var onTap: () -> Void = {}
+    let onToggle: () -> Void
+
+    var body: some View {
+        HStack(spacing: 10) {
+            RoundedRectangle(cornerRadius: 2).fill(category.color).frame(width: 4)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(todo.title)
+                    .font(.system(size: 14, weight: .medium))
+                    .strikethrough(todo.isCompleted)
+                    .foregroundStyle(todo.isCompleted ? .secondary : .primary)
+                HStack(spacing: 4) {
+                    Text(category.name).font(.system(size: 11)).foregroundStyle(.secondary)
+                    if todo.isRepeating {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.system(size: 9)).foregroundStyle(.secondary)
+                    }
+                }
+            }
+
+            Spacer()
+
+            ZStack {
+                Circle()
+                    .stroke(todo.isCompleted ? category.color : Color.secondary.opacity(0.4), lineWidth: 2)
+                    .frame(width: 22, height: 22)
+                if todo.isCompleted {
+                    Circle().fill(category.color.opacity(0.15)).frame(width: 22, height: 22)
+                    Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundStyle(category.color)
+                }
+            }
+            .frame(width: 32, height: 32)
+            .contentShape(Rectangle())
+            .onTapGesture { onToggle() }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color(nsColor: .controlBackgroundColor))
+                .shadow(color: .black.opacity(0.04), radius: 2, y: 1)
+        )
+        .contentShape(Rectangle())
+        .onTapGesture { onTap() }
+    }
+}
