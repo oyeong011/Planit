@@ -17,12 +17,23 @@ struct MainView: View {
     }
 }
 
+// MARK: - Left Panel Mode
+
+enum LeftPanelMode: String {
+    case chat
+    case review
+    case onboarding
+}
+
 struct MainCalendarView: View {
     @ObservedObject var authManager: GoogleAuthManager
     @Binding var newTodoTitle: String
     @StateObject private var viewModel: CalendarViewModel
     @StateObject private var aiService: AIService
-    @State private var showChat: Bool = true
+    @StateObject private var goalService = GoalService()
+    @StateObject private var reviewService: ReviewService
+    @State private var showLeftPanel: Bool = true
+    @State private var leftPanelMode: LeftPanelMode = .chat
 
     init(authManager: GoogleAuthManager, newTodoTitle: Binding<String>) {
         self.authManager = authManager
@@ -33,27 +44,117 @@ struct MainCalendarView: View {
             authManager: authManager,
             calendarService: authManager.isAuthenticated ? vm.googleService : nil
         ))
+        let gs = GoalService()
+        self._goalService = StateObject(wrappedValue: gs)
+        self._reviewService = StateObject(wrappedValue: ReviewService(
+            goalService: gs,
+            calendarService: authManager.isAuthenticated ? vm.googleService : nil
+        ))
     }
 
     var body: some View {
         HStack(spacing: 0) {
-            if showChat {
-                ChatView(aiService: aiService, viewModel: viewModel)
+            if showLeftPanel {
+                leftPanel
                     .frame(width: 280)
-
                 Divider()
             }
 
-            CalendarGridView(viewModel: viewModel, showChat: $showChat)
-                .frame(width: showChat ? 510 : 570)
+            CalendarGridView(viewModel: viewModel, showChat: $showLeftPanel)
+                .frame(width: showLeftPanel ? 510 : 570)
 
             DailyDetailView(viewModel: viewModel, newTodoTitle: $newTodoTitle)
                 .frame(width: 310)
         }
-        .frame(width: showChat ? 1100 : 880, height: 700)
+        .frame(width: showLeftPanel ? 1100 : 880, height: 700)
         .background(Color(nsColor: .controlBackgroundColor))
         .onChange(of: authManager.isAuthenticated) { _ in
             viewModel.refreshEvents()
+        }
+        .onAppear {
+            checkLeftPanelMode()
+        }
+    }
+
+    // MARK: - Left Panel
+
+    @ViewBuilder
+    private var leftPanel: some View {
+        VStack(spacing: 0) {
+            // Panel mode toggle (only if onboarding done)
+            if goalService.profile.onboardingDone && leftPanelMode != .onboarding {
+                HStack(spacing: 0) {
+                    panelTab("리뷰", mode: .review, icon: "sparkles")
+                    panelTab("채팅", mode: .chat, icon: "bubble.left")
+                }
+                .padding(.horizontal, 8)
+                .padding(.top, 6)
+            }
+
+            // Panel content
+            switch leftPanelMode {
+            case .onboarding:
+                OnboardingView(goalService: goalService) {
+                    leftPanelMode = .chat
+                    reviewService.checkAndActivate()
+                }
+
+            case .review:
+                ReviewView(
+                    reviewService: reviewService,
+                    goalService: goalService,
+                    onCreateEvent: { title, start, end in
+                        Task {
+                            _ = try? await viewModel.googleService.createEvent(
+                                title: title, startDate: start, endDate: end, isAllDay: false)
+                            viewModel.refreshEvents()
+                        }
+                    },
+                    onDismiss: {
+                        reviewService.dismissReview()
+                        leftPanelMode = .chat
+                    }
+                )
+
+            case .chat:
+                ChatView(aiService: aiService, viewModel: viewModel)
+            }
+        }
+    }
+
+    private func panelTab(_ label: String, mode: LeftPanelMode, icon: String) -> some View {
+        Button {
+            leftPanelMode = mode
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: 10))
+                Text(label)
+                    .font(.system(size: 11, weight: leftPanelMode == mode ? .semibold : .regular))
+            }
+            .foregroundStyle(leftPanelMode == mode ? .purple : .secondary)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 5)
+            .background(
+                RoundedRectangle(cornerRadius: 5)
+                    .fill(leftPanelMode == mode ? Color.purple.opacity(0.1) : Color.clear)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Mode Detection
+
+    private func checkLeftPanelMode() {
+        if !goalService.profile.onboardingDone {
+            leftPanelMode = .onboarding
+            return
+        }
+
+        // Check if it's review time
+        reviewService.checkAndActivate()
+        if reviewService.currentMode != .none {
+            leftPanelMode = .review
         }
     }
 }

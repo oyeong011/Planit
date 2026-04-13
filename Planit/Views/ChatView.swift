@@ -147,6 +147,12 @@ struct ChatView: View {
                             .padding(.vertical, 4)
                             .id("loading")
                         }
+
+                        // Pending action approval buttons
+                        if aiService.hasPendingActions {
+                            actionApprovalCard
+                                .id("approval")
+                        }
                     }
                     .padding(.horizontal, 8)
                     .padding(.vertical, 8)
@@ -180,6 +186,83 @@ struct ChatView: View {
             .padding(.vertical, 8)
         }
     }
+
+    // MARK: - Action Approval Card
+
+    private var actionApprovalCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 4) {
+                Image(systemName: "exclamationmark.shield.fill")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.orange)
+                Text("일정 변경 확인")
+                    .font(.system(size: 11, weight: .bold))
+            }
+
+            ForEach(Array(aiService.pendingActions.enumerated()), id: \.offset) { _, action in
+                HStack(spacing: 6) {
+                    Image(systemName: action.action == "create" ? "plus.circle.fill" :
+                            action.action == "update" ? "pencil.circle.fill" : "trash.circle.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(action.action == "delete" ? .red : .blue)
+                    Text("\(actionLabel(action.action)): \(action.title ?? "?")")
+                        .font(.system(size: 10))
+                        .lineLimit(1)
+                }
+            }
+
+            HStack(spacing: 8) {
+                Button {
+                    Task {
+                        let results = await aiService.confirmPendingActions()
+                        messages.append(contentsOf: results)
+                        viewModel.refreshEvents()
+                    }
+                } label: {
+                    HStack(spacing: 3) {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 9, weight: .bold))
+                        Text("실행")
+                            .font(.system(size: 10, weight: .semibold))
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 5)
+                    .background(RoundedRectangle(cornerRadius: 5).fill(.purple))
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    let msg = aiService.declinePendingActions()
+                    messages.append(msg)
+                } label: {
+                    Text("취소")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(RoundedRectangle(cornerRadius: 5).stroke(Color.secondary.opacity(0.3)))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 8).fill(Color.orange.opacity(0.06)))
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.orange.opacity(0.2), lineWidth: 1))
+        .padding(.horizontal, 4)
+    }
+
+    private func actionLabel(_ action: String) -> String {
+        switch action {
+        case "create": return "추가"
+        case "update": return "수정"
+        case "delete": return "삭제"
+        default: return action
+        }
+    }
+
+    // MARK: - Send Message
 
     private func sendMessage() {
         let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)

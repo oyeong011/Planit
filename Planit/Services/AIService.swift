@@ -67,6 +67,9 @@ final class AIService: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var claudeAvailable: Bool = false
     @Published var codexAvailable: Bool = false
+    /// Pending actions awaiting user approval before execution
+    @Published var pendingActions: [CalendarAction] = []
+    @Published var pendingMessage: String?
 
     private let authManager: GoogleAuthManager
     private let calendarService: GoogleCalendarService?
@@ -269,6 +272,26 @@ final class AIService: ObservableObject {
         """
     }
 
+    // MARK: - User Confirmation for Actions
+
+    /// Call this when user confirms pending actions (types "확인", "실행", etc.)
+    func confirmPendingActions() async -> [ChatMessage] {
+        let actions = pendingActions
+        pendingActions = []
+        pendingMessage = nil
+        guard !actions.isEmpty else { return [] }
+        return await executeActions(actions)
+    }
+
+    /// Call this when user declines pending actions
+    func declinePendingActions() -> ChatMessage {
+        pendingActions = []
+        pendingMessage = nil
+        return ChatMessage(role: .assistant, content: "작업이 취소되었습니다.")
+    }
+
+    var hasPendingActions: Bool { !pendingActions.isEmpty }
+
     // MARK: - Execute Actions (with eventId validation)
 
     private func executeActions(_ actions: [CalendarAction]) async -> [ChatMessage] {
@@ -458,11 +481,13 @@ final class AIService: ObservableObject {
         var results: [ChatMessage] = []
 
         if let actions = actions, !actions.isEmpty {
-            let actionResults = await executeActions(actions)
-            results.append(contentsOf: actionResults)
-        }
-
-        if !message.isEmpty {
+            // Queue actions for user approval instead of executing immediately
+            pendingActions = actions
+            pendingMessage = message
+            let summary = actions.map { "\($0.action): \($0.title ?? "?")" }.joined(separator: "\n")
+            results.append(ChatMessage(role: .assistant, content: message))
+            results.append(ChatMessage(role: .toolCall, content: "⚠️ 아래 작업을 실행할까요?\n\(summary)\n\n확인하려면 '확인' 또는 '실행'을 입력하세요."))
+        } else if !message.isEmpty {
             results.append(ChatMessage(role: .assistant, content: message))
         }
 

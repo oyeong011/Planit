@@ -10,7 +10,10 @@ let package = Package(
         .executableTarget(
             name: "Planit",
             path: "Planit",
-            exclude: ["Info.plist", "Planit.entitlements"]
+            exclude: ["Info.plist", "Planit.entitlements"],
+            resources: [
+                .copy("Resources/PrivacyInfo.xcprivacy")
+            ]
         )
     ]
 )
