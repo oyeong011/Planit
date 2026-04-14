@@ -369,3 +369,18 @@
 "chat.quick.add.meeting" = "Yarın saat 15'e toplantı ekle";
 "chat.quick.free.time" = "Bu hafta boş zaman bul";
 "chat.quick.tomorrow.plan" = "Yarın için plan yap";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "Kurulum Gerekli";
+"setup.subtitle" = "AI asistanını kullanmaya başlamak için bu adımları tamamla";
+"setup.step1.title" = "AI CLI Kur";
+"setup.step2.title" = "Google Takvim'i Bağla";
+"setup.claude.desc" = "Claude'dan gününü planlamana ve düzenlende yardım etmesini iste";
+"setup.codex.desc" = "Akıllı öneriler için Codex'i kullan";
+"setup.google.desc" = "Daha akıllı zamanlama için takvim etkinliklerini senkronize et";
+"setup.google.connect.button" = "Google Takvim'i Bağla";
+"setup.google.skip.hint" = "Daha sonra Ayarlar'dan bağlayabilirsin";
+"setup.google.connected" = "Bağlandı";
+"setup.complete" = "Her şey hazır! Şimdi sohbet etmeye başlayabilirsin.";
+"setup.installed" = "Kuruldu";
+"setup.copy.command" = "Kurulum komutunu kopyala";

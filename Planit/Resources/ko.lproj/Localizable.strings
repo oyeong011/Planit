@@ -371,3 +371,18 @@
 "chat.quick.add.meeting" = "내일 오후 3시에 회의 추가해줘";
 "chat.quick.free.time" = "이번 주 비어있는 시간 찾아줘";
 "chat.quick.tomorrow.plan" = "내일 일정 계획 세워줘";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "초기 설정 필요";
+"setup.subtitle" = "AI 어시스턴트를 사용하려면 아래 단계를 완료하세요";
+"setup.step1.title" = "AI CLI 설치";
+"setup.step2.title" = "Google 캘린더 연동";
+"setup.claude.desc" = "Claude로 하루 일정을 계획하고 정리해보세요";
+"setup.codex.desc" = "Codex로 스마트한 제안을 받아보세요";
+"setup.google.desc" = "캘린더 일정을 연동하면 더 스마트한 스케줄링이 가능합니다";
+"setup.google.connect.button" = "Google 캘린더 연동";
+"setup.google.skip.hint" = "나중에 설정에서 연동할 수 있습니다";
+"setup.google.connected" = "연동됨";
+"setup.complete" = "모두 완료! 이제 AI와 대화를 시작해보세요.";
+"setup.installed" = "설치됨";
+"setup.copy.command" = "설치 명령어 복사";

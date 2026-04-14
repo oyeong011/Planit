@@ -369,3 +369,18 @@
 "chat.quick.add.meeting" = "Vergadering toevoegen morgen om 15:00";
 "chat.quick.free.time" = "Vrije tijd zoeken deze week";
 "chat.quick.tomorrow.plan" = "Mijn dag van morgen plannen";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "Installatie vereist";
+"setup.subtitle" = "Voltooi deze stappen om de AI-assistent te gaan gebruiken";
+"setup.step1.title" = "AI CLI installeren";
+"setup.step2.title" = "Google Agenda koppelen";
+"setup.claude.desc" = "Vraag Claude je te helpen bij het plannen van je dag";
+"setup.codex.desc" = "Gebruik Codex voor slimme suggesties";
+"setup.google.desc" = "Synchroniseer agenda-evenementen voor slimmere planning";
+"setup.google.connect.button" = "Google Agenda koppelen";
+"setup.google.skip.hint" = "Je kunt later verbinden in Instellingen";
+"setup.google.connected" = "Gekoppeld";
+"setup.complete" = "Alles klaar! Je kunt nu beginnen met chatten.";
+"setup.installed" = "Geïnstalleerd";
+"setup.copy.command" = "Installatieopdracht kopiëren";

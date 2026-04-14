@@ -369,3 +369,18 @@
 "chat.quick.add.meeting" = "เพิ่มการประชุมพรุ่งนี้บ่าย 3 โมง";
 "chat.quick.free.time" = "หาเวลาว่างในสัปดาห์นี้";
 "chat.quick.tomorrow.plan" = "วางแผนวันพรุ่งนี้";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "ต้องการการตั้งค่า";
+"setup.subtitle" = "ทำตามขั้นตอนเหล่านี้เพื่อเริ่มใช้งานผู้ช่วย AI";
+"setup.step1.title" = "ติดตั้ง AI CLI";
+"setup.step2.title" = "เชื่อมต่อ Google ปฏิทิน";
+"setup.claude.desc" = "ขอให้ Claude ช่วยวางแผนและจัดระเบียบวันของคุณ";
+"setup.codex.desc" = "ใช้ Codex สำหรับคำแนะนำอัจฉริยะ";
+"setup.google.desc" = "ซิงค์กิจกรรมในปฏิทินเพื่อการจัดตารางที่ชาญฉลาดขึ้น";
+"setup.google.connect.button" = "เชื่อมต่อ Google ปฏิทิน";
+"setup.google.skip.hint" = "คุณสามารถเชื่อมต่อภายหลังในการตั้งค่า";
+"setup.google.connected" = "เชื่อมต่อแล้ว";
+"setup.complete" = "พร้อมทุกอย่างแล้ว! เริ่มแชทได้เลย";
+"setup.installed" = "ติดตั้งแล้ว";
+"setup.copy.command" = "คัดลอกคำสั่งติดตั้ง";

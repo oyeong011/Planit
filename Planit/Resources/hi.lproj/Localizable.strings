@@ -369,3 +369,18 @@
 "chat.quick.add.meeting" = "कल दोपहर 3 बजे मीटिंग जोड़ें";
 "chat.quick.free.time" = "इस हफ्ते खाली समय खोजें";
 "chat.quick.tomorrow.plan" = "कल का दिन प्लान करें";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "सेटअप आवश्यक है";
+"setup.subtitle" = "AI सहायक का उपयोग शुरू करने के लिए ये चरण पूरे करें";
+"setup.step1.title" = "AI CLI इंस्टॉल करें";
+"setup.step2.title" = "Google कैलेंडर कनेक्ट करें";
+"setup.claude.desc" = "Claude से अपने दिन की योजना बनाने में मदद लें";
+"setup.codex.desc" = "स्मार्ट सुझावों के लिए Codex का उपयोग करें";
+"setup.google.desc" = "स्मार्ट शेड्यूलिंग के लिए कैलेंडर इवेंट सिंक करें";
+"setup.google.connect.button" = "Google कैलेंडर कनेक्ट करें";
+"setup.google.skip.hint" = "आप बाद में सेटिंग्स में कनेक्ट कर सकते हैं";
+"setup.google.connected" = "कनेक्टेड";
+"setup.complete" = "सब तैयार है! अब आप चैट करना शुरू कर सकते हैं।";
+"setup.installed" = "इंस्टॉल किया";
+"setup.copy.command" = "इंस्टॉल कमांड कॉपी करें";

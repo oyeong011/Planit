@@ -2,11 +2,16 @@ import Foundation
 import Security
 
 /// macOS Keychain-backed storage for sensitive data (OAuth tokens, credentials).
-/// All related values are stored as a single JSON blob per group to minimize Keychain prompts.
+/// In-memory cache prevents repeated Keychain prompts per session.
 enum KeychainHelper {
     private static let service = "com.oy.planit"
 
-    // MARK: - Generic single-item API (internal)
+    // MARK: - In-memory cache (세션당 키체인 접근 최소화)
+
+    private static var tokensCache: AuthTokens?
+    private static var credentialsCache: OAuthCredentials?
+
+    // MARK: - Generic single-item API
 
     @discardableResult
     private static func saveItem(account: String, data: Data) -> Bool {
@@ -15,7 +20,6 @@ enum KeychainHelper {
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
         ]
-        // Update existing item (also migrates kSecAttrAccessible to current policy)
         let updateAttrs: [String: Any] = [
             kSecValueData as String: data,
             kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlocked,
@@ -23,7 +27,6 @@ enum KeychainHelper {
         let updateStatus = SecItemUpdate(lookup as CFDictionary, updateAttrs as CFDictionary)
         if updateStatus == errSecSuccess { return true }
 
-        // Only add if item genuinely does not exist; other errors (locked, permission) are real failures
         guard updateStatus == errSecItemNotFound else { return false }
         var addQuery = lookup
         addQuery[kSecValueData as String] = data
@@ -56,38 +59,44 @@ enum KeychainHelper {
         return status == errSecSuccess || status == errSecItemNotFound
     }
 
-    // MARK: - Auth Tokens (single Keychain entry)
-    // Stores accessToken + refreshToken together to avoid multiple prompts.
+    // MARK: - Auth Tokens
 
     private static let tokenAccount = "planit.auth.tokens"
 
     struct AuthTokens: Codable {
         var accessToken: String?
         var refreshToken: String?
-        var tokenExpiry: Double?   // timeIntervalSince1970
+        var tokenExpiry: Double?
         var userEmail: String?
     }
 
     static func loadAuthTokens() -> AuthTokens {
+        if let cached = tokensCache { return cached }
         guard let data = loadItem(account: tokenAccount),
               let tokens = try? JSONDecoder().decode(AuthTokens.self, from: data) else {
             return AuthTokens()
         }
+        tokensCache = tokens
         return tokens
     }
 
     @discardableResult
     static func saveAuthTokens(_ tokens: AuthTokens) -> Bool {
         guard let data = try? JSONEncoder().encode(tokens) else { return false }
-        return saveItem(account: tokenAccount, data: data)
+        if saveItem(account: tokenAccount, data: data) {
+            tokensCache = tokens
+            return true
+        }
+        return false
     }
 
     @discardableResult
     static func deleteAuthTokens() -> Bool {
-        deleteItem(account: tokenAccount)
+        tokensCache = nil
+        return deleteItem(account: tokenAccount)
     }
 
-    // MARK: - OAuth Credentials (single Keychain entry)
+    // MARK: - OAuth Credentials
 
     private static let credentialsAccount = "planit.auth.credentials"
 
@@ -97,25 +106,34 @@ enum KeychainHelper {
     }
 
     static func loadCredentials() -> OAuthCredentials? {
+        if let cached = credentialsCache { return cached }
         guard let data = loadItem(account: credentialsAccount),
               let creds = try? JSONDecoder().decode(OAuthCredentials.self, from: data) else {
             return nil
         }
+        credentialsCache = creds
         return creds
     }
 
     @discardableResult
     static func saveCredentials(_ creds: OAuthCredentials) -> Bool {
         guard let data = try? JSONEncoder().encode(creds) else { return false }
-        return saveItem(account: credentialsAccount, data: data)
+        if saveItem(account: credentialsAccount, data: data) {
+            credentialsCache = creds
+            return true
+        }
+        return false
     }
 
-    // MARK: - Migration
+    // MARK: - Migration (UserDefaults 플래그로 1회만 실행)
 
-    /// One-time migration: old file-based tokens → Keychain, old individual Keychain items → consolidated.
+    private static let migrationDoneKey = "planit.keychain.migrationDone.v2"
+
     static func migrateIfNeeded() {
+        guard !UserDefaults.standard.bool(forKey: migrationDoneKey) else { return }
         migrateFromFileStorage()
         migrateFromIndividualKeychainItems()
+        UserDefaults.standard.set(true, forKey: migrationDoneKey)
     }
 
     private static func migrateFromFileStorage() {
@@ -143,21 +161,17 @@ enum KeychainHelper {
             tokens.tokenExpiry = t
             filesToDelete.append(expiryPath)
         }
-        // Only delete source files after successful Keychain save
         if !filesToDelete.isEmpty && saveAuthTokens(tokens) {
             filesToDelete.forEach { try? FileManager.default.removeItem(at: $0) }
         }
-
         let contents = (try? FileManager.default.contentsOfDirectory(atPath: tokenDir.path)) ?? []
         if contents.isEmpty { try? FileManager.default.removeItem(at: tokenDir) }
     }
 
     private static func migrateFromIndividualKeychainItems() {
-        // If consolidated item already exists, skip
         if loadItem(account: tokenAccount) != nil &&
            loadItem(account: credentialsAccount) != nil { return }
 
-        // Pull legacy individual items
         func legacyLoad(_ key: String) -> String? {
             let query: [String: Any] = [
                 kSecClass as String: kSecClassGenericPassword,
@@ -172,7 +186,6 @@ enum KeychainHelper {
             return String(data: data, encoding: .utf8)
         }
 
-        // Collect which legacy keys exist and merge into consolidated tokens
         var tokens = loadAuthTokens()
         var legacyTokenKeys: [String] = []
         if let v = legacyLoad("planit.accessToken")  { tokens.accessToken  = v; legacyTokenKeys.append("planit.accessToken") }
@@ -182,13 +195,10 @@ enum KeychainHelper {
             tokens.tokenExpiry = t
             legacyTokenKeys.append("planit.tokenExpiry")
         }
-
-        // Only save and delete if we actually found legacy tokens to migrate
         if !legacyTokenKeys.isEmpty && saveAuthTokens(tokens) {
             legacyTokenKeys.forEach { deleteItem(account: $0) }
         }
 
-        // Credentials: only migrate if both clientId and clientSecret exist
         if let id = legacyLoad("planit.oauth.clientId"),
            let secret = legacyLoad("planit.oauth.clientSecret"),
            saveCredentials(OAuthCredentials(clientID: id, clientSecret: secret)) {

@@ -369,3 +369,18 @@
 "chat.quick.add.meeting" = "Értekezlet hozzáadása holnap 15:00-kor";
 "chat.quick.free.time" = "Szabad idő keresése ezen a héten";
 "chat.quick.tomorrow.plan" = "Holnapi napom megtervezése";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "Beállítás szükséges";
+"setup.subtitle" = "Végezd el ezeket a lépéseket az AI asszisztens használatához";
+"setup.step1.title" = "AI CLI telepítése";
+"setup.step2.title" = "Google Naptár csatlakoztatása";
+"setup.claude.desc" = "Kérd meg Claudet, hogy segítsen megtervezni a napodat";
+"setup.codex.desc" = "Használd a Codexet intelligens javaslatokhoz";
+"setup.google.desc" = "Szinkronizáld a naptáreseményeket az intelligensebb ütemezésért";
+"setup.google.connect.button" = "Google Naptár csatlakoztatása";
+"setup.google.skip.hint" = "Csatlakozhatsz később a Beállításokban";
+"setup.google.connected" = "Csatlakoztatva";
+"setup.complete" = "Minden kész! Most elkezdhetsz csevegni.";
+"setup.installed" = "Telepítve";
+"setup.copy.command" = "Telepítési parancs másolása";

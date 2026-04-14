@@ -369,3 +369,18 @@
 "chat.quick.add.meeting" = "Lägg till möte imorgon kl 15";
 "chat.quick.free.time" = "Hitta ledig tid den här veckan";
 "chat.quick.tomorrow.plan" = "Planera min dag imorgon";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "Installation krävs";
+"setup.subtitle" = "Slutför dessa steg för att börja använda AI-assistenten";
+"setup.step1.title" = "Installera AI CLI";
+"setup.step2.title" = "Anslut Google Kalender";
+"setup.claude.desc" = "Be Claude hjälpa dig planera och organisera din dag";
+"setup.codex.desc" = "Använd Codex för smarta förslag";
+"setup.google.desc" = "Synkronisera kalenderсобытия för smartare schemaläggning";
+"setup.google.connect.button" = "Anslut Google Kalender";
+"setup.google.skip.hint" = "Du kan ansluta senare i Inställningar";
+"setup.google.connected" = "Ansluten";
+"setup.complete" = "Allt klart! Du kan börja chatta nu.";
+"setup.installed" = "Installerad";
+"setup.copy.command" = "Kopiera installationskommando";

@@ -369,3 +369,18 @@
 "chat.quick.add.meeting" = "Thêm cuộc họp vào 3 giờ chiều ngày mai";
 "chat.quick.free.time" = "Tìm thời gian rảnh trong tuần này";
 "chat.quick.tomorrow.plan" = "Lên kế hoạch cho ngày mai";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "Cần thiết lập";
+"setup.subtitle" = "Hoàn thành các bước này để bắt đầu sử dụng trợ lý AI";
+"setup.step1.title" = "Cài đặt AI CLI";
+"setup.step2.title" = "Kết nối Google Lịch";
+"setup.claude.desc" = "Nhờ Claude giúp lên kế hoạch và tổ chức ngày của bạn";
+"setup.codex.desc" = "Dùng Codex để nhận gợi ý thông minh";
+"setup.google.desc" = "Đồng bộ sự kiện lịch để lên lịch thông minh hơn";
+"setup.google.connect.button" = "Kết nối Google Lịch";
+"setup.google.skip.hint" = "Bạn có thể kết nối sau trong Cài đặt";
+"setup.google.connected" = "Đã kết nối";
+"setup.complete" = "Xong rồi! Bạn có thể bắt đầu trò chuyện ngay bây giờ.";
+"setup.installed" = "Đã cài đặt";
+"setup.copy.command" = "Sao chép lệnh cài đặt";

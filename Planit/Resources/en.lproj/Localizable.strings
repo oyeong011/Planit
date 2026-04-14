@@ -371,3 +371,18 @@
 "chat.quick.add.meeting" = "Add a meeting tomorrow at 3pm";
 "chat.quick.free.time" = "Find free time this week";
 "chat.quick.tomorrow.plan" = "Plan my day for tomorrow";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "Setup Required";
+"setup.subtitle" = "Complete these steps to start using the AI assistant";
+"setup.step1.title" = "Install AI CLI";
+"setup.step2.title" = "Connect Google Calendar";
+"setup.claude.desc" = "Ask Claude to help plan and organize your day";
+"setup.codex.desc" = "Use Codex to generate smart suggestions";
+"setup.google.desc" = "Sync your calendar events for smarter scheduling";
+"setup.google.connect.button" = "Connect Google Calendar";
+"setup.google.skip.hint" = "You can connect later in Settings";
+"setup.google.connected" = "Connected";
+"setup.complete" = "All set! You can start chatting now.";
+"setup.installed" = "Installed";
+"setup.copy.command" = "Copy install command";

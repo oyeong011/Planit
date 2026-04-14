@@ -369,3 +369,18 @@
 "chat.quick.add.meeting" = "إضافة اجتماع غداً الساعة 3 مساءً";
 "chat.quick.free.time" = "إيجاد وقت فراغ هذا الأسبوع";
 "chat.quick.tomorrow.plan" = "تخطيط يومي لغد";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "الإعداد المطلوب";
+"setup.subtitle" = "أكمل هذه الخطوات لبدء استخدام مساعد الذكاء الاصطناعي";
+"setup.step1.title" = "تثبيت CLI للذكاء الاصطناعي";
+"setup.step2.title" = "ربط تقويم Google";
+"setup.claude.desc" = "اطلب من Claude مساعدتك في تخطيط يومك وتنظيمه";
+"setup.codex.desc" = "استخدم Codex للحصول على اقتراحات ذكية";
+"setup.google.desc" = "زامن أحداث التقويم لجدولة أذكى";
+"setup.google.connect.button" = "ربط تقويم Google";
+"setup.google.skip.hint" = "يمكنك الربط لاحقاً في الإعدادات";
+"setup.google.connected" = "مرتبط";
+"setup.complete" = "كل شيء جاهز! يمكنك البدء في المحادثة الآن.";
+"setup.installed" = "مثبّت";
+"setup.copy.command" = "نسخ أمر التثبيت";

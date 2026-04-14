@@ -369,3 +369,18 @@
 "chat.quick.add.meeting" = "Додати зустріч завтра о 15:00";
 "chat.quick.free.time" = "Знайти вільний час цього тижня";
 "chat.quick.tomorrow.plan" = "Планувати завтрашній день";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "Потрібне налаштування";
+"setup.subtitle" = "Виконайте ці кроки, щоб почати використовувати ШІ-помічника";
+"setup.step1.title" = "Встановити AI CLI";
+"setup.step2.title" = "Підключити Google Календар";
+"setup.claude.desc" = "Попросіть Claude допомогти спланувати та організувати ваш день";
+"setup.codex.desc" = "Використовуйте Codex для розумних пропозицій";
+"setup.google.desc" = "Синхронізуйте події календаря для розумнішого планування";
+"setup.google.connect.button" = "Підключити Google Календар";
+"setup.google.skip.hint" = "Ви можете підключити пізніше в Налаштуваннях";
+"setup.google.connected" = "Підключено";
+"setup.complete" = "Все готово! Ви можете почати спілкування зараз.";
+"setup.installed" = "Встановлено";
+"setup.copy.command" = "Копіювати команду встановлення";

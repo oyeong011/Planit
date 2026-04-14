@@ -369,3 +369,18 @@
 "chat.quick.add.meeting" = "Adaugă o întâlnire mâine la ora 15";
 "chat.quick.free.time" = "Găsește timp liber săptămâna aceasta";
 "chat.quick.tomorrow.plan" = "Planifică-mi ziua de mâine";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "Configurare necesară";
+"setup.subtitle" = "Parcurge acești pași pentru a începe să utilizezi asistentul AI";
+"setup.step1.title" = "Instalează AI CLI";
+"setup.step2.title" = "Conectează Google Calendar";
+"setup.claude.desc" = "Roagă-l pe Claude să te ajute să îți planifici ziua";
+"setup.codex.desc" = "Folosește Codex pentru sugestii inteligente";
+"setup.google.desc" = "Sincronizează evenimentele din calendar pentru o planificare mai inteligentă";
+"setup.google.connect.button" = "Conectează Google Calendar";
+"setup.google.skip.hint" = "Poți conecta mai târziu din Setări";
+"setup.google.connected" = "Conectat";
+"setup.complete" = "Totul e gata! Poți începe să discuți acum.";
+"setup.installed" = "Instalat";
+"setup.copy.command" = "Copiază comanda de instalare";

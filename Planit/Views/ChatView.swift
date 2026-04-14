@@ -57,64 +57,243 @@ struct ChatView: View {
         .background(Color(nsColor: .windowBackgroundColor))
     }
 
-    // MARK: - Unconfigured
+    // MARK: - Setup Guide (CLI 미설치 시)
 
     private var unconfiguredView: some View {
-        VStack(spacing: 12) {
-            Spacer()
-
-            switch aiService.provider {
-            case .claude:
-                Image(systemName: "terminal")
-                    .font(.system(size: 28))
-                    .foregroundStyle(.secondary)
-                Text(String(localized: "chat.claude.not.installed"))
-                    .font(.system(size: 13, weight: .medium))
-                Text(String(localized: "chat.claude.install.hint"))
-                    .font(.system(size: 10))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .textSelection(.enabled)
-
-            case .codex:
-                Image(systemName: "terminal")
-                    .font(.system(size: 28))
-                    .foregroundStyle(.secondary)
-                Text(String(localized: "chat.codex.not.installed"))
-                    .font(.system(size: 13, weight: .medium))
-                Text(String(localized: "chat.codex.install.hint"))
-                    .font(.system(size: 10))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .textSelection(.enabled)
-            }
-
-            HStack(spacing: 12) {
-                Button {
-                    aiService.recheckCLI()
-                } label: {
-                    Text(String(localized: "chat.redetect"))
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.blue)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .contentShape(Rectangle())
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                // 헤더
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "wand.and.stars")
+                            .foregroundStyle(.purple)
+                        Text(String(localized: "setup.title"))
+                            .font(.system(size: 14, weight: .bold))
+                    }
+                    Text(String(localized: "setup.subtitle"))
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
                 }
-                .buttonStyle(.plain)
+                .padding(.top, 4)
 
-                Picker(String(localized: "chat.select.other.ai"), selection: $aiService.provider) {
-                    ForEach(AIProvider.allCases, id: \.self) { p in
-                        Text(p.rawValue).tag(p)
+                Divider()
+
+                // Step 1 — AI 설치
+                setupStep(
+                    number: 1,
+                    icon: "terminal.fill",
+                    color: .purple,
+                    title: String(localized: "setup.step1.title"),
+                    done: aiService.claudeAvailable || aiService.codexAvailable
+                ) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        // Claude Code
+                        installOption(
+                            name: "Claude Code",
+                            description: String(localized: "setup.claude.desc"),
+                            commands: ["npm install -g @anthropic-ai/claude-code", "claude --version"],
+                            isInstalled: aiService.claudeAvailable,
+                            badgeColor: .purple
+                        )
+
+                        // Codex
+                        installOption(
+                            name: "Codex",
+                            description: String(localized: "setup.codex.desc"),
+                            commands: ["npm install -g @openai/codex", "codex --version"],
+                            isInstalled: aiService.codexAvailable,
+                            badgeColor: .green
+                        )
+
+                        // 재감지 버튼
+                        Button {
+                            aiService.recheckCLI()
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "arrow.clockwise")
+                                    .font(.system(size: 10))
+                                Text(String(localized: "chat.redetect"))
+                                    .font(.system(size: 11, weight: .medium))
+                            }
+                            .foregroundStyle(.purple)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(RoundedRectangle(cornerRadius: 6).stroke(Color.purple.opacity(0.4)))
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.top, 2)
                     }
                 }
-                .labelsHidden()
-                .frame(width: 90)
-                .font(.system(size: 11))
+
+                // Step 2 — Google Calendar 연결
+                setupStep(
+                    number: 2,
+                    icon: "calendar.badge.checkmark",
+                    color: .blue,
+                    title: String(localized: "setup.step2.title"),
+                    done: viewModel.authManager.isAuthenticated
+                ) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        if viewModel.authManager.isAuthenticated {
+                            HStack(spacing: 6) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundStyle(.green)
+                                Text(viewModel.authManager.userEmail ?? String(localized: "setup.google.connected"))
+                                    .font(.system(size: 11))
+                            }
+                        } else {
+                            Text(String(localized: "setup.google.desc"))
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+
+                            Button {
+                                Task { await viewModel.authManager.startOAuthFlow() }
+                            } label: {
+                                HStack(spacing: 5) {
+                                    Image(systemName: "person.badge.plus")
+                                        .font(.system(size: 11))
+                                    Text(String(localized: "setup.google.connect.button"))
+                                        .font(.system(size: 11, weight: .semibold))
+                                }
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 6)
+                                .background(RoundedRectangle(cornerRadius: 7).fill(.blue))
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+
+                            Text(String(localized: "setup.google.skip.hint"))
+                                .font(.system(size: 10))
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                }
+
+                // 완료 상태
+                if (aiService.claudeAvailable || aiService.codexAvailable) && viewModel.authManager.isAuthenticated {
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                        Text(String(localized: "setup.complete"))
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(.green)
+                    }
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(RoundedRectangle(cornerRadius: 8).fill(Color.green.opacity(0.06)))
+                }
+            }
+            .padding(12)
+        }
+    }
+
+    private func setupStep(
+        number: Int,
+        icon: String,
+        color: Color,
+        title: String,
+        done: Bool,
+        @ViewBuilder content: () -> some View
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                ZStack {
+                    Circle()
+                        .fill(done ? Color.green : color.opacity(0.15))
+                        .frame(width: 24, height: 24)
+                    if done {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.white)
+                    } else {
+                        Text("\(number)")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(color)
+                    }
+                }
+                Text(title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(done ? .secondary : .primary)
+                if done {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.green)
+                }
             }
 
-            Spacer()
+            if !done {
+                content()
+                    .padding(.leading, 32)
+            }
         }
-        .frame(maxWidth: .infinity)
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(done ? Color.green.opacity(0.04) : Color(nsColor: .controlBackgroundColor))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(done ? Color.green.opacity(0.2) : Color.clear, lineWidth: 1)
+        )
+    }
+
+    private func installOption(
+        name: String,
+        description: String,
+        commands: [String],
+        isInstalled: Bool,
+        badgeColor: Color
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            HStack(spacing: 6) {
+                Text(name)
+                    .font(.system(size: 11, weight: .semibold))
+                if isInstalled {
+                    Text(String(localized: "setup.installed"))
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(badgeColor)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 1)
+                        .background(Capsule().fill(badgeColor.opacity(0.12)))
+                }
+            }
+            Text(description)
+                .font(.system(size: 10))
+                .foregroundStyle(.secondary)
+
+            if !isInstalled {
+                ForEach(commands, id: \.self) { cmd in
+                    HStack(spacing: 6) {
+                        Text(cmd)
+                            .font(.system(size: 10, design: .monospaced))
+                            .foregroundStyle(.primary)
+                            .textSelection(.enabled)
+                            .lineLimit(1)
+                        Spacer(minLength: 0)
+                        Button {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(cmd, forType: .string)
+                        } label: {
+                            Image(systemName: "doc.on.doc")
+                                .font(.system(size: 10))
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .help(String(localized: "setup.copy.command"))
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(RoundedRectangle(cornerRadius: 5).fill(Color.secondary.opacity(0.08)))
+                }
+            }
+        }
+        .padding(8)
+        .background(
+            RoundedRectangle(cornerRadius: 7)
+                .fill(isInstalled ? badgeColor.opacity(0.05) : Color.clear)
+        )
     }
 
     // MARK: - Chat Content

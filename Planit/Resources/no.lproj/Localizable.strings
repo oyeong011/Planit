@@ -369,3 +369,18 @@
 "chat.quick.add.meeting" = "Legg til møte i morgen kl. 15";
 "chat.quick.free.time" = "Finn ledig tid denne uken";
 "chat.quick.tomorrow.plan" = "Planlegg dagen min i morgen";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "Oppsett kreves";
+"setup.subtitle" = "Fullfør disse trinnene for å begynne å bruke AI-assistenten";
+"setup.step1.title" = "Installer AI CLI";
+"setup.step2.title" = "Koble til Google Kalender";
+"setup.claude.desc" = "Be Claude om hjelp til å planlegge dagen din";
+"setup.codex.desc" = "Bruk Codex for smarte forslag";
+"setup.google.desc" = "Synkroniser kalenderbegivenheter for smartere planlegging";
+"setup.google.connect.button" = "Koble til Google Kalender";
+"setup.google.skip.hint" = "Du kan koble til senere i Innstillinger";
+"setup.google.connected" = "Tilkoblet";
+"setup.complete" = "Alt er klart! Du kan begynne å chatte nå.";
+"setup.installed" = "Installert";
+"setup.copy.command" = "Kopier installasjonskommando";

@@ -369,3 +369,18 @@
 "chat.quick.add.meeting" = "明天下午3点添加会议";
 "chat.quick.free.time" = "找出本周的空闲时间";
 "chat.quick.tomorrow.plan" = "帮我规划明天的日程";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "需要设置";
+"setup.subtitle" = "完成以下步骤以开始使用 AI 助手";
+"setup.step1.title" = "安装 AI CLI";
+"setup.step2.title" = "连接 Google 日历";
+"setup.claude.desc" = "让 Claude 帮助您规划和整理一天的日程";
+"setup.codex.desc" = "使用 Codex 获取智能建议";
+"setup.google.desc" = "同步日历事件以实现更智能的日程安排";
+"setup.google.connect.button" = "连接 Google 日历";
+"setup.google.skip.hint" = "您可以稍后在设置中连接";
+"setup.google.connected" = "已连接";
+"setup.complete" = "一切就绪！您可以立即开始聊天。";
+"setup.installed" = "已安装";
+"setup.copy.command" = "复制安装命令";

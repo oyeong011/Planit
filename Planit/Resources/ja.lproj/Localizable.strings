@@ -369,3 +369,18 @@
 "chat.quick.add.meeting" = "明日の午後3時に会議を追加";
 "chat.quick.free.time" = "今週の空き時間を探して";
 "chat.quick.tomorrow.plan" = "明日の予定を計画して";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "セットアップが必要です";
+"setup.subtitle" = "AIアシスタントを使い始めるには、以下の手順を完了してください";
+"setup.step1.title" = "AI CLIをインストール";
+"setup.step2.title" = "Googleカレンダーを連携";
+"setup.claude.desc" = "Claudeに一日の計画と整理を手伝ってもらいましょう";
+"setup.codex.desc" = "Codexでスマートな提案を受け取りましょう";
+"setup.google.desc" = "カレンダーのイベントを同期して、よりスマートなスケジュール管理を";
+"setup.google.connect.button" = "Googleカレンダーを連携する";
+"setup.google.skip.hint" = "後で設定から連携できます";
+"setup.google.connected" = "連携済み";
+"setup.complete" = "準備完了！今すぐチャットを始められます。";
+"setup.installed" = "インストール済み";
+"setup.copy.command" = "インストールコマンドをコピー";

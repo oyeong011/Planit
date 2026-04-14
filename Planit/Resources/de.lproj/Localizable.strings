@@ -369,3 +369,18 @@
 "chat.quick.add.meeting" = "Meeting morgen um 15 Uhr hinzufügen";
 "chat.quick.free.time" = "Freie Zeit diese Woche finden";
 "chat.quick.tomorrow.plan" = "Morgen planen";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "Einrichtung erforderlich";
+"setup.subtitle" = "Schließe diese Schritte ab, um den KI-Assistenten zu nutzen";
+"setup.step1.title" = "AI CLI installieren";
+"setup.step2.title" = "Google Kalender verbinden";
+"setup.claude.desc" = "Lass Claude dir bei der Tagesplanung helfen";
+"setup.codex.desc" = "Nutze Codex für intelligente Vorschläge";
+"setup.google.desc" = "Synchronisiere Kalenderereignisse für intelligentere Planung";
+"setup.google.connect.button" = "Google Kalender verbinden";
+"setup.google.skip.hint" = "Du kannst es später in den Einstellungen verbinden";
+"setup.google.connected" = "Verbunden";
+"setup.complete" = "Alles bereit! Du kannst jetzt mit dem Chatten beginnen.";
+"setup.installed" = "Installiert";
+"setup.copy.command" = "Installationsbefehl kopieren";

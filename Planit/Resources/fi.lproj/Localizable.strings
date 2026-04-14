@@ -369,3 +369,18 @@
 "chat.quick.add.meeting" = "Lisää kokous huomenna klo 15";
 "chat.quick.free.time" = "Etsi vapaata aikaa tällä viikolla";
 "chat.quick.tomorrow.plan" = "Suunnittele huominen päivä";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "Asetukset vaaditaan";
+"setup.subtitle" = "Suorita nämä vaiheet käyttääksesi AI-avustajaa";
+"setup.step1.title" = "Asenna AI CLI";
+"setup.step2.title" = "Yhdistä Google Kalenteri";
+"setup.claude.desc" = "Pyydä Claudea auttamaan päiväsi suunnittelussa";
+"setup.codex.desc" = "Käytä Codexia älykkäisiin ehdotuksiin";
+"setup.google.desc" = "Synkronoi kalenteritapahtumat älykkäämpää aikataulutusta varten";
+"setup.google.connect.button" = "Yhdistä Google Kalenteri";
+"setup.google.skip.hint" = "Voit yhdistää myöhemmin Asetuksissa";
+"setup.google.connected" = "Yhdistetty";
+"setup.complete" = "Kaikki valmista! Voit aloittaa keskustelun nyt.";
+"setup.installed" = "Asennettu";
+"setup.copy.command" = "Kopioi asennuskomento";

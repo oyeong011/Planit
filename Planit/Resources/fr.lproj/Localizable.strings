@@ -369,3 +369,18 @@
 "chat.quick.add.meeting" = "Ajouter une réunion demain à 15h";
 "chat.quick.free.time" = "Trouver du temps libre cette semaine";
 "chat.quick.tomorrow.plan" = "Planifier ma journée de demain";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "Configuration requise";
+"setup.subtitle" = "Complétez ces étapes pour commencer à utiliser l'assistant IA";
+"setup.step1.title" = "Installer l'IA CLI";
+"setup.step2.title" = "Connecter Google Agenda";
+"setup.claude.desc" = "Demandez à Claude de vous aider à planifier votre journée";
+"setup.codex.desc" = "Utilisez Codex pour des suggestions intelligentes";
+"setup.google.desc" = "Synchronisez vos événements de calendrier pour une planification plus intelligente";
+"setup.google.connect.button" = "Connecter Google Agenda";
+"setup.google.skip.hint" = "Vous pouvez connecter plus tard dans les Paramètres";
+"setup.google.connected" = "Connecté";
+"setup.complete" = "Tout est prêt ! Vous pouvez commencer à discuter maintenant.";
+"setup.installed" = "Installé";
+"setup.copy.command" = "Copier la commande d'installation";

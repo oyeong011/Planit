@@ -369,3 +369,18 @@
 "chat.quick.add.meeting" = "Προσθήκη συνάντησης αύριο στις 15:00";
 "chat.quick.free.time" = "Εύρεση ελεύθερου χρόνου αυτή την εβδομάδα";
 "chat.quick.tomorrow.plan" = "Προγραμματισμός της αυριανής ημέρας";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "Απαιτείται ρύθμιση";
+"setup.subtitle" = "Ολοκληρώστε αυτά τα βήματα για να ξεκινήσετε τον AI βοηθό";
+"setup.step1.title" = "Εγκατάσταση AI CLI";
+"setup.step2.title" = "Σύνδεση Google Ημερολόγιο";
+"setup.claude.desc" = "Ζητήστε από τον Claude να βοηθήσει στον σχεδιασμό της ημέρας σας";
+"setup.codex.desc" = "Χρησιμοποιήστε το Codex για έξυπνες προτάσεις";
+"setup.google.desc" = "Συγχρονίστε τα συμβάντα ημερολογίου για πιο έξυπνο προγραμματισμό";
+"setup.google.connect.button" = "Σύνδεση Google Ημερολόγιο";
+"setup.google.skip.hint" = "Μπορείτε να συνδεθείτε αργότερα στις Ρυθμίσεις";
+"setup.google.connected" = "Συνδεδεμένο";
+"setup.complete" = "Όλα έτοιμα! Μπορείτε να ξεκινήσετε τη συνομιλία τώρα.";
+"setup.installed" = "Εγκατεστημένο";
+"setup.copy.command" = "Αντιγραφή εντολής εγκατάστασης";

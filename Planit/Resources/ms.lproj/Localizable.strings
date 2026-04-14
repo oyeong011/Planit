@@ -369,3 +369,18 @@
 "chat.quick.add.meeting" = "Tambah mesyuarat esok jam 3 petang";
 "chat.quick.free.time" = "Cari masa lapang minggu ini";
 "chat.quick.tomorrow.plan" = "Rancang hari saya esok";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "Persediaan Diperlukan";
+"setup.subtitle" = "Lengkapkan langkah-langkah ini untuk mula menggunakan pembantu AI";
+"setup.step1.title" = "Pasang AI CLI";
+"setup.step2.title" = "Sambungkan Google Kalendar";
+"setup.claude.desc" = "Minta Claude membantu merancang dan mengatur hari anda";
+"setup.codex.desc" = "Gunakan Codex untuk cadangan pintar";
+"setup.google.desc" = "Segerakkan acara kalendar untuk penjadualan yang lebih pintar";
+"setup.google.connect.button" = "Sambungkan Google Kalendar";
+"setup.google.skip.hint" = "Anda boleh menyambung kemudian dalam Tetapan";
+"setup.google.connected" = "Disambungkan";
+"setup.complete" = "Semua dah siap! Anda boleh mula berbual sekarang.";
+"setup.installed" = "Dipasang";
+"setup.copy.command" = "Salin arahan pemasangan";

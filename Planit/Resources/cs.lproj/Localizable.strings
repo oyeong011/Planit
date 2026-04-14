@@ -369,3 +369,18 @@
 "chat.quick.add.meeting" = "Přidat schůzku zítra ve 15:00";
 "chat.quick.free.time" = "Najít volný čas tento týden";
 "chat.quick.tomorrow.plan" = "Naplánovat zítřejší den";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "Vyžadováno nastavení";
+"setup.subtitle" = "Dokončete tyto kroky pro spuštění AI asistenta";
+"setup.step1.title" = "Instalace AI CLI";
+"setup.step2.title" = "Připojení Google Kalendáře";
+"setup.claude.desc" = "Nechte Claudea pomoci s plánováním vašeho dne";
+"setup.codex.desc" = "Používejte Codex pro chytrá doporučení";
+"setup.google.desc" = "Synchronizujte události kalendáře pro chytřejší plánování";
+"setup.google.connect.button" = "Připojit Google Kalendář";
+"setup.google.skip.hint" = "Připojit můžete později v Nastavení";
+"setup.google.connected" = "Připojeno";
+"setup.complete" = "Vše připraveno! Nyní můžete začít chatovat.";
+"setup.installed" = "Nainstalováno";
+"setup.copy.command" = "Kopírovat příkaz instalace";

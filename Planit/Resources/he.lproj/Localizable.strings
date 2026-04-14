@@ -369,3 +369,18 @@
 "chat.quick.add.meeting" = "הוסף פגישה מחר בשעה 15:00";
 "chat.quick.free.time" = "מצא זמן פנוי השבוע";
 "chat.quick.tomorrow.plan" = "תכנן את מחר שלי";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "נדרשת הגדרה";
+"setup.subtitle" = "השלם שלבים אלה כדי להתחיל להשתמש בעוזר הבינה המלאכותית";
+"setup.step1.title" = "התקן AI CLI";
+"setup.step2.title" = "חבר יומן Google";
+"setup.claude.desc" = "בקש מ-Claude לעזור לך לתכנן את יומך";
+"setup.codex.desc" = "השתמש ב-Codex להצעות חכמות";
+"setup.google.desc" = "סנכרן אירועי יומן לתזמון חכם יותר";
+"setup.google.connect.button" = "חבר יומן Google";
+"setup.google.skip.hint" = "אפשר לחבר מאוחר יותר בהגדרות";
+"setup.google.connected" = "מחובר";
+"setup.complete" = "הכל מוכן! אפשר להתחיל לשוחח עכשיו.";
+"setup.installed" = "מותקן";
+"setup.copy.command" = "העתק פקודת התקנה";
