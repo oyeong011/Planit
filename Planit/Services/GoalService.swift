@@ -86,13 +86,19 @@ final class GoalService: ObservableObject {
         completions[eventId]
     }
 
+    func removeCompletion(eventId: String) {
+        guard let record = completions.removeValue(forKey: eventId) else { return }
+        saveCompletions()
+        updateDailyMetrics(for: record.date)
+    }
+
     // MARK: - Daily Metrics
 
     private func updateDailyMetrics(for date: Date) {
         let key = Self.dateKey(date)
         let cal = Calendar.current
         let dayStart = cal.startOfDay(for: date)
-        let dayEnd = cal.date(byAdding: .day, value: 1, to: dayStart)!
+        guard let dayEnd = cal.date(byAdding: .day, value: 1, to: dayStart) else { return }
 
         let dayRecords = completions.values.filter {
             $0.date >= dayStart && $0.date < dayEnd
@@ -120,16 +126,25 @@ final class GoalService: ObservableObject {
 
     // MARK: - Progress
 
-    func weeklyCompletionRate() -> Double {
+    enum CompletionPeriod { case day, week, month, year }
+
+    func completionRate(for period: CompletionPeriod) -> Double {
         let cal = Calendar.current
         let today = cal.startOfDay(for: Date())
-        let weekAgo = cal.date(byAdding: .day, value: -7, to: today)!
-
-        let weekRecords = completions.values.filter { $0.date >= weekAgo }
-        guard !weekRecords.isEmpty else { return 0 }
-        let done = weekRecords.filter { $0.status == .done }.count
-        return Double(done) / Double(weekRecords.count)
+        let from: Date
+        switch period {
+        case .day:   from = today
+        case .week:  from = cal.date(byAdding: .day, value: -7, to: today) ?? today
+        case .month: from = cal.date(byAdding: .month, value: -1, to: today) ?? today
+        case .year:  from = cal.date(byAdding: .year, value: -1, to: today) ?? today
+        }
+        let records = completions.values.filter { $0.date >= from }
+        guard !records.isEmpty else { return 0 }
+        let done = records.filter { $0.status == .done }.count
+        return Double(done) / Double(records.count)
     }
+
+    func weeklyCompletionRate() -> Double { completionRate(for: .week) }
 
     func goalProgress(_ goalId: String) -> (hoursPlanned: Double, hoursActual: Double) {
         let records = completions.values.filter { $0.goalId == goalId }
@@ -146,7 +161,7 @@ final class GoalService: ObservableObject {
         guard let rec = goal.recurrence else { return 0 }
         let cal = Calendar.current
         let today = cal.startOfDay(for: Date())
-        let weekStart = cal.date(from: cal.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today))!
+        guard let weekStart = cal.date(from: cal.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today)) else { return 0 }
         let done = completions.values
             .filter { $0.goalId == goal.id && $0.date >= weekStart && $0.status == .done }
             .count

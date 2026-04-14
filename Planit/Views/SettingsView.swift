@@ -66,6 +66,8 @@ struct SettingsView: View {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(.secondary)
                         .font(.title3)
+                        .frame(width: 24, height: 24)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
@@ -112,6 +114,7 @@ struct SettingsView: View {
                 RoundedRectangle(cornerRadius: 7)
                     .fill(selectedSection == section ? Color.purple.opacity(0.12) : Color.clear)
             )
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -192,6 +195,7 @@ struct SettingsView: View {
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(profile.energyType == type ? Color.purple.opacity(0.4) : Color.clear, lineWidth: 1.5)
             )
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -228,6 +232,7 @@ struct SettingsView: View {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(profile.aggressiveness == mode ? Color.purple.opacity(0.08) : Color.clear)
             )
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -355,6 +360,7 @@ struct SettingsView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 9)
                         .background(RoundedRectangle(cornerRadius: 8).fill(Color.purple))
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
@@ -411,6 +417,7 @@ struct SettingsView: View {
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(isSelected ? Color.purple.opacity(0.35) : Color.clear, lineWidth: 1.5)
             )
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }

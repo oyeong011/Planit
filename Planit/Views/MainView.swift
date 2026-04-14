@@ -48,6 +48,7 @@ struct MainCalendarView: View {
             calendarService: vm.googleService
         ))
         let gs = GoalService()
+        vm.goalService = gs
         self._goalService = StateObject(wrappedValue: gs)
         self._reviewService = StateObject(wrappedValue: ReviewService(
             goalService: gs,
@@ -119,6 +120,7 @@ struct MainCalendarView: View {
                 ReviewView(
                     reviewService: reviewService,
                     goalService: goalService,
+                    viewModel: viewModel,
                     onCreateEvent: { title, start, end in
                         Task {
                             _ = try? await viewModel.googleService.createEvent(
@@ -155,6 +157,7 @@ struct MainCalendarView: View {
                 RoundedRectangle(cornerRadius: 5)
                     .fill(leftPanelMode == mode ? Color.purple.opacity(0.1) : Color.clear)
             )
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -278,11 +281,13 @@ struct CalendarGridView: View {
                                     todos: viewModel.todosForDate(date),
                                     categoryFor: { viewModel.category(for: $0) },
                                     onDrop: { payload, targetDate in
-                                        if payload.hasPrefix("todo:"),
-                                           let id = UUID(uuidString: String(payload.dropFirst(5))) {
+                                        switch CalendarDragPayload(payload) {
+                                        case .todo(let id):
                                             viewModel.moveTodo(id: id, toDate: targetDate)
-                                        } else if payload.hasPrefix("event:") {
-                                            viewModel.moveCalendarEvent(id: String(payload.dropFirst(6)), toDate: targetDate)
+                                        case .event(let id):
+                                            viewModel.moveCalendarEvent(id: id, toDate: targetDate)
+                                        case nil:
+                                            return
                                         }
                                         viewModel.selectedDate = targetDate
                                     }
@@ -632,6 +637,8 @@ struct CategoryManagerView: View {
                             Image(systemName: "xmark.circle.fill")
                                 .font(.system(size: 14))
                                 .foregroundStyle(.secondary)
+                                .frame(width: 24, height: 24)
+                                .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
                     }
@@ -1034,6 +1041,9 @@ struct InlineAddTodoForm: View {
                 Spacer()
                 Button { onCancel() } label: {
                     Text(String(localized: "common.cancel")).font(.system(size: 11)).foregroundStyle(.secondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .contentShape(Rectangle())
                 }.buttonStyle(.plain)
 
                 Button { submit() } label: {
@@ -1041,6 +1051,7 @@ struct InlineAddTodoForm: View {
                         .foregroundStyle(.white)
                         .padding(.horizontal, 14).padding(.vertical, 5)
                         .background(RoundedRectangle(cornerRadius: 6).fill(Color.blue))
+                        .contentShape(Rectangle())
                 }.buttonStyle(.plain)
             }
         }
@@ -1061,6 +1072,62 @@ struct InlineAddTodoForm: View {
     }
 }
 
+// MARK: - Drag Payload
+
+enum CalendarDragPayload {
+    case event(String)
+    case todo(UUID)
+
+    init?(_ raw: String) {
+        if raw.hasPrefix("event:") {
+            let id = String(raw.dropFirst("event:".count))
+            guard !id.isEmpty else { return nil }
+            self = .event(id)
+        } else if raw.hasPrefix("todo:") {
+            let rawID = String(raw.dropFirst("todo:".count))
+            guard let uuid = UUID(uuidString: rawID) else { return nil }
+            self = .todo(uuid)
+        } else {
+            return nil
+        }
+    }
+}
+
+// MARK: - Drag Ghost Preview
+
+/// 드래그 중 커서 옆에 표시되는 고스트 블록
+struct DragGhostRow: View {
+    let title: String
+    let color: Color
+    let subtitle: String
+
+    var body: some View {
+        HStack(spacing: 10) {
+            RoundedRectangle(cornerRadius: 2).fill(color).frame(width: 4)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                Text(subtitle)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .frame(width: 260)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color(nsColor: .controlBackgroundColor))
+                .shadow(color: .black.opacity(0.18), radius: 12, y: 6)
+        )
+        .opacity(0.92)
+    }
+}
+
 // MARK: - Event Row
 
 struct EventRowView: View {
@@ -1078,54 +1145,46 @@ struct EventRowView: View {
     }
 
     var body: some View {
-        HStack(spacing: 0) {
-            // 드래그 핸들 — 여기서만 드래그 가능 (ScrollView 제스처 충돌 방지)
-            Image(systemName: "line.3.horizontal")
-                .font(.system(size: 10))
-                .foregroundStyle(.secondary.opacity(0.35))
-                .frame(width: 22, height: 44)
-                .contentShape(Rectangle())
-                .draggable("event:\(event.id)")
+        HStack(spacing: 10) {
+            RoundedRectangle(cornerRadius: 2).fill(event.color).frame(width: 4)
 
-            HStack(spacing: 10) {
-                RoundedRectangle(cornerRadius: 2).fill(event.color).frame(width: 4)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(event.title)
-                        .font(.system(size: 14, weight: .medium))
-                        .strikethrough(isCompleted)
-                        .foregroundStyle(isCompleted ? .secondary : .primary)
-                    Text(timeText).font(.system(size: 11)).foregroundStyle(.secondary)
-                }
-
-                Spacer()
-
-                Button { onToggle?() } label: {
-                    ZStack {
-                        Circle()
-                            .stroke(isCompleted ? event.color : Color.secondary.opacity(0.4), lineWidth: 2)
-                            .frame(width: 22, height: 22)
-                        if isCompleted {
-                            Circle().fill(event.color.opacity(0.15)).frame(width: 22, height: 22)
-                            Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundStyle(event.color)
-                        }
-                    }
-                    .frame(width: 32, height: 32)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(event.title)
+                    .font(.system(size: 14, weight: .medium))
+                    .strikethrough(isCompleted)
+                    .foregroundStyle(isCompleted ? .secondary : .primary)
+                Text(timeText).font(.system(size: 11)).foregroundStyle(.secondary)
             }
-            .padding(.leading, 4)
-            .padding(.trailing, 12)
-            .padding(.vertical, 10)
-            .contentShape(Rectangle())
-            .onTapGesture { onTap() }
+
+            Spacer()
+
+            Button { onToggle?() } label: {
+                ZStack {
+                    Circle()
+                        .stroke(isCompleted ? event.color : Color.secondary.opacity(0.4), lineWidth: 2)
+                        .frame(width: 22, height: 22)
+                    if isCompleted {
+                        Circle().fill(event.color.opacity(0.15)).frame(width: 22, height: 22)
+                        Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundStyle(event.color)
+                    }
+                }
+                .frame(width: 32, height: 32)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
         }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 10)
                 .fill(Color(nsColor: .controlBackgroundColor))
                 .shadow(color: .black.opacity(0.04), radius: 2, y: 1)
         )
+        .contentShape(Rectangle())
+        .onTapGesture { onTap() }
+        .draggable("event:\(event.id)") {
+            DragGhostRow(title: event.title, color: event.color, subtitle: timeText)
+        }
     }
 }
 
@@ -1139,68 +1198,64 @@ struct TodoRowView: View {
     let onToggle: () -> Void
 
     var body: some View {
-        HStack(spacing: 0) {
-            // 드래그 핸들 — 여기서만 드래그 가능 (ScrollView 제스처 충돌 방지)
-            Image(systemName: "line.3.horizontal")
-                .font(.system(size: 10))
-                .foregroundStyle(.secondary.opacity(0.35))
-                .frame(width: 22, height: 44)
-                .contentShape(Rectangle())
-                .draggable("todo:\(todo.id.uuidString)")
+        HStack(spacing: 10) {
+            RoundedRectangle(cornerRadius: 2)
+                .fill(todo.source == .appleReminder ? Color.orange : category.color)
+                .frame(width: 4)
 
-            HStack(spacing: 10) {
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(todo.source == .appleReminder ? Color.orange : category.color)
-                    .frame(width: 4)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(todo.title)
-                        .font(.system(size: 14, weight: .medium))
-                        .strikethrough(todo.isCompleted)
-                        .foregroundStyle(todo.isCompleted ? .secondary : .primary)
-                    HStack(spacing: 4) {
-                        if todo.source == .appleReminder {
-                            Image(systemName: "bell.fill")
-                                .font(.system(size: 9)).foregroundStyle(.orange)
-                            Text(String(localized: "detail.reminders")).font(.system(size: 11)).foregroundStyle(.orange)
-                        } else {
-                            Text(category.name).font(.system(size: 11)).foregroundStyle(.secondary)
-                        }
-                        if todo.isRepeating {
-                            Image(systemName: "arrow.triangle.2.circlepath")
-                                .font(.system(size: 9)).foregroundStyle(.secondary)
-                        }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(todo.title)
+                    .font(.system(size: 14, weight: .medium))
+                    .strikethrough(todo.isCompleted)
+                    .foregroundStyle(todo.isCompleted ? .secondary : .primary)
+                HStack(spacing: 4) {
+                    if todo.source == .appleReminder {
+                        Image(systemName: "bell.fill")
+                            .font(.system(size: 9)).foregroundStyle(.orange)
+                        Text(String(localized: "detail.reminders")).font(.system(size: 11)).foregroundStyle(.orange)
+                    } else {
+                        Text(category.name).font(.system(size: 11)).foregroundStyle(.secondary)
+                    }
+                    if todo.isRepeating {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.system(size: 9)).foregroundStyle(.secondary)
                     }
                 }
-
-                Spacer()
-
-                Button { onToggle() } label: {
-                    let accentColor = todo.source == .appleReminder ? Color.orange : category.color
-                    ZStack {
-                        Circle()
-                            .stroke(todo.isCompleted ? accentColor : Color.secondary.opacity(0.4), lineWidth: 2)
-                            .frame(width: 22, height: 22)
-                        if todo.isCompleted {
-                            Circle().fill(accentColor.opacity(0.15)).frame(width: 22, height: 22)
-                            Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundStyle(accentColor)
-                        }
-                    }
-                    .frame(width: 32, height: 32)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
             }
-            .padding(.leading, 4)
-            .padding(.trailing, 12)
-            .padding(.vertical, 10)
-            .contentShape(Rectangle())
-            .onTapGesture { onTap() }
+
+            Spacer()
+
+            Button { onToggle() } label: {
+                let accentColor = todo.source == .appleReminder ? Color.orange : category.color
+                ZStack {
+                    Circle()
+                        .stroke(todo.isCompleted ? accentColor : Color.secondary.opacity(0.4), lineWidth: 2)
+                        .frame(width: 22, height: 22)
+                    if todo.isCompleted {
+                        Circle().fill(accentColor.opacity(0.15)).frame(width: 22, height: 22)
+                        Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundStyle(accentColor)
+                    }
+                }
+                .frame(width: 32, height: 32)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
         }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 10)
                 .fill(Color(nsColor: .controlBackgroundColor))
                 .shadow(color: .black.opacity(0.04), radius: 2, y: 1)
         )
+        .contentShape(Rectangle())
+        .onTapGesture { onTap() }
+        .draggable("todo:\(todo.id.uuidString)") {
+            DragGhostRow(
+                title: todo.title,
+                color: todo.source == .appleReminder ? Color.orange : category.color,
+                subtitle: todo.source == .appleReminder ? String(localized: "detail.reminders") : category.name
+            )
+        }
     }
 }

@@ -52,6 +52,7 @@ final class CalendarViewModel: ObservableObject {
 
     let authManager: GoogleAuthManager
     lazy var googleService = GoogleCalendarService(auth: authManager)
+    weak var goalService: GoalService?
     private let eventStore = EKEventStore()
     private let calendar = Calendar.current
     private let fileManager = FileManager.default
@@ -114,11 +115,14 @@ final class CalendarViewModel: ObservableObject {
         if let observer = notificationObserver {
             NotificationCenter.default.removeObserver(observer)
         }
+        if let observer = reminderObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 
-    /// Periodic refresh every 15 seconds
+    /// Periodic refresh every 60 seconds
     private func startPeriodicRefresh() {
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { [weak self] _ in
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.refreshEvents()
             }
@@ -399,6 +403,7 @@ final class CalendarViewModel: ObservableObject {
             do {
                 _ = try await googleService.deleteEvent(eventID: eventID)
                 completedEventIDs.remove(eventID)
+                goalService?.removeCompletion(eventId: eventID)
                 saveCompletedEvents()
                 fetchEventsFromGoogle(for: currentMonth)
             } catch {
@@ -408,6 +413,7 @@ final class CalendarViewModel: ObservableObject {
                 // Optimistic local removal
                 calendarEvents.removeAll { $0.id == eventID }
                 completedEventIDs.remove(eventID)
+                goalService?.removeCompletion(eventId: eventID)
                 saveCompletedEvents()
                 cacheEvents(calendarEvents)
             }
@@ -518,6 +524,7 @@ final class CalendarViewModel: ObservableObject {
         do {
             try eventStore.remove(ekEvent, span: .thisEvent)
             completedEventIDs.remove(eventID)
+            goalService?.removeCompletion(eventId: eventID)
             saveCompletedEvents()
             fetchEventsFromEventKit(for: currentMonth)
             return true
@@ -701,6 +708,14 @@ final class CalendarViewModel: ObservableObject {
         todos[index].isCompleted.toggle()
         saveTodos()
 
+        // 달성률 반영 — 항상 UUID 기반 고정 키 사용 (googleEventId는 나중에 할당될 수 있어 키가 불안정)
+        let completionKey = "todo:\(todos[index].id.uuidString)"
+        if todos[index].isCompleted {
+            goalService?.markCompletion(eventId: completionKey, goalId: nil, status: .done, plannedMinutes: 30)
+        } else {
+            goalService?.removeCompletion(eventId: completionKey)
+        }
+
         if authManager.isAuthenticated, let eventId = todos[index].googleEventId {
             let todo = todos[index]
             let prefix = todo.isCompleted ? "✅ " : ""
@@ -715,12 +730,14 @@ final class CalendarViewModel: ObservableObject {
     }
 
     func deleteTodo(id: UUID) {
-        if let todo = todos.first(where: { $0.id == id }),
-           let eventId = todo.googleEventId,
-           authManager.isAuthenticated {
-            Task {
-                _ = try? await googleService.deleteEvent(eventID: eventId)
-                self.refreshEvents()
+        if let todo = todos.first(where: { $0.id == id }) {
+            // 완료 기록 정리
+            goalService?.removeCompletion(eventId: "todo:\(id.uuidString)")
+            if let eventId = todo.googleEventId, authManager.isAuthenticated {
+                Task {
+                    _ = try? await googleService.deleteEvent(eventID: eventId)
+                    self.refreshEvents()
+                }
             }
         }
         todos.removeAll { $0.id == id }
@@ -818,8 +835,10 @@ final class CalendarViewModel: ObservableObject {
     func toggleEventCompleted(_ eventID: String) {
         if completedEventIDs.contains(eventID) {
             completedEventIDs.remove(eventID)
+            goalService?.removeCompletion(eventId: eventID)
         } else {
             completedEventIDs.insert(eventID)
+            goalService?.markCompletion(eventId: eventID, goalId: nil, status: .done, plannedMinutes: 60)
         }
         saveCompletedEvents()
     }

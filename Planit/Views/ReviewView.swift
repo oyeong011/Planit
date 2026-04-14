@@ -3,12 +3,14 @@ import SwiftUI
 struct ReviewView: View {
     @ObservedObject var reviewService: ReviewService
     @ObservedObject var goalService: GoalService
+    @ObservedObject var viewModel: CalendarViewModel
     let onCreateEvent: (String, Date, Date) -> Void
     let onDismiss: () -> Void
 
     @State private var isGenerating = false
     @State private var showPlanResult = false
     @State private var aiPlan: ReviewAIPlan?
+    @State private var selectedPeriod: GoalService.CompletionPeriod = .day
     // 저녁 리뷰 중 사용자가 마킹한 이벤트 추적
     @State private var reviewedItems: [(title: String, status: CompletionStatus, start: Date, end: Date)] = []
 
@@ -51,6 +53,8 @@ struct ReviewView: View {
                 Image(systemName: "xmark")
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(.secondary)
+                    .frame(width: 24, height: 24)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
         }
@@ -103,6 +107,9 @@ struct ReviewView: View {
                         Text("모두 내일로")
                             .font(.system(size: 11))
                             .foregroundStyle(.orange)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
@@ -175,6 +182,8 @@ struct ReviewView: View {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 20))
                         .foregroundStyle(.green)
+                        .frame(width: 28, height: 28)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .help("완료")
@@ -183,6 +192,8 @@ struct ReviewView: View {
                     Image(systemName: "arrow.right.circle.fill")
                         .font(.system(size: 20))
                         .foregroundStyle(.orange)
+                        .frame(width: 28, height: 28)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .help("내일로")
@@ -191,6 +202,8 @@ struct ReviewView: View {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 20))
                         .foregroundStyle(Color.secondary)
+                        .frame(width: 28, height: 28)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .help("건너뜀")
@@ -243,6 +256,9 @@ struct ReviewView: View {
                     Text("확인")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.purple)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
@@ -273,12 +289,15 @@ struct ReviewView: View {
             if suggestion.status != .accepted {
                 HStack(spacing: 6) {
                     Button { acceptSuggestion(at: index) } label: {
-                        Text("추가")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 4)
-                            .background(RoundedRectangle(cornerRadius: 5).fill(.purple))
+                        HStack {
+                            Text("추가")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(.white)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 4)
+                        .background(RoundedRectangle(cornerRadius: 5).fill(.purple))
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
 
@@ -286,6 +305,9 @@ struct ReviewView: View {
                         Text("건너뜀")
                             .font(.system(size: 11))
                             .foregroundStyle(.secondary)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
@@ -299,31 +321,116 @@ struct ReviewView: View {
                 : Color(nsColor: .controlBackgroundColor)))
     }
 
-    // MARK: - Weekly Progress
+    // MARK: - Progress Card
+
+    /// 기간별 (완료, 전체) 카운트 반환
+    private func progressCounts(for period: GoalService.CompletionPeriod) -> (done: Int, total: Int) {
+        // 그레고리력, 일요일 시작, minimumDaysInFirstWeek=1로 고정 (로케일 독립)
+        var cal = Calendar(identifier: .gregorian)
+        cal.firstWeekday = 1
+        cal.minimumDaysInFirstWeek = 1
+
+        let component: Calendar.Component
+        switch period {
+        case .day:   component = .day
+        case .week:  component = .weekOfYear
+        case .month: component = .month
+        case .year:  component = .year
+        }
+        guard let interval = cal.dateInterval(of: component, for: Date()) else { return (0, 0) }
+
+        // 할일로 등록된 Google 이벤트 ID — calendarEvents와 중복 제외
+        let todoEventIds = Set(viewModel.todos.compactMap { $0.googleEventId })
+        let completedIDs = viewModel.completedEventIDs
+
+        // 이벤트: 구간 겹침 테스트 (멀티데이·종일 이벤트 포함)
+        let events = viewModel.calendarEvents.filter { event in
+            guard !todoEventIds.contains(event.id) else { return false }
+            let eventEnd = event.endDate > event.startDate ? event.endDate : event.startDate.addingTimeInterval(1)
+            return event.startDate < interval.end && eventEnd > interval.start
+        }
+
+        // 할일: 모든 기간 동일 로직 — appleReminders는 캐시 날짜와 interval이 일치할 때만 포함됨
+        let localTodos = viewModel.todos.filter {
+            let d = cal.startOfDay(for: $0.date)
+            return d >= interval.start && d < interval.end
+        }
+        let reminderTodos = viewModel.appleReminders.filter {
+            let d = cal.startOfDay(for: $0.date)
+            return d >= interval.start && d < interval.end
+        }
+        let baseTodos = localTodos + reminderTodos
+
+        // 완료 판정: todo+event 쌍은 어느 쪽이든 완료면 done
+        let doneTodos = baseTodos.filter { todo in
+            todo.isCompleted || (todo.googleEventId.map { completedIDs.contains($0) } ?? false)
+        }.count
+        let doneEvents = events.filter { completedIDs.contains($0.id) }.count
+
+        return (doneTodos + doneEvents, baseTodos.count + events.count)
+    }
 
     private var weeklyProgressCard: some View {
-        let rate = goalService.weeklyCompletionRate()
-        let percent = Int(rate * 100)
+        let (done, total) = progressCounts(for: selectedPeriod)
+        let rate = total > 0 ? Double(done) / Double(total) : 0
 
-        return VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text("이번 주 달성률")
-                    .font(.system(size: 11, weight: .medium))
-                Spacer()
-                Text("\(percent)%")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(rate >= 0.7 ? .green : rate >= 0.4 ? .orange : .red)
-            }
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(Color.secondary.opacity(0.15))
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(rate >= 0.7 ? Color.green : rate >= 0.4 ? Color.orange : Color.red)
-                        .frame(width: geo.size.width * CGFloat(max(0, min(1, rate))))
+        return VStack(alignment: .leading, spacing: 8) {
+            // 기간 탭
+            HStack(spacing: 2) {
+                ForEach([
+                    (GoalService.CompletionPeriod.day, "오늘"),
+                    (.week, "이번주"),
+                    (.month, "이번달"),
+                    (.year, "올해"),
+                ], id: \.1) { period, label in
+                    Button { selectedPeriod = period } label: {
+                        Text(label)
+                            .font(.system(size: 10, weight: selectedPeriod == period ? .semibold : .regular))
+                            .foregroundStyle(selectedPeriod == period ? .white : .secondary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 3)
+                            .background(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(selectedPeriod == period ? Color.purple : Color.clear)
+                            )
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
                 }
             }
-            .frame(height: 6)
+            .padding(3)
+            .background(RoundedRectangle(cornerRadius: 6).fill(Color.secondary.opacity(0.1)))
+
+            if total > 0 {
+                HStack {
+                    Text("할일 달성률")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text("\(Int(rate * 100))%")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(rate >= 0.7 ? .green : rate >= 0.4 ? .orange : .red)
+                }
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 3).fill(Color.secondary.opacity(0.15))
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(rate >= 0.7 ? Color.green : rate >= 0.4 ? Color.orange : Color.red)
+                            .frame(width: geo.size.width * CGFloat(rate))
+                            .animation(.easeInOut(duration: 0.3), value: rate)
+                    }
+                }
+                .frame(height: 6)
+                Text("\(done) / \(total) 완료")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+            } else {
+                Text("등록된 할일이 없어요")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 8)
+            }
         }
         .padding(10)
         .background(RoundedRectangle(cornerRadius: 8).fill(Color(nsColor: .controlBackgroundColor)))
@@ -402,6 +509,9 @@ struct ReviewView: View {
                     Text("닫기")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.indigo)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
