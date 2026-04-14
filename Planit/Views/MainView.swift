@@ -798,40 +798,37 @@ struct ModalEventDetail: View {
                         Text(viewModel.isEventCompleted(event.id) ? String(localized: "common.completed") : String(localized: "common.incomplete")).font(.system(size: 13)).foregroundStyle(.secondary)
                     }
 
-                    // 캘린더 카테고리 매핑 (이 캘린더의 모든 이벤트에 적용)
-                    if !event.calendarID.isEmpty {
-                        let mappedCatID = viewModel.calendarCategoryMappings[event.calendarID]?.categoryID
-                        Divider()
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("이 캘린더의 카테고리")
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundStyle(.secondary)
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 6) {
-                                    // 없음 버튼
-                                    Button {
-                                        viewModel.setCalendarCategory(calendarID: event.calendarID, calendarName: event.calendarName, categoryID: nil)
-                                    } label: {
-                                        Text("없음")
-                                            .font(.system(size: 11))
-                                            .padding(.horizontal, 8).padding(.vertical, 4)
-                                            .background(RoundedRectangle(cornerRadius: 5).fill(mappedCatID == nil ? Color.secondary.opacity(0.3) : Color.secondary.opacity(0.1)))
-                                            .foregroundStyle(mappedCatID == nil ? .primary : .secondary)
-                                    }.buttonStyle(.plain)
+                    // 이벤트 카테고리 매핑 (이 이벤트 독립적으로 적용)
+                    let mappedCatID = viewModel.eventCategoryMappings[event.id]?.categoryID
+                    Divider()
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("카테고리")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.secondary)
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 6) {
+                                Button {
+                                    viewModel.setEventCategory(eventID: event.id, eventTitle: event.title, categoryID: nil)
+                                } label: {
+                                    Text("없음")
+                                        .font(.system(size: 11))
+                                        .padding(.horizontal, 8).padding(.vertical, 4)
+                                        .background(RoundedRectangle(cornerRadius: 5).fill(mappedCatID == nil ? Color.secondary.opacity(0.3) : Color.secondary.opacity(0.1)))
+                                        .foregroundStyle(mappedCatID == nil ? .primary : .secondary)
+                                }.buttonStyle(.plain)
 
-                                    ForEach(viewModel.categories) { cat in
-                                        Button {
-                                            viewModel.setCalendarCategory(calendarID: event.calendarID, calendarName: event.calendarName, categoryID: cat.id)
-                                        } label: {
-                                            HStack(spacing: 4) {
-                                                Circle().fill(cat.color).frame(width: 8, height: 8)
-                                                Text(cat.name).font(.system(size: 11))
-                                            }
-                                            .padding(.horizontal, 8).padding(.vertical, 4)
-                                            .background(RoundedRectangle(cornerRadius: 5).fill(mappedCatID == cat.id ? cat.color.opacity(0.25) : cat.color.opacity(0.08)))
-                                            .foregroundStyle(mappedCatID == cat.id ? cat.color : .secondary)
-                                        }.buttonStyle(.plain)
-                                    }
+                                ForEach(viewModel.categories) { cat in
+                                    Button {
+                                        viewModel.setEventCategory(eventID: event.id, eventTitle: event.title, categoryID: cat.id)
+                                    } label: {
+                                        HStack(spacing: 4) {
+                                            Circle().fill(cat.color).frame(width: 8, height: 8)
+                                            Text(cat.name).font(.system(size: 11))
+                                        }
+                                        .padding(.horizontal, 8).padding(.vertical, 4)
+                                        .background(RoundedRectangle(cornerRadius: 5).fill(mappedCatID == cat.id ? cat.color.opacity(0.25) : cat.color.opacity(0.08)))
+                                        .foregroundStyle(mappedCatID == cat.id ? cat.color : .secondary)
+                                    }.buttonStyle(.plain)
                                 }
                             }
                         }

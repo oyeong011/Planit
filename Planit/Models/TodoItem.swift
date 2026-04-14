@@ -137,17 +137,17 @@ struct CalendarEvent: Identifiable, Hashable {
     var categoryID: UUID? = nil   // 파생 상태 — 매핑 적용 후 채워짐
 }
 
-// MARK: - Calendar Category Mapping
+// MARK: - Event Category Mapping (이벤트별 독립 매핑)
 
-struct CalendarCategoryMapping: Codable, Hashable {
-    var calendarID: String       // 안정적인 키 (source:identifier)
-    var calendarName: String     // 표시용 스냅샷
+struct EventCategoryMapping: Codable, Hashable {
+    var eventID: String          // CalendarEvent.id (이벤트별 고유 키)
+    var eventTitle: String       // 표시용 스냅샷
     var categoryID: UUID
 }
 
-struct CalendarCategoryMappingsStore: Codable {
+struct EventCategoryMappingsStore: Codable {
     var version: Int = 1
-    var mappings: [CalendarCategoryMapping] = []
+    var mappings: [EventCategoryMapping] = []
 }
 
 // MARK: - Offline Cache Models
