@@ -35,6 +35,8 @@ struct SettingsView: View {
 
     @State private var selectedSection: SettingsSection = .profile
     @State private var profile: UserProfile
+    @State private var apiKeyInput: String = ""
+    @State private var apiKeySaved: Bool = false
 
     init(goalService: GoalService, authManager: GoogleAuthManager, aiService: AIService,
          viewModel: CalendarViewModel, onDismiss: @escaping () -> Void) {
@@ -352,6 +354,10 @@ struct SettingsView: View {
                 }
             }
 
+            settingsCard(String(localized: "settings.ai.apikey.card")) {
+                apiKeySection
+            }
+
             settingsCard(String(localized: "settings.ai.save.card")) {
                 Button {
                     aiService.saveSettings()
@@ -371,7 +377,13 @@ struct SettingsView: View {
 
     private func aiProviderRow(_ provider: AIProvider) -> some View {
         let isSelected = aiService.provider == provider
-        let isAvailable: Bool = provider == .claude ? aiService.claudeAvailable : aiService.codexAvailable
+        let isAvailable: Bool = {
+            switch provider {
+            case .claude:    return aiService.claudeAvailable
+            case .codex:     return aiService.codexAvailable
+            case .claudeAPI: return !aiService.claudeAPIKey.isEmpty
+            }
+        }()
 
         return Button {
             aiService.provider = provider
@@ -426,8 +438,63 @@ struct SettingsView: View {
 
     private func providerDesc(_ provider: AIProvider) -> String {
         switch provider {
-        case .claude: return String(localized: "settings.ai.claude.desc")
-        case .codex:  return String(localized: "settings.ai.codex.desc")
+        case .claude:    return String(localized: "settings.ai.claude.desc")
+        case .codex:     return String(localized: "settings.ai.codex.desc")
+        case .claudeAPI: return String(localized: "settings.ai.claudeapi.desc")
+        }
+    }
+
+    private var apiKeySection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 6) {
+                Image(systemName: "key.fill")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.purple)
+                Text(String(localized: "settings.ai.apikey.label"))
+                    .font(.system(size: 13, weight: .medium))
+                Spacer()
+                if !aiService.claudeAPIKey.isEmpty {
+                    HStack(spacing: 4) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 10))
+                            .foregroundStyle(.green)
+                        Text(String(localized: "settings.ai.apikey.set"))
+                            .font(.system(size: 10))
+                            .foregroundStyle(.green)
+                    }
+                }
+            }
+
+            HStack(spacing: 8) {
+                SecureField(String(localized: "settings.ai.apikey.placeholder"), text: $apiKeyInput)
+                    .font(.system(size: 12, design: .monospaced))
+                    .textFieldStyle(.roundedBorder)
+                    .onAppear {
+                        // 기존 키 표시 (일부만)
+                        if !aiService.claudeAPIKey.isEmpty {
+                            apiKeyInput = aiService.claudeAPIKey
+                        }
+                    }
+
+                Button {
+                    aiService.saveClaudeAPIKey(apiKeyInput)
+                    apiKeySaved = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { apiKeySaved = false }
+                } label: {
+                    Text(apiKeySaved ? String(localized: "common.saved") : String(localized: "common.save"))
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 5)
+                        .background(RoundedRectangle(cornerRadius: 6).fill(apiKeySaved ? Color.green : Color.purple))
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+
+            Text(String(localized: "settings.ai.apikey.hint"))
+                .font(.system(size: 10))
+                .foregroundStyle(.secondary)
         }
     }
 

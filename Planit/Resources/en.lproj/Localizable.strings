@@ -371,3 +371,16 @@
 "chat.quick.add.meeting" = "Add a meeting tomorrow at 3pm";
 "chat.quick.free.time" = "Find free time this week";
 "chat.quick.tomorrow.plan" = "Plan my day for tomorrow";
+
+/* ===== Claude API Provider ===== */
+"chat.apikey.needed.title" = "Claude API Key Required";
+"chat.apikey.needed.hint" = "Enter your Claude API key in Settings to use AI without installing CLI tools";
+"ai.provider.apikey.needed" = "API key not set";
+"ai.provider.apikey.set" = "API key set";
+"settings.ai.claudeapi.desc" = "Direct API — no CLI install needed";
+"settings.ai.apikey.card" = "Claude API Key";
+"settings.ai.apikey.label" = "Claude API Key";
+"settings.ai.apikey.set" = "Key saved";
+"settings.ai.apikey.placeholder" = "sk-ant-...";
+"settings.ai.apikey.hint" = "Get your API key at console.anthropic.com. Stored securely in Keychain.";
+"common.saved" = "Saved";

@@ -371,3 +371,16 @@
 "chat.quick.add.meeting" = "내일 오후 3시에 회의 추가해줘";
 "chat.quick.free.time" = "이번 주 비어있는 시간 찾아줘";
 "chat.quick.tomorrow.plan" = "내일 일정 계획 세워줘";
+
+/* ===== Claude API Provider ===== */
+"chat.apikey.needed.title" = "Claude API 키 필요";
+"chat.apikey.needed.hint" = "CLI 설치 없이 AI를 사용하려면 설정에서 Claude API 키를 입력하세요";
+"ai.provider.apikey.needed" = "API 키 미설정";
+"ai.provider.apikey.set" = "API 키 설정됨";
+"settings.ai.claudeapi.desc" = "직접 API 연동 — CLI 설치 불필요";
+"settings.ai.apikey.card" = "Claude API 키";
+"settings.ai.apikey.label" = "Claude API 키";
+"settings.ai.apikey.set" = "키 저장됨";
+"settings.ai.apikey.placeholder" = "sk-ant-...";
+"settings.ai.apikey.hint" = "console.anthropic.com에서 API 키를 발급받으세요. 키체인에 안전하게 저장됩니다.";
+"common.saved" = "저장됨";

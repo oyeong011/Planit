@@ -6,18 +6,29 @@ import PDFKit
 enum AIProvider: String, CaseIterable, Codable {
     case claude = "Claude Code"
     case codex = "Codex"
+    case claudeAPI = "Claude API"
 
     var icon: String {
         switch self {
-        case .claude: return "c.circle.fill"
-        case .codex: return "o.circle.fill"
+        case .claude:     return "c.circle.fill"
+        case .codex:      return "o.circle.fill"
+        case .claudeAPI:  return "sparkles"
         }
     }
 
     var defaultModel: String {
         switch self {
-        case .claude: return "claude-sonnet-4-20250514"
-        case .codex: return "gpt-5.4"
+        case .claude:     return "claude-sonnet-4-20250514"
+        case .codex:      return "gpt-5.4"
+        case .claudeAPI:  return "claude-sonnet-4-5-20251101"
+        }
+    }
+
+    /// CLI 설치 없이 API 키만으로 동작하는 프로바이더
+    var requiresCLI: Bool {
+        switch self {
+        case .claude, .codex: return true
+        case .claudeAPI:      return false
         }
     }
 }
@@ -113,6 +124,7 @@ final class AIService: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var claudeAvailable: Bool = false
     @Published var codexAvailable: Bool = false
+    @Published var claudeAPIKey: String = ""        // Claude API 키 (키체인 로드)
     /// Pending actions awaiting user approval before execution
     @Published var pendingActions: [CalendarAction] = []
     @Published var pendingMessage: String?
@@ -130,13 +142,16 @@ final class AIService: ObservableObject {
     /// ViewModel이 이미 로드한 캐시 이벤트 (API 재호출 없이 사용)
     var cachedCalendarEvents: [CalendarEvent] = []
 
+    private static let claudeAPIKeyAccount = "planit.claude.apikey"
+
     nonisolated(unsafe) private static let cliTimeout: TimeInterval = 90
     nonisolated(unsafe) private static let maxOutputBytes = 1_048_576  // 1 MB
 
     var isConfigured: Bool {
         switch provider {
-        case .claude: return claudeAvailable
-        case .codex: return codexAvailable
+        case .claude:    return claudeAvailable
+        case .codex:     return codexAvailable
+        case .claudeAPI: return !claudeAPIKey.isEmpty
         }
     }
 
@@ -144,7 +159,23 @@ final class AIService: ObservableObject {
         self.authManager = authManager
         self.calendarService = calendarService
         loadSettings()
+        // Claude API 키 로드 (키체인 1회)
+        claudeAPIKey = KeychainHelper.loadAPIKey(account: Self.claudeAPIKeyAccount) ?? ""
         checkCLIAvailability()
+    }
+
+    func saveClaudeAPIKey(_ key: String) {
+        claudeAPIKey = key.trimmingCharacters(in: .whitespacesAndNewlines)
+        if claudeAPIKey.isEmpty {
+            KeychainHelper.deleteAPIKey(account: Self.claudeAPIKeyAccount)
+        } else {
+            KeychainHelper.saveAPIKey(claudeAPIKey, account: Self.claudeAPIKeyAccount)
+        }
+        // API 키가 있으면 자동으로 claudeAPI 프로바이더로 전환
+        if !claudeAPIKey.isEmpty && provider == .claude && !claudeAvailable {
+            provider = .claudeAPI
+            saveSettings()
+        }
     }
 
     // MARK: - CLI Detection (resolve absolute paths, no login shell)
@@ -640,20 +671,16 @@ final class AIService: ObservableObject {
         switch provider {
         case .claude:
             guard let path = claudePath else { return [ChatMessage(role: .assistant, content: "Claude Code가 설치되지 않았습니다. /opt/homebrew/bin 또는 ~/.local/bin에 claude가 있는지 확인하세요.")] }
-            // --system-prompt: 시스템 프롬프트 분리, --no-session-persistence: 세션 파일 충돌 방지
-            // --image: 이미지 파일 직접 전달 (비전 분석)
             var claudeArgs = ["-p", "--output-format", "text",
                               "--no-session-persistence",
                               "--system-prompt", systemPrompt]
             for img in imageAttachments {
                 claudeArgs += ["--image", img.url.path]
             }
-            // system: "" — 시스템 프롬프트는 이미 args에 포함됨
             rawResponse = await sendCLI(executablePath: path, args: claudeArgs,
                                          system: "", userMessage: augmentedMessage, history: history)
         case .codex:
             guard let path = codexPath else { return [ChatMessage(role: .assistant, content: "Codex CLI가 설치되지 않았습니다. /opt/homebrew/bin 또는 ~/.local/bin에 codex가 있는지 확인하세요.")] }
-            // codex는 -i/--image 플래그로 이미지 첨부 지원, --ephemeral로 세션 저장 방지
             var codexArgs = ["exec", "--sandbox", "read-only", "--skip-git-repo-check", "--ephemeral"]
             for img in imageAttachments {
                 codexArgs += ["--image", img.url.path]
@@ -661,6 +688,17 @@ final class AIService: ObservableObject {
             rawResponse = await sendCLI(executablePath: path, args: codexArgs,
                                          system: systemPrompt, userMessage: augmentedMessage, history: history,
                                          isCodex: true)
+        case .claudeAPI:
+            guard !claudeAPIKey.isEmpty else {
+                return [ChatMessage(role: .assistant, content: "Claude API 키가 설정되지 않았습니다. 설정에서 API 키를 입력해주세요.")]
+            }
+            rawResponse = await sendClaudeAPI(
+                apiKey: claudeAPIKey,
+                system: systemPrompt,
+                userMessage: augmentedMessage,
+                imageAttachments: imageAttachments,
+                history: history
+            )
         }
 
         let (message, actions) = parseAIResponse(rawResponse)
@@ -908,6 +946,86 @@ final class AIService: ObservableObject {
         }
 
         return resultLines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    // MARK: - Claude API (Direct HTTP — no CLI required)
+
+    private func sendClaudeAPI(
+        apiKey: String,
+        system: String,
+        userMessage: String,
+        imageAttachments: [ChatAttachment],
+        history: [ChatMessage]
+    ) async -> String {
+        let url = URL(string: "https://api.anthropic.com/v1/messages")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+        request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        // 히스토리 → messages 배열 (최근 10턴)
+        var messages: [[String: Any]] = []
+        for msg in history.suffix(20) where msg.role == .user || msg.role == .assistant {
+            messages.append([
+                "role": msg.role == .user ? "user" : "assistant",
+                "content": msg.content
+            ])
+        }
+
+        // 현재 사용자 메시지 (이미지 포함 가능)
+        var userContent: [Any] = []
+        for img in imageAttachments {
+            if let data = try? Data(contentsOf: img.url) {
+                let base64 = data.base64EncodedString()
+                let ext = img.url.pathExtension.lowercased()
+                let mediaType = ext == "jpg" || ext == "jpeg" ? "image/jpeg"
+                    : ext == "png" ? "image/png"
+                    : ext == "gif" ? "image/gif" : "image/webp"
+                userContent.append([
+                    "type": "image",
+                    "source": ["type": "base64", "media_type": mediaType, "data": base64]
+                ])
+            }
+        }
+        userContent.append(["type": "text", "text": userMessage])
+        messages.append(["role": "user", "content": userContent])
+
+        let body: [String: Any] = [
+            "model": AIProvider.claudeAPI.defaultModel,
+            "max_tokens": 2048,
+            "system": system,
+            "messages": messages
+        ]
+
+        guard let httpBody = try? JSONSerialization.data(withJSONObject: body) else {
+            return "요청 직렬화 실패"
+        }
+        request.httpBody = httpBody
+        request.timeoutInterval = 60
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            if let http = response as? HTTPURLResponse, http.statusCode != 200 {
+                // API 오류 — 사용자에게 친절한 메시지
+                if http.statusCode == 401 {
+                    return "API 키가 유효하지 않습니다. 설정에서 Claude API 키를 확인해주세요."
+                }
+                if http.statusCode == 429 {
+                    return "요청이 너무 많습니다. 잠시 후 다시 시도해주세요."
+                }
+                return "API 오류 (\(http.statusCode)). 잠시 후 다시 시도해주세요."
+            }
+            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let content = json["content"] as? [[String: Any]],
+                  let first = content.first,
+                  let text = first["text"] as? String else {
+                return "응답을 파싱하지 못했습니다."
+            }
+            return text
+        } catch {
+            return "네트워크 오류: \(error.localizedDescription)"
+        }
     }
 
 }
