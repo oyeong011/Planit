@@ -532,6 +532,9 @@ struct ChatView: View {
         let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty || !attachments.isEmpty else { return }
 
+        // ViewModel의 캐시 이벤트를 AIService에 주입 (API 재호출 방지)
+        aiService.cachedCalendarEvents = viewModel.calendarEvents
+
         let currentAttachments = attachments
         let displayText = text.isEmpty
             ? currentAttachments.map { "[\($0.fileName)]" }.joined(separator: " ")

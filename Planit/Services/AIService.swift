@@ -127,6 +127,9 @@ final class AIService: ObservableObject {
     /// Known valid event IDs from the last calendar context fetch
     private var knownEventIds: Set<String> = []
 
+    /// ViewModel이 이미 로드한 캐시 이벤트 (API 재호출 없이 사용)
+    var cachedCalendarEvents: [CalendarEvent] = []
+
     nonisolated(unsafe) private static let cliTimeout: TimeInterval = 90
     nonisolated(unsafe) private static let maxOutputBytes = 1_048_576  // 1 MB
 
@@ -223,68 +226,81 @@ final class AIService: ObservableObject {
     // MARK: - Calendar Context
 
     private func buildCalendarContext() async -> (context: String, eventIds: Set<String>) {
-        guard let service = calendarService else { return ("캘린더 미연결", []) }
-
         let cal = Calendar.current
         let today = cal.startOfDay(for: Date())
+
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM-dd HH:mm"
+        fmt.timeZone = TimeZone(identifier: "Asia/Seoul")
+
+        let dayFmt = DateFormatter()
+        dayFmt.dateFormat = "yyyy-MM-dd (E)"
+        dayFmt.locale = Locale(identifier: "ko_KR")
+        dayFmt.timeZone = TimeZone(identifier: "Asia/Seoul")
 
         var context = "=== 향후 2주 캘린더 일정 ===\n"
         var ids = Set<String>()
 
-        do {
-            var allEvents: [CalendarEvent] = []
-            for dayOffset in 0..<14 {
-                guard let date = cal.date(byAdding: .day, value: dayOffset, to: today) else { continue }
-                let events = try await service.fetchEvents(for: date)
-                allEvents.append(contentsOf: events)
+        // 1순위: ViewModel에서 주입된 캐시 이벤트 (API 재호출 불필요)
+        let sourceEvents: [CalendarEvent]
+        if !cachedCalendarEvents.isEmpty {
+            // 오늘~14일 이내 이벤트만 필터
+            guard let deadline = cal.date(byAdding: .day, value: 14, to: today) else {
+                return ("캘린더 미연결", [])
             }
-
-            var seen = Set<String>()
-            let unique = allEvents.filter { seen.insert($0.id).inserted }
-            let sorted = unique.sorted { $0.startDate < $1.startDate }
-
-            let fmt = DateFormatter()
-            fmt.dateFormat = "yyyy-MM-dd HH:mm"
-            fmt.timeZone = TimeZone(identifier: "Asia/Seoul")
-
-            let dayFmt = DateFormatter()
-            dayFmt.dateFormat = "yyyy-MM-dd (E)"
-            dayFmt.locale = Locale(identifier: "ko_KR")
-            dayFmt.timeZone = TimeZone(identifier: "Asia/Seoul")
-
-            if sorted.isEmpty {
-                context += "일정 없음\n"
-            } else {
-                // 날짜별 그룹핑
-                var currentDay = ""
-                for event in sorted {
-                    ids.insert(event.id)
-                    let dayStr = dayFmt.string(from: event.startDate)
-                    if dayStr != currentDay {
-                        currentDay = dayStr
-                        context += "\n### \(dayStr)\n"
-                    }
-                    // 제목 새니타이징: 줄바꿈/제어문자 제거, 80자 제한
-                    let safeTitle = String(event.title
-                        .replacingOccurrences(of: "\n", with: " ")
-                        .replacingOccurrences(of: "\r", with: "")
-                        .replacingOccurrences(of: "```", with: "")
-                        .prefix(80))
-                    if event.isAllDay {
-                        context += "- [\(event.id)] 종일 | \(safeTitle)\n"
-                    } else {
-                        context += "- [\(event.id)] \(fmt.string(from: event.startDate)) ~ \(fmt.string(from: event.endDate)) | \(safeTitle)\n"
-                    }
+            sourceEvents = cachedCalendarEvents.filter {
+                $0.startDate >= today && $0.startDate < deadline
+            }
+        } else if let service = calendarService {
+            // 2순위: Google API (캐시 없을 때만)
+            var fetched: [CalendarEvent] = []
+            do {
+                for dayOffset in 0..<14 {
+                    guard let date = cal.date(byAdding: .day, value: dayOffset, to: today) else { continue }
+                    let events = try await service.fetchEvents(for: date)
+                    fetched.append(contentsOf: events)
                 }
+            } catch {
+                // 인증 오류 등 - 빈 일정으로 계속 진행 (오류 노출 X)
+                context += "일정 없음 (캘린더 연결 필요)\n"
+                context += "\n오늘: \(dayFmt.string(from: Date()))\n"
+                return (String(context.prefix(20_000)), [])
             }
-            context += "\n오늘: \(dayFmt.string(from: Date()))\n"
-        } catch {
-            context += "일정 로드 실패: \(error.localizedDescription)\n"
+            sourceEvents = fetched
+        } else {
+            return ("캘린더 미연결", [])
         }
 
-        // context 크기 제한: 20KB 초과 시 먼 미래 끝부분을 잘라냄 (오늘~가까운 날짜 우선 유지)
-        let cappedContext = String(context.prefix(20_000))
-        return (cappedContext, ids)
+        var seen = Set<String>()
+        let unique = sourceEvents.filter { seen.insert($0.id).inserted }
+        let sorted = unique.sorted { $0.startDate < $1.startDate }
+
+        if sorted.isEmpty {
+            context += "일정 없음\n"
+        } else {
+            var currentDay = ""
+            for event in sorted {
+                ids.insert(event.id)
+                let dayStr = dayFmt.string(from: event.startDate)
+                if dayStr != currentDay {
+                    currentDay = dayStr
+                    context += "\n### \(dayStr)\n"
+                }
+                let safeTitle = String(event.title
+                    .replacingOccurrences(of: "\n", with: " ")
+                    .replacingOccurrences(of: "\r", with: "")
+                    .replacingOccurrences(of: "```", with: "")
+                    .prefix(80))
+                if event.isAllDay {
+                    context += "- [\(event.id)] 종일 | \(safeTitle)\n"
+                } else {
+                    context += "- [\(event.id)] \(fmt.string(from: event.startDate)) ~ \(fmt.string(from: event.endDate)) | \(safeTitle)\n"
+                }
+            }
+        }
+        context += "\n오늘: \(dayFmt.string(from: Date()))\n"
+
+        return (String(context.prefix(20_000)), ids)
     }
 
     private func buildSystemPrompt(calendarContext: String) -> String {
