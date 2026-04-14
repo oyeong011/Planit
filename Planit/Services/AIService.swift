@@ -321,7 +321,7 @@ final class AIService: ObservableObject {
 
         ## 일정 충돌 감지
         - 새 일정의 시간대가 기존 일정과 겹치는지 확인해 (겹침 = 새 시작 < 기존 종료 AND 새 종료 > 기존 시작)
-        - 겹치면 message에 "⚠️ [기존 일정 제목] (HH:mm~HH:mm)과 시간이 겹칩니다" 경고 포함
+        - 겹치면 message에 "[기존 일정 제목] (HH:mm~HH:mm)과 시간이 겹칩니다" 경고 포함
         - 종일 일정끼리의 겹침은 경고하지 않아도 됨
 
         ## 일정 생성
@@ -331,7 +331,7 @@ final class AIService: ObservableObject {
 
         ## 일정 수정/삭제
         - 삭제/수정 시 반드시 위 일정 목록의 [eventId]를 사용해
-        - ⚠️ 일정 목록에 없는 eventId는 절대 사용하지 마. 목록에 없으면 "해당 일정을 찾을 수 없습니다. 일정을 새로고침해주세요."로 응답
+        - 일정 목록에 없는 eventId는 절대 사용하지 마. 목록에 없으면 "해당 일정을 찾을 수 없습니다. 일정을 새로고침해주세요."로 응답
         - 여러 일정 중 애매하면 어떤 일정인지 되물어
         - "취소해줘", "지워줘" → delete / "바꿔줘", "옮겨줘", "시간 변경" → update
         - "전부 삭제", "다 지워" 같은 일괄 삭제 요청 → 거부하고 "하나씩 지정해주세요" 안내
@@ -404,7 +404,7 @@ final class AIService: ObservableObject {
         // 일괄 삭제 방지: 2개 이상 delete 요청 시 거부
         let deleteCount = actions.filter { $0.action == "delete" }.count
         if deleteCount >= 2 {
-            return [ChatMessage(role: .toolCall, content: "⚠️ 일괄 삭제(\(deleteCount)건)는 안전을 위해 거부되었습니다. 하나씩 삭제해주세요.")]
+            return [ChatMessage(role: .toolCall, content: "일괄 삭제(\(deleteCount)건)는 안전을 위해 거부되었습니다. 하나씩 삭제해주세요.")]
         }
         let fmt = ISO8601DateFormatter()
         fmt.formatOptions = [.withInternetDateTime]
@@ -419,7 +419,7 @@ final class AIService: ObservableObject {
             // Validate eventId for delete/update against known IDs
             if action.action == "delete" || action.action == "update" {
                 guard let eventId = action.eventId, knownEventIds.contains(eventId) else {
-                    results.append(ChatMessage(role: .toolCall, content: "⚠️ \(action.action) 실패: 유효하지 않은 eventId"))
+                    results.append(ChatMessage(role: .toolCall, content: "\(action.action) 실패: 유효하지 않은 eventId"))
                     continue
                 }
             }
@@ -432,23 +432,23 @@ final class AIService: ObservableObject {
                       let endStr = action.endDate,
                       let start = parseDate(startStr),
                       let end = parseDate(endStr) else {
-                    results.append(ChatMessage(role: .toolCall, content: "⚠️ 생성 실패: 잘못된 파라미터"))
+                    results.append(ChatMessage(role: .toolCall, content: "생성 실패: 잘못된 파라미터"))
                     continue
                 }
                 do {
                     _ = try await service.createEvent(title: rawTitle, startDate: start, endDate: end, isAllDay: action.isAllDay ?? false)
-                    results.append(ChatMessage(role: .toolCall, content: "✅ 생성: \(rawTitle)"))
+                    results.append(ChatMessage(role: .toolCall, content: "생성: \(rawTitle)"))
                 } catch {
-                    results.append(ChatMessage(role: .toolCall, content: "⚠️ 생성 실패: \(error.localizedDescription)"))
+                    results.append(ChatMessage(role: .toolCall, content: "생성 실패: \(error.localizedDescription)"))
                 }
 
             case "delete":
                 let eventId = action.eventId!
                 do {
                     let ok = try await service.deleteEvent(eventID: eventId)
-                    results.append(ChatMessage(role: .toolCall, content: ok ? "✅ 삭제 완료" : "⚠️ 삭제 실패"))
+                    results.append(ChatMessage(role: .toolCall, content: ok ? "삭제 완료" : "삭제 실패"))
                 } catch {
-                    results.append(ChatMessage(role: .toolCall, content: "⚠️ 삭제 실패: \(error.localizedDescription)"))
+                    results.append(ChatMessage(role: .toolCall, content: "삭제 실패: \(error.localizedDescription)"))
                 }
 
             case "update":
@@ -462,18 +462,17 @@ final class AIService: ObservableObject {
                     if let endStr = action.endDate, let e = parseDate(endStr) {
                         endDate = e
                     } else {
-                        endDate = s.addingTimeInterval(3600)  // Default 1 hour
+                        endDate = s.addingTimeInterval(3600)
                     }
                 } else {
-                    // No dates provided — need both for API, skip with error
-                    results.append(ChatMessage(role: .toolCall, content: "⚠️ 수정 실패: 날짜 정보 없음"))
+                    results.append(ChatMessage(role: .toolCall, content: "수정 실패: 날짜 정보 없음"))
                     continue
                 }
                 do {
                     let ok = try await service.updateEvent(eventID: eventId, title: updateTitle, startDate: startDate, endDate: endDate, isAllDay: action.isAllDay ?? false)
-                    results.append(ChatMessage(role: .toolCall, content: ok ? "✅ 수정 완료" : "⚠️ 수정 실패"))
+                    results.append(ChatMessage(role: .toolCall, content: ok ? "수정 완료" : "수정 실패"))
                 } catch {
-                    results.append(ChatMessage(role: .toolCall, content: "⚠️ 수정 실패: \(error.localizedDescription)"))
+                    results.append(ChatMessage(role: .toolCall, content: "수정 실패: \(error.localizedDescription)"))
                 }
 
             default:
@@ -636,7 +635,7 @@ final class AIService: ObservableObject {
             pendingMessage = message
             let summary = actions.map { "\($0.action): \($0.title ?? "?")" }.joined(separator: "\n")
             results.append(ChatMessage(role: .assistant, content: message))
-            results.append(ChatMessage(role: .toolCall, content: "⚠️ 아래 작업을 실행할까요?\n\(summary)\n\n확인하려면 '확인' 또는 '실행'을 입력하세요."))
+            results.append(ChatMessage(role: .toolCall, content: "아래 작업을 실행할까요?\n\(summary)"))
         } else if !message.isEmpty {
             results.append(ChatMessage(role: .assistant, content: message))
         }

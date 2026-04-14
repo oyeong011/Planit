@@ -126,16 +126,25 @@ final class GoalService: ObservableObject {
 
     // MARK: - Progress
 
-    func weeklyCompletionRate() -> Double {
+    enum CompletionPeriod { case day, week, month, year }
+
+    func completionRate(for period: CompletionPeriod) -> Double {
         let cal = Calendar.current
         let today = cal.startOfDay(for: Date())
-        let weekAgo = cal.date(byAdding: .day, value: -7, to: today)!
-
-        let weekRecords = completions.values.filter { $0.date >= weekAgo }
-        guard !weekRecords.isEmpty else { return 0 }
-        let done = weekRecords.filter { $0.status == .done }.count
-        return Double(done) / Double(weekRecords.count)
+        let from: Date
+        switch period {
+        case .day:   from = today
+        case .week:  from = cal.date(byAdding: .day, value: -7, to: today)!
+        case .month: from = cal.date(byAdding: .month, value: -1, to: today)!
+        case .year:  from = cal.date(byAdding: .year, value: -1, to: today)!
+        }
+        let records = completions.values.filter { $0.date >= from }
+        guard !records.isEmpty else { return 0 }
+        let done = records.filter { $0.status == .done }.count
+        return Double(done) / Double(records.count)
     }
+
+    func weeklyCompletionRate() -> Double { completionRate(for: .week) }
 
     func goalProgress(_ goalId: String) -> (hoursPlanned: Double, hoursActual: Double) {
         let records = completions.values.filter { $0.goalId == goalId }
