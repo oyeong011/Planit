@@ -369,6 +369,8 @@
 "chat.quick.add.meeting" = "Додати зустріч завтра о 15:00";
 "chat.quick.free.time" = "Знайти вільний час цього тижня";
 "chat.quick.tomorrow.plan" = "Планувати завтрашній день";
+"chat.attach.hint" = "Прикріпити зображення або PDF (макс. 5, 20 МБ)";
+"chat.attach.picker.message" = "Виберіть зображення або PDF для прикріплення";
 
 /* ===== Onboarding Setup ===== */
 "setup.title" = "Потрібне налаштування";

@@ -369,6 +369,8 @@
 "chat.quick.add.meeting" = "Aggiungi riunione domani alle 15";
 "chat.quick.free.time" = "Trova tempo libero questa settimana";
 "chat.quick.tomorrow.plan" = "Pianifica la mia giornata di domani";
+"chat.attach.hint" = "Allega un'immagine o un PDF (max 5, 20 MB)";
+"chat.attach.picker.message" = "Seleziona immagini o PDF da allegare";
 
 /* ===== Onboarding Setup ===== */
 "setup.title" = "Configurazione richiesta";

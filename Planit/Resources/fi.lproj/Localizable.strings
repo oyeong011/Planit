@@ -369,6 +369,8 @@
 "chat.quick.add.meeting" = "Lisää kokous huomenna klo 15";
 "chat.quick.free.time" = "Etsi vapaata aikaa tällä viikolla";
 "chat.quick.tomorrow.plan" = "Suunnittele huominen päivä";
+"chat.attach.hint" = "Liitä kuva tai PDF (enintään 5, 20 Mt)";
+"chat.attach.picker.message" = "Valitse liitettävät kuvat tai PDF-tiedostot";
 
 /* ===== Onboarding Setup ===== */
 "setup.title" = "Asetukset vaaditaan";

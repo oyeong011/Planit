@@ -529,8 +529,15 @@ final class AIService: ObservableObject {
         // Try all JSON blocks in the response (there might be multiple ```json blocks)
         var searchStart = cleaned.startIndex
         while let jsonRange = cleaned.range(of: "```json", options: .caseInsensitive, range: searchStart..<cleaned.endIndex) {
-            // Find the newline after ```json
-            let contentStart = cleaned.index(after: cleaned[jsonRange.upperBound...].firstIndex(of: "\n") ?? jsonRange.upperBound)
+            // Find the newline after ```json — guard against missing newline or trailing boundary
+            let afterFence = jsonRange.upperBound
+            guard afterFence < cleaned.endIndex,
+                  let newlineIdx = cleaned[afterFence...].firstIndex(of: "\n"),
+                  cleaned.index(after: newlineIdx) <= cleaned.endIndex else {
+                searchStart = afterFence
+                continue
+            }
+            let contentStart = cleaned.index(after: newlineIdx)
             if let endRange = cleaned.range(of: "\n```", range: contentStart..<cleaned.endIndex) {
                 let jsonStr = String(cleaned[contentStart..<endRange.lowerBound])
                 if let result = Self.tryParseJSON(jsonStr) {
@@ -781,49 +788,14 @@ final class AIService: ObservableObject {
             return "CLI 실행 실패: \(error.localizedDescription)"
         }
 
-        // Write input to stdin, then close
-        if let inputData = input.data(using: .utf8) {
-            inPipe.fileHandleForWriting.write(inputData)
-        }
-        inPipe.fileHandleForWriting.closeFile()
-
         // Streamed output collection with cap
+        // NSLock으로 비동기 readabilityHandler 간 데이터 레이스 방지
         var outBuffer = Data()
         var errBuffer = Data()
-        let outputCapReached = DispatchSemaphore(value: 0)
         var capHit = false
+        let bufferLock = NSLock()
 
-        outPipe.fileHandleForReading.readabilityHandler = { handle in
-            let chunk = handle.availableData
-            if chunk.isEmpty {
-                handle.readabilityHandler = nil
-                return
-            }
-            if outBuffer.count + chunk.count > maxOutputBytes {
-                outBuffer.append(chunk.prefix(maxOutputBytes - outBuffer.count))
-                capHit = true
-                handle.readabilityHandler = nil
-                // Terminate process to avoid pipe backpressure blocking
-                if proc.isRunning { proc.terminate() }
-                outputCapReached.signal()
-            } else {
-                outBuffer.append(chunk)
-            }
-        }
-
-        errPipe.fileHandleForReading.readabilityHandler = { handle in
-            let chunk = handle.availableData
-            if chunk.isEmpty {
-                handle.readabilityHandler = nil
-                return
-            }
-            // Cap stderr at 64KB
-            if errBuffer.count < 65536 {
-                errBuffer.append(chunk.prefix(65536 - errBuffer.count))
-            }
-        }
-
-        // Timeout: SIGTERM after timeout, SIGKILL after grace period
+        // Timeout: stdin 쓰기 전에 타임아웃 설치 — 프로세스가 일찍 종료해도 write가 블록되지 않도록
         let killQueue = DispatchQueue(label: "planit.cli.timeout")
         let termTimer = DispatchSource.makeTimerSource(queue: killQueue)
         termTimer.schedule(deadline: .now() + cliTimeout)
@@ -841,6 +813,45 @@ final class AIService: ObservableObject {
         }
         killTimer.resume()
 
+        // Write input to stdin, then close
+        if let inputData = input.data(using: .utf8) {
+            inPipe.fileHandleForWriting.write(inputData)
+        }
+        inPipe.fileHandleForWriting.closeFile()
+
+        outPipe.fileHandleForReading.readabilityHandler = { handle in
+            let chunk = handle.availableData
+            if chunk.isEmpty {
+                handle.readabilityHandler = nil
+                return
+            }
+            bufferLock.lock()
+            defer { bufferLock.unlock() }
+            if outBuffer.count + chunk.count > maxOutputBytes {
+                outBuffer.append(chunk.prefix(maxOutputBytes - outBuffer.count))
+                capHit = true
+                handle.readabilityHandler = nil
+                // Terminate process to avoid pipe backpressure blocking
+                if proc.isRunning { proc.terminate() }
+            } else {
+                outBuffer.append(chunk)
+            }
+        }
+
+        errPipe.fileHandleForReading.readabilityHandler = { handle in
+            let chunk = handle.availableData
+            if chunk.isEmpty {
+                handle.readabilityHandler = nil
+                return
+            }
+            // Cap stderr at 64KB
+            bufferLock.lock()
+            defer { bufferLock.unlock() }
+            if errBuffer.count < 65536 {
+                errBuffer.append(chunk.prefix(65536 - errBuffer.count))
+            }
+        }
+
         proc.waitUntilExit()
         termTimer.cancel()
         killTimer.cancel()
@@ -849,13 +860,18 @@ final class AIService: ObservableObject {
         outPipe.fileHandleForReading.readabilityHandler = nil
         errPipe.fileHandleForReading.readabilityHandler = nil
 
+        bufferLock.lock()
         var output = String(data: outBuffer, encoding: .utf8) ?? ""
-        if capHit {
+        let didCapHit = capHit
+        let finalErrBuffer = errBuffer
+        bufferLock.unlock()
+
+        if didCapHit {
             output += "\n... (출력이 잘렸습니다)"
         }
 
         if proc.terminationStatus != 0 {
-            let errStr = String(data: errBuffer, encoding: .utf8) ?? ""
+            let errStr = String(data: finalErrBuffer, encoding: .utf8) ?? ""
             return output.isEmpty ? "오류: \(errStr)" : output
         }
 

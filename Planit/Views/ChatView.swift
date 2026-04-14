@@ -723,18 +723,17 @@ struct ChatView: View {
         inputText = ""
         attachments = []
 
-        // 전송 후 임시 paste 파일 정리
-        let tmpPasteDir = FileManager.default.temporaryDirectory.appendingPathComponent("calen-paste")
-        for att in currentAttachments {
-            if att.url.path.hasPrefix(tmpPasteDir.path) {
-                try? FileManager.default.removeItem(at: att.url)
-            }
-        }
-
         Task {
             let response = await aiService.sendMessage(text, attachments: currentAttachments, history: Array(messages.dropLast()))
             messages.append(contentsOf: response)
             viewModel.refreshEvents()
+            // 전송 완료 후 임시 paste 파일 정리 — send가 파일을 읽은 뒤에 삭제
+            let tmpPasteDir = FileManager.default.temporaryDirectory.appendingPathComponent("calen-paste")
+            for att in currentAttachments {
+                if att.url.path.hasPrefix(tmpPasteDir.path) {
+                    try? FileManager.default.removeItem(at: att.url)
+                }
+            }
         }
     }
 }

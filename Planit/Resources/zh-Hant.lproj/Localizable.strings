@@ -369,6 +369,8 @@
 "chat.quick.add.meeting" = "明天下午3點新增會議";
 "chat.quick.free.time" = "找出本週的空閒時間";
 "chat.quick.tomorrow.plan" = "幫我規劃明天的日程";
+"chat.attach.hint" = "附加圖片或 PDF（最多 5 個，20 MB）";
+"chat.attach.picker.message" = "選擇要附加的圖片或 PDF";
 
 /* ===== Onboarding Setup ===== */
 "setup.title" = "需要設定";

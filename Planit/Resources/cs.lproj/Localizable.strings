@@ -369,6 +369,8 @@
 "chat.quick.add.meeting" = "Přidat schůzku zítra ve 15:00";
 "chat.quick.free.time" = "Najít volný čas tento týden";
 "chat.quick.tomorrow.plan" = "Naplánovat zítřejší den";
+"chat.attach.hint" = "Připojit obrázek nebo PDF (max 5, 20 MB)";
+"chat.attach.picker.message" = "Vyberte obrázky nebo PDF soubory k připojení";
 
 /* ===== Onboarding Setup ===== */
 "setup.title" = "Vyžadováno nastavení";

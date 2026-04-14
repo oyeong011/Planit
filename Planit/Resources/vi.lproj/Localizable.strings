@@ -369,6 +369,8 @@
 "chat.quick.add.meeting" = "Thêm cuộc họp vào 3 giờ chiều ngày mai";
 "chat.quick.free.time" = "Tìm thời gian rảnh trong tuần này";
 "chat.quick.tomorrow.plan" = "Lên kế hoạch cho ngày mai";
+"chat.attach.hint" = "Đính kèm hình ảnh hoặc PDF (tối đa 5, 20 MB)";
+"chat.attach.picker.message" = "Chọn hình ảnh hoặc PDF để đính kèm";
 
 /* ===== Onboarding Setup ===== */
 "setup.title" = "Cần thiết lập";

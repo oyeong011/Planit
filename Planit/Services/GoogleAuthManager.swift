@@ -202,6 +202,9 @@ final class GoogleAuthManager: ObservableObject {
     }
 
     func logout() {
+        // 진행 중인 토큰 갱신 취소 — 갱신 완료 후 토큰이 재저장되는 것을 방지
+        refreshTask?.cancel()
+        refreshTask = nil
         accessToken = nil
         refreshToken = nil
         tokenExpiry = nil
@@ -390,6 +393,9 @@ final class GoogleAuthManager: ObservableObject {
         request.httpBody = body.data(using: .utf8)
 
         let (data, response) = try await URLSession.shared.data(for: request)
+        // 네트워크 응답 대기 중 logout()이 호출됐으면 토큰 저장을 중단
+        try Task.checkCancellation()
+
         if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
             throw AuthError.tokenExchangeFailed("Refresh HTTP \((response as? HTTPURLResponse)?.statusCode ?? 0)")
         }

@@ -131,15 +131,20 @@ enum KeychainHelper {
 
     static func migrateIfNeeded() {
         guard !UserDefaults.standard.bool(forKey: migrationDoneKey) else { return }
-        migrateFromFileStorage()
-        migrateFromIndividualKeychainItems()
-        UserDefaults.standard.set(true, forKey: migrationDoneKey)
+        let fileOk = migrateFromFileStorage()
+        let keychainOk = migrateFromIndividualKeychainItems()
+        // 마이그레이션 완료 플래그는 두 작업 모두 성공하거나 마이그레이션할 데이터가 없을 때만 설정
+        if fileOk && keychainOk {
+            UserDefaults.standard.set(true, forKey: migrationDoneKey)
+        }
     }
 
-    private static func migrateFromFileStorage() {
-        guard let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else { return }
+    /// 파일 스토리지에서 마이그레이션. 마이그레이션할 데이터가 없거나 성공하면 true 반환.
+    @discardableResult
+    private static func migrateFromFileStorage() -> Bool {
+        guard let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else { return true }
         let tokenDir = support.appendingPathComponent("Planit/tokens", isDirectory: true)
-        guard FileManager.default.fileExists(atPath: tokenDir.path) else { return }
+        guard FileManager.default.fileExists(atPath: tokenDir.path) else { return true }
 
         var tokens = loadAuthTokens()
         var filesToDelete: [URL] = []
@@ -161,16 +166,20 @@ enum KeychainHelper {
             tokens.tokenExpiry = t
             filesToDelete.append(expiryPath)
         }
-        if !filesToDelete.isEmpty && saveAuthTokens(tokens) {
-            filesToDelete.forEach { try? FileManager.default.removeItem(at: $0) }
-        }
+        guard !filesToDelete.isEmpty else { return true }
+        // 저장 성공 후에만 원본 파일 삭제
+        guard saveAuthTokens(tokens) else { return false }
+        filesToDelete.forEach { try? FileManager.default.removeItem(at: $0) }
         let contents = (try? FileManager.default.contentsOfDirectory(atPath: tokenDir.path)) ?? []
         if contents.isEmpty { try? FileManager.default.removeItem(at: tokenDir) }
+        return true
     }
 
-    private static func migrateFromIndividualKeychainItems() {
+    /// 개별 Keychain 항목에서 마이그레이션. 마이그레이션할 데이터가 없거나 성공하면 true 반환.
+    @discardableResult
+    private static func migrateFromIndividualKeychainItems() -> Bool {
         if loadItem(account: tokenAccount) != nil &&
-           loadItem(account: credentialsAccount) != nil { return }
+           loadItem(account: credentialsAccount) != nil { return true }
 
         func legacyLoad(_ key: String) -> String? {
             let query: [String: Any] = [
@@ -195,15 +204,21 @@ enum KeychainHelper {
             tokens.tokenExpiry = t
             legacyTokenKeys.append("planit.tokenExpiry")
         }
-        if !legacyTokenKeys.isEmpty && saveAuthTokens(tokens) {
-            legacyTokenKeys.forEach { deleteItem(account: $0) }
+        var tokensOk = true
+        if !legacyTokenKeys.isEmpty {
+            tokensOk = saveAuthTokens(tokens)
+            if tokensOk { legacyTokenKeys.forEach { deleteItem(account: $0) } }
         }
 
+        var credsOk = true
         if let id = legacyLoad("planit.oauth.clientId"),
-           let secret = legacyLoad("planit.oauth.clientSecret"),
-           saveCredentials(OAuthCredentials(clientID: id, clientSecret: secret)) {
-            deleteItem(account: "planit.oauth.clientId")
-            deleteItem(account: "planit.oauth.clientSecret")
+           let secret = legacyLoad("planit.oauth.clientSecret") {
+            credsOk = saveCredentials(OAuthCredentials(clientID: id, clientSecret: secret))
+            if credsOk {
+                deleteItem(account: "planit.oauth.clientId")
+                deleteItem(account: "planit.oauth.clientSecret")
+            }
         }
+        return tokensOk && credsOk
     }
 }

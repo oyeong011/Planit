@@ -83,6 +83,8 @@ final class CalendarViewModel: ObservableObject {
     private var dateChangeTimer: Timer?
 
     private var notificationObserver: Any?
+    /// syncPendingEdits 재진입 방지 플래그
+    private var isSyncingPendingEdits = false
 
     init(authManager: GoogleAuthManager) {
         self.authManager = authManager
@@ -462,13 +464,24 @@ final class CalendarViewModel: ObservableObject {
     // MARK: - EventKit (fallback when not using Google API)
 
     private func observeCalendarChanges() {
+        // 기존 observer 제거 후 재등록 — 중복 리스너 누수 방지
+        if let existing = notificationObserver {
+            NotificationCenter.default.removeObserver(existing)
+        }
         notificationObserver = NotificationCenter.default.addObserver(
             forName: .EKEventStoreChanged,
             object: eventStore,
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
-                self?.fetchEventsFromEventKit(for: self?.currentMonth ?? Date())
+                guard let self else { return }
+                // Google 인증 상태일 때 EventKit만 불러오면 Google 이벤트가 유실되므로
+                // refreshEvents()를 통해 적절한 소스에서 로드
+                if self.authManager.isAuthenticated {
+                    self.refreshEvents()
+                } else {
+                    self.fetchEventsFromEventKit(for: self.currentMonth)
+                }
             }
         }
     }
@@ -1055,10 +1068,19 @@ final class CalendarViewModel: ObservableObject {
     /// Sync all pending offline edits to Google Calendar
     func syncPendingEdits() async {
         guard !pendingEdits.isEmpty, authManager.isAuthenticated else { return }
+        guard !isSyncingPendingEdits else { return }  // 재진입 방지
+        isSyncingPendingEdits = true
+        defer { isSyncingPendingEdits = false }
+
+        // 처리할 배치를 스냅샷하고 pendingEdits를 즉시 비움
+        // → await 구간에 새로 추가된 편집이 remaining 덮어쓰기로 유실되는 문제 방지
+        let batch = pendingEdits
+        pendingEdits = []
+        savePendingEdits()
 
         var remaining: [PendingCalendarEdit] = []
 
-        for edit in pendingEdits {
+        for edit in batch {
             do {
                 switch edit.action {
                 case "create":
@@ -1084,8 +1106,9 @@ final class CalendarViewModel: ObservableObject {
             }
         }
 
-        pendingEdits = remaining
-        pendingEditsCount = remaining.count
+        // 실패한 편집 + sync 도중 새로 추가된 편집을 합산
+        pendingEdits = remaining + pendingEdits
+        pendingEditsCount = pendingEdits.count
         savePendingEdits()
     }
 }

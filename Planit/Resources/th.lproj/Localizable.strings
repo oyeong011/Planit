@@ -369,6 +369,8 @@
 "chat.quick.add.meeting" = "เพิ่มการประชุมพรุ่งนี้บ่าย 3 โมง";
 "chat.quick.free.time" = "หาเวลาว่างในสัปดาห์นี้";
 "chat.quick.tomorrow.plan" = "วางแผนวันพรุ่งนี้";
+"chat.attach.hint" = "แนบรูปภาพหรือ PDF (สูงสุด 5 ไฟล์, 20 MB)";
+"chat.attach.picker.message" = "เลือกรูปภาพหรือ PDF เพื่อแนบ";
 
 /* ===== Onboarding Setup ===== */
 "setup.title" = "ต้องการการตั้งค่า";
