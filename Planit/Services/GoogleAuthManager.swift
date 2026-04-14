@@ -42,10 +42,8 @@ final class GoogleAuthManager: ObservableObject {
     private var refreshTask: Task<String, Error>?
 
     init() {
-        // Suppress SIGPIPE process-wide (socket writes to closed connections)
         signal(SIGPIPE, SIG_IGN)
-        // Migrate old file-based tokens to macOS Keychain (one-time)
-        KeychainHelper.migrateFromFileStorage()
+        KeychainHelper.migrateIfNeeded()
         loadCredentials()
         loadTokens()
     }
@@ -53,15 +51,14 @@ final class GoogleAuthManager: ObservableObject {
     // MARK: - Credentials
 
     private func loadCredentials() {
-        // 1. Try Keychain (preferred)
-        if let id = KeychainHelper.load(key: "planit.oauth.clientId"),
-           let secret = KeychainHelper.load(key: "planit.oauth.clientSecret") {
-            clientID = id
-            clientSecret = secret
+        // 1. Consolidated Keychain entry
+        if let creds = KeychainHelper.loadCredentials() {
+            clientID = creds.clientID
+            clientSecret = creds.clientSecret
             return
         }
 
-        // 2. Migrate from legacy plaintext file to Keychain
+        // 2. Legacy plaintext JSON file → migrate to Keychain
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         let legacyPath = support.appendingPathComponent("Planit/google_credentials.json")
         if let data = try? Data(contentsOf: legacyPath),
@@ -69,16 +66,14 @@ final class GoogleAuthManager: ObservableObject {
            let id = json["client_id"], let secret = json["client_secret"] {
             clientID = id
             clientSecret = secret
-            // Save to Keychain; only remove plaintext file if both writes succeed
-            let savedId = KeychainHelper.save(key: "planit.oauth.clientId", value: id)
-            let savedSecret = KeychainHelper.save(key: "planit.oauth.clientSecret", value: secret)
-            if savedId && savedSecret {
+            let creds = KeychainHelper.OAuthCredentials(clientID: id, clientSecret: secret)
+            if KeychainHelper.saveCredentials(creds) {
                 try? FileManager.default.removeItem(at: legacyPath)
             }
             return
         }
 
-        // 3. Check bundle (development only)
+        // 3. Bundle credentials (development only)
         #if DEBUG
         if let bundlePath = Bundle.main.path(forResource: "google_credentials", ofType: "json"),
            let data = try? Data(contentsOf: URL(fileURLWithPath: bundlePath)),
@@ -86,8 +81,7 @@ final class GoogleAuthManager: ObservableObject {
            let id = json["client_id"], let secret = json["client_secret"] {
             clientID = id
             clientSecret = secret
-            KeychainHelper.save(key: "planit.oauth.clientId", value: id)
-            KeychainHelper.save(key: "planit.oauth.clientSecret", value: secret)
+            KeychainHelper.saveCredentials(KeychainHelper.OAuthCredentials(clientID: id, clientSecret: secret))
         }
         #endif
     }
@@ -95,8 +89,7 @@ final class GoogleAuthManager: ObservableObject {
     func setupCredentials(clientID: String, clientSecret: String) {
         self.clientID = clientID
         self.clientSecret = clientSecret
-        KeychainHelper.save(key: "planit.oauth.clientId", value: clientID)
-        KeychainHelper.save(key: "planit.oauth.clientSecret", value: clientSecret)
+        KeychainHelper.saveCredentials(KeychainHelper.OAuthCredentials(clientID: clientID, clientSecret: clientSecret))
     }
 
     var hasCredentials: Bool { !clientID.isEmpty && !clientSecret.isEmpty }
@@ -104,22 +97,22 @@ final class GoogleAuthManager: ObservableObject {
     // MARK: - Token Management
 
     private func loadTokens() {
-        accessToken = KeychainHelper.load(key: "planit.accessToken")
-        refreshToken = KeychainHelper.load(key: "planit.refreshToken")
-        userEmail = KeychainHelper.load(key: "planit.userEmail")
-        if let s = KeychainHelper.load(key: "planit.tokenExpiry"), let t = Double(s) {
-            tokenExpiry = Date(timeIntervalSince1970: t)
-        }
+        let tokens = KeychainHelper.loadAuthTokens()
+        accessToken  = tokens.accessToken
+        refreshToken = tokens.refreshToken
+        userEmail    = tokens.userEmail
+        if let t = tokens.tokenExpiry { tokenExpiry = Date(timeIntervalSince1970: t) }
         isAuthenticated = refreshToken != nil
     }
 
     private func saveTokens() {
-        if let t = accessToken { KeychainHelper.save(key: "planit.accessToken", value: t) }
-        if let t = refreshToken { KeychainHelper.save(key: "planit.refreshToken", value: t) }
-        if let e = tokenExpiry {
-            KeychainHelper.save(key: "planit.tokenExpiry", value: "\(e.timeIntervalSince1970)")
-        }
-        if let email = userEmail { KeychainHelper.save(key: "planit.userEmail", value: email) }
+        let tokens = KeychainHelper.AuthTokens(
+            accessToken:  accessToken,
+            refreshToken: refreshToken,
+            tokenExpiry:  tokenExpiry.map { $0.timeIntervalSince1970 },
+            userEmail:    userEmail
+        )
+        KeychainHelper.saveAuthTokens(tokens)
     }
 
     func getValidToken() async throws -> String {
@@ -214,10 +207,7 @@ final class GoogleAuthManager: ObservableObject {
         tokenExpiry = nil
         userEmail = nil
         isAuthenticated = false
-        KeychainHelper.delete(key: "planit.accessToken")
-        KeychainHelper.delete(key: "planit.refreshToken")
-        KeychainHelper.delete(key: "planit.tokenExpiry")
-        KeychainHelper.delete(key: "planit.userEmail")
+        KeychainHelper.deleteAuthTokens()
     }
 
     // MARK: - Loopback Server

@@ -223,3 +223,136 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "Günlük";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "Sabah";
+"energy.type.evening" = "Akşam";
+"energy.type.balanced" = "Dengeli";
+
+/* ===== Aggressiveness ===== */
+"aggressiveness.manual" = "Manuel";
+"aggressiveness.assist" = "Destekli";
+"aggressiveness.semiauto" = "Yarı-Otomatik";
+"aggressiveness.auto" = "Otomatik";
+
+/* ===== Settings View ===== */
+"settings.title" = "Ayarlar";
+"settings.autosave" = "Değişiklikler otomatik kaydedildi";
+"settings.section.profile" = "Profil";
+"settings.section.schedule" = "Program";
+"settings.section.ai" = "AI Ayarları";
+"settings.section.integrations" = "Entegrasyonlar";
+"settings.section.notifications" = "Bildirimler";
+"settings.section.advanced" = "Gelişmiş";
+"settings.profile.subtitle" = "Kişisel ritminizi ve çalışma tarzınızı yapılandırın";
+"settings.energy.card" = "Enerji Düzeni";
+"settings.energy.desc" = "Zirve odaklanma sürenizi seçin. AI bu dönemde önemli görevleri planlayacak.";
+"settings.pace.card" = "Program Hızı";
+"settings.pace.desc" = "AI'nın öneriler yaparken programınızı ne kadar agresif doldurduğunu belirler.";
+"settings.schedule.subtitle" = "Çalışma saatlerinizi ve günlük odaklanma kapasitenizi ayarlayın";
+"settings.work.card" = "Çalışma Saatleri";
+"settings.work.start.label" = "Başlangıç";
+"settings.work.end.label" = "Bitiş";
+"settings.lunch.start.label" = "Öğle Başlangıcı";
+"settings.lunch.end.label" = "Öğle Bitişi";
+"settings.work.hours.format" = "%d saat çalışma";
+"settings.commute.card" = "Yolculuk Süresi";
+"settings.commute.label" = "Tek yönlü yolculuk süresi";
+"settings.commute.minutes.format" = "%d dak";
+"settings.commute.roundtrip.format" = "Gidiş-dönüş %d dak · Günlük odak süresinden hariç";
+"settings.capacity.card" = "Günlük Odaklanma Kapasitesi";
+"settings.capacity.weekday" = "Hafta içi";
+"settings.capacity.weekend" = "Hafta sonu";
+"settings.capacity.hours.format" = "%d sa";
+"settings.capacity.hours.minutes.format" = "%d sa %d dak";
+"settings.ai.subtitle" = "Program analizi ve planlama için AI seçin";
+"settings.ai.engine.card" = "AI Motoru";
+"settings.ai.status.card" = "Mevcut Durum";
+"settings.ai.save.card" = "Kaydet";
+"settings.ai.installed.badge" = "Yüklü";
+"settings.ai.not.installed.badge" = "Yüklü Değil";
+"settings.ai.claude.installed.detail" = "Yüklü — Güçlü doğal dil anlama";
+"settings.ai.claude.install.hint" = "Gerekli: brew install claude";
+"settings.ai.codex.installed.detail" = "Yüklü — Kod için optimize edilmiş";
+"settings.ai.codex.install.hint" = "Gerekli: npm install -g @openai/codex";
+"settings.ai.save.button" = "AI Ayarlarını Kaydet";
+"settings.ai.claude.desc" = "Mükemmel doğal dil anlama. Karmaşık zamanlama ve hedef analizi için ideal.";
+"settings.ai.codex.desc" = "Kod tabanlı optimizasyon için özel. Kural tabanlı hızlı planlama için harika.";
+"settings.aggressiveness.manual.desc" = "Tüm programları manuel yönetin. AI sessiz kalır.";
+"settings.aggressiveness.assist.desc" = "AI yalnızca önerir. Kabul etmeye siz karar verirsiniz.";
+"settings.aggressiveness.semiauto.desc" = "Onaylanan önerileri takvime otomatik kaydeder.";
+"settings.aggressiveness.auto.desc" = "AI otomatik olarak en iyi programları oluşturur ve kaydeder.";
+"settings.integrations.subtitle" = "Harici hizmet ve takvim bağlantılarını yönetin";
+"settings.google.connected" = "Bağlı";
+"settings.google.not.connected" = "Bağlı Değil";
+"settings.google.no.email" = "E-posta bilgisi yok";
+"settings.google.connect.hint" = "Programınızı senkronize etmek için Google hesabınızı bağlayın";
+"settings.google.disconnect.button" = "Bağlantıyı Kes";
+"settings.google.login.button" = "Google ile Giriş Yap";
+"settings.google.privacy" = "Takvim verileri yalnızca cihazda saklanır. AI yalnızca etkinlik başlıklarına ve saatlerine başvurur.";
+"settings.apple.card" = "Apple Entegrasyonu";
+"settings.apple.calendar.title" = "Apple Takvim Senkronizasyonu";
+"settings.apple.calendar.desc" = "Cihazınızdaki Apple Takvim etkinliklerini gösterir";
+"settings.apple.reminders.title" = "Apple Hatırlatıcıları İçe Aktar";
+"settings.apple.reminders.desc" = "Hatırlatıcıları görev olarak içe aktarır";
+"settings.google.skip.card" = "Google Olmadan Kullan";
+"settings.google.skip.title" = "Google Girişini Atla";
+"settings.google.skip.desc" = "Google Takvim olmadan AI özelliklerini kullanın";
+"settings.notifications.subtitle" = "Sabah brifing ve akşam inceleme bildirim saatlerini ayarlayın";
+"settings.morning.card" = "Sabah Brifing";
+"settings.morning.time.title" = "Sabah Brifing Saati";
+"settings.morning.time.desc" = "Günün program özeti ve hedef ilerlemesi hakkında bildirim gönderir";
+"settings.evening.card" = "Akşam İncelemesi";
+"settings.evening.time.title" = "Akşam İnceleme Saati";
+"settings.evening.time.desc" = "Tamamlanan programları inceler ve yarın için planlar";
+"settings.notifications.permission.card" = "Bildirim İzni";
+"settings.notifications.permission.title" = "Sistem bildirim izni gerekli";
+"settings.notifications.permission.desc" = "macOS System Settings → Notifications → Allow Calen";
+"settings.notifications.open.system" = "Sistem Ayarlarını Aç";
+"settings.hour.format" = "%d:00";
+"settings.advanced.subtitle" = "Veri yönetimi ve uygulama sıfırlama seçenekleri";
+"settings.onboarding.card" = "Başlangıç";
+"settings.onboarding.restart.title" = "Başlangıcı Yeniden Başlat";
+"settings.onboarding.restart.desc" = "Hedef kurulum ekranını baştan yapın";
+"settings.onboarding.restart.button" = "Yeniden Başlat";
+"settings.data.reset.card" = "Verileri Sıfırla";
+"settings.completions.reset.title" = "Tamamlanma Geçmişini Sıfırla";
+"settings.completions.reset.desc" = "Tüm etkinlik tamamlanma kayıtlarını siler";
+"settings.completions.reset.button" = "Sıfırla";
+"settings.review.reset.title" = "Günlük İncelemeyi Sıfırla";
+"settings.review.reset.desc" = "Bugünün tamamlanan incelemesini tekrar gösterilmek üzere sıfırlar";
+"settings.review.reset.button" = "Sıfırla";
+"settings.goals.delete.title" = "Tüm Hedefleri Sil";
+"settings.goals.delete.desc" = "Kayıtlı tüm hedefleri siler. Bu geri alınamaz.";
+"settings.goals.delete.button" = "Sil";
+"settings.language.card" = "Dil";
+"settings.language.desc" = "Bir dil seçin. Değişikliği uygulamak için uygulama yeniden başlayacak.";
+"settings.app.info.card" = "Uygulama Bilgisi";
+"settings.app.version" = "Sürüm 1.0 · Kişisel AI Takvim Asistanı";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "Yarının Planı Hazır";
+"review.today.lookback" = "Bugünün İncelemesi";
+"review.move.all" = "Tümünü Yarına Taşı";
+"review.generating.button" = "Plan oluşturuluyor...";
+"review.generate.tomorrow" = "Yarının Planını Otomatik Oluştur";
+"review.no.past.events" = "Bugün geçmiş etkinlik yok";
+"review.generate.now.hint" = "Yarının planını şimdi oluşturabilirsiniz";
+"review.on.track" = "Sorunsuz gidiyor";
+"review.evening.auto.plan" = "Yarının planını akşam otomatik oluşturacağız";
+"review.ok.button" = "Tamam";
+"review.close.button" = "Kapat";
+"review.add.button" = "Ekle";
+"review.skip.button" = "Atla";
+"review.period.week" = "Bu Hafta";
+"review.period.month" = "Bu Ay";
+"review.period.year" = "Bu Yıl";
+"review.completion.rate" = "Tamamlanma Oranı";
+"review.completion.count.format" = "%d / %d tamamlandı";
+"review.no.todos" = "Kayıtlı görev yok";
+"review.added.to.calendar" = "Takvime Eklendi";
+"review.tomorrow.sufficient" = "Yarının programı zaten dolu";
+
+/* ===== MainView ===== */
+"event.category.label" = "Kategori";
+"event.category.none" = "Yok";

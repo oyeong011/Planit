@@ -223,3 +223,136 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "Щоденні";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "Ранковий";
+"energy.type.evening" = "Вечірній";
+"energy.type.balanced" = "Збалансований";
+
+/* ===== Aggressiveness ===== */
+"aggressiveness.manual" = "Ручний";
+"aggressiveness.assist" = "Асистований";
+"aggressiveness.semiauto" = "Напівавтоматичний";
+"aggressiveness.auto" = "Автоматичний";
+
+/* ===== Settings View ===== */
+"settings.title" = "Налаштування";
+"settings.autosave" = "Зміни зберігаються автоматично";
+"settings.section.profile" = "Профіль";
+"settings.section.schedule" = "Розклад";
+"settings.section.ai" = "Налаштування ШІ";
+"settings.section.integrations" = "Інтеграції";
+"settings.section.notifications" = "Сповіщення";
+"settings.section.advanced" = "Додатково";
+"settings.profile.subtitle" = "Налаштуйте свій особистий ритм і стиль роботи";
+"settings.energy.card" = "Режим енергії";
+"settings.energy.desc" = "Виберіть пік концентрації. ШІ планує важливі завдання на цей час.";
+"settings.pace.card" = "Темп розкладу";
+"settings.pace.desc" = "Визначає, наскільки активно ШІ заповнює розклад при складанні пропозицій.";
+"settings.schedule.subtitle" = "Встановіть робочий час і щоденний обсяг концентрації";
+"settings.work.card" = "Робочий час";
+"settings.work.start.label" = "Початок";
+"settings.work.end.label" = "Кінець";
+"settings.lunch.start.label" = "Початок обіду";
+"settings.lunch.end.label" = "Кінець обіду";
+"settings.work.hours.format" = "%d год роботи";
+"settings.commute.card" = "Час у дорозі";
+"settings.commute.label" = "Час в одну сторону";
+"settings.commute.minutes.format" = "%d хв";
+"settings.commute.roundtrip.format" = "Туди й назад %d хв · Не включено до щоденного часу концентрації";
+"settings.capacity.card" = "Щоденний обсяг концентрації";
+"settings.capacity.weekday" = "Будні";
+"settings.capacity.weekend" = "Вихідні";
+"settings.capacity.hours.format" = "%d год";
+"settings.capacity.hours.minutes.format" = "%d год %d хв";
+"settings.ai.subtitle" = "Виберіть ШІ для аналізу та планування розкладу";
+"settings.ai.engine.card" = "Рушій ШІ";
+"settings.ai.status.card" = "Поточний статус";
+"settings.ai.save.card" = "Зберегти";
+"settings.ai.installed.badge" = "Встановлено";
+"settings.ai.not.installed.badge" = "Не встановлено";
+"settings.ai.claude.installed.detail" = "Встановлено — Потужне розуміння природної мови";
+"settings.ai.claude.install.hint" = "Потрібно: brew install claude";
+"settings.ai.codex.installed.detail" = "Встановлено — Оптимізовано для коду";
+"settings.ai.codex.install.hint" = "Потрібно: npm install -g @openai/codex";
+"settings.ai.save.button" = "Зберегти налаштування ШІ";
+"settings.ai.claude.desc" = "Відмінне розуміння природної мови. Ідеально для складного планування й аналізу цілей.";
+"settings.ai.codex.desc" = "Спеціалізований для оптимізації на основі коду. Чудово підходить для швидкого планування за правилами.";
+"settings.aggressiveness.manual.desc" = "Керуйте всіма розкладами вручну. ШІ мовчить.";
+"settings.aggressiveness.assist.desc" = "ШІ лише пропонує. Ви вирішуєте, приймати чи ні.";
+"settings.aggressiveness.semiauto.desc" = "Автоматично реєструє схвалені пропозиції в календарі.";
+"settings.aggressiveness.auto.desc" = "ШІ автоматично створює та реєструє оптимальні розклади.";
+"settings.integrations.subtitle" = "Керування підключеннями до зовнішніх сервісів і календарів";
+"settings.google.connected" = "Підключено";
+"settings.google.not.connected" = "Не підключено";
+"settings.google.no.email" = "Немає інформації про email";
+"settings.google.connect.hint" = "Підключіть акаунт Google для синхронізації розкладу";
+"settings.google.disconnect.button" = "Відключити";
+"settings.google.login.button" = "Увійти через Google";
+"settings.google.privacy" = "Дані календаря зберігаються лише на пристрої. ШІ використовує лише назви та час подій.";
+"settings.apple.card" = "Інтеграція Apple";
+"settings.apple.calendar.title" = "Синхронізація з Apple Calendar";
+"settings.apple.calendar.desc" = "Відображає події Apple Calendar на вашому пристрої";
+"settings.apple.reminders.title" = "Імпорт нагадувань Apple";
+"settings.apple.reminders.desc" = "Імпортує нагадування як завдання";
+"settings.google.skip.card" = "Використовувати без Google";
+"settings.google.skip.title" = "Пропустити вхід через Google";
+"settings.google.skip.desc" = "Використовуйте функції ШІ без Google Calendar";
+"settings.notifications.subtitle" = "Встановіть час ранкового брифінгу та вечірнього огляду";
+"settings.morning.card" = "Ранковий брифінг";
+"settings.morning.time.title" = "Час ранкового брифінгу";
+"settings.morning.time.desc" = "Сповіщає про зведення розкладу на сьогодні та прогрес по цілях";
+"settings.evening.card" = "Вечірній огляд";
+"settings.evening.time.title" = "Час вечірнього огляду";
+"settings.evening.time.desc" = "Переглядає виконані завдання та планує на завтра";
+"settings.notifications.permission.card" = "Дозвіл на сповіщення";
+"settings.notifications.permission.title" = "Потрібен дозвіл системних сповіщень";
+"settings.notifications.permission.desc" = "Системні налаштування macOS → Сповіщення → Дозволити Calen";
+"settings.notifications.open.system" = "Відкрити системні налаштування";
+"settings.hour.format" = "%d:00";
+"settings.advanced.subtitle" = "Керування даними та скидання програми";
+"settings.onboarding.card" = "Онбординг";
+"settings.onboarding.restart.title" = "Перезапустити онбординг";
+"settings.onboarding.restart.desc" = "Повторно пройти налаштування цілей з початку";
+"settings.onboarding.restart.button" = "Перезапустити";
+"settings.data.reset.card" = "Скидання даних";
+"settings.completions.reset.title" = "Скинути історію виконання";
+"settings.completions.reset.desc" = "Видаляє всі записи про виконання подій";
+"settings.completions.reset.button" = "Скинути";
+"settings.review.reset.title" = "Скинути щоденний огляд";
+"settings.review.reset.desc" = "Скидає сьогоднішній завершений огляд, щоб показати його знову";
+"settings.review.reset.button" = "Скинути";
+"settings.goals.delete.title" = "Видалити всі цілі";
+"settings.goals.delete.desc" = "Видаляє всі зареєстровані цілі. Цю дію не можна скасувати.";
+"settings.goals.delete.button" = "Видалити";
+"settings.language.card" = "Мова";
+"settings.language.desc" = "Виберіть мову. Програма перезапуститься для застосування змін.";
+"settings.app.info.card" = "Інформація про програму";
+"settings.app.version" = "Версія 1.0 · Персональний ШІ-помічник календаря";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "План на завтра готовий";
+"review.today.lookback" = "Огляд сьогоднішнього дня";
+"review.move.all" = "Перенести все на завтра";
+"review.generating.button" = "Складання плану...";
+"review.generate.tomorrow" = "Автоматично згенерувати план на завтра";
+"review.no.past.events" = "Немає минулих подій сьогодні";
+"review.generate.now.hint" = "Ви можете згенерувати план на завтра зараз";
+"review.on.track" = "Все йде за планом";
+"review.evening.auto.plan" = "Увечері ми автоматично згенеруємо план на завтра";
+"review.ok.button" = "ОК";
+"review.close.button" = "Закрити";
+"review.add.button" = "Додати";
+"review.skip.button" = "Пропустити";
+"review.period.week" = "Цей тиждень";
+"review.period.month" = "Цей місяць";
+"review.period.year" = "Цей рік";
+"review.completion.rate" = "Відсоток виконання";
+"review.completion.count.format" = "%d / %d виконано";
+"review.no.todos" = "Немає зареєстрованих завдань";
+"review.added.to.calendar" = "Додано до календаря";
+"review.tomorrow.sufficient" = "Розклад на завтра вже заповнений";
+
+/* ===== MainView ===== */
+"event.category.label" = "Категорія";
+"event.category.none" = "Немає";

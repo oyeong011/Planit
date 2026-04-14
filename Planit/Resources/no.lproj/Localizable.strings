@@ -223,3 +223,136 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "Daglig";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "Morgen";
+"energy.type.evening" = "Kveld";
+"energy.type.balanced" = "Balansert";
+
+/* ===== Aggressiveness ===== */
+"aggressiveness.manual" = "Manuell";
+"aggressiveness.assist" = "Assistert";
+"aggressiveness.semiauto" = "Halvautomatisk";
+"aggressiveness.auto" = "Automatisk";
+
+/* ===== Settings View ===== */
+"settings.title" = "Innstillinger";
+"settings.autosave" = "Endringer lagres automatisk";
+"settings.section.profile" = "Profil";
+"settings.section.schedule" = "Timeplan";
+"settings.section.ai" = "AI-innstillinger";
+"settings.section.integrations" = "Integrasjoner";
+"settings.section.notifications" = "Varsler";
+"settings.section.advanced" = "Avansert";
+"settings.profile.subtitle" = "Konfigurer din personlige rytme og arbeidsstil";
+"settings.energy.card" = "Energimønster";
+"settings.energy.desc" = "Velg din beste fokustid. AI planlegger viktige oppgaver i denne perioden.";
+"settings.pace.card" = "Planleggingstempo";
+"settings.pace.desc" = "Bestemmer hvor aggressivt AI fyller timeplanen din med forslag.";
+"settings.schedule.subtitle" = "Angi arbeidstimer og daglig fokuskapasitet";
+"settings.work.card" = "Arbeidstimer";
+"settings.work.start.label" = "Start";
+"settings.work.end.label" = "Slutt";
+"settings.lunch.start.label" = "Lunsjstart";
+"settings.lunch.end.label" = "Lunsjslutt";
+"settings.work.hours.format" = "%d t arbeid";
+"settings.commute.card" = "Pendlingstid";
+"settings.commute.label" = "Enveis pendlingstid";
+"settings.commute.minutes.format" = "%d min";
+"settings.commute.roundtrip.format" = "Tur-retur %d min · Ikke inkludert i daglig fokustid";
+"settings.capacity.card" = "Daglig fokuskapasitet";
+"settings.capacity.weekday" = "Ukedag";
+"settings.capacity.weekend" = "Helg";
+"settings.capacity.hours.format" = "%d t";
+"settings.capacity.hours.minutes.format" = "%d t %d min";
+"settings.ai.subtitle" = "Velg AI for timeplananalyse og planlegging";
+"settings.ai.engine.card" = "AI-motor";
+"settings.ai.status.card" = "Gjeldende status";
+"settings.ai.save.card" = "Lagre";
+"settings.ai.installed.badge" = "Installert";
+"settings.ai.not.installed.badge" = "Ikke installert";
+"settings.ai.claude.installed.detail" = "Installert — Kraftig språkforståelse";
+"settings.ai.claude.install.hint" = "Kreves: brew install claude";
+"settings.ai.codex.installed.detail" = "Installert — Optimalisert for kode";
+"settings.ai.codex.install.hint" = "Kreves: npm install -g @openai/codex";
+"settings.ai.save.button" = "Lagre AI-innstillinger";
+"settings.ai.claude.desc" = "Fremragende språkforståelse. Ideell for kompleks planlegging og målanalyse.";
+"settings.ai.codex.desc" = "Spesialisert på kodebasert optimalisering. Bra for rask regelbasert planlegging.";
+"settings.aggressiveness.manual.desc" = "Administrer alle timeplaner manuelt. AI holder seg stille.";
+"settings.aggressiveness.assist.desc" = "AI foreslår bare. Du bestemmer om du aksepterer.";
+"settings.aggressiveness.semiauto.desc" = "Godkjente forslag registreres automatisk i kalenderen.";
+"settings.aggressiveness.auto.desc" = "AI oppretter og registrerer automatisk optimale timeplaner.";
+"settings.integrations.subtitle" = "Administrer tilkoblinger til eksterne tjenester og kalendere";
+"settings.google.connected" = "Tilkoblet";
+"settings.google.not.connected" = "Ikke tilkoblet";
+"settings.google.no.email" = "Ingen e-postinformasjon";
+"settings.google.connect.hint" = "Koble til Google-kontoen din for å synkronisere timeplanen din";
+"settings.google.disconnect.button" = "Koble fra";
+"settings.google.login.button" = "Logg inn med Google";
+"settings.google.privacy" = "Kalenderdata lagres kun på enheten. AI refererer kun til hendelsestitler og -tider.";
+"settings.apple.card" = "Apple-integrasjon";
+"settings.apple.calendar.title" = "Apple Kalender-synkronisering";
+"settings.apple.calendar.desc" = "Viser Apple Kalender-hendelser på enheten din";
+"settings.apple.reminders.title" = "Importer Apple Påminnelser";
+"settings.apple.reminders.desc" = "Importerer påminnelser som oppgaver";
+"settings.google.skip.card" = "Bruk uten Google";
+"settings.google.skip.title" = "Hopp over Google-pålogging";
+"settings.google.skip.desc" = "Bruk AI-funksjoner uten Google Kalender";
+"settings.notifications.subtitle" = "Angi varslingstider for morgenbriefing og kveldsevaluering";
+"settings.morning.card" = "Morgenbriefing";
+"settings.morning.time.title" = "Tid for morgenbriefing";
+"settings.morning.time.desc" = "Varsler deg om dagens timeplansammendrag og målfremdrift";
+"settings.evening.card" = "Kveldsevaluering";
+"settings.evening.time.title" = "Tid for kveldsevaluering";
+"settings.evening.time.desc" = "Gjennomgår fullførte timeplaner og planlegger for i morgen";
+"settings.notifications.permission.card" = "Varslingstillatelse";
+"settings.notifications.permission.title" = "Systemvarslingstillatelse kreves";
+"settings.notifications.permission.desc" = "macOS Systeminnstillinger → Varsler → Tillat Calen";
+"settings.notifications.open.system" = "Åpne systeminnstillinger";
+"settings.hour.format" = "%d:00";
+"settings.advanced.subtitle" = "Databehandling og app-tilbakestillingsalternativer";
+"settings.onboarding.card" = "Onboarding";
+"settings.onboarding.restart.title" = "Start onboarding på nytt";
+"settings.onboarding.restart.desc" = "Gjør måloppsettsidebildet på nytt fra begynnelsen";
+"settings.onboarding.restart.button" = "Start på nytt";
+"settings.data.reset.card" = "Tilbakestill data";
+"settings.completions.reset.title" = "Tilbakestill fullføringshistorikk";
+"settings.completions.reset.desc" = "Sletter alle hendelsesfulliøringsoppføringer";
+"settings.completions.reset.button" = "Tilbakestill";
+"settings.review.reset.title" = "Tilbakestill daglig evaluering";
+"settings.review.reset.desc" = "Tilbakestiller dagens fullførte evaluering for å vise den igjen";
+"settings.review.reset.button" = "Tilbakestill";
+"settings.goals.delete.title" = "Slett alle mål";
+"settings.goals.delete.desc" = "Sletter alle registrerte mål. Dette kan ikke angres.";
+"settings.goals.delete.button" = "Slett";
+"settings.language.card" = "Språk";
+"settings.language.desc" = "Velg et språk. Appen starter på nytt for å bruke endringen.";
+"settings.app.info.card" = "App-info";
+"settings.app.version" = "Versjon 1.0 · Personlig AI-kalenderassistent";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "Morgendagens plan klar";
+"review.today.lookback" = "Tilbakeblikk på i dag";
+"review.move.all" = "Flytt alt til i morgen";
+"review.generating.button" = "Genererer plan...";
+"review.generate.tomorrow" = "Generer morgendagens plan automatisk";
+"review.no.past.events" = "Ingen tidligere hendelser i dag";
+"review.generate.now.hint" = "Du kan generere morgendagens plan nå";
+"review.on.track" = "Går bra";
+"review.evening.auto.plan" = "Vi genererer automatisk morgendagens plan om kvelden";
+"review.ok.button" = "OK";
+"review.close.button" = "Lukk";
+"review.add.button" = "Legg til";
+"review.skip.button" = "Hopp over";
+"review.period.week" = "Denne uken";
+"review.period.month" = "Denne måneden";
+"review.period.year" = "Dette året";
+"review.completion.rate" = "Fullføringsrate";
+"review.completion.count.format" = "%d / %d fullført";
+"review.no.todos" = "Ingen oppgaver registrert";
+"review.added.to.calendar" = "Lagt til i kalender";
+"review.tomorrow.sufficient" = "Morgendagens timeplan er allerede full";
+
+/* ===== MainView ===== */
+"event.category.label" = "Kategori";
+"event.category.none" = "Ingen";

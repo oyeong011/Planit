@@ -223,3 +223,136 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "Codzienne";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "Poranny";
+"energy.type.evening" = "Wieczorny";
+"energy.type.balanced" = "Zrównoważony";
+
+/* ===== Aggressiveness ===== */
+"aggressiveness.manual" = "Ręczny";
+"aggressiveness.assist" = "Wspomagany";
+"aggressiveness.semiauto" = "Półautomatyczny";
+"aggressiveness.auto" = "Automatyczny";
+
+/* ===== Settings View ===== */
+"settings.title" = "Ustawienia";
+"settings.autosave" = "Zmiany są zapisywane automatycznie";
+"settings.section.profile" = "Profil";
+"settings.section.schedule" = "Harmonogram";
+"settings.section.ai" = "Ustawienia AI";
+"settings.section.integrations" = "Integracje";
+"settings.section.notifications" = "Powiadomienia";
+"settings.section.advanced" = "Zaawansowane";
+"settings.profile.subtitle" = "Skonfiguruj swój osobisty rytm i styl pracy";
+"settings.energy.card" = "Wzorzec energii";
+"settings.energy.desc" = "Wybierz godziny szczytowej koncentracji. AI zaplanuje ważne zadania na ten czas.";
+"settings.pace.card" = "Tempo harmonogramu";
+"settings.pace.desc" = "Określa, jak agresywnie AI wypełnia harmonogram podczas tworzenia sugestii.";
+"settings.schedule.subtitle" = "Ustaw godziny pracy i dzienny limit skupienia";
+"settings.work.card" = "Godziny pracy";
+"settings.work.start.label" = "Początek";
+"settings.work.end.label" = "Koniec";
+"settings.lunch.start.label" = "Początek przerwy";
+"settings.lunch.end.label" = "Koniec przerwy";
+"settings.work.hours.format" = "%d godz. pracy";
+"settings.commute.card" = "Czas dojazdu";
+"settings.commute.label" = "Czas dojazdu w jedną stronę";
+"settings.commute.minutes.format" = "%d min";
+"settings.commute.roundtrip.format" = "Tam i z powrotem %d min · Wykluczone z dziennego czasu skupienia";
+"settings.capacity.card" = "Dzienny limit skupienia";
+"settings.capacity.weekday" = "Dzień roboczy";
+"settings.capacity.weekend" = "Weekend";
+"settings.capacity.hours.format" = "%d godz.";
+"settings.capacity.hours.minutes.format" = "%d godz. %d min";
+"settings.ai.subtitle" = "Wybierz AI do analizy i planowania harmonogramu";
+"settings.ai.engine.card" = "Silnik AI";
+"settings.ai.status.card" = "Aktualny status";
+"settings.ai.save.card" = "Zapisz";
+"settings.ai.installed.badge" = "Zainstalowany";
+"settings.ai.not.installed.badge" = "Niezainstalowany";
+"settings.ai.claude.installed.detail" = "Zainstalowany — Zaawansowane rozumienie języka naturalnego";
+"settings.ai.claude.install.hint" = "Wymagane: brew install claude";
+"settings.ai.codex.installed.detail" = "Zainstalowany — Zoptymalizowany pod kątem kodu";
+"settings.ai.codex.install.hint" = "Wymagane: npm install -g @openai/codex";
+"settings.ai.save.button" = "Zapisz ustawienia AI";
+"settings.ai.claude.desc" = "Doskonałe rozumienie języka naturalnego. Idealne do złożonego planowania i analizy celów.";
+"settings.ai.codex.desc" = "Specjalizowany w optymalizacji opartej na kodzie. Świetny do szybkiego planowania opartego na regułach.";
+"settings.aggressiveness.manual.desc" = "Zarządzaj wszystkimi harmonogramami ręcznie. AI pozostaje cicho.";
+"settings.aggressiveness.assist.desc" = "AI tylko sugeruje. Ty decydujesz, czy zaakceptować.";
+"settings.aggressiveness.semiauto.desc" = "Automatycznie rejestruje zaakceptowane sugestie w kalendarzu.";
+"settings.aggressiveness.auto.desc" = "AI automatycznie tworzy i rejestruje optymalne harmonogramy.";
+"settings.integrations.subtitle" = "Zarządzaj połączeniami z zewnętrznymi usługami i kalendarzami";
+"settings.google.connected" = "Połączono";
+"settings.google.not.connected" = "Niepołączono";
+"settings.google.no.email" = "Brak informacji o emailu";
+"settings.google.connect.hint" = "Połącz swoje konto Google, aby synchronizować harmonogram";
+"settings.google.disconnect.button" = "Rozłącz";
+"settings.google.login.button" = "Zaloguj się przez Google";
+"settings.google.privacy" = "Dane kalendarza są przechowywane tylko na urządzeniu. AI odwołuje się tylko do tytułów i godzin wydarzeń.";
+"settings.apple.card" = "Integracja Apple";
+"settings.apple.calendar.title" = "Synchronizacja z Apple Calendar";
+"settings.apple.calendar.desc" = "Wyświetla wydarzenia Apple Calendar na Twoim urządzeniu";
+"settings.apple.reminders.title" = "Importuj przypomnienia Apple";
+"settings.apple.reminders.desc" = "Importuje przypomnienia jako zadania";
+"settings.google.skip.card" = "Używaj bez Google";
+"settings.google.skip.title" = "Pomiń logowanie przez Google";
+"settings.google.skip.desc" = "Używaj funkcji AI bez Google Calendar";
+"settings.notifications.subtitle" = "Ustaw godziny porannego briefingu i wieczornego przeglądu";
+"settings.morning.card" = "Poranny briefing";
+"settings.morning.time.title" = "Godzina porannego briefingu";
+"settings.morning.time.desc" = "Powiadamia o podsumowaniu dzisiejszego harmonogramu i postępie celów";
+"settings.evening.card" = "Wieczorny przegląd";
+"settings.evening.time.title" = "Godzina wieczornego przeglądu";
+"settings.evening.time.desc" = "Przegląda ukończone zadania i planuje na jutro";
+"settings.notifications.permission.card" = "Uprawnienia powiadomień";
+"settings.notifications.permission.title" = "Wymagane uprawnienia systemowe do powiadomień";
+"settings.notifications.permission.desc" = "Ustawienia systemowe macOS → Powiadomienia → Zezwól Calen";
+"settings.notifications.open.system" = "Otwórz ustawienia systemowe";
+"settings.hour.format" = "%d:00";
+"settings.advanced.subtitle" = "Zarządzanie danymi i opcje resetowania aplikacji";
+"settings.onboarding.card" = "Onboarding";
+"settings.onboarding.restart.title" = "Uruchom onboarding ponownie";
+"settings.onboarding.restart.desc" = "Ponownie przejdź konfigurację celów od początku";
+"settings.onboarding.restart.button" = "Uruchom ponownie";
+"settings.data.reset.card" = "Reset danych";
+"settings.completions.reset.title" = "Resetuj historię ukończenia";
+"settings.completions.reset.desc" = "Usuwa wszystkie rekordy ukończenia wydarzeń";
+"settings.completions.reset.button" = "Resetuj";
+"settings.review.reset.title" = "Resetuj dzienny przegląd";
+"settings.review.reset.desc" = "Resetuje dzisiejszy ukończony przegląd, aby pokazać go ponownie";
+"settings.review.reset.button" = "Resetuj";
+"settings.goals.delete.title" = "Usuń wszystkie cele";
+"settings.goals.delete.desc" = "Usuwa wszystkie zarejestrowane cele. Tej operacji nie można cofnąć.";
+"settings.goals.delete.button" = "Usuń";
+"settings.language.card" = "Język";
+"settings.language.desc" = "Wybierz język. Aplikacja uruchomi się ponownie, aby zastosować zmianę.";
+"settings.app.info.card" = "Informacje o aplikacji";
+"settings.app.version" = "Wersja 1.0 · Osobisty asystent AI kalendarza";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "Plan na jutro gotowy";
+"review.today.lookback" = "Przegląd dzisiejszego dnia";
+"review.move.all" = "Przenieś wszystko na jutro";
+"review.generating.button" = "Generowanie planu...";
+"review.generate.tomorrow" = "Automatycznie wygeneruj plan na jutro";
+"review.no.past.events" = "Brak minionych wydarzeń dzisiaj";
+"review.generate.now.hint" = "Możesz teraz wygenerować plan na jutro";
+"review.on.track" = "Wszystko idzie sprawnie";
+"review.evening.auto.plan" = "Wieczorem automatycznie wygenerujemy plan na jutro";
+"review.ok.button" = "OK";
+"review.close.button" = "Zamknij";
+"review.add.button" = "Dodaj";
+"review.skip.button" = "Pomiń";
+"review.period.week" = "Ten tydzień";
+"review.period.month" = "Ten miesiąc";
+"review.period.year" = "Ten rok";
+"review.completion.rate" = "Wskaźnik ukończenia";
+"review.completion.count.format" = "%d / %d ukończonych";
+"review.no.todos" = "Brak zarejestrowanych zadań";
+"review.added.to.calendar" = "Dodano do kalendarza";
+"review.tomorrow.sufficient" = "Jutrzejszy harmonogram jest już pełny";
+
+/* ===== MainView ===== */
+"event.category.label" = "Kategoria";
+"event.category.none" = "Brak";

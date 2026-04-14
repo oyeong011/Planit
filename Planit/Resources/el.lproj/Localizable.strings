@@ -223,3 +223,136 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "Καθημερινά";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "Πρωί";
+"energy.type.evening" = "Βράδυ";
+"energy.type.balanced" = "Ισορροπημένο";
+
+/* ===== Aggressiveness ===== */
+"aggressiveness.manual" = "Χειροκίνητο";
+"aggressiveness.assist" = "Βοηθούμενο";
+"aggressiveness.semiauto" = "Ημιαυτόματο";
+"aggressiveness.auto" = "Αυτόματο";
+
+/* ===== Settings View ===== */
+"settings.title" = "Ρυθμίσεις";
+"settings.autosave" = "Οι αλλαγές αποθηκεύτηκαν αυτόματα";
+"settings.section.profile" = "Προφίλ";
+"settings.section.schedule" = "Πρόγραμμα";
+"settings.section.ai" = "Ρυθμίσεις AI";
+"settings.section.integrations" = "Ενσωματώσεις";
+"settings.section.notifications" = "Ειδοποιήσεις";
+"settings.section.advanced" = "Για Προχωρημένους";
+"settings.profile.subtitle" = "Ρυθμίστε τον προσωπικό σας ρυθμό και στυλ εργασίας";
+"settings.energy.card" = "Μοτίβο Ενέργειας";
+"settings.energy.desc" = "Επιλέξτε την ώρα αιχμής εστίασης. Η AI θα προγραμματίσει σημαντικές εργασίες σε αυτή την περίοδο.";
+"settings.pace.card" = "Ρυθμός Προγράμματος";
+"settings.pace.desc" = "Καθορίζει πόσο επιθετικά η AI γεμίζει το πρόγραμμά σας όταν κάνει προτάσεις.";
+"settings.schedule.subtitle" = "Ορίστε τις ώρες εργασίας και την ημερήσια ικανότητα εστίασης";
+"settings.work.card" = "Ώρες Εργασίας";
+"settings.work.start.label" = "Έναρξη";
+"settings.work.end.label" = "Λήξη";
+"settings.lunch.start.label" = "Έναρξη Μεσημεριανού";
+"settings.lunch.end.label" = "Λήξη Μεσημεριανού";
+"settings.work.hours.format" = "%d ώρες εργασίας";
+"settings.commute.card" = "Χρόνος Μετακίνησης";
+"settings.commute.label" = "Χρόνος μετακίνησης μιας κατεύθυνσης";
+"settings.commute.minutes.format" = "%d λεπτά";
+"settings.commute.roundtrip.format" = "Μετ/νηση %d λεπτά · Εξαιρείται από τον ημερήσιο χρόνο εστίασης";
+"settings.capacity.card" = "Ημερήσια Ικανότητα Εστίασης";
+"settings.capacity.weekday" = "Καθημερινή";
+"settings.capacity.weekend" = "Σαββατοκύριακο";
+"settings.capacity.hours.format" = "%d ώ";
+"settings.capacity.hours.minutes.format" = "%d ώ %d λεπτ";
+"settings.ai.subtitle" = "Επιλέξτε την AI για ανάλυση και σχεδιασμό προγράμματος";
+"settings.ai.engine.card" = "Μηχανή AI";
+"settings.ai.status.card" = "Τρέχουσα Κατάσταση";
+"settings.ai.save.card" = "Αποθήκευση";
+"settings.ai.installed.badge" = "Εγκατεστημένο";
+"settings.ai.not.installed.badge" = "Μη Εγκατεστημένο";
+"settings.ai.claude.installed.detail" = "Εγκατεστημένο — Ισχυρή κατανόηση φυσικής γλώσσας";
+"settings.ai.claude.install.hint" = "Απαιτείται: brew install claude";
+"settings.ai.codex.installed.detail" = "Εγκατεστημένο — Βελτιστοποιημένο για κώδικα";
+"settings.ai.codex.install.hint" = "Απαιτείται: npm install -g @openai/codex";
+"settings.ai.save.button" = "Αποθήκευση Ρυθμίσεων AI";
+"settings.ai.claude.desc" = "Εξαιρετική κατανόηση φυσικής γλώσσας. Ιδανικό για σύνθετο προγραμματισμό και ανάλυση στόχων.";
+"settings.ai.codex.desc" = "Εξειδικευμένο για βελτιστοποίηση βάσει κώδικα. Εξαιρετικό για γρήγορο σχεδιασμό βάσει κανόνων.";
+"settings.aggressiveness.manual.desc" = "Διαχειριστείτε όλα τα προγράμματα χειροκίνητα. Η AI παραμένει σιωπηλή.";
+"settings.aggressiveness.assist.desc" = "Η AI προτείνει μόνο. Εσείς αποφασίζετε να αποδεχτείτε.";
+"settings.aggressiveness.semiauto.desc" = "Καταχωρεί αυτόματα τις εγκεκριμένες προτάσεις στο ημερολόγιο.";
+"settings.aggressiveness.auto.desc" = "Η AI δημιουργεί και καταχωρεί αυτόματα βέλτιστα προγράμματα.";
+"settings.integrations.subtitle" = "Διαχειριστείτε εξωτερικές υπηρεσίες και συνδέσεις ημερολογίου";
+"settings.google.connected" = "Συνδεδεμένο";
+"settings.google.not.connected" = "Μη Συνδεδεμένο";
+"settings.google.no.email" = "Δεν υπάρχουν πληροφορίες email";
+"settings.google.connect.hint" = "Συνδέστε τον λογαριασμό Google σας για συγχρονισμό προγράμματος";
+"settings.google.disconnect.button" = "Αποσύνδεση";
+"settings.google.login.button" = "Σύνδεση με Google";
+"settings.google.privacy" = "Τα δεδομένα ημερολογίου αποθηκεύονται μόνο στη συσκευή. Η AI αναφέρεται μόνο σε τίτλους και ώρες.";
+"settings.apple.card" = "Ενσωμάτωση Apple";
+"settings.apple.calendar.title" = "Συγχρονισμός Apple Calendar";
+"settings.apple.calendar.desc" = "Εμφανίζει συμβάντα Apple Calendar στη συσκευή σας";
+"settings.apple.reminders.title" = "Εισαγωγή Υπενθυμίσεων Apple";
+"settings.apple.reminders.desc" = "Εισάγει υπενθυμίσεις ως εργασίες";
+"settings.google.skip.card" = "Χρήση χωρίς Google";
+"settings.google.skip.title" = "Παράλειψη Σύνδεσης Google";
+"settings.google.skip.desc" = "Χρησιμοποιήστε λειτουργίες AI χωρίς Google Calendar";
+"settings.notifications.subtitle" = "Ορίστε ώρες ειδοποίησης για πρωινή ενημέρωση και βραδινή ανασκόπηση";
+"settings.morning.card" = "Πρωινή Ενημέρωση";
+"settings.morning.time.title" = "Ώρα Πρωινής Ενημέρωσης";
+"settings.morning.time.desc" = "Σας ειδοποιεί για τη σύνοψη προγράμματος και την πρόοδο στόχων";
+"settings.evening.card" = "Βραδινή Ανασκόπηση";
+"settings.evening.time.title" = "Ώρα Βραδινής Ανασκόπησης";
+"settings.evening.time.desc" = "Ανασκοπεί ολοκληρωμένα προγράμματα και σχεδιάζει για αύριο";
+"settings.notifications.permission.card" = "Άδεια Ειδοποίησης";
+"settings.notifications.permission.title" = "Απαιτείται άδεια ειδοποίησης συστήματος";
+"settings.notifications.permission.desc" = "macOS System Settings → Notifications → Allow Calen";
+"settings.notifications.open.system" = "Άνοιγμα Ρυθμίσεων Συστήματος";
+"settings.hour.format" = "%d:00";
+"settings.advanced.subtitle" = "Επιλογές διαχείρισης δεδομένων και επαναφοράς εφαρμογής";
+"settings.onboarding.card" = "Εισαγωγή";
+"settings.onboarding.restart.title" = "Επανεκκίνηση Εισαγωγής";
+"settings.onboarding.restart.desc" = "Επαναλάβετε την οθόνη ρύθμισης στόχων από την αρχή";
+"settings.onboarding.restart.button" = "Επανεκκίνηση";
+"settings.data.reset.card" = "Επαναφορά Δεδομένων";
+"settings.completions.reset.title" = "Επαναφορά Ιστορικού Ολοκλήρωσης";
+"settings.completions.reset.desc" = "Διαγράφει όλες τις εγγραφές ολοκλήρωσης συμβάντων";
+"settings.completions.reset.button" = "Επαναφορά";
+"settings.review.reset.title" = "Επαναφορά Ημερήσιας Ανασκόπησης";
+"settings.review.reset.desc" = "Επαναφέρει την ολοκληρωμένη ανασκόπηση σήμερα για εμφάνιση";
+"settings.review.reset.button" = "Επαναφορά";
+"settings.goals.delete.title" = "Διαγραφή Όλων των Στόχων";
+"settings.goals.delete.desc" = "Διαγράφει όλους τους καταχωρημένους στόχους. Αυτό δεν μπορεί να αναιρεθεί.";
+"settings.goals.delete.button" = "Διαγραφή";
+"settings.language.card" = "Γλώσσα";
+"settings.language.desc" = "Επιλέξτε γλώσσα. Η εφαρμογή θα επανεκκινήσει για εφαρμογή.";
+"settings.app.info.card" = "Πληροφορίες Εφαρμογής";
+"settings.app.version" = "Έκδοση 1.0 · Προσωπικός Βοηθός AI Ημερολογίου";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "Το Πλάνο Αύριο Είναι Έτοιμο";
+"review.today.lookback" = "Ανασκόπηση Σήμερα";
+"review.move.all" = "Μεταφορά Όλων για Αύριο";
+"review.generating.button" = "Δημιουργία πλάνου...";
+"review.generate.tomorrow" = "Αυτόματη Δημιουργία Πλάνου Αύριο";
+"review.no.past.events" = "Δεν υπάρχουν παρελθοντικά συμβάντα σήμερα";
+"review.generate.now.hint" = "Μπορείτε να δημιουργήσετε το πλάνο αύριο τώρα";
+"review.on.track" = "Πηγαίνει ομαλά";
+"review.evening.auto.plan" = "Θα δημιουργήσουμε αυτόματα το πλάνο αύριο το βράδυ";
+"review.ok.button" = "OK";
+"review.close.button" = "Κλείσιμο";
+"review.add.button" = "Προσθήκη";
+"review.skip.button" = "Παράλειψη";
+"review.period.week" = "Αυτή η Εβδομάδα";
+"review.period.month" = "Αυτός ο Μήνας";
+"review.period.year" = "Αυτό το Έτος";
+"review.completion.rate" = "Ποσοστό Ολοκλήρωσης";
+"review.completion.count.format" = "%d / %d ολοκληρώθηκαν";
+"review.no.todos" = "Δεν υπάρχουν καταχωρημένες εργασίες";
+"review.added.to.calendar" = "Προστέθηκε στο Ημερολόγιο";
+"review.tomorrow.sufficient" = "Το πρόγραμμα αύριο είναι ήδη πλήρες";
+
+/* ===== MainView ===== */
+"event.category.label" = "Κατηγορία";
+"event.category.none" = "Κανένα";

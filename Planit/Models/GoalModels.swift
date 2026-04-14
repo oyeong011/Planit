@@ -131,6 +131,14 @@ enum EnergyType: String, Codable, CaseIterable {
     case evening = "저녁형"
     case balanced = "균형형"
 
+    var localizedTitle: String {
+        switch self {
+        case .morning:  return NSLocalizedString("energy.type.morning", comment: "")
+        case .evening:  return NSLocalizedString("energy.type.evening", comment: "")
+        case .balanced: return NSLocalizedString("energy.type.balanced", comment: "")
+        }
+    }
+
     var deepSlots: [String] {
         switch self {
         case .morning: return ["AM-Deep"]
@@ -145,6 +153,15 @@ enum Aggressiveness: String, Codable, CaseIterable {
     case assist = "보조"
     case semiAuto = "반자동"
     case auto = "자동"
+
+    var localizedTitle: String {
+        switch self {
+        case .manual:   return NSLocalizedString("aggressiveness.manual", comment: "")
+        case .assist:   return NSLocalizedString("aggressiveness.assist", comment: "")
+        case .semiAuto: return NSLocalizedString("aggressiveness.semiauto", comment: "")
+        case .auto:     return NSLocalizedString("aggressiveness.auto", comment: "")
+        }
+    }
 }
 
 // MARK: - Review Suggestion

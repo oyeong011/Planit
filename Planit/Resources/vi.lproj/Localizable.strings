@@ -223,3 +223,136 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "Hàng ngày";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "Buổi Sáng";
+"energy.type.evening" = "Buổi Tối";
+"energy.type.balanced" = "Cân Bằng";
+
+/* ===== Aggressiveness ===== */
+"aggressiveness.manual" = "Thủ Công";
+"aggressiveness.assist" = "Hỗ Trợ";
+"aggressiveness.semiauto" = "Bán Tự Động";
+"aggressiveness.auto" = "Tự Động";
+
+/* ===== Settings View ===== */
+"settings.title" = "Cài đặt";
+"settings.autosave" = "Thay đổi được lưu tự động";
+"settings.section.profile" = "Hồ sơ";
+"settings.section.schedule" = "Lịch trình";
+"settings.section.ai" = "Cài đặt AI";
+"settings.section.integrations" = "Tích hợp";
+"settings.section.notifications" = "Thông báo";
+"settings.section.advanced" = "Nâng cao";
+"settings.profile.subtitle" = "Cấu hình nhịp điệu cá nhân và phong cách làm việc của bạn";
+"settings.energy.card" = "Mẫu năng lượng";
+"settings.energy.desc" = "Chọn thời điểm tập trung cao nhất. AI sẽ lên lịch các công việc quan trọng trong khoảng thời gian này.";
+"settings.pace.card" = "Tốc độ lịch trình";
+"settings.pace.desc" = "Xác định mức độ AI lấp đầy lịch trình khi đưa ra gợi ý.";
+"settings.schedule.subtitle" = "Đặt giờ làm việc và năng lực tập trung hàng ngày";
+"settings.work.card" = "Giờ làm việc";
+"settings.work.start.label" = "Bắt đầu";
+"settings.work.end.label" = "Kết thúc";
+"settings.lunch.start.label" = "Bắt đầu nghỉ trưa";
+"settings.lunch.end.label" = "Kết thúc nghỉ trưa";
+"settings.work.hours.format" = "%d giờ làm việc";
+"settings.commute.card" = "Thời gian đi lại";
+"settings.commute.label" = "Thời gian đi lại một chiều";
+"settings.commute.minutes.format" = "%d phút";
+"settings.commute.roundtrip.format" = "Cả hai chiều %d phút · Không tính vào thời gian tập trung hàng ngày";
+"settings.capacity.card" = "Năng lực tập trung hàng ngày";
+"settings.capacity.weekday" = "Ngày thường";
+"settings.capacity.weekend" = "Cuối tuần";
+"settings.capacity.hours.format" = "%d h";
+"settings.capacity.hours.minutes.format" = "%d h %d phút";
+"settings.ai.subtitle" = "Chọn AI để phân tích và lên kế hoạch lịch trình";
+"settings.ai.engine.card" = "AI Engine";
+"settings.ai.status.card" = "Trạng thái hiện tại";
+"settings.ai.save.card" = "Lưu";
+"settings.ai.installed.badge" = "Đã cài";
+"settings.ai.not.installed.badge" = "Chưa cài";
+"settings.ai.claude.installed.detail" = "Đã cài — Hiểu ngôn ngữ tự nhiên mạnh mẽ";
+"settings.ai.claude.install.hint" = "Bắt buộc: brew install claude";
+"settings.ai.codex.installed.detail" = "Đã cài — Tối ưu cho code";
+"settings.ai.codex.install.hint" = "Bắt buộc: npm install -g @openai/codex";
+"settings.ai.save.button" = "Lưu cài đặt AI";
+"settings.ai.claude.desc" = "Hiểu ngôn ngữ tự nhiên xuất sắc. Lý tưởng cho lịch trình phức tạp và phân tích mục tiêu.";
+"settings.ai.codex.desc" = "Chuyên tối ưu hóa dựa trên code. Phù hợp để lập kế hoạch theo quy tắc nhanh chóng.";
+"settings.aggressiveness.manual.desc" = "Quản lý tất cả lịch trình thủ công. AI im lặng.";
+"settings.aggressiveness.assist.desc" = "AI chỉ đề xuất. Bạn quyết định chấp nhận.";
+"settings.aggressiveness.semiauto.desc" = "Tự động đăng ký các đề xuất đã duyệt vào lịch.";
+"settings.aggressiveness.auto.desc" = "AI tự động tạo và đăng ký lịch trình tối ưu.";
+"settings.integrations.subtitle" = "Quản lý kết nối dịch vụ bên ngoài và lịch";
+"settings.google.connected" = "Đã kết nối";
+"settings.google.not.connected" = "Chưa kết nối";
+"settings.google.no.email" = "Không có thông tin email";
+"settings.google.connect.hint" = "Kết nối tài khoản Google để đồng bộ lịch trình";
+"settings.google.disconnect.button" = "Ngắt kết nối";
+"settings.google.login.button" = "Đăng nhập bằng Google";
+"settings.google.privacy" = "Dữ liệu lịch chỉ lưu trên thiết bị. AI chỉ tham chiếu tiêu đề và thời gian sự kiện.";
+"settings.apple.card" = "Tích hợp Apple";
+"settings.apple.calendar.title" = "Đồng bộ Apple Calendar";
+"settings.apple.calendar.desc" = "Hiển thị sự kiện Apple Calendar trên thiết bị của bạn";
+"settings.apple.reminders.title" = "Nhập Apple Reminders";
+"settings.apple.reminders.desc" = "Nhập nhắc nhở dưới dạng việc cần làm";
+"settings.google.skip.card" = "Dùng không có Google";
+"settings.google.skip.title" = "Bỏ qua đăng nhập Google";
+"settings.google.skip.desc" = "Sử dụng tính năng AI không cần Google Calendar";
+"settings.notifications.subtitle" = "Đặt thời gian thông báo bản tin buổi sáng và đánh giá buổi tối";
+"settings.morning.card" = "Bản tin buổi sáng";
+"settings.morning.time.title" = "Thời gian bản tin buổi sáng";
+"settings.morning.time.desc" = "Thông báo tóm tắt lịch hôm nay và tiến độ mục tiêu";
+"settings.evening.card" = "Đánh giá buổi tối";
+"settings.evening.time.title" = "Thời gian đánh giá buổi tối";
+"settings.evening.time.desc" = "Đánh giá lịch đã hoàn thành và lên kế hoạch cho ngày mai";
+"settings.notifications.permission.card" = "Quyền thông báo";
+"settings.notifications.permission.title" = "Cần quyền thông báo hệ thống";
+"settings.notifications.permission.desc" = "Cài đặt hệ thống macOS → Thông báo → Cho phép Calen";
+"settings.notifications.open.system" = "Mở Cài đặt hệ thống";
+"settings.hour.format" = "%d:00";
+"settings.advanced.subtitle" = "Quản lý dữ liệu và tùy chọn đặt lại ứng dụng";
+"settings.onboarding.card" = "Onboarding";
+"settings.onboarding.restart.title" = "Khởi động lại Onboarding";
+"settings.onboarding.restart.desc" = "Làm lại màn hình thiết lập mục tiêu từ đầu";
+"settings.onboarding.restart.button" = "Khởi động lại";
+"settings.data.reset.card" = "Đặt lại dữ liệu";
+"settings.completions.reset.title" = "Đặt lại lịch sử hoàn thành";
+"settings.completions.reset.desc" = "Xóa tất cả bản ghi hoàn thành sự kiện";
+"settings.completions.reset.button" = "Đặt lại";
+"settings.review.reset.title" = "Đặt lại đánh giá hàng ngày";
+"settings.review.reset.desc" = "Đặt lại đánh giá hôm nay đã hoàn thành để hiển thị lại";
+"settings.review.reset.button" = "Đặt lại";
+"settings.goals.delete.title" = "Xóa tất cả mục tiêu";
+"settings.goals.delete.desc" = "Xóa tất cả mục tiêu đã đăng ký. Không thể hoàn tác.";
+"settings.goals.delete.button" = "Xóa";
+"settings.language.card" = "Ngôn ngữ";
+"settings.language.desc" = "Chọn ngôn ngữ. Ứng dụng sẽ khởi động lại để áp dụng thay đổi.";
+"settings.app.info.card" = "Thông tin ứng dụng";
+"settings.app.version" = "Phiên bản 1.0 · Trợ lý Lịch AI Cá nhân";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "Kế hoạch ngày mai đã sẵn sàng";
+"review.today.lookback" = "Nhìn lại hôm nay";
+"review.move.all" = "Chuyển tất cả sang ngày mai";
+"review.generating.button" = "Đang tạo kế hoạch...";
+"review.generate.tomorrow" = "Tự động tạo kế hoạch ngày mai";
+"review.no.past.events" = "Không có sự kiện nào hôm nay";
+"review.generate.now.hint" = "Bạn có thể tạo kế hoạch ngày mai ngay bây giờ";
+"review.on.track" = "Đang tiến triển tốt";
+"review.evening.auto.plan" = "Chúng tôi sẽ tự động tạo kế hoạch ngày mai vào buổi tối";
+"review.ok.button" = "OK";
+"review.close.button" = "Đóng";
+"review.add.button" = "Thêm";
+"review.skip.button" = "Bỏ qua";
+"review.period.week" = "Tuần này";
+"review.period.month" = "Tháng này";
+"review.period.year" = "Năm này";
+"review.completion.rate" = "Tỷ lệ hoàn thành";
+"review.completion.count.format" = "%d / %d đã hoàn thành";
+"review.no.todos" = "Không có việc cần làm nào đăng ký";
+"review.added.to.calendar" = "Đã thêm vào lịch";
+"review.tomorrow.sufficient" = "Lịch ngày mai đã đầy";
+
+/* ===== MainView ===== */
+"event.category.label" = "Danh mục";
+"event.category.none" = "Không có";

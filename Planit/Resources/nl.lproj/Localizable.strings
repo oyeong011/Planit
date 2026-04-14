@@ -223,3 +223,136 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "Dagelijks";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "Ochtend";
+"energy.type.evening" = "Avond";
+"energy.type.balanced" = "Gebalanceerd";
+
+/* ===== Aggressiveness ===== */
+"aggressiveness.manual" = "Handmatig";
+"aggressiveness.assist" = "Geassisteerd";
+"aggressiveness.semiauto" = "Halfautomatisch";
+"aggressiveness.auto" = "Automatisch";
+
+/* ===== Settings View ===== */
+"settings.title" = "Instellingen";
+"settings.autosave" = "Wijzigingen worden automatisch opgeslagen";
+"settings.section.profile" = "Profiel";
+"settings.section.schedule" = "Schema";
+"settings.section.ai" = "AI-instellingen";
+"settings.section.integrations" = "Integraties";
+"settings.section.notifications" = "Meldingen";
+"settings.section.advanced" = "Geavanceerd";
+"settings.profile.subtitle" = "Configureer je persoonlijk ritme en werkstijl";
+"settings.energy.card" = "Energiepatroon";
+"settings.energy.desc" = "Selecteer je piekfocustijd. AI plant belangrijke taken in deze periode.";
+"settings.pace.card" = "Schematempo";
+"settings.pace.desc" = "Bepaalt hoe agressief AI je schema vult bij het doen van suggesties.";
+"settings.schedule.subtitle" = "Stel je werkuren en dagelijkse focuscapaciteit in";
+"settings.work.card" = "Werkuren";
+"settings.work.start.label" = "Begin";
+"settings.work.end.label" = "Einde";
+"settings.lunch.start.label" = "Lunchbegin";
+"settings.lunch.end.label" = "Luncheinde";
+"settings.work.hours.format" = "%d uur werk";
+"settings.commute.card" = "Reistijd";
+"settings.commute.label" = "Eenrichtingsreistijd";
+"settings.commute.minutes.format" = "%d min";
+"settings.commute.roundtrip.format" = "Heen en terug %d min · Niet inbegrepen in dagelijkse focustijd";
+"settings.capacity.card" = "Dagelijkse focuscapaciteit";
+"settings.capacity.weekday" = "Doordeweeks";
+"settings.capacity.weekend" = "Weekend";
+"settings.capacity.hours.format" = "%d u";
+"settings.capacity.hours.minutes.format" = "%d u %d min";
+"settings.ai.subtitle" = "Kies de AI voor schema-analyse en planning";
+"settings.ai.engine.card" = "AI-engine";
+"settings.ai.status.card" = "Huidige status";
+"settings.ai.save.card" = "Opslaan";
+"settings.ai.installed.badge" = "Geïnstalleerd";
+"settings.ai.not.installed.badge" = "Niet geïnstalleerd";
+"settings.ai.claude.installed.detail" = "Geïnstalleerd — Krachtig taalbegrip";
+"settings.ai.claude.install.hint" = "Vereist: brew install claude";
+"settings.ai.codex.installed.detail" = "Geïnstalleerd — Geoptimaliseerd voor code";
+"settings.ai.codex.install.hint" = "Vereist: npm install -g @openai/codex";
+"settings.ai.save.button" = "AI-instellingen opslaan";
+"settings.ai.claude.desc" = "Uitstekend taalbegrip. Ideaal voor complexe planning en doelanalyse.";
+"settings.ai.codex.desc" = "Gespecialiseerd in code-gebaseerde optimalisatie. Goed voor snelle regelgebaseerde planning.";
+"settings.aggressiveness.manual.desc" = "Beheer alle schema's handmatig. AI blijft stil.";
+"settings.aggressiveness.assist.desc" = "AI stelt alleen voor. Jij beslist of je het accepteert.";
+"settings.aggressiveness.semiauto.desc" = "Goedgekeurde suggesties worden automatisch in de agenda geregistreerd.";
+"settings.aggressiveness.auto.desc" = "AI maakt en registreert automatisch optimale schema's.";
+"settings.integrations.subtitle" = "Verbindingen met externe diensten en agenda's beheren";
+"settings.google.connected" = "Verbonden";
+"settings.google.not.connected" = "Niet verbonden";
+"settings.google.no.email" = "Geen e-mailinformatie";
+"settings.google.connect.hint" = "Verbind je Google-account om je schema te synchroniseren";
+"settings.google.disconnect.button" = "Verbreken";
+"settings.google.login.button" = "Inloggen met Google";
+"settings.google.privacy" = "Agendagegevens worden alleen op het apparaat opgeslagen. AI gebruikt alleen gebeurtenistitels en -tijden.";
+"settings.apple.card" = "Apple-integratie";
+"settings.apple.calendar.title" = "Apple Agenda-synchronisatie";
+"settings.apple.calendar.desc" = "Toont Apple Agenda-gebeurtenissen op je apparaat";
+"settings.apple.reminders.title" = "Apple Herinneringen importeren";
+"settings.apple.reminders.desc" = "Importeert herinneringen als taken";
+"settings.google.skip.card" = "Gebruik zonder Google";
+"settings.google.skip.title" = "Google-aanmelding overslaan";
+"settings.google.skip.desc" = "AI-functies gebruiken zonder Google Agenda";
+"settings.notifications.subtitle" = "Stel meldingstijden in voor ochtendoverzicht en avondreview";
+"settings.morning.card" = "Ochtendoverzicht";
+"settings.morning.time.title" = "Tijd ochtendoverzicht";
+"settings.morning.time.desc" = "Informeert je over de samenvatting van het dagelijkse schema en de voortgang van doelen";
+"settings.evening.card" = "Avondreview";
+"settings.evening.time.title" = "Tijd avondreview";
+"settings.evening.time.desc" = "Beoordeelt voltooide schema's en plant voor morgen";
+"settings.notifications.permission.card" = "Meldingsbevoegdheid";
+"settings.notifications.permission.title" = "Systeemmeldingsbevoegdheid vereist";
+"settings.notifications.permission.desc" = "macOS Systeeminstellingen → Meldingen → Calen toestaan";
+"settings.notifications.open.system" = "Systeeminstellingen openen";
+"settings.hour.format" = "%d:00";
+"settings.advanced.subtitle" = "Gegevensbeheer en app-resetopties";
+"settings.onboarding.card" = "Onboarding";
+"settings.onboarding.restart.title" = "Onboarding opnieuw starten";
+"settings.onboarding.restart.desc" = "Het doelinstallatiescherm opnieuw doorlopen vanaf het begin";
+"settings.onboarding.restart.button" = "Opnieuw starten";
+"settings.data.reset.card" = "Gegevens resetten";
+"settings.completions.reset.title" = "Voltooiingsgeschiedenis resetten";
+"settings.completions.reset.desc" = "Verwijdert alle voltooiingsrecords van gebeurtenissen";
+"settings.completions.reset.button" = "Resetten";
+"settings.review.reset.title" = "Dagelijkse review resetten";
+"settings.review.reset.desc" = "Zet de voltooide review van vandaag terug om deze opnieuw te tonen";
+"settings.review.reset.button" = "Resetten";
+"settings.goals.delete.title" = "Alle doelen verwijderen";
+"settings.goals.delete.desc" = "Verwijdert alle geregistreerde doelen. Dit kan niet ongedaan worden gemaakt.";
+"settings.goals.delete.button" = "Verwijderen";
+"settings.language.card" = "Taal";
+"settings.language.desc" = "Selecteer een taal. De app wordt opnieuw gestart om de wijziging toe te passen.";
+"settings.app.info.card" = "App-info";
+"settings.app.version" = "Versie 1.0 · Persoonlijke AI-kalenderassistent";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "Plan voor morgen klaar";
+"review.today.lookback" = "Terugblik op vandaag";
+"review.move.all" = "Alles verplaatsen naar morgen";
+"review.generating.button" = "Plan genereren...";
+"review.generate.tomorrow" = "Plan voor morgen automatisch genereren";
+"review.no.past.events" = "Geen afgelopen afspraken vandaag";
+"review.generate.now.hint" = "Je kunt nu het plan voor morgen genereren";
+"review.on.track" = "Gaat goed";
+"review.evening.auto.plan" = "We genereren 's avonds automatisch het plan voor morgen";
+"review.ok.button" = "OK";
+"review.close.button" = "Sluiten";
+"review.add.button" = "Toevoegen";
+"review.skip.button" = "Overslaan";
+"review.period.week" = "Deze week";
+"review.period.month" = "Deze maand";
+"review.period.year" = "Dit jaar";
+"review.completion.rate" = "Voltooiingspercentage";
+"review.completion.count.format" = "%d / %d voltooid";
+"review.no.todos" = "Geen taken geregistreerd";
+"review.added.to.calendar" = "Toegevoegd aan agenda";
+"review.tomorrow.sufficient" = "Het schema voor morgen is al vol";
+
+/* ===== MainView ===== */
+"event.category.label" = "Categorie";
+"event.category.none" = "Geen";

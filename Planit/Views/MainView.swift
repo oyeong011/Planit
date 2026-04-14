@@ -802,7 +802,7 @@ struct ModalEventDetail: View {
                     let mappedCatID = viewModel.eventCategoryMappings[event.id]?.categoryID
                     Divider()
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("카테고리")
+                        Text(String(localized: "event.category.label"))
                             .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(.secondary)
                         ScrollView(.horizontal, showsIndicators: false) {
@@ -810,7 +810,7 @@ struct ModalEventDetail: View {
                                 Button {
                                     viewModel.setEventCategory(eventID: event.id, eventTitle: event.title, categoryID: nil)
                                 } label: {
-                                    Text("없음")
+                                    Text(String(localized: "event.category.none"))
                                         .font(.system(size: 11))
                                         .padding(.horizontal, 8).padding(.vertical, 4)
                                         .background(RoundedRectangle(cornerRadius: 5).fill(mappedCatID == nil ? Color.secondary.opacity(0.3) : Color.secondary.opacity(0.1)))

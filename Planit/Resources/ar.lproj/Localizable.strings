@@ -223,3 +223,136 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "يومي";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "صباحي";
+"energy.type.evening" = "مسائي";
+"energy.type.balanced" = "متوازن";
+
+/* ===== Aggressiveness ===== */
+"aggressiveness.manual" = "يدوي";
+"aggressiveness.assist" = "مساعد";
+"aggressiveness.semiauto" = "شبه تلقائي";
+"aggressiveness.auto" = "تلقائي";
+
+/* ===== Settings View ===== */
+"settings.title" = "الإعدادات";
+"settings.autosave" = "يتم حفظ التغييرات تلقائياً";
+"settings.section.profile" = "الملف الشخصي";
+"settings.section.schedule" = "الجدول";
+"settings.section.ai" = "إعدادات الذكاء الاصطناعي";
+"settings.section.integrations" = "التكاملات";
+"settings.section.notifications" = "الإشعارات";
+"settings.section.advanced" = "متقدم";
+"settings.profile.subtitle" = "اضبط إيقاعك الشخصي وأسلوب عملك";
+"settings.energy.card" = "نمط الطاقة";
+"settings.energy.desc" = "حدد وقت ذروة تركيزك. سيجدول الذكاء الاصطناعي المهام المهمة خلال هذه الفترة.";
+"settings.pace.card" = "وتيرة الجدولة";
+"settings.pace.desc" = "يحدد مدى تكثيف الذكاء الاصطناعي لجدولك عند تقديم الاقتراحات.";
+"settings.schedule.subtitle" = "حدد ساعات عملك وطاقة التركيز اليومية";
+"settings.work.card" = "ساعات العمل";
+"settings.work.start.label" = "البداية";
+"settings.work.end.label" = "النهاية";
+"settings.lunch.start.label" = "بداية الغداء";
+"settings.lunch.end.label" = "نهاية الغداء";
+"settings.work.hours.format" = "%d ساعة عمل";
+"settings.commute.card" = "وقت التنقل";
+"settings.commute.label" = "وقت التنقل في اتجاه واحد";
+"settings.commute.minutes.format" = "%d د";
+"settings.commute.roundtrip.format" = "ذهاب وإياب %d د · مستبعد من وقت التركيز اليومي";
+"settings.capacity.card" = "طاقة التركيز اليومية";
+"settings.capacity.weekday" = "أيام الأسبوع";
+"settings.capacity.weekend" = "عطلة نهاية الأسبوع";
+"settings.capacity.hours.format" = "%d س";
+"settings.capacity.hours.minutes.format" = "%d س %d د";
+"settings.ai.subtitle" = "اختر الذكاء الاصطناعي لتحليل الجدول والتخطيط";
+"settings.ai.engine.card" = "محرك الذكاء الاصطناعي";
+"settings.ai.status.card" = "الحالة الحالية";
+"settings.ai.save.card" = "حفظ";
+"settings.ai.installed.badge" = "مثبّت";
+"settings.ai.not.installed.badge" = "غير مثبّت";
+"settings.ai.claude.installed.detail" = "مثبّت — فهم قوي للغة الطبيعية";
+"settings.ai.claude.install.hint" = "مطلوب: brew install claude";
+"settings.ai.codex.installed.detail" = "مثبّت — محسّن للكود";
+"settings.ai.codex.install.hint" = "مطلوب: npm install -g @openai/codex";
+"settings.ai.save.button" = "حفظ إعدادات الذكاء الاصطناعي";
+"settings.ai.claude.desc" = "فهم ممتاز للغة الطبيعية. مثالي للجدولة المعقدة وتحليل الأهداف.";
+"settings.ai.codex.desc" = "متخصص في التحسين القائم على الكود. رائع للتخطيط السريع القائم على القواعد.";
+"settings.aggressiveness.manual.desc" = "إدارة جميع الجداول يدوياً. الذكاء الاصطناعي يبقى صامتاً.";
+"settings.aggressiveness.assist.desc" = "الذكاء الاصطناعي يقترح فقط. أنت تقرر القبول.";
+"settings.aggressiveness.semiauto.desc" = "يسجّل الاقتراحات المعتمدة تلقائياً في التقويم.";
+"settings.aggressiveness.auto.desc" = "يُنشئ الذكاء الاصطناعي ويسجّل الجداول المثلى تلقائياً.";
+"settings.integrations.subtitle" = "إدارة الخدمات الخارجية وتوصيلات التقويم";
+"settings.google.connected" = "متصل";
+"settings.google.not.connected" = "غير متصل";
+"settings.google.no.email" = "لا توجد معلومات بريد إلكتروني";
+"settings.google.connect.hint" = "اربط حساب Google الخاص بك لمزامنة جدولك";
+"settings.google.disconnect.button" = "قطع الاتصال";
+"settings.google.login.button" = "تسجيل الدخول بـ Google";
+"settings.google.privacy" = "يُخزَّن بيانات التقويم على الجهاز فقط. يرجع الذكاء الاصطناعي إلى عناوين الأحداث وأوقاتها فقط.";
+"settings.apple.card" = "تكامل Apple";
+"settings.apple.calendar.title" = "مزامنة تقويم Apple";
+"settings.apple.calendar.desc" = "يعرض أحداث تقويم Apple على جهازك";
+"settings.apple.reminders.title" = "استيراد تذكيرات Apple";
+"settings.apple.reminders.desc" = "يستورد التذكيرات كمهام";
+"settings.google.skip.card" = "الاستخدام بدون Google";
+"settings.google.skip.title" = "تخطي تسجيل الدخول بـ Google";
+"settings.google.skip.desc" = "استخدم ميزات الذكاء الاصطناعي بدون تقويم Google";
+"settings.notifications.subtitle" = "حدد أوقات إشعارات الإحاطة الصباحية ومراجعة المساء";
+"settings.morning.card" = "الإحاطة الصباحية";
+"settings.morning.time.title" = "وقت الإحاطة الصباحية";
+"settings.morning.time.desc" = "يُخطرك بملخص جدول اليوم وتقدم الأهداف";
+"settings.evening.card" = "مراجعة المساء";
+"settings.evening.time.title" = "وقت مراجعة المساء";
+"settings.evening.time.desc" = "يراجع الجداول المكتملة ويخطط للغد";
+"settings.notifications.permission.card" = "إذن الإشعارات";
+"settings.notifications.permission.title" = "يلزم إذن إشعارات النظام";
+"settings.notifications.permission.desc" = "إعدادات نظام macOS ← الإشعارات ← السماح لـ Calen";
+"settings.notifications.open.system" = "فتح إعدادات النظام";
+"settings.hour.format" = "%d:00";
+"settings.advanced.subtitle" = "خيارات إدارة البيانات وإعادة ضبط التطبيق";
+"settings.onboarding.card" = "الإعداد الأولي";
+"settings.onboarding.restart.title" = "إعادة تشغيل الإعداد الأولي";
+"settings.onboarding.restart.desc" = "إعادة شاشة إعداد الأهداف من البداية";
+"settings.onboarding.restart.button" = "إعادة التشغيل";
+"settings.data.reset.card" = "إعادة ضبط البيانات";
+"settings.completions.reset.title" = "إعادة ضبط سجل الإنجازات";
+"settings.completions.reset.desc" = "يحذف جميع سجلات إتمام الأحداث";
+"settings.completions.reset.button" = "إعادة الضبط";
+"settings.review.reset.title" = "إعادة ضبط المراجعة اليومية";
+"settings.review.reset.desc" = "يعيد ضبط المراجعة المكتملة لهذا اليوم لعرضها مجدداً";
+"settings.review.reset.button" = "إعادة الضبط";
+"settings.goals.delete.title" = "حذف جميع الأهداف";
+"settings.goals.delete.desc" = "يحذف جميع الأهداف المسجلة. لا يمكن التراجع عن هذا.";
+"settings.goals.delete.button" = "حذف";
+"settings.language.card" = "اللغة";
+"settings.language.desc" = "حدد اللغة. سيعيد التطبيق التشغيل لتطبيق التغيير.";
+"settings.app.info.card" = "معلومات التطبيق";
+"settings.app.version" = "الإصدار 1.0 · مساعد التقويم الشخصي بالذكاء الاصطناعي";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "خطة الغد جاهزة";
+"review.today.lookback" = "مراجعة اليوم";
+"review.move.all" = "نقل الكل إلى الغد";
+"review.generating.button" = "جارٍ إنشاء الخطة...";
+"review.generate.tomorrow" = "إنشاء خطة الغد تلقائياً";
+"review.no.past.events" = "لا توجد أحداث سابقة اليوم";
+"review.generate.now.hint" = "يمكنك إنشاء خطة الغد الآن";
+"review.on.track" = "يسير بسلاسة";
+"review.evening.auto.plan" = "سننشئ خطة الغد تلقائياً في المساء";
+"review.ok.button" = "حسناً";
+"review.close.button" = "إغلاق";
+"review.add.button" = "إضافة";
+"review.skip.button" = "تخطي";
+"review.period.week" = "هذا الأسبوع";
+"review.period.month" = "هذا الشهر";
+"review.period.year" = "هذا العام";
+"review.completion.rate" = "معدل الإنجاز";
+"review.completion.count.format" = "%d / %d مكتمل";
+"review.no.todos" = "لا توجد مهام مسجلة";
+"review.added.to.calendar" = "أُضيف إلى التقويم";
+"review.tomorrow.sufficient" = "جدول الغد ممتلئ بالفعل";
+
+/* ===== MainView ===== */
+"event.category.label" = "الفئة";
+"event.category.none" = "بلا فئة";

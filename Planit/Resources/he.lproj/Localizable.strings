@@ -223,3 +223,136 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "יומי";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "בוקר";
+"energy.type.evening" = "ערב";
+"energy.type.balanced" = "מאוזן";
+
+/* ===== Aggressiveness ===== */
+"aggressiveness.manual" = "ידני";
+"aggressiveness.assist" = "מסייע";
+"aggressiveness.semiauto" = "חצי-אוטומטי";
+"aggressiveness.auto" = "אוטומטי";
+
+/* ===== Settings View ===== */
+"settings.title" = "הגדרות";
+"settings.autosave" = "שינויים נשמרים אוטומטית";
+"settings.section.profile" = "פרופיל";
+"settings.section.schedule" = "לוח זמנים";
+"settings.section.ai" = "הגדרות AI";
+"settings.section.integrations" = "אינטגרציות";
+"settings.section.notifications" = "התראות";
+"settings.section.advanced" = "מתקדם";
+"settings.profile.subtitle" = "הגדר את הקצב האישי ואת סגנון העבודה שלך";
+"settings.energy.card" = "דפוס אנרגיה";
+"settings.energy.desc" = "בחר את שעת הריכוז המרבי שלך. AI יתזמן משימות חשובות בתקופה זו.";
+"settings.pace.card" = "קצב לוח הזמנים";
+"settings.pace.desc" = "קובע עד כמה AI ממלא את לוח הזמנים שלך כשמציע הצעות.";
+"settings.schedule.subtitle" = "הגדר את שעות העבודה וקיבולת הריכוז היומית";
+"settings.work.card" = "שעות עבודה";
+"settings.work.start.label" = "התחלה";
+"settings.work.end.label" = "סיום";
+"settings.lunch.start.label" = "תחילת ארוחת צהריים";
+"settings.lunch.end.label" = "סיום ארוחת צהריים";
+"settings.work.hours.format" = "%d שעות עבודה";
+"settings.commute.card" = "זמן נסיעה לעבודה";
+"settings.commute.label" = "זמן נסיעה בכיוון אחד";
+"settings.commute.minutes.format" = "%d דק'";
+"settings.commute.roundtrip.format" = "הלוך-חזור %d דק' · לא נכלל בזמן ריכוז יומי";
+"settings.capacity.card" = "קיבולת ריכוז יומית";
+"settings.capacity.weekday" = "יום חול";
+"settings.capacity.weekend" = "סוף שבוע";
+"settings.capacity.hours.format" = "%d ש'";
+"settings.capacity.hours.minutes.format" = "%d ש' %d דק'";
+"settings.ai.subtitle" = "בחר את ה-AI לניתוח לוח זמנים ותכנון";
+"settings.ai.engine.card" = "מנוע AI";
+"settings.ai.status.card" = "סטטוס נוכחי";
+"settings.ai.save.card" = "שמור";
+"settings.ai.installed.badge" = "מותקן";
+"settings.ai.not.installed.badge" = "לא מותקן";
+"settings.ai.claude.installed.detail" = "מותקן — הבנת שפה טבעית חזקה";
+"settings.ai.claude.install.hint" = "נדרש: brew install claude";
+"settings.ai.codex.installed.detail" = "מותקן — מותאם לקוד";
+"settings.ai.codex.install.hint" = "נדרש: npm install -g @openai/codex";
+"settings.ai.save.button" = "שמור הגדרות AI";
+"settings.ai.claude.desc" = "הבנת שפה טבעית מצוינת. אידיאלי לתזמון מורכב וניתוח מטרות.";
+"settings.ai.codex.desc" = "מתמחה באופטימיזציה מבוססת קוד. מצוין לתכנון מהיר מבוסס-כללים.";
+"settings.aggressiveness.manual.desc" = "נהל את כל לוחות הזמנים ידנית. AI שומר על שקט.";
+"settings.aggressiveness.assist.desc" = "AI מציע בלבד. אתה מחליט אם לקבל.";
+"settings.aggressiveness.semiauto.desc" = "רושם הצעות מאושרות לוח הזמנים אוטומטית.";
+"settings.aggressiveness.auto.desc" = "AI יוצר ורושם לוחות זמנים אופטימליים אוטומטית.";
+"settings.integrations.subtitle" = "נהל חיבורי שירותים חיצוניים ויומנים";
+"settings.google.connected" = "מחובר";
+"settings.google.not.connected" = "לא מחובר";
+"settings.google.no.email" = "אין מידע אימייל";
+"settings.google.connect.hint" = "חבר את חשבון Google שלך לסנכרון לוח הזמנים";
+"settings.google.disconnect.button" = "נתק";
+"settings.google.login.button" = "התחבר עם Google";
+"settings.google.privacy" = "נתוני יומן מאוחסנים במכשיר בלבד. AI מתייחס רק לכותרות ולזמני האירועים.";
+"settings.apple.card" = "אינטגרציית Apple";
+"settings.apple.calendar.title" = "סנכרון יומן Apple";
+"settings.apple.calendar.desc" = "מציג אירועי יומן Apple במכשירך";
+"settings.apple.reminders.title" = "ייבוא תזכורות Apple";
+"settings.apple.reminders.desc" = "מייבא תזכורות כמשימות";
+"settings.google.skip.card" = "שימוש ללא Google";
+"settings.google.skip.title" = "דלג על כניסה ל-Google";
+"settings.google.skip.desc" = "השתמש בתכונות AI ללא Google Calendar";
+"settings.notifications.subtitle" = "הגדר שעות להתראת בוקר ולסקירת ערב";
+"settings.morning.card" = "תדריך בוקר";
+"settings.morning.time.title" = "שעת תדריך בוקר";
+"settings.morning.time.desc" = "מודיע לך על סיכום לוח הזמנים של היום ועל התקדמות המטרות";
+"settings.evening.card" = "סקירת ערב";
+"settings.evening.time.title" = "שעת סקירת ערב";
+"settings.evening.time.desc" = "סוקר לוחות זמנים שהושלמו ומתכנן למחר";
+"settings.notifications.permission.card" = "הרשאת התראות";
+"settings.notifications.permission.title" = "נדרשת הרשאת התראות מערכת";
+"settings.notifications.permission.desc" = "הגדרות מערכת macOS ← התראות ← אפשר Calen";
+"settings.notifications.open.system" = "פתח הגדרות מערכת";
+"settings.hour.format" = "%d:00";
+"settings.advanced.subtitle" = "ניהול נתונים ואפשרויות איפוס אפליקציה";
+"settings.onboarding.card" = "הכנסה לשימוש";
+"settings.onboarding.restart.title" = "הפעל מחדש הכנסה לשימוש";
+"settings.onboarding.restart.desc" = "חזור על מסך הגדרת המטרות מהתחלה";
+"settings.onboarding.restart.button" = "הפעל מחדש";
+"settings.data.reset.card" = "איפוס נתונים";
+"settings.completions.reset.title" = "איפוס היסטוריית השלמות";
+"settings.completions.reset.desc" = "מוחק את כל רשומות השלמת האירועים";
+"settings.completions.reset.button" = "איפוס";
+"settings.review.reset.title" = "איפוס סקירה יומית";
+"settings.review.reset.desc" = "מאפס את הסקירה שהושלמה היום להצגתה שוב";
+"settings.review.reset.button" = "איפוס";
+"settings.goals.delete.title" = "מחק את כל המטרות";
+"settings.goals.delete.desc" = "מוחק את כל המטרות הרשומות. לא ניתן לבטל פעולה זו.";
+"settings.goals.delete.button" = "מחק";
+"settings.language.card" = "שפה";
+"settings.language.desc" = "בחר שפה. האפליקציה תופעל מחדש להחלת השינוי.";
+"settings.app.info.card" = "מידע על האפליקציה";
+"settings.app.version" = "גרסה 1.0 · עוזר יומן AI אישי";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "תוכנית מחר מוכנה";
+"review.today.lookback" = "סקירת היום";
+"review.move.all" = "העבר הכל למחר";
+"review.generating.button" = "מייצר תוכנית...";
+"review.generate.tomorrow" = "ייצר תוכנית מחר אוטומטית";
+"review.no.past.events" = "אין אירועים עבר היום";
+"review.generate.now.hint" = "ניתן לייצר תוכנית מחר עכשיו";
+"review.on.track" = "מתנהל בצורה חלקה";
+"review.evening.auto.plan" = "ניצור אוטומטית תוכנית מחר בערב";
+"review.ok.button" = "אישור";
+"review.close.button" = "סגור";
+"review.add.button" = "הוסף";
+"review.skip.button" = "דלג";
+"review.period.week" = "השבוע";
+"review.period.month" = "החודש";
+"review.period.year" = "השנה";
+"review.completion.rate" = "אחוז השלמה";
+"review.completion.count.format" = "%d / %d הושלמו";
+"review.no.todos" = "אין משימות רשומות";
+"review.added.to.calendar" = "נוסף ליומן";
+"review.tomorrow.sufficient" = "לוח הזמנים של מחר כבר מלא";
+
+/* ===== MainView ===== */
+"event.category.label" = "קטגוריה";
+"event.category.none" = "ללא";

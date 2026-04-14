@@ -223,3 +223,136 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "ประจำวัน";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "เช้า";
+"energy.type.evening" = "เย็น";
+"energy.type.balanced" = "สมดุล";
+
+/* ===== Aggressiveness ===== */
+"aggressiveness.manual" = "ด้วยตนเอง";
+"aggressiveness.assist" = "ช่วยเหลือ";
+"aggressiveness.semiauto" = "กึ่งอัตโนมัติ";
+"aggressiveness.auto" = "อัตโนมัติ";
+
+/* ===== Settings View ===== */
+"settings.title" = "การตั้งค่า";
+"settings.autosave" = "บันทึกการเปลี่ยนแปลงอัตโนมัติ";
+"settings.section.profile" = "โปรไฟล์";
+"settings.section.schedule" = "ตารางเวลา";
+"settings.section.ai" = "การตั้งค่า AI";
+"settings.section.integrations" = "การเชื่อมต่อ";
+"settings.section.notifications" = "การแจ้งเตือน";
+"settings.section.advanced" = "ขั้นสูง";
+"settings.profile.subtitle" = "กำหนดจังหวะส่วนตัวและสไตล์การทำงานของคุณ";
+"settings.energy.card" = "รูปแบบพลังงาน";
+"settings.energy.desc" = "เลือกช่วงเวลาที่มีสมาธิสูงสุด AI จะจัดงานสำคัญในช่วงเวลานี้";
+"settings.pace.card" = "ความเร็วตาราง";
+"settings.pace.desc" = "กำหนดความเข้มข้นที่ AI เติมตารางเวลาเมื่อให้คำแนะนำ";
+"settings.schedule.subtitle" = "กำหนดเวลาทำงานและความจุโฟกัสรายวัน";
+"settings.work.card" = "เวลาทำงาน";
+"settings.work.start.label" = "เริ่ม";
+"settings.work.end.label" = "สิ้นสุด";
+"settings.lunch.start.label" = "เริ่มพักเที่ยง";
+"settings.lunch.end.label" = "สิ้นสุดพักเที่ยง";
+"settings.work.hours.format" = "%d ชม. ทำงาน";
+"settings.commute.card" = "เวลาเดินทาง";
+"settings.commute.label" = "เวลาเดินทางทางเดียว";
+"settings.commute.minutes.format" = "%d นาที";
+"settings.commute.roundtrip.format" = "ไป-กลับ %d นาที · ไม่นับรวมในเวลาโฟกัสรายวัน";
+"settings.capacity.card" = "ความจุโฟกัสรายวัน";
+"settings.capacity.weekday" = "วันธรรมดา";
+"settings.capacity.weekend" = "วันหยุดสุดสัปดาห์";
+"settings.capacity.hours.format" = "%d ชม.";
+"settings.capacity.hours.minutes.format" = "%d ชม. %d นาที";
+"settings.ai.subtitle" = "เลือก AI สำหรับวิเคราะห์และวางแผนตาราง";
+"settings.ai.engine.card" = "AI Engine";
+"settings.ai.status.card" = "สถานะปัจจุบัน";
+"settings.ai.save.card" = "บันทึก";
+"settings.ai.installed.badge" = "ติดตั้งแล้ว";
+"settings.ai.not.installed.badge" = "ยังไม่ได้ติดตั้ง";
+"settings.ai.claude.installed.detail" = "ติดตั้งแล้ว — เข้าใจภาษาธรรมชาติได้ดีเยี่ยม";
+"settings.ai.claude.install.hint" = "จำเป็น: brew install claude";
+"settings.ai.codex.installed.detail" = "ติดตั้งแล้ว — ปรับแต่งสำหรับโค้ด";
+"settings.ai.codex.install.hint" = "จำเป็น: npm install -g @openai/codex";
+"settings.ai.save.button" = "บันทึกการตั้งค่า AI";
+"settings.ai.claude.desc" = "เข้าใจภาษาธรรมชาติได้ดีเยี่ยม เหมาะสำหรับการวางแผนที่ซับซ้อนและวิเคราะห์เป้าหมาย";
+"settings.ai.codex.desc" = "เชี่ยวชาญการปรับแต่งตามโค้ด เหมาะสำหรับการวางแผนตามกฎอย่างรวดเร็ว";
+"settings.aggressiveness.manual.desc" = "จัดการตารางทั้งหมดด้วยตนเอง AI ไม่แทรกแซง";
+"settings.aggressiveness.assist.desc" = "AI แนะนำเท่านั้น คุณตัดสินใจเอง";
+"settings.aggressiveness.semiauto.desc" = "ลงทะเบียนคำแนะนำที่อนุมัติแล้วในปฏิทินอัตโนมัติ";
+"settings.aggressiveness.auto.desc" = "AI สร้างและลงทะเบียนตารางที่เหมาะสมอัตโนมัติ";
+"settings.integrations.subtitle" = "จัดการการเชื่อมต่อบริการภายนอกและปฏิทิน";
+"settings.google.connected" = "เชื่อมต่อแล้ว";
+"settings.google.not.connected" = "ยังไม่ได้เชื่อมต่อ";
+"settings.google.no.email" = "ไม่มีข้อมูลอีเมล";
+"settings.google.connect.hint" = "เชื่อมต่อบัญชี Google เพื่อซิงค์ตารางเวลา";
+"settings.google.disconnect.button" = "ยกเลิกการเชื่อมต่อ";
+"settings.google.login.button" = "ลงชื่อเข้าด้วย Google";
+"settings.google.privacy" = "ข้อมูลปฏิทินเก็บไว้ในอุปกรณ์เท่านั้น AI อ้างอิงเฉพาะชื่อและเวลากิจกรรม";
+"settings.apple.card" = "การเชื่อมต่อ Apple";
+"settings.apple.calendar.title" = "ซิงค์ Apple Calendar";
+"settings.apple.calendar.desc" = "แสดงกิจกรรม Apple Calendar บนอุปกรณ์ของคุณ";
+"settings.apple.reminders.title" = "นำเข้า Apple Reminders";
+"settings.apple.reminders.desc" = "นำเข้าการเตือนเป็นสิ่งที่ต้องทำ";
+"settings.google.skip.card" = "ใช้โดยไม่มี Google";
+"settings.google.skip.title" = "ข้ามการลงชื่อ Google";
+"settings.google.skip.desc" = "ใช้ฟีเจอร์ AI โดยไม่ต้องใช้ Google Calendar";
+"settings.notifications.subtitle" = "ตั้งเวลาแจ้งเตือนสรุปเช้าและทบทวนตอนเย็น";
+"settings.morning.card" = "สรุปเช้า";
+"settings.morning.time.title" = "เวลาสรุปเช้า";
+"settings.morning.time.desc" = "แจ้งเตือนสรุปตารางวันนี้และความคืบหน้าเป้าหมาย";
+"settings.evening.card" = "ทบทวนตอนเย็น";
+"settings.evening.time.title" = "เวลาทบทวนตอนเย็น";
+"settings.evening.time.desc" = "ทบทวนตารางที่เสร็จแล้วและวางแผนสำหรับพรุ่งนี้";
+"settings.notifications.permission.card" = "สิทธิ์แจ้งเตือน";
+"settings.notifications.permission.title" = "ต้องการสิทธิ์แจ้งเตือนจากระบบ";
+"settings.notifications.permission.desc" = "การตั้งค่าระบบ macOS → การแจ้งเตือน → อนุญาต Calen";
+"settings.notifications.open.system" = "เปิดการตั้งค่าระบบ";
+"settings.hour.format" = "%d:00";
+"settings.advanced.subtitle" = "ตัวเลือกการจัดการข้อมูลและรีเซ็ตแอป";
+"settings.onboarding.card" = "Onboarding";
+"settings.onboarding.restart.title" = "เริ่ม Onboarding ใหม่";
+"settings.onboarding.restart.desc" = "ทำหน้าจอตั้งเป้าหมายใหม่ตั้งแต่ต้น";
+"settings.onboarding.restart.button" = "เริ่มใหม่";
+"settings.data.reset.card" = "รีเซ็ตข้อมูล";
+"settings.completions.reset.title" = "รีเซ็ตประวัติการทำเสร็จ";
+"settings.completions.reset.desc" = "ลบบันทึกการทำเสร็จกิจกรรมทั้งหมด";
+"settings.completions.reset.button" = "รีเซ็ต";
+"settings.review.reset.title" = "รีเซ็ตการทบทวนรายวัน";
+"settings.review.reset.desc" = "รีเซ็ตการทบทวนที่เสร็จแล้วในวันนี้เพื่อแสดงอีกครั้ง";
+"settings.review.reset.button" = "รีเซ็ต";
+"settings.goals.delete.title" = "ลบเป้าหมายทั้งหมด";
+"settings.goals.delete.desc" = "ลบเป้าหมายที่ลงทะเบียนทั้งหมด ไม่สามารถเลิกทำได้";
+"settings.goals.delete.button" = "ลบ";
+"settings.language.card" = "ภาษา";
+"settings.language.desc" = "เลือกภาษา แอปจะรีสตาร์ทเพื่อใช้การเปลี่ยนแปลง";
+"settings.app.info.card" = "ข้อมูลแอป";
+"settings.app.version" = "เวอร์ชัน 1.0 · ผู้ช่วย AI ปฏิทินส่วนตัว";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "แผนพรุ่งนี้พร้อมแล้ว";
+"review.today.lookback" = "ทบทวนวันนี้";
+"review.move.all" = "ย้ายทั้งหมดไปพรุ่งนี้";
+"review.generating.button" = "กำลังสร้างแผน...";
+"review.generate.tomorrow" = "สร้างแผนพรุ่งนี้อัตโนมัติ";
+"review.no.past.events" = "ไม่มีกิจกรรมที่ผ่านมาวันนี้";
+"review.generate.now.hint" = "คุณสามารถสร้างแผนพรุ่งนี้ได้เดี๋ยวนี้";
+"review.on.track" = "กำลังดำเนินไปอย่างราบรื่น";
+"review.evening.auto.plan" = "เราจะสร้างแผนพรุ่งนี้อัตโนมัติในตอนเย็น";
+"review.ok.button" = "ตกลง";
+"review.close.button" = "ปิด";
+"review.add.button" = "เพิ่ม";
+"review.skip.button" = "ข้าม";
+"review.period.week" = "สัปดาห์นี้";
+"review.period.month" = "เดือนนี้";
+"review.period.year" = "ปีนี้";
+"review.completion.rate" = "อัตราการทำเสร็จ";
+"review.completion.count.format" = "%d / %d เสร็จแล้ว";
+"review.no.todos" = "ไม่มีสิ่งที่ต้องทำที่ลงทะเบียน";
+"review.added.to.calendar" = "เพิ่มในปฏิทินแล้ว";
+"review.tomorrow.sufficient" = "ตารางพรุ่งนี้เต็มแล้ว";
+
+/* ===== MainView ===== */
+"event.category.label" = "หมวดหมู่";
+"event.category.none" = "ไม่มี";

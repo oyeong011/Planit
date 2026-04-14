@@ -223,3 +223,136 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "Quotidiano";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "Mattina";
+"energy.type.evening" = "Sera";
+"energy.type.balanced" = "Equilibrato";
+
+/* ===== Aggressiveness ===== */
+"aggressiveness.manual" = "Manuale";
+"aggressiveness.assist" = "Assistito";
+"aggressiveness.semiauto" = "Semiautomatico";
+"aggressiveness.auto" = "Automatico";
+
+/* ===== Settings View ===== */
+"settings.title" = "Impostazioni";
+"settings.autosave" = "Le modifiche vengono salvate automaticamente";
+"settings.section.profile" = "Profilo";
+"settings.section.schedule" = "Programma";
+"settings.section.ai" = "Impostazioni IA";
+"settings.section.integrations" = "Integrazioni";
+"settings.section.notifications" = "Notifiche";
+"settings.section.advanced" = "Avanzate";
+"settings.profile.subtitle" = "Configura il tuo ritmo personale e stile di lavoro";
+"settings.energy.card" = "Schema energetico";
+"settings.energy.desc" = "Seleziona il tuo momento di massima concentrazione. L'IA pianificherà le attività importanti in questo periodo.";
+"settings.pace.card" = "Ritmo del programma";
+"settings.pace.desc" = "Determina quanto aggressivamente l'IA riempie il tuo programma quando fa suggerimenti.";
+"settings.schedule.subtitle" = "Imposta l'orario di lavoro e la capacità di concentrazione giornaliera";
+"settings.work.card" = "Orario di lavoro";
+"settings.work.start.label" = "Inizio";
+"settings.work.end.label" = "Fine";
+"settings.lunch.start.label" = "Inizio pranzo";
+"settings.lunch.end.label" = "Fine pranzo";
+"settings.work.hours.format" = "%d h di lavoro";
+"settings.commute.card" = "Tempo di tragitto";
+"settings.commute.label" = "Tempo di tragitto (solo andata)";
+"settings.commute.minutes.format" = "%d min";
+"settings.commute.roundtrip.format" = "Andata e ritorno %d min · Escluso dal tempo di concentrazione giornaliero";
+"settings.capacity.card" = "Capacità di concentrazione giornaliera";
+"settings.capacity.weekday" = "Giorni feriali";
+"settings.capacity.weekend" = "Fine settimana";
+"settings.capacity.hours.format" = "%d h";
+"settings.capacity.hours.minutes.format" = "%d h %d min";
+"settings.ai.subtitle" = "Scegli l'IA per l'analisi e la pianificazione del programma";
+"settings.ai.engine.card" = "Motore IA";
+"settings.ai.status.card" = "Stato attuale";
+"settings.ai.save.card" = "Salva";
+"settings.ai.installed.badge" = "Installato";
+"settings.ai.not.installed.badge" = "Non installato";
+"settings.ai.claude.installed.detail" = "Installato — Potente comprensione del linguaggio naturale";
+"settings.ai.claude.install.hint" = "Richiesto: brew install claude";
+"settings.ai.codex.installed.detail" = "Installato — Ottimizzato per il codice";
+"settings.ai.codex.install.hint" = "Richiesto: npm install -g @openai/codex";
+"settings.ai.save.button" = "Salva impostazioni IA";
+"settings.ai.claude.desc" = "Eccellente comprensione del linguaggio naturale. Ideale per una pianificazione complessa e l'analisi degli obiettivi.";
+"settings.ai.codex.desc" = "Specializzato nell'ottimizzazione basata su codice. Ottimo per una pianificazione rapida basata su regole.";
+"settings.aggressiveness.manual.desc" = "Gestisci tutti i programmi manualmente. L'IA rimane silenziosa.";
+"settings.aggressiveness.assist.desc" = "L'IA suggerisce soltanto. Sei tu a decidere se accettare.";
+"settings.aggressiveness.semiauto.desc" = "Registra automaticamente i suggerimenti approvati nel calendario.";
+"settings.aggressiveness.auto.desc" = "L'IA crea e registra automaticamente i programmi ottimali.";
+"settings.integrations.subtitle" = "Gestisci le connessioni a servizi esterni e calendari";
+"settings.google.connected" = "Connesso";
+"settings.google.not.connected" = "Non connesso";
+"settings.google.no.email" = "Nessuna informazione e-mail";
+"settings.google.connect.hint" = "Connetti il tuo account Google per sincronizzare il programma";
+"settings.google.disconnect.button" = "Disconnetti";
+"settings.google.login.button" = "Accedi con Google";
+"settings.google.privacy" = "I dati del calendario sono archiviati solo sul dispositivo. L'IA fa riferimento solo ai titoli e agli orari degli eventi.";
+"settings.apple.card" = "Integrazione Apple";
+"settings.apple.calendar.title" = "Sincronizzazione Calendario Apple";
+"settings.apple.calendar.desc" = "Mostra gli eventi del Calendario Apple sul tuo dispositivo";
+"settings.apple.reminders.title" = "Importa Promemoria Apple";
+"settings.apple.reminders.desc" = "Importa i promemoria come attività";
+"settings.google.skip.card" = "Usa senza Google";
+"settings.google.skip.title" = "Salta l'accesso con Google";
+"settings.google.skip.desc" = "Usa le funzionalità IA senza Google Calendar";
+"settings.notifications.subtitle" = "Imposta gli orari delle notifiche per il briefing mattutino e la revisione serale";
+"settings.morning.card" = "Briefing mattutino";
+"settings.morning.time.title" = "Ora del briefing mattutino";
+"settings.morning.time.desc" = "Ti notifica il riepilogo del programma di oggi e l'avanzamento degli obiettivi";
+"settings.evening.card" = "Revisione serale";
+"settings.evening.time.title" = "Ora della revisione serale";
+"settings.evening.time.desc" = "Esamina i programmi completati e pianifica per domani";
+"settings.notifications.permission.card" = "Permesso notifiche";
+"settings.notifications.permission.title" = "Permesso notifiche di sistema richiesto";
+"settings.notifications.permission.desc" = "Impostazioni di sistema macOS → Notifiche → Consenti Calen";
+"settings.notifications.open.system" = "Apri Impostazioni di sistema";
+"settings.hour.format" = "%d:00";
+"settings.advanced.subtitle" = "Opzioni di gestione dati e ripristino dell'app";
+"settings.onboarding.card" = "Introduzione";
+"settings.onboarding.restart.title" = "Riavvia l'introduzione";
+"settings.onboarding.restart.desc" = "Rifai la schermata di configurazione degli obiettivi dall'inizio";
+"settings.onboarding.restart.button" = "Riavvia";
+"settings.data.reset.card" = "Ripristina dati";
+"settings.completions.reset.title" = "Ripristina cronologia completamenti";
+"settings.completions.reset.desc" = "Elimina tutti i record di completamento degli eventi";
+"settings.completions.reset.button" = "Ripristina";
+"settings.review.reset.title" = "Ripristina revisione giornaliera";
+"settings.review.reset.desc" = "Ripristina la revisione completata di oggi per mostrarla di nuovo";
+"settings.review.reset.button" = "Ripristina";
+"settings.goals.delete.title" = "Elimina tutti gli obiettivi";
+"settings.goals.delete.desc" = "Elimina tutti gli obiettivi registrati. Questa azione non può essere annullata.";
+"settings.goals.delete.button" = "Elimina";
+"settings.language.card" = "Lingua";
+"settings.language.desc" = "Seleziona una lingua. L'app si riavvierà per applicare la modifica.";
+"settings.app.info.card" = "Info app";
+"settings.app.version" = "Versione 1.0 · Assistente IA personale per il calendario";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "Piano per domani pronto";
+"review.today.lookback" = "Revisione di oggi";
+"review.move.all" = "Sposta tutto a domani";
+"review.generating.button" = "Generazione piano...";
+"review.generate.tomorrow" = "Genera automaticamente il piano per domani";
+"review.no.past.events" = "Nessun evento passato oggi";
+"review.generate.now.hint" = "Puoi generare ora il piano per domani";
+"review.on.track" = "Tutto procede bene";
+"review.evening.auto.plan" = "Genereremo automaticamente il piano per domani in serata";
+"review.ok.button" = "OK";
+"review.close.button" = "Chiudi";
+"review.add.button" = "Aggiungi";
+"review.skip.button" = "Salta";
+"review.period.week" = "Questa settimana";
+"review.period.month" = "Questo mese";
+"review.period.year" = "Quest'anno";
+"review.completion.rate" = "Tasso di completamento";
+"review.completion.count.format" = "%d / %d completati";
+"review.no.todos" = "Nessuna attività registrata";
+"review.added.to.calendar" = "Aggiunto al calendario";
+"review.tomorrow.sufficient" = "Il programma di domani è già pieno";
+
+/* ===== MainView ===== */
+"event.category.label" = "Categoria";
+"event.category.none" = "Nessuna";

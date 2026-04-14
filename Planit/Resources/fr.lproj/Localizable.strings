@@ -223,3 +223,136 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "Quotidien";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "Matin";
+"energy.type.evening" = "Soir";
+"energy.type.balanced" = "Équilibré";
+
+/* ===== Aggressiveness ===== */
+"aggressiveness.manual" = "Manuel";
+"aggressiveness.assist" = "Assisté";
+"aggressiveness.semiauto" = "Semi-auto";
+"aggressiveness.auto" = "Automatique";
+
+/* ===== Settings View ===== */
+"settings.title" = "Paramètres";
+"settings.autosave" = "Les modifications sont enregistrées automatiquement";
+"settings.section.profile" = "Profil";
+"settings.section.schedule" = "Planning";
+"settings.section.ai" = "Paramètres IA";
+"settings.section.integrations" = "Intégrations";
+"settings.section.notifications" = "Notifications";
+"settings.section.advanced" = "Avancé";
+"settings.profile.subtitle" = "Configurez votre rythme personnel et votre style de travail";
+"settings.energy.card" = "Profil d'énergie";
+"settings.energy.desc" = "Sélectionnez votre heure de concentration optimale. L'IA planifiera les tâches importantes pendant cette période.";
+"settings.pace.card" = "Cadence du planning";
+"settings.pace.desc" = "Détermine l'intensité avec laquelle l'IA remplit votre planning lors des suggestions.";
+"settings.schedule.subtitle" = "Définissez vos heures de travail et votre capacité de concentration quotidienne";
+"settings.work.card" = "Heures de travail";
+"settings.work.start.label" = "Début";
+"settings.work.end.label" = "Fin";
+"settings.lunch.start.label" = "Début du déjeuner";
+"settings.lunch.end.label" = "Fin du déjeuner";
+"settings.work.hours.format" = "%d h de travail";
+"settings.commute.card" = "Temps de trajet";
+"settings.commute.label" = "Temps de trajet (aller simple)";
+"settings.commute.minutes.format" = "%d min";
+"settings.commute.roundtrip.format" = "Aller-retour %d min · Exclu du temps de concentration quotidien";
+"settings.capacity.card" = "Capacité de concentration quotidienne";
+"settings.capacity.weekday" = "Semaine";
+"settings.capacity.weekend" = "Week-end";
+"settings.capacity.hours.format" = "%d h";
+"settings.capacity.hours.minutes.format" = "%d h %d min";
+"settings.ai.subtitle" = "Choisissez l'IA pour l'analyse et la planification de votre emploi du temps";
+"settings.ai.engine.card" = "Moteur IA";
+"settings.ai.status.card" = "État actuel";
+"settings.ai.save.card" = "Enregistrer";
+"settings.ai.installed.badge" = "Installé";
+"settings.ai.not.installed.badge" = "Non installé";
+"settings.ai.claude.installed.detail" = "Installé — Puissante compréhension du langage naturel";
+"settings.ai.claude.install.hint" = "Requis : brew install claude";
+"settings.ai.codex.installed.detail" = "Installé — Optimisé pour le code";
+"settings.ai.codex.install.hint" = "Requis : npm install -g @openai/codex";
+"settings.ai.save.button" = "Enregistrer les paramètres IA";
+"settings.ai.claude.desc" = "Excellente compréhension du langage naturel. Idéal pour une planification complexe et l'analyse d'objectifs.";
+"settings.ai.codex.desc" = "Spécialisé dans l'optimisation basée sur le code. Idéal pour une planification rapide basée sur des règles.";
+"settings.aggressiveness.manual.desc" = "Gérez tous les plannings manuellement. L'IA reste silencieuse.";
+"settings.aggressiveness.assist.desc" = "L'IA suggère seulement. Vous décidez d'accepter.";
+"settings.aggressiveness.semiauto.desc" = "Enregistre automatiquement les suggestions approuvées dans le calendrier.";
+"settings.aggressiveness.auto.desc" = "L'IA crée et enregistre automatiquement les plannings optimaux.";
+"settings.integrations.subtitle" = "Gérez les connexions aux services externes et aux calendriers";
+"settings.google.connected" = "Connecté";
+"settings.google.not.connected" = "Non connecté";
+"settings.google.no.email" = "Aucune information e-mail";
+"settings.google.connect.hint" = "Connectez votre compte Google pour synchroniser votre planning";
+"settings.google.disconnect.button" = "Déconnecter";
+"settings.google.login.button" = "Se connecter avec Google";
+"settings.google.privacy" = "Les données du calendrier sont stockées uniquement sur l'appareil. L'IA ne fait référence qu'aux titres et horaires des événements.";
+"settings.apple.card" = "Intégration Apple";
+"settings.apple.calendar.title" = "Synchronisation Calendrier Apple";
+"settings.apple.calendar.desc" = "Affiche les événements du Calendrier Apple sur votre appareil";
+"settings.apple.reminders.title" = "Importer les Rappels Apple";
+"settings.apple.reminders.desc" = "Importe les rappels en tant que tâches";
+"settings.google.skip.card" = "Utiliser sans Google";
+"settings.google.skip.title" = "Ignorer la connexion Google";
+"settings.google.skip.desc" = "Utilisez les fonctionnalités IA sans Google Agenda";
+"settings.notifications.subtitle" = "Définissez les horaires de notification du briefing matinal et du bilan du soir";
+"settings.morning.card" = "Briefing matinal";
+"settings.morning.time.title" = "Heure du briefing matinal";
+"settings.morning.time.desc" = "Vous informe du résumé de votre planning du jour et de l'avancement de vos objectifs";
+"settings.evening.card" = "Bilan du soir";
+"settings.evening.time.title" = "Heure du bilan du soir";
+"settings.evening.time.desc" = "Passe en revue les plannings terminés et planifie pour demain";
+"settings.notifications.permission.card" = "Permission de notifications";
+"settings.notifications.permission.title" = "Permission système de notification requise";
+"settings.notifications.permission.desc" = "Réglages système macOS → Notifications → Autoriser Calen";
+"settings.notifications.open.system" = "Ouvrir les Réglages système";
+"settings.hour.format" = "%d:00";
+"settings.advanced.subtitle" = "Options de gestion des données et réinitialisation de l'app";
+"settings.onboarding.card" = "Présentation";
+"settings.onboarding.restart.title" = "Recommencer la présentation";
+"settings.onboarding.restart.desc" = "Refaire l'écran de configuration des objectifs depuis le début";
+"settings.onboarding.restart.button" = "Recommencer";
+"settings.data.reset.card" = "Réinitialiser les données";
+"settings.completions.reset.title" = "Réinitialiser l'historique des complétions";
+"settings.completions.reset.desc" = "Supprime tous les enregistrements de complétion d'événements";
+"settings.completions.reset.button" = "Réinitialiser";
+"settings.review.reset.title" = "Réinitialiser le bilan quotidien";
+"settings.review.reset.desc" = "Réinitialise le bilan terminé d'aujourd'hui pour l'afficher à nouveau";
+"settings.review.reset.button" = "Réinitialiser";
+"settings.goals.delete.title" = "Supprimer tous les objectifs";
+"settings.goals.delete.desc" = "Supprime tous les objectifs enregistrés. Cette action est irréversible.";
+"settings.goals.delete.button" = "Supprimer";
+"settings.language.card" = "Langue";
+"settings.language.desc" = "Sélectionnez une langue. L'app redémarrera pour appliquer le changement.";
+"settings.app.info.card" = "Infos sur l'app";
+"settings.app.version" = "Version 1.0 · Assistant IA personnel de calendrier";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "Plan de demain prêt";
+"review.today.lookback" = "Bilan d'aujourd'hui";
+"review.move.all" = "Tout déplacer à demain";
+"review.generating.button" = "Génération du plan...";
+"review.generate.tomorrow" = "Générer automatiquement le plan de demain";
+"review.no.past.events" = "Aucun événement passé aujourd'hui";
+"review.generate.now.hint" = "Vous pouvez générer le plan de demain maintenant";
+"review.on.track" = "Tout se passe bien";
+"review.evening.auto.plan" = "Nous générerons automatiquement le plan de demain en soirée";
+"review.ok.button" = "OK";
+"review.close.button" = "Fermer";
+"review.add.button" = "Ajouter";
+"review.skip.button" = "Passer";
+"review.period.week" = "Cette semaine";
+"review.period.month" = "Ce mois";
+"review.period.year" = "Cette année";
+"review.completion.rate" = "Taux de complétion";
+"review.completion.count.format" = "%d / %d terminés";
+"review.no.todos" = "Aucune tâche enregistrée";
+"review.added.to.calendar" = "Ajouté au calendrier";
+"review.tomorrow.sufficient" = "Le planning de demain est déjà complet";
+
+/* ===== MainView ===== */
+"event.category.label" = "Catégorie";
+"event.category.none" = "Aucune";

@@ -223,3 +223,136 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "Päivittäinen";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "Aamu";
+"energy.type.evening" = "Ilta";
+"energy.type.balanced" = "Tasapainoinen";
+
+/* ===== Aggressiveness ===== */
+"aggressiveness.manual" = "Manuaalinen";
+"aggressiveness.assist" = "Avustettu";
+"aggressiveness.semiauto" = "Puoliautomaattinen";
+"aggressiveness.auto" = "Automaattinen";
+
+/* ===== Settings View ===== */
+"settings.title" = "Asetukset";
+"settings.autosave" = "Muutokset tallennetaan automaattisesti";
+"settings.section.profile" = "Profiili";
+"settings.section.schedule" = "Aikataulu";
+"settings.section.ai" = "Tekoälyasetukset";
+"settings.section.integrations" = "Integraatiot";
+"settings.section.notifications" = "Ilmoitukset";
+"settings.section.advanced" = "Lisäasetukset";
+"settings.profile.subtitle" = "Määritä henkilökohtainen rytmisi ja työskentelytyylisi";
+"settings.energy.card" = "Energiamalli";
+"settings.energy.desc" = "Valitse paras keskittymisaikasi. Tekoäly aikatauluttaa tärkeät tehtävät tänä ajanjaksona.";
+"settings.pace.card" = "Aikataulutahti";
+"settings.pace.desc" = "Määrittää kuinka aggressiivisesti tekoäly täyttää aikataulusi ehdotuksia tehdessään.";
+"settings.schedule.subtitle" = "Aseta työajat ja päivittäinen fokuskapasiteetti";
+"settings.work.card" = "Työajat";
+"settings.work.start.label" = "Alku";
+"settings.work.end.label" = "Loppu";
+"settings.lunch.start.label" = "Lounaan alku";
+"settings.lunch.end.label" = "Lounaan loppu";
+"settings.work.hours.format" = "%d t työtä";
+"settings.commute.card" = "Työmatka-aika";
+"settings.commute.label" = "Yhdensuuntainen työmatka-aika";
+"settings.commute.minutes.format" = "%d min";
+"settings.commute.roundtrip.format" = "Edestakainen %d min · Ei sisälly päivittäiseen fokusaikaan";
+"settings.capacity.card" = "Päivittäinen fokuskapasiteetti";
+"settings.capacity.weekday" = "Arkipäivä";
+"settings.capacity.weekend" = "Viikonloppu";
+"settings.capacity.hours.format" = "%d t";
+"settings.capacity.hours.minutes.format" = "%d t %d min";
+"settings.ai.subtitle" = "Valitse tekoäly aikatauluanalyysiä ja suunnittelua varten";
+"settings.ai.engine.card" = "Tekoälymoottori";
+"settings.ai.status.card" = "Nykyinen tila";
+"settings.ai.save.card" = "Tallenna";
+"settings.ai.installed.badge" = "Asennettu";
+"settings.ai.not.installed.badge" = "Ei asennettu";
+"settings.ai.claude.installed.detail" = "Asennettu — Tehokas kielen ymmärtäminen";
+"settings.ai.claude.install.hint" = "Vaaditaan: brew install claude";
+"settings.ai.codex.installed.detail" = "Asennettu — Optimoitu koodille";
+"settings.ai.codex.install.hint" = "Vaaditaan: npm install -g @openai/codex";
+"settings.ai.save.button" = "Tallenna tekoälyasetukset";
+"settings.ai.claude.desc" = "Erinomainen kielen ymmärtäminen. Ihanteellinen monimutkaiseen aikataulutukseen ja tavoiteanalyysiin.";
+"settings.ai.codex.desc" = "Erikoistunut koodipohjaiseen optimointiin. Hyvä nopeaan sääntöpohjaiseen suunnitteluun.";
+"settings.aggressiveness.manual.desc" = "Hallitse kaikkia aikatauluja manuaalisesti. Tekoäly pysyy hiljaa.";
+"settings.aggressiveness.assist.desc" = "Tekoäly vain ehdottaa. Sinä päätät hyväksytkö.";
+"settings.aggressiveness.semiauto.desc" = "Hyväksytyt ehdotukset rekisteröidään automaattisesti kalenteriin.";
+"settings.aggressiveness.auto.desc" = "Tekoäly luo ja rekisteröi automaattisesti optimaaliset aikataulut.";
+"settings.integrations.subtitle" = "Hallitse ulkoisten palveluiden ja kalentereiden yhteyksiä";
+"settings.google.connected" = "Yhdistetty";
+"settings.google.not.connected" = "Ei yhdistetty";
+"settings.google.no.email" = "Ei sähköpostitietoja";
+"settings.google.connect.hint" = "Yhdistä Google-tilisi synkronoidaksesi aikataulusi";
+"settings.google.disconnect.button" = "Katkaise yhteys";
+"settings.google.login.button" = "Kirjaudu Google-tilillä";
+"settings.google.privacy" = "Kalenteritiedot tallennetaan vain laitteelle. Tekoäly viittaa vain tapahtumien nimiin ja aikoihin.";
+"settings.apple.card" = "Apple-integraatio";
+"settings.apple.calendar.title" = "Apple-kalenterin synkronointi";
+"settings.apple.calendar.desc" = "Näyttää Apple-kalenterin tapahtumat laitteellasi";
+"settings.apple.reminders.title" = "Tuo Apple-muistutukset";
+"settings.apple.reminders.desc" = "Tuo muistutukset tehtävinä";
+"settings.google.skip.card" = "Käytä ilman Googlea";
+"settings.google.skip.title" = "Ohita Google-kirjautuminen";
+"settings.google.skip.desc" = "Käytä tekoälytoimintoja ilman Google-kalenteria";
+"settings.notifications.subtitle" = "Aseta ilmoitusajat aamuyhteenvedolle ja iltakatsaukselle";
+"settings.morning.card" = "Aamuyhteenveto";
+"settings.morning.time.title" = "Aamuyhteenvedon aika";
+"settings.morning.time.desc" = "Ilmoittaa sinulle päivän aikatauluyhteenvedon ja tavoiteetenemisen";
+"settings.evening.card" = "Iltakatsaus";
+"settings.evening.time.title" = "Iltakatsauksen aika";
+"settings.evening.time.desc" = "Tarkistaa valmistuneet aikataulut ja suunnittelee huomiselle";
+"settings.notifications.permission.card" = "Ilmoituslupa";
+"settings.notifications.permission.title" = "Järjestelmän ilmoituslupa vaaditaan";
+"settings.notifications.permission.desc" = "macOS Järjestelmäasetukset → Ilmoitukset → Salli Calen";
+"settings.notifications.open.system" = "Avaa järjestelmäasetukset";
+"settings.hour.format" = "%d:00";
+"settings.advanced.subtitle" = "Tiedonhallinta ja sovelluksen palautusvaihtoehdot";
+"settings.onboarding.card" = "Käyttöönotto";
+"settings.onboarding.restart.title" = "Käynnistä käyttöönotto uudelleen";
+"settings.onboarding.restart.desc" = "Tee tavoiteasetukset uudelleen alusta";
+"settings.onboarding.restart.button" = "Käynnistä uudelleen";
+"settings.data.reset.card" = "Nollaa tiedot";
+"settings.completions.reset.title" = "Nollaa valmistumishistoria";
+"settings.completions.reset.desc" = "Poistaa kaikki tapahtumien valmistumistiedot";
+"settings.completions.reset.button" = "Nollaa";
+"settings.review.reset.title" = "Nollaa päivittäinen katsaus";
+"settings.review.reset.desc" = "Nollaa tänään valmistuneen katsauksen näyttääkseen sen uudelleen";
+"settings.review.reset.button" = "Nollaa";
+"settings.goals.delete.title" = "Poista kaikki tavoitteet";
+"settings.goals.delete.desc" = "Poistaa kaikki rekisteröidyt tavoitteet. Tätä ei voi kumota.";
+"settings.goals.delete.button" = "Poista";
+"settings.language.card" = "Kieli";
+"settings.language.desc" = "Valitse kieli. Sovellus käynnistyy uudelleen muutoksen soveltamiseksi.";
+"settings.app.info.card" = "Sovellustiedot";
+"settings.app.version" = "Versio 1.0 · Henkilökohtainen tekoälykalenteriavustaja";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "Huomisen suunnitelma valmis";
+"review.today.lookback" = "Tänään takautuvasti";
+"review.move.all" = "Siirrä kaikki huomiselle";
+"review.generating.button" = "Luodaan suunnitelmaa...";
+"review.generate.tomorrow" = "Luo huomisen suunnitelma automaattisesti";
+"review.no.past.events" = "Ei aiempia tapahtumia tänään";
+"review.generate.now.hint" = "Voit luoda huomisen suunnitelman nyt";
+"review.on.track" = "Menee sujuvasti";
+"review.evening.auto.plan" = "Luomme automaattisesti huomisen suunnitelman illalla";
+"review.ok.button" = "OK";
+"review.close.button" = "Sulje";
+"review.add.button" = "Lisää";
+"review.skip.button" = "Ohita";
+"review.period.week" = "Tämä viikko";
+"review.period.month" = "Tämä kuukausi";
+"review.period.year" = "Tämä vuosi";
+"review.completion.rate" = "Valmistumisaste";
+"review.completion.count.format" = "%d / %d valmistunut";
+"review.no.todos" = "Ei rekisteröityjä tehtäviä";
+"review.added.to.calendar" = "Lisätty kalenteriin";
+"review.tomorrow.sufficient" = "Huomisen aikataulu on jo täynnä";
+
+/* ===== MainView ===== */
+"event.category.label" = "Luokka";
+"event.category.none" = "Ei mitään";

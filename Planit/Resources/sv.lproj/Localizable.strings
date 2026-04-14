@@ -223,3 +223,136 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "Dagligt";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "Morgon";
+"energy.type.evening" = "Kväll";
+"energy.type.balanced" = "Balanserad";
+
+/* ===== Aggressiveness ===== */
+"aggressiveness.manual" = "Manuell";
+"aggressiveness.assist" = "Assisterad";
+"aggressiveness.semiauto" = "Halvautomatisk";
+"aggressiveness.auto" = "Automatisk";
+
+/* ===== Settings View ===== */
+"settings.title" = "Inställningar";
+"settings.autosave" = "Ändringar sparas automatiskt";
+"settings.section.profile" = "Profil";
+"settings.section.schedule" = "Schema";
+"settings.section.ai" = "AI-inställningar";
+"settings.section.integrations" = "Integrationer";
+"settings.section.notifications" = "Aviseringar";
+"settings.section.advanced" = "Avancerat";
+"settings.profile.subtitle" = "Konfigurera din personliga rytm och arbetsstil";
+"settings.energy.card" = "Energimönster";
+"settings.energy.desc" = "Välj din bästa fokustid. AI schemalägger viktiga uppgifter under denna period.";
+"settings.pace.card" = "Schematakt";
+"settings.pace.desc" = "Avgör hur aggressivt AI fyller ditt schema när det ger förslag.";
+"settings.schedule.subtitle" = "Ange dina arbetstider och daglig fokuskapacitet";
+"settings.work.card" = "Arbetstider";
+"settings.work.start.label" = "Start";
+"settings.work.end.label" = "Slut";
+"settings.lunch.start.label" = "Lunchstart";
+"settings.lunch.end.label" = "Lunchslut";
+"settings.work.hours.format" = "%d tim arbete";
+"settings.commute.card" = "Pendlingstid";
+"settings.commute.label" = "Enkelvägs pendlingstid";
+"settings.commute.minutes.format" = "%d min";
+"settings.commute.roundtrip.format" = "Tur och retur %d min · Exkluderat från daglig fokustid";
+"settings.capacity.card" = "Daglig fokuskapacitet";
+"settings.capacity.weekday" = "Vardag";
+"settings.capacity.weekend" = "Helg";
+"settings.capacity.hours.format" = "%d t";
+"settings.capacity.hours.minutes.format" = "%d t %d min";
+"settings.ai.subtitle" = "Välj AI för schemaanalys och planering";
+"settings.ai.engine.card" = "AI-motor";
+"settings.ai.status.card" = "Aktuell status";
+"settings.ai.save.card" = "Spara";
+"settings.ai.installed.badge" = "Installerad";
+"settings.ai.not.installed.badge" = "Ej installerad";
+"settings.ai.claude.installed.detail" = "Installerad — Kraftfullt språkförståelse";
+"settings.ai.claude.install.hint" = "Krävs: brew install claude";
+"settings.ai.codex.installed.detail" = "Installerad — Optimerad för kod";
+"settings.ai.codex.install.hint" = "Krävs: npm install -g @openai/codex";
+"settings.ai.save.button" = "Spara AI-inställningar";
+"settings.ai.claude.desc" = "Utmärkt språkförståelse. Idealisk för komplex schemaläggning och målanalys.";
+"settings.ai.codex.desc" = "Specialiserad på kodbaserad optimering. Bra för snabb regelbaserad planering.";
+"settings.aggressiveness.manual.desc" = "Hantera alla scheman manuellt. AI är tyst.";
+"settings.aggressiveness.assist.desc" = "AI föreslår bara. Du bestämmer om du accepterar.";
+"settings.aggressiveness.semiauto.desc" = "Godkända förslag registreras automatiskt i kalendern.";
+"settings.aggressiveness.auto.desc" = "AI skapar och registrerar automatiskt optimala scheman.";
+"settings.integrations.subtitle" = "Hantera anslutningar till externa tjänster och kalendrar";
+"settings.google.connected" = "Ansluten";
+"settings.google.not.connected" = "Ej ansluten";
+"settings.google.no.email" = "Ingen e-postinformation";
+"settings.google.connect.hint" = "Anslut ditt Google-konto för att synkronisera ditt schema";
+"settings.google.disconnect.button" = "Koppla från";
+"settings.google.login.button" = "Logga in med Google";
+"settings.google.privacy" = "Kalenderdata lagras bara på enheten. AI refererar bara till händelsetitlar och tider.";
+"settings.apple.card" = "Apple-integration";
+"settings.apple.calendar.title" = "Apple Kalender-synkronisering";
+"settings.apple.calendar.desc" = "Visar Apple Kalender-händelser på din enhet";
+"settings.apple.reminders.title" = "Importera Apple Påminnelser";
+"settings.apple.reminders.desc" = "Importerar påminnelser som uppgifter";
+"settings.google.skip.card" = "Använd utan Google";
+"settings.google.skip.title" = "Hoppa över Google-inloggning";
+"settings.google.skip.desc" = "Använd AI-funktioner utan Google Kalender";
+"settings.notifications.subtitle" = "Ange aviseringstider för morgongenomgång och kvällsrecension";
+"settings.morning.card" = "Morgongenomgång";
+"settings.morning.time.title" = "Tid för morgongenomgång";
+"settings.morning.time.desc" = "Meddelar dig om dagens schemasammanfattning och målframsteg";
+"settings.evening.card" = "Kvällsrecension";
+"settings.evening.time.title" = "Tid för kvällsrecension";
+"settings.evening.time.desc" = "Granskar avslutade scheman och planerar för imorgon";
+"settings.notifications.permission.card" = "Aviseringstillstånd";
+"settings.notifications.permission.title" = "Systemtillstånd för aviseringar krävs";
+"settings.notifications.permission.desc" = "macOS Systeminställningar → Aviseringar → Tillåt Calen";
+"settings.notifications.open.system" = "Öppna systeminställningar";
+"settings.hour.format" = "%d:00";
+"settings.advanced.subtitle" = "Datahantering och alternativ för appåterställning";
+"settings.onboarding.card" = "Onboarding";
+"settings.onboarding.restart.title" = "Starta om onboarding";
+"settings.onboarding.restart.desc" = "Gör om målkonfigurationsskärmen från början";
+"settings.onboarding.restart.button" = "Starta om";
+"settings.data.reset.card" = "Återställ data";
+"settings.completions.reset.title" = "Återställ slutförandehistorik";
+"settings.completions.reset.desc" = "Tar bort alla slutförandeposter för händelser";
+"settings.completions.reset.button" = "Återställ";
+"settings.review.reset.title" = "Återställ daglig recension";
+"settings.review.reset.desc" = "Återställer dagens avslutade recension för att visa den igen";
+"settings.review.reset.button" = "Återställ";
+"settings.goals.delete.title" = "Ta bort alla mål";
+"settings.goals.delete.desc" = "Tar bort alla registrerade mål. Detta kan inte ångras.";
+"settings.goals.delete.button" = "Ta bort";
+"settings.language.card" = "Språk";
+"settings.language.desc" = "Välj ett språk. Appen startas om för att tillämpa ändringen.";
+"settings.app.info.card" = "Appinfo";
+"settings.app.version" = "Version 1.0 · Personlig AI-kalenderassistent";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "Morgondagens plan klar";
+"review.today.lookback" = "Tillbaka på idag";
+"review.move.all" = "Flytta allt till imorgon";
+"review.generating.button" = "Genererar plan...";
+"review.generate.tomorrow" = "Generera morgondagens plan automatiskt";
+"review.no.past.events" = "Inga tidigare händelser idag";
+"review.generate.now.hint" = "Du kan generera morgondagens plan nu";
+"review.on.track" = "Går smidigt";
+"review.evening.auto.plan" = "Vi genererar automatiskt morgondagens plan på kvällen";
+"review.ok.button" = "OK";
+"review.close.button" = "Stäng";
+"review.add.button" = "Lägg till";
+"review.skip.button" = "Hoppa över";
+"review.period.week" = "Denna vecka";
+"review.period.month" = "Denna månad";
+"review.period.year" = "Detta år";
+"review.completion.rate" = "Slutförandegrad";
+"review.completion.count.format" = "%d / %d slutförda";
+"review.no.todos" = "Inga uppgifter registrerade";
+"review.added.to.calendar" = "Lagd till i kalendern";
+"review.tomorrow.sufficient" = "Morgondagens schema är redan fullt";
+
+/* ===== MainView ===== */
+"event.category.label" = "Kategori";
+"event.category.none" = "Ingen";

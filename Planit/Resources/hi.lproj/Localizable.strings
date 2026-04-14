@@ -223,3 +223,136 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "दैनिक";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "सुबह";
+"energy.type.evening" = "शाम";
+"energy.type.balanced" = "संतुलित";
+
+/* ===== Aggressiveness ===== */
+"aggressiveness.manual" = "मैन्युअल";
+"aggressiveness.assist" = "सहायक";
+"aggressiveness.semiauto" = "अर्ध-स्वचालित";
+"aggressiveness.auto" = "स्वचालित";
+
+/* ===== Settings View ===== */
+"settings.title" = "सेटिंग्स";
+"settings.autosave" = "परिवर्तन स्वचालित रूप से सहेजे जाते हैं";
+"settings.section.profile" = "प्रोफ़ाइल";
+"settings.section.schedule" = "शेड्यूल";
+"settings.section.ai" = "AI सेटिंग्स";
+"settings.section.integrations" = "इंटीग्रेशन";
+"settings.section.notifications" = "सूचनाएँ";
+"settings.section.advanced" = "उन्नत";
+"settings.profile.subtitle" = "अपनी व्यक्तिगत लय और कार्यशैली कॉन्फ़िगर करें";
+"settings.energy.card" = "ऊर्जा पैटर्न";
+"settings.energy.desc" = "अपना सर्वोच्च फोकस समय चुनें। AI इस अवधि में महत्वपूर्ण कार्य शेड्यूल करेगा।";
+"settings.pace.card" = "शेड्यूल गति";
+"settings.pace.desc" = "यह निर्धारित करता है कि AI सुझाव देते समय आपका शेड्यूल कितनी आक्रामकता से भरता है।";
+"settings.schedule.subtitle" = "अपने काम के घंटे और दैनिक फोकस क्षमता सेट करें";
+"settings.work.card" = "काम के घंटे";
+"settings.work.start.label" = "शुरुआत";
+"settings.work.end.label" = "समाप्ति";
+"settings.lunch.start.label" = "दोपहर के भोजन की शुरुआत";
+"settings.lunch.end.label" = "दोपहर के भोजन का अंत";
+"settings.work.hours.format" = "%d घंटे काम";
+"settings.commute.card" = "आवागमन समय";
+"settings.commute.label" = "एक-तरफ़ा आवागमन समय";
+"settings.commute.minutes.format" = "%d मिनट";
+"settings.commute.roundtrip.format" = "आने-जाने में %d मिनट · दैनिक फोकस समय से बाहर";
+"settings.capacity.card" = "दैनिक फोकस क्षमता";
+"settings.capacity.weekday" = "कार्यदिवस";
+"settings.capacity.weekend" = "सप्ताहांत";
+"settings.capacity.hours.format" = "%d घं";
+"settings.capacity.hours.minutes.format" = "%d घं %d मिनट";
+"settings.ai.subtitle" = "शेड्यूल विश्लेषण और योजना के लिए AI चुनें";
+"settings.ai.engine.card" = "AI इंजन";
+"settings.ai.status.card" = "वर्तमान स्थिति";
+"settings.ai.save.card" = "सहेजें";
+"settings.ai.installed.badge" = "इंस्टॉल है";
+"settings.ai.not.installed.badge" = "इंस्टॉल नहीं है";
+"settings.ai.claude.installed.detail" = "इंस्टॉल — शक्तिशाली प्राकृतिक भाषा समझ";
+"settings.ai.claude.install.hint" = "आवश्यक: brew install claude";
+"settings.ai.codex.installed.detail" = "इंस्टॉल — कोड के लिए अनुकूलित";
+"settings.ai.codex.install.hint" = "आवश्यक: npm install -g @openai/codex";
+"settings.ai.save.button" = "AI सेटिंग्स सहेजें";
+"settings.ai.claude.desc" = "उत्कृष्ट प्राकृतिक भाषा समझ। जटिल शेड्यूलिंग और लक्ष्य विश्लेषण के लिए आदर्श।";
+"settings.ai.codex.desc" = "कोड-आधारित अनुकूलन में विशेषज्ञ। तेज़ नियम-आधारित योजना के लिए बेहतरीन।";
+"settings.aggressiveness.manual.desc" = "सभी शेड्यूल मैन्युअल रूप से प्रबंधित करें। AI चुप रहता है।";
+"settings.aggressiveness.assist.desc" = "AI केवल सुझाव देता है। स्वीकार करना आप पर निर्भर है।";
+"settings.aggressiveness.semiauto.desc" = "स्वीकृत सुझाव कैलेंडर में स्वचालित रूप से पंजीकृत होते हैं।";
+"settings.aggressiveness.auto.desc" = "AI स्वचालित रूप से इष्टतम शेड्यूल बनाता और पंजीकृत करता है।";
+"settings.integrations.subtitle" = "बाहरी सेवा और कैलेंडर कनेक्शन प्रबंधित करें";
+"settings.google.connected" = "जुड़ा हुआ";
+"settings.google.not.connected" = "नहीं जुड़ा";
+"settings.google.no.email" = "ईमेल जानकारी नहीं";
+"settings.google.connect.hint" = "अपना शेड्यूल सिंक करने के लिए Google खाता जोड़ें";
+"settings.google.disconnect.button" = "डिस्कनेक्ट करें";
+"settings.google.login.button" = "Google से साइन इन करें";
+"settings.google.privacy" = "कैलेंडर डेटा केवल डिवाइस पर संग्रहीत होता है। AI केवल इवेंट शीर्षक और समय देखता है।";
+"settings.apple.card" = "Apple इंटीग्रेशन";
+"settings.apple.calendar.title" = "Apple Calendar सिंक";
+"settings.apple.calendar.desc" = "आपके डिवाइस पर Apple Calendar इवेंट दिखाता है";
+"settings.apple.reminders.title" = "Apple Reminders आयात करें";
+"settings.apple.reminders.desc" = "रिमाइंडर को टू-डू के रूप में आयात करता है";
+"settings.google.skip.card" = "Google के बिना उपयोग करें";
+"settings.google.skip.title" = "Google साइन-इन छोड़ें";
+"settings.google.skip.desc" = "Google Calendar के बिना AI सुविधाएँ उपयोग करें";
+"settings.notifications.subtitle" = "सुबह की ब्रीफिंग और शाम की समीक्षा की सूचना समय सेट करें";
+"settings.morning.card" = "सुबह की ब्रीफिंग";
+"settings.morning.time.title" = "सुबह की ब्रीफिंग का समय";
+"settings.morning.time.desc" = "आज के शेड्यूल का सारांश और लक्ष्य प्रगति की सूचना देता है";
+"settings.evening.card" = "शाम की समीक्षा";
+"settings.evening.time.title" = "शाम की समीक्षा का समय";
+"settings.evening.time.desc" = "पूर्ण शेड्यूल की समीक्षा करता है और कल के लिए योजना बनाता है";
+"settings.notifications.permission.card" = "सूचना अनुमति";
+"settings.notifications.permission.title" = "सिस्टम सूचना अनुमति आवश्यक है";
+"settings.notifications.permission.desc" = "macOS System Settings → Notifications → Calen को अनुमति दें";
+"settings.notifications.open.system" = "System Settings खोलें";
+"settings.hour.format" = "%d:00";
+"settings.advanced.subtitle" = "डेटा प्रबंधन और ऐप रीसेट विकल्प";
+"settings.onboarding.card" = "ऑनबोर्डिंग";
+"settings.onboarding.restart.title" = "ऑनबोर्डिंग पुनः शुरू करें";
+"settings.onboarding.restart.desc" = "लक्ष्य सेटअप स्क्रीन शुरू से फिर से करें";
+"settings.onboarding.restart.button" = "पुनः शुरू करें";
+"settings.data.reset.card" = "डेटा रीसेट";
+"settings.completions.reset.title" = "पूर्णता इतिहास रीसेट करें";
+"settings.completions.reset.desc" = "सभी इवेंट पूर्णता रिकॉर्ड हटाता है";
+"settings.completions.reset.button" = "रीसेट करें";
+"settings.review.reset.title" = "दैनिक समीक्षा रीसेट करें";
+"settings.review.reset.desc" = "आज की पूर्ण समीक्षा को फिर दिखाने के लिए रीसेट करता है";
+"settings.review.reset.button" = "रीसेट करें";
+"settings.goals.delete.title" = "सभी लक्ष्य हटाएँ";
+"settings.goals.delete.desc" = "सभी पंजीकृत लक्ष्य हटाता है। इसे पूर्ववत नहीं किया जा सकता।";
+"settings.goals.delete.button" = "हटाएँ";
+"settings.language.card" = "भाषा";
+"settings.language.desc" = "एक भाषा चुनें। परिवर्तन लागू करने के लिए ऐप पुनः शुरू होगा।";
+"settings.app.info.card" = "ऐप जानकारी";
+"settings.app.version" = "संस्करण 1.0 · व्यक्तिगत AI कैलेंडर सहायक";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "कल की योजना तैयार है";
+"review.today.lookback" = "आज की समीक्षा";
+"review.move.all" = "सभी कल पर ले जाएँ";
+"review.generating.button" = "योजना बना रहे हैं...";
+"review.generate.tomorrow" = "कल की योजना स्वतः बनाएँ";
+"review.no.past.events" = "आज कोई पुराने इवेंट नहीं";
+"review.generate.now.hint" = "आप अभी कल की योजना बना सकते हैं";
+"review.on.track" = "सुचारू रूप से चल रहा है";
+"review.evening.auto.plan" = "हम शाम को कल की योजना स्वतः बनाएँगे";
+"review.ok.button" = "ठीक है";
+"review.close.button" = "बंद करें";
+"review.add.button" = "जोड़ें";
+"review.skip.button" = "छोड़ें";
+"review.period.week" = "इस सप्ताह";
+"review.period.month" = "इस महीने";
+"review.period.year" = "इस वर्ष";
+"review.completion.rate" = "पूर्णता दर";
+"review.completion.count.format" = "%d / %d पूर्ण";
+"review.no.todos" = "कोई टू-डू पंजीकृत नहीं";
+"review.added.to.calendar" = "कैलेंडर में जोड़ा गया";
+"review.tomorrow.sufficient" = "कल का शेड्यूल पहले से भरा है";
+
+/* ===== MainView ===== */
+"event.category.label" = "श्रेणी";
+"event.category.none" = "कोई नहीं";

@@ -223,3 +223,136 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "Zilnic";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "Dimineață";
+"energy.type.evening" = "Seară";
+"energy.type.balanced" = "Echilibrat";
+
+/* ===== Aggressiveness ===== */
+"aggressiveness.manual" = "Manual";
+"aggressiveness.assist" = "Asistat";
+"aggressiveness.semiauto" = "Semiautomat";
+"aggressiveness.auto" = "Automat";
+
+/* ===== Settings View ===== */
+"settings.title" = "Setări";
+"settings.autosave" = "Modificările sunt salvate automat";
+"settings.section.profile" = "Profil";
+"settings.section.schedule" = "Program";
+"settings.section.ai" = "Setări AI";
+"settings.section.integrations" = "Integrări";
+"settings.section.notifications" = "Notificări";
+"settings.section.advanced" = "Avansat";
+"settings.profile.subtitle" = "Configurează ritmul personal și stilul de lucru";
+"settings.energy.card" = "Tipar de energie";
+"settings.energy.desc" = "Selectează orele de concentrare maximă. AI va programa sarcinile importante în această perioadă.";
+"settings.pace.card" = "Ritmul programului";
+"settings.pace.desc" = "Determină cât de agresiv umple AI programul atunci când face sugestii.";
+"settings.schedule.subtitle" = "Setează orele de lucru și capacitatea zilnică de concentrare";
+"settings.work.card" = "Ore de lucru";
+"settings.work.start.label" = "Început";
+"settings.work.end.label" = "Sfârșit";
+"settings.lunch.start.label" = "Început pauză prânz";
+"settings.lunch.end.label" = "Sfârșit pauză prânz";
+"settings.work.hours.format" = "%d ore lucru";
+"settings.commute.card" = "Timp de navetă";
+"settings.commute.label" = "Timp de navetă dus";
+"settings.commute.minutes.format" = "%d min";
+"settings.commute.roundtrip.format" = "Dus-întors %d min · Exclus din timpul zilnic de concentrare";
+"settings.capacity.card" = "Capacitate zilnică de concentrare";
+"settings.capacity.weekday" = "Zi lucrătoare";
+"settings.capacity.weekend" = "Weekend";
+"settings.capacity.hours.format" = "%d h";
+"settings.capacity.hours.minutes.format" = "%d h %d min";
+"settings.ai.subtitle" = "Alege AI pentru analiza și planificarea programului";
+"settings.ai.engine.card" = "Motor AI";
+"settings.ai.status.card" = "Status curent";
+"settings.ai.save.card" = "Salvează";
+"settings.ai.installed.badge" = "Instalat";
+"settings.ai.not.installed.badge" = "Neinstalat";
+"settings.ai.claude.installed.detail" = "Instalat — Înțelegere puternică a limbajului natural";
+"settings.ai.claude.install.hint" = "Necesar: brew install claude";
+"settings.ai.codex.installed.detail" = "Instalat — Optimizat pentru cod";
+"settings.ai.codex.install.hint" = "Necesar: npm install -g @openai/codex";
+"settings.ai.save.button" = "Salvează setările AI";
+"settings.ai.claude.desc" = "Înțelegere excelentă a limbajului natural. Ideal pentru planificare complexă și analiza obiectivelor.";
+"settings.ai.codex.desc" = "Specializat în optimizare bazată pe cod. Excelent pentru planificare rapidă bazată pe reguli.";
+"settings.aggressiveness.manual.desc" = "Gestionează toate programele manual. AI rămâne tăcut.";
+"settings.aggressiveness.assist.desc" = "AI doar sugerează. Tu decizi dacă accepți.";
+"settings.aggressiveness.semiauto.desc" = "Înregistrează automat sugestiile aprobate în calendar.";
+"settings.aggressiveness.auto.desc" = "AI creează și înregistrează automat programe optime.";
+"settings.integrations.subtitle" = "Gestionează conexiunile la servicii externe și calendare";
+"settings.google.connected" = "Conectat";
+"settings.google.not.connected" = "Neconectat";
+"settings.google.no.email" = "Fără informații despre email";
+"settings.google.connect.hint" = "Conectează contul tău Google pentru a sincroniza programul";
+"settings.google.disconnect.button" = "Deconectează";
+"settings.google.login.button" = "Conectare cu Google";
+"settings.google.privacy" = "Datele calendarului sunt stocate doar pe dispozitiv. AI referențiază doar titlurile și orele evenimentelor.";
+"settings.apple.card" = "Integrare Apple";
+"settings.apple.calendar.title" = "Sincronizare Apple Calendar";
+"settings.apple.calendar.desc" = "Afișează evenimentele Apple Calendar de pe dispozitivul tău";
+"settings.apple.reminders.title" = "Importă memento-urile Apple";
+"settings.apple.reminders.desc" = "Importă memento-urile ca sarcini";
+"settings.google.skip.card" = "Utilizează fără Google";
+"settings.google.skip.title" = "Sari peste conectarea Google";
+"settings.google.skip.desc" = "Utilizează funcțiile AI fără Google Calendar";
+"settings.notifications.subtitle" = "Setează orele pentru briefingul de dimineață și recenzia de seară";
+"settings.morning.card" = "Briefing de dimineață";
+"settings.morning.time.title" = "Ora briefingului de dimineață";
+"settings.morning.time.desc" = "Te notifică despre rezumatul programului de astăzi și progresul obiectivelor";
+"settings.evening.card" = "Recenzia de seară";
+"settings.evening.time.title" = "Ora recenziei de seară";
+"settings.evening.time.desc" = "Revizuiește sarcinile finalizate și planifică pentru mâine";
+"settings.notifications.permission.card" = "Permisiune notificări";
+"settings.notifications.permission.title" = "Este necesară permisiunea de notificare sistem";
+"settings.notifications.permission.desc" = "Preferințe sistem macOS → Notificări → Permite Calen";
+"settings.notifications.open.system" = "Deschide Preferințe sistem";
+"settings.hour.format" = "%d:00";
+"settings.advanced.subtitle" = "Gestionarea datelor și opțiuni de resetare a aplicației";
+"settings.onboarding.card" = "Onboarding";
+"settings.onboarding.restart.title" = "Repornește onboarding-ul";
+"settings.onboarding.restart.desc" = "Reface configurarea obiectivelor de la început";
+"settings.onboarding.restart.button" = "Repornește";
+"settings.data.reset.card" = "Resetare date";
+"settings.completions.reset.title" = "Resetează istoricul de finalizare";
+"settings.completions.reset.desc" = "Șterge toate înregistrările de finalizare a evenimentelor";
+"settings.completions.reset.button" = "Resetează";
+"settings.review.reset.title" = "Resetează recenzia zilnică";
+"settings.review.reset.desc" = "Resetează recenzia de astăzi finalizată pentru a o afișa din nou";
+"settings.review.reset.button" = "Resetează";
+"settings.goals.delete.title" = "Șterge toate obiectivele";
+"settings.goals.delete.desc" = "Șterge toate obiectivele înregistrate. Această acțiune nu poate fi anulată.";
+"settings.goals.delete.button" = "Șterge";
+"settings.language.card" = "Limbă";
+"settings.language.desc" = "Selectează o limbă. Aplicația va reporni pentru a aplica modificarea.";
+"settings.app.info.card" = "Informații aplicație";
+"settings.app.version" = "Versiunea 1.0 · Asistent personal AI pentru calendar";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "Planul de mâine este gata";
+"review.today.lookback" = "Recenzia zilei de astăzi";
+"review.move.all" = "Mută totul pe mâine";
+"review.generating.button" = "Se generează planul...";
+"review.generate.tomorrow" = "Generează automat planul de mâine";
+"review.no.past.events" = "Niciun eveniment trecut astăzi";
+"review.generate.now.hint" = "Poți genera planul de mâine acum";
+"review.on.track" = "Merge bine";
+"review.evening.auto.plan" = "Seara vom genera automat planul de mâine";
+"review.ok.button" = "OK";
+"review.close.button" = "Închide";
+"review.add.button" = "Adaugă";
+"review.skip.button" = "Omite";
+"review.period.week" = "Săptămâna aceasta";
+"review.period.month" = "Luna aceasta";
+"review.period.year" = "Anul acesta";
+"review.completion.rate" = "Rata de finalizare";
+"review.completion.count.format" = "%d / %d finalizate";
+"review.no.todos" = "Nicio sarcină înregistrată";
+"review.added.to.calendar" = "Adăugat în calendar";
+"review.tomorrow.sufficient" = "Programul de mâine este deja plin";
+
+/* ===== MainView ===== */
+"event.category.label" = "Categorie";
+"event.category.none" = "Niciunul";

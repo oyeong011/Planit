@@ -223,3 +223,136 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "日常";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "早晨型";
+"energy.type.evening" = "夜晚型";
+"energy.type.balanced" = "均衡型";
+
+/* ===== Aggressiveness ===== */
+"aggressiveness.manual" = "手動";
+"aggressiveness.assist" = "輔助";
+"aggressiveness.semiauto" = "半自動";
+"aggressiveness.auto" = "自動";
+
+/* ===== Settings View ===== */
+"settings.title" = "設定";
+"settings.autosave" = "變更已自動儲存";
+"settings.section.profile" = "個人資料";
+"settings.section.schedule" = "行程";
+"settings.section.ai" = "AI設定";
+"settings.section.integrations" = "整合";
+"settings.section.notifications" = "通知";
+"settings.section.advanced" = "進階";
+"settings.profile.subtitle" = "設定您的個人節奏和工作方式";
+"settings.energy.card" = "精力模式";
+"settings.energy.desc" = "選擇您的專注高峰時段。AI將在此時段安排重要任務。";
+"settings.pace.card" = "行程節奏";
+"settings.pace.desc" = "決定AI在提供建議時填充行程的積極程度。";
+"settings.schedule.subtitle" = "設定您的工作時間和每日專注上限";
+"settings.work.card" = "工作時間";
+"settings.work.start.label" = "開始";
+"settings.work.end.label" = "結束";
+"settings.lunch.start.label" = "午餐開始";
+"settings.lunch.end.label" = "午餐結束";
+"settings.work.hours.format" = "%d小時工作";
+"settings.commute.card" = "通勤時間";
+"settings.commute.label" = "單程通勤時間";
+"settings.commute.minutes.format" = "%d分鐘";
+"settings.commute.roundtrip.format" = "來回%d分鐘 · 已從每日專注時間中扣除";
+"settings.capacity.card" = "每日專注上限";
+"settings.capacity.weekday" = "平日";
+"settings.capacity.weekend" = "週末";
+"settings.capacity.hours.format" = "%d小時";
+"settings.capacity.hours.minutes.format" = "%d小時%d分鐘";
+"settings.ai.subtitle" = "選擇用於行程分析和規劃的AI";
+"settings.ai.engine.card" = "AI引擎";
+"settings.ai.status.card" = "目前狀態";
+"settings.ai.save.card" = "儲存";
+"settings.ai.installed.badge" = "已安裝";
+"settings.ai.not.installed.badge" = "未安裝";
+"settings.ai.claude.installed.detail" = "已安裝 — 強大的自然語言理解";
+"settings.ai.claude.install.hint" = "需要: brew install claude";
+"settings.ai.codex.installed.detail" = "已安裝 — 針對程式碼最佳化";
+"settings.ai.codex.install.hint" = "需要: npm install -g @openai/codex";
+"settings.ai.save.button" = "儲存AI設定";
+"settings.ai.claude.desc" = "出色的自然語言理解能力。非常適合複雜的行程安排和目標分析。";
+"settings.ai.codex.desc" = "專注於程式碼最佳化。非常適合快速的規則式規劃。";
+"settings.aggressiveness.manual.desc" = "手動管理所有行程。AI保持靜默。";
+"settings.aggressiveness.assist.desc" = "AI僅提供建議。由您決定是否採納。";
+"settings.aggressiveness.semiauto.desc" = "自動將已核准的建議新增至日曆。";
+"settings.aggressiveness.auto.desc" = "AI自動建立並登錄最佳行程。";
+"settings.integrations.subtitle" = "管理外部服務和日曆連接";
+"settings.google.connected" = "已連接";
+"settings.google.not.connected" = "未連接";
+"settings.google.no.email" = "無電子郵件資訊";
+"settings.google.connect.hint" = "連接您的Google帳號以同步行程";
+"settings.google.disconnect.button" = "中斷連接";
+"settings.google.login.button" = "使用Google登入";
+"settings.google.privacy" = "日曆資料僅儲存在裝置上。AI僅參考事件標題和時間。";
+"settings.apple.card" = "Apple整合";
+"settings.apple.calendar.title" = "Apple日曆同步";
+"settings.apple.calendar.desc" = "在裝置上顯示Apple日曆事件";
+"settings.apple.reminders.title" = "匯入Apple提醒事項";
+"settings.apple.reminders.desc" = "將提醒事項匯入為待辦";
+"settings.google.skip.card" = "不使用Google";
+"settings.google.skip.title" = "略過Google登入";
+"settings.google.skip.desc" = "無需Google日曆即可使用AI功能";
+"settings.notifications.subtitle" = "設定晨間簡報和晚間回顧的通知時間";
+"settings.morning.card" = "晨間簡報";
+"settings.morning.time.title" = "晨間簡報時間";
+"settings.morning.time.desc" = "通知您今日行程摘要和目標進度";
+"settings.evening.card" = "晚間回顧";
+"settings.evening.time.title" = "晚間回顧時間";
+"settings.evening.time.desc" = "回顧已完成的行程，規劃明天";
+"settings.notifications.permission.card" = "通知權限";
+"settings.notifications.permission.title" = "需要系統通知權限";
+"settings.notifications.permission.desc" = "macOS系統設定 → 通知 → 允許Calen";
+"settings.notifications.open.system" = "開啟系統設定";
+"settings.hour.format" = "%d時";
+"settings.advanced.subtitle" = "資料管理和應用程式重置選項";
+"settings.onboarding.card" = "引導設定";
+"settings.onboarding.restart.title" = "重新開始引導設定";
+"settings.onboarding.restart.desc" = "從頭重做目標設定畫面";
+"settings.onboarding.restart.button" = "重新開始";
+"settings.data.reset.card" = "重置資料";
+"settings.completions.reset.title" = "重置完成紀錄";
+"settings.completions.reset.desc" = "刪除所有事件完成紀錄";
+"settings.completions.reset.button" = "重置";
+"settings.review.reset.title" = "重置每日回顧";
+"settings.review.reset.desc" = "將今天已完成的回顧重置以再次顯示";
+"settings.review.reset.button" = "重置";
+"settings.goals.delete.title" = "刪除所有目標";
+"settings.goals.delete.desc" = "刪除所有已登錄的目標。此操作無法復原。";
+"settings.goals.delete.button" = "刪除";
+"settings.language.card" = "語言";
+"settings.language.desc" = "選擇語言。應用程式將重新啟動以套用變更。";
+"settings.app.info.card" = "應用程式資訊";
+"settings.app.version" = "版本 1.0 · 個人AI日曆助理";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "明日計畫已就緒";
+"review.today.lookback" = "今日回顧";
+"review.move.all" = "全部移到明天";
+"review.generating.button" = "正在生成計畫...";
+"review.generate.tomorrow" = "自動生成明日計畫";
+"review.no.past.events" = "今天沒有過去的事件";
+"review.generate.now.hint" = "現在可以生成明日計畫";
+"review.on.track" = "進展順利";
+"review.evening.auto.plan" = "我們將在晚間自動生成明日計畫";
+"review.ok.button" = "確定";
+"review.close.button" = "關閉";
+"review.add.button" = "新增";
+"review.skip.button" = "略過";
+"review.period.week" = "本週";
+"review.period.month" = "本月";
+"review.period.year" = "今年";
+"review.completion.rate" = "完成率";
+"review.completion.count.format" = "%d / %d 已完成";
+"review.no.todos" = "尚無待辦事項";
+"review.added.to.calendar" = "已新增至日曆";
+"review.tomorrow.sufficient" = "明日行程已排滿";
+
+/* ===== MainView ===== */
+"event.category.label" = "分類";
+"event.category.none" = "無";

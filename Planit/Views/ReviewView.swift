@@ -73,8 +73,8 @@ struct ReviewView: View {
     }
 
     private var headerTitle: String {
-        if showPlanResult { return "내일 계획 완성" }
-        return reviewService.currentMode == .evening ? "저녁 리뷰" : "오늘의 조정"
+        if showPlanResult { return String(localized: "review.plan.complete.title") }
+        return reviewService.currentMode == .evening ? String(localized: "review.evening.title") : String(localized: "review.daily.title")
     }
 
     // MARK: - Evening Review Content
@@ -86,7 +86,7 @@ struct ReviewView: View {
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("오늘 돌아보기")
+                        Text(String(localized: "review.today.lookback"))
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundStyle(.secondary)
                             .padding(.horizontal, 4)
@@ -104,7 +104,7 @@ struct ReviewView: View {
             HStack {
                 if !reviewService.suggestions.isEmpty {
                     Button { moveAllToTomorrow() } label: {
-                        Text("모두 내일로")
+                        Text(String(localized: "review.move.all"))
                             .font(.system(size: 11))
                             .foregroundStyle(.orange)
                             .padding(.horizontal, 8)
@@ -120,7 +120,7 @@ struct ReviewView: View {
                     if isGenerating {
                         HStack(spacing: 6) {
                             ProgressView().controlSize(.small)
-                            Text("계획 생성 중...")
+                            Text(String(localized: "review.generating.button"))
                                 .font(.system(size: 12, weight: .semibold))
                                 .foregroundStyle(.indigo)
                         }
@@ -128,7 +128,7 @@ struct ReviewView: View {
                         HStack(spacing: 4) {
                             Image(systemName: "wand.and.stars")
                                 .font(.system(size: 11))
-                            Text("내일 계획 자동 생성")
+                            Text(String(localized: "review.generate.tomorrow"))
                                 .font(.system(size: 12, weight: .semibold))
                         }
                         .foregroundStyle(.white)
@@ -153,9 +153,9 @@ struct ReviewView: View {
             Image(systemName: "moon.stars")
                 .font(.system(size: 28))
                 .foregroundStyle(.indigo)
-            Text("오늘 지난 일정이 없어요")
+            Text(String(localized: "review.no.past.events"))
                 .font(.system(size: 13, weight: .semibold))
-            Text("바로 내일 계획을 생성할 수 있어요")
+            Text(String(localized: "review.generate.now.hint"))
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
             Spacer()
@@ -186,7 +186,7 @@ struct ReviewView: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .help("완료")
+                .help(String(localized: "review.help.done"))
 
                 Button { markCompletion(at: index, status: .moved) } label: {
                     Image(systemName: "arrow.right.circle.fill")
@@ -196,7 +196,7 @@ struct ReviewView: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .help("내일로")
+                .help(String(localized: "review.help.tomorrow"))
 
                 Button { markCompletion(at: index, status: .skipped) } label: {
                     Image(systemName: "xmark.circle.fill")
@@ -206,7 +206,7 @@ struct ReviewView: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .help("건너뜀")
+                .help(String(localized: "review.help.skip"))
             }
         }
         .padding(10)
@@ -228,9 +228,9 @@ struct ReviewView: View {
                             Image(systemName: "checkmark.circle")
                                 .font(.system(size: 26))
                                 .foregroundStyle(.green)
-                            Text("순조롭게 진행 중이에요")
+                            Text(String(localized: "review.on.track"))
                                 .font(.system(size: 12, weight: .semibold))
-                            Text("저녁에 내일 계획을 자동으로 생성해 드려요")
+                            Text(String(localized: "review.evening.auto.plan"))
                                 .font(.system(size: 11))
                                 .foregroundStyle(.secondary)
                         }
@@ -253,7 +253,7 @@ struct ReviewView: View {
                     reviewService.dismissReview()
                     onDismiss()
                 } label: {
-                    Text("확인")
+                    Text(String(localized: "review.ok.button"))
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.purple)
                         .padding(.horizontal, 12)
@@ -290,7 +290,7 @@ struct ReviewView: View {
                 HStack(spacing: 6) {
                     Button { acceptSuggestion(at: index) } label: {
                         HStack {
-                            Text("추가")
+                            Text(String(localized: "review.add.button"))
                                 .font(.system(size: 11, weight: .semibold))
                                 .foregroundStyle(.white)
                         }
@@ -302,7 +302,7 @@ struct ReviewView: View {
                     .buttonStyle(.plain)
 
                     Button { declineSuggestion(at: index) } label: {
-                        Text("건너뜀")
+                        Text(String(localized: "review.skip.button"))
                             .font(.system(size: 11))
                             .foregroundStyle(.secondary)
                             .padding(.horizontal, 8)
@@ -378,10 +378,10 @@ struct ReviewView: View {
             // 기간 탭
             HStack(spacing: 2) {
                 ForEach([
-                    (GoalService.CompletionPeriod.day, "오늘"),
-                    (.week, "이번주"),
-                    (.month, "이번달"),
-                    (.year, "올해"),
+                    (GoalService.CompletionPeriod.day, String(localized: "common.today")),
+                    (.week, String(localized: "review.period.week")),
+                    (.month, String(localized: "review.period.month")),
+                    (.year, String(localized: "review.period.year")),
                 ], id: \.1) { period, label in
                     Button { selectedPeriod = period } label: {
                         Text(label)
@@ -403,7 +403,7 @@ struct ReviewView: View {
 
             if total > 0 {
                 HStack {
-                    Text("할일 달성률")
+                    Text(String(localized: "review.completion.rate"))
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                     Spacer()
@@ -421,11 +421,11 @@ struct ReviewView: View {
                     }
                 }
                 .frame(height: 6)
-                Text("\(done) / \(total) 완료")
+                Text(verbatim: String(format: String(localized: "review.completion.count.format"), done, total))
                     .font(.system(size: 10))
                     .foregroundStyle(.secondary)
             } else {
-                Text("등록된 할일이 없어요")
+                Text(String(localized: "review.no.todos"))
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -466,7 +466,7 @@ struct ReviewView: View {
                             Image(systemName: "calendar.badge.checkmark")
                                 .font(.system(size: 26))
                                 .foregroundStyle(.green)
-                            Text("내일 일정이 이미 충분해요")
+                            Text(String(localized: "review.tomorrow.sufficient"))
                                 .font(.system(size: 12, weight: .semibold))
                         }
                         .frame(maxWidth: .infinity)
@@ -474,7 +474,7 @@ struct ReviewView: View {
                     } else {
                         // 캘린더에 추가된 이벤트 목록
                         VStack(alignment: .leading, spacing: 6) {
-                            Label("캘린더에 추가됨", systemImage: "checkmark.circle.fill")
+                            Label(String(localized: "review.added.to.calendar"), systemImage: "checkmark.circle.fill")
                                 .font(.system(size: 11, weight: .semibold))
                                 .foregroundStyle(.green)
 
@@ -506,7 +506,7 @@ struct ReviewView: View {
                     reviewService.dismissReview()
                     onDismiss()
                 } label: {
-                    Text("닫기")
+                    Text(String(localized: "review.close.button"))
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.indigo)
                         .padding(.horizontal, 12)
@@ -622,15 +622,15 @@ struct ReviewView: View {
 
     private var todayDateString: String {
         let fmt = DateFormatter()
-        fmt.dateFormat = "M월 d일"
-        fmt.locale = Locale(identifier: "ko_KR")
+        fmt.dateStyle = .medium
+        fmt.timeStyle = .none
         return fmt.string(from: Date())
     }
 
     private var tomorrowDateString: String {
         let fmt = DateFormatter()
-        fmt.dateFormat = "M월 d일 (E)"
-        fmt.locale = Locale(identifier: "ko_KR")
+        fmt.dateStyle = .medium
+        fmt.timeStyle = .none
         let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date())!
         return fmt.string(from: tomorrow)
     }
@@ -638,7 +638,7 @@ struct ReviewView: View {
     private func formatTime(_ date: Date) -> String {
         let fmt = DateFormatter()
         fmt.dateFormat = "HH:mm"
-        fmt.timeZone = TimeZone(identifier: "Asia/Seoul")
+        fmt.timeZone = TimeZone.current
         return fmt.string(from: date)
     }
 
@@ -659,14 +659,14 @@ struct ReviewView: View {
 
     private func labelFor(_ type: SuggestionType) -> String {
         switch type {
-        case .carryover: return "미완료"
-        case .deadline: return "마감 임박"
-        case .habitGap: return "습관"
-        case .deadlineSpread: return "분산"
-        case .prep: return "준비"
-        case .focusQuota: return "집중"
-        case .health: return "건강"
-        case .buffer: return "이동"
+        case .carryover: return String(localized: "suggestion.carryover")
+        case .deadline: return String(localized: "suggestion.deadline")
+        case .habitGap: return String(localized: "suggestion.habit")
+        case .deadlineSpread: return String(localized: "suggestion.spread")
+        case .prep: return String(localized: "suggestion.prep")
+        case .focusQuota: return String(localized: "suggestion.focus")
+        case .health: return String(localized: "suggestion.health")
+        case .buffer: return String(localized: "suggestion.buffer")
         }
     }
 

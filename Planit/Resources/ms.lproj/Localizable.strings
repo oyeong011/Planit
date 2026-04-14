@@ -223,3 +223,136 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "Harian";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "Pagi";
+"energy.type.evening" = "Malam";
+"energy.type.balanced" = "Seimbang";
+
+/* ===== Aggressiveness ===== */
+"aggressiveness.manual" = "Manual";
+"aggressiveness.assist" = "Dibantu";
+"aggressiveness.semiauto" = "Semi-Automatik";
+"aggressiveness.auto" = "Automatik";
+
+/* ===== Settings View ===== */
+"settings.title" = "Tetapan";
+"settings.autosave" = "Perubahan disimpan secara automatik";
+"settings.section.profile" = "Profil";
+"settings.section.schedule" = "Jadual";
+"settings.section.ai" = "Tetapan AI";
+"settings.section.integrations" = "Integrasi";
+"settings.section.notifications" = "Pemberitahuan";
+"settings.section.advanced" = "Lanjutan";
+"settings.profile.subtitle" = "Konfigurasikan ritma peribadi dan gaya kerja anda";
+"settings.energy.card" = "Corak Tenaga";
+"settings.energy.desc" = "Pilih waktu fokus puncak anda. AI akan menjadualkan tugas penting dalam tempoh ini.";
+"settings.pace.card" = "Kadar Jadual";
+"settings.pace.desc" = "Menentukan sejauh mana AI mengisi jadual anda semasa membuat cadangan.";
+"settings.schedule.subtitle" = "Tetapkan waktu kerja dan kapasiti fokus harian";
+"settings.work.card" = "Waktu Kerja";
+"settings.work.start.label" = "Mula";
+"settings.work.end.label" = "Tamat";
+"settings.lunch.start.label" = "Mula Makan Tengah Hari";
+"settings.lunch.end.label" = "Tamat Makan Tengah Hari";
+"settings.work.hours.format" = "%d j kerja";
+"settings.commute.card" = "Masa Perjalanan";
+"settings.commute.label" = "Masa perjalanan satu hala";
+"settings.commute.minutes.format" = "%d min";
+"settings.commute.roundtrip.format" = "Pergi balik %d min · Tidak termasuk dalam masa fokus harian";
+"settings.capacity.card" = "Kapasiti Fokus Harian";
+"settings.capacity.weekday" = "Hari Bekerja";
+"settings.capacity.weekend" = "Hujung Minggu";
+"settings.capacity.hours.format" = "%d j";
+"settings.capacity.hours.minutes.format" = "%d j %d min";
+"settings.ai.subtitle" = "Pilih AI untuk analisis dan perancangan jadual";
+"settings.ai.engine.card" = "AI Engine";
+"settings.ai.status.card" = "Status Semasa";
+"settings.ai.save.card" = "Simpan";
+"settings.ai.installed.badge" = "Dipasang";
+"settings.ai.not.installed.badge" = "Tidak Dipasang";
+"settings.ai.claude.installed.detail" = "Dipasang — Pemahaman bahasa semula jadi yang hebat";
+"settings.ai.claude.install.hint" = "Diperlukan: brew install claude";
+"settings.ai.codex.installed.detail" = "Dipasang — Dioptimumkan untuk kod";
+"settings.ai.codex.install.hint" = "Diperlukan: npm install -g @openai/codex";
+"settings.ai.save.button" = "Simpan Tetapan AI";
+"settings.ai.claude.desc" = "Pemahaman bahasa semula jadi yang cemerlang. Sesuai untuk penjadualan kompleks dan analisis matlamat.";
+"settings.ai.codex.desc" = "Khusus untuk pengoptimuman berasaskan kod. Bagus untuk perancangan berasaskan peraturan yang pantas.";
+"settings.aggressiveness.manual.desc" = "Urus semua jadual secara manual. AI senyap.";
+"settings.aggressiveness.assist.desc" = "AI hanya mencadangkan. Anda memutuskan untuk menerima.";
+"settings.aggressiveness.semiauto.desc" = "Mendaftar cadangan yang diluluskan ke kalendar secara automatik.";
+"settings.aggressiveness.auto.desc" = "AI secara automatik mencipta dan mendaftar jadual optimum.";
+"settings.integrations.subtitle" = "Urus sambungan perkhidmatan luaran dan kalendar";
+"settings.google.connected" = "Disambungkan";
+"settings.google.not.connected" = "Tidak Disambungkan";
+"settings.google.no.email" = "Tiada maklumat e-mel";
+"settings.google.connect.hint" = "Sambungkan akaun Google anda untuk menyegerakkan jadual";
+"settings.google.disconnect.button" = "Putuskan Sambungan";
+"settings.google.login.button" = "Log masuk dengan Google";
+"settings.google.privacy" = "Data kalendar hanya disimpan pada peranti. AI hanya merujuk tajuk dan masa acara sahaja.";
+"settings.apple.card" = "Integrasi Apple";
+"settings.apple.calendar.title" = "Segerak Apple Calendar";
+"settings.apple.calendar.desc" = "Menunjukkan acara Apple Calendar pada peranti anda";
+"settings.apple.reminders.title" = "Import Apple Reminders";
+"settings.apple.reminders.desc" = "Mengimport peringatan sebagai tugasan";
+"settings.google.skip.card" = "Guna Tanpa Google";
+"settings.google.skip.title" = "Langkau Log Masuk Google";
+"settings.google.skip.desc" = "Gunakan ciri AI tanpa Google Calendar";
+"settings.notifications.subtitle" = "Tetapkan masa pemberitahuan taklimat pagi dan semakan malam";
+"settings.morning.card" = "Taklimat Pagi";
+"settings.morning.time.title" = "Masa Taklimat Pagi";
+"settings.morning.time.desc" = "Memberitahu ringkasan jadual hari ini dan kemajuan matlamat";
+"settings.evening.card" = "Semakan Malam";
+"settings.evening.time.title" = "Masa Semakan Malam";
+"settings.evening.time.desc" = "Menyemak jadual yang selesai dan merancang untuk esok";
+"settings.notifications.permission.card" = "Kebenaran Pemberitahuan";
+"settings.notifications.permission.title" = "Kebenaran pemberitahuan sistem diperlukan";
+"settings.notifications.permission.desc" = "Tetapan Sistem macOS → Pemberitahuan → Benarkan Calen";
+"settings.notifications.open.system" = "Buka Tetapan Sistem";
+"settings.hour.format" = "%d:00";
+"settings.advanced.subtitle" = "Pengurusan data dan pilihan tetapan semula aplikasi";
+"settings.onboarding.card" = "Onboarding";
+"settings.onboarding.restart.title" = "Mulakan Semula Onboarding";
+"settings.onboarding.restart.desc" = "Ulang skrin persediaan matlamat dari awal";
+"settings.onboarding.restart.button" = "Mulakan Semula";
+"settings.data.reset.card" = "Tetapkan Semula Data";
+"settings.completions.reset.title" = "Tetapkan Semula Sejarah Penyelesaian";
+"settings.completions.reset.desc" = "Memadam semua rekod penyelesaian acara";
+"settings.completions.reset.button" = "Tetapkan Semula";
+"settings.review.reset.title" = "Tetapkan Semula Semakan Harian";
+"settings.review.reset.desc" = "Menetapkan semula semakan hari ini yang telah selesai untuk ditunjukkan semula";
+"settings.review.reset.button" = "Tetapkan Semula";
+"settings.goals.delete.title" = "Padam Semua Matlamat";
+"settings.goals.delete.desc" = "Memadam semua matlamat yang didaftarkan. Ini tidak boleh dibatalkan.";
+"settings.goals.delete.button" = "Padam";
+"settings.language.card" = "Bahasa";
+"settings.language.desc" = "Pilih bahasa. Aplikasi akan dimulakan semula untuk menerapkan perubahan.";
+"settings.app.info.card" = "Maklumat Aplikasi";
+"settings.app.version" = "Versi 1.0 · Pembantu Kalendar AI Peribadi";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "Rancangan Esok Sedia";
+"review.today.lookback" = "Tinjauan Hari Ini";
+"review.move.all" = "Pindahkan Semua ke Esok";
+"review.generating.button" = "Menjana rancangan...";
+"review.generate.tomorrow" = "Jana Rancangan Esok Secara Automatik";
+"review.no.past.events" = "Tiada acara lepas hari ini";
+"review.generate.now.hint" = "Anda boleh menjana rancangan esok sekarang";
+"review.on.track" = "Berjalan lancar";
+"review.evening.auto.plan" = "Kami akan menjana rancangan esok secara automatik pada waktu malam";
+"review.ok.button" = "OK";
+"review.close.button" = "Tutup";
+"review.add.button" = "Tambah";
+"review.skip.button" = "Langkau";
+"review.period.week" = "Minggu Ini";
+"review.period.month" = "Bulan Ini";
+"review.period.year" = "Tahun Ini";
+"review.completion.rate" = "Kadar Penyelesaian";
+"review.completion.count.format" = "%d / %d selesai";
+"review.no.todos" = "Tiada tugasan didaftarkan";
+"review.added.to.calendar" = "Ditambahkan ke Kalendar";
+"review.tomorrow.sufficient" = "Jadual esok sudah penuh";
+
+/* ===== MainView ===== */
+"event.category.label" = "Kategori";
+"event.category.none" = "Tiada";

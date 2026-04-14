@@ -223,3 +223,136 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "Diario";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "Mañana";
+"energy.type.evening" = "Tarde";
+"energy.type.balanced" = "Equilibrado";
+
+/* ===== Aggressiveness ===== */
+"aggressiveness.manual" = "Manual";
+"aggressiveness.assist" = "Asistido";
+"aggressiveness.semiauto" = "Semiautomático";
+"aggressiveness.auto" = "Automático";
+
+/* ===== Settings View ===== */
+"settings.title" = "Ajustes";
+"settings.autosave" = "Los cambios se guardan automáticamente";
+"settings.section.profile" = "Perfil";
+"settings.section.schedule" = "Horario";
+"settings.section.ai" = "Ajustes de IA";
+"settings.section.integrations" = "Integraciones";
+"settings.section.notifications" = "Notificaciones";
+"settings.section.advanced" = "Avanzado";
+"settings.profile.subtitle" = "Configura tu ritmo personal y estilo de trabajo";
+"settings.energy.card" = "Patrón de energía";
+"settings.energy.desc" = "Selecciona tu hora de mayor concentración. La IA programará las tareas importantes en ese período.";
+"settings.pace.card" = "Ritmo de programación";
+"settings.pace.desc" = "Determina con qué intensidad la IA llena tu agenda al hacer sugerencias.";
+"settings.schedule.subtitle" = "Establece tu horario laboral y capacidad de enfoque diario";
+"settings.work.card" = "Horario laboral";
+"settings.work.start.label" = "Inicio";
+"settings.work.end.label" = "Fin";
+"settings.lunch.start.label" = "Inicio del almuerzo";
+"settings.lunch.end.label" = "Fin del almuerzo";
+"settings.work.hours.format" = "%d h de trabajo";
+"settings.commute.card" = "Tiempo de trayecto";
+"settings.commute.label" = "Tiempo de trayecto (ida)";
+"settings.commute.minutes.format" = "%d min";
+"settings.commute.roundtrip.format" = "Ida y vuelta %d min · Excluido del tiempo de enfoque diario";
+"settings.capacity.card" = "Capacidad de enfoque diario";
+"settings.capacity.weekday" = "Entre semana";
+"settings.capacity.weekend" = "Fin de semana";
+"settings.capacity.hours.format" = "%d h";
+"settings.capacity.hours.minutes.format" = "%d h %d min";
+"settings.ai.subtitle" = "Elige la IA para el análisis y la planificación de tu agenda";
+"settings.ai.engine.card" = "Motor de IA";
+"settings.ai.status.card" = "Estado actual";
+"settings.ai.save.card" = "Guardar";
+"settings.ai.installed.badge" = "Instalado";
+"settings.ai.not.installed.badge" = "No instalado";
+"settings.ai.claude.installed.detail" = "Instalado — Potente comprensión del lenguaje natural";
+"settings.ai.claude.install.hint" = "Requerido: brew install claude";
+"settings.ai.codex.installed.detail" = "Instalado — Optimizado para código";
+"settings.ai.codex.install.hint" = "Requerido: npm install -g @openai/codex";
+"settings.ai.save.button" = "Guardar ajustes de IA";
+"settings.ai.claude.desc" = "Excelente comprensión del lenguaje natural. Ideal para programación compleja y análisis de objetivos.";
+"settings.ai.codex.desc" = "Especializado en optimización basada en código. Ideal para planificación rápida basada en reglas.";
+"settings.aggressiveness.manual.desc" = "Gestiona todos los horarios manualmente. La IA permanece silenciosa.";
+"settings.aggressiveness.assist.desc" = "La IA solo sugiere. Tú decides si aceptas.";
+"settings.aggressiveness.semiauto.desc" = "Registra automáticamente las sugerencias aprobadas en el calendario.";
+"settings.aggressiveness.auto.desc" = "La IA crea y registra automáticamente los horarios óptimos.";
+"settings.integrations.subtitle" = "Gestiona las conexiones con servicios externos y calendarios";
+"settings.google.connected" = "Conectado";
+"settings.google.not.connected" = "No conectado";
+"settings.google.no.email" = "Sin información de correo";
+"settings.google.connect.hint" = "Conecta tu cuenta de Google para sincronizar tu agenda";
+"settings.google.disconnect.button" = "Desconectar";
+"settings.google.login.button" = "Iniciar sesión con Google";
+"settings.google.privacy" = "Los datos del calendario se almacenan solo en el dispositivo. La IA solo hace referencia a los títulos y horarios de los eventos.";
+"settings.apple.card" = "Integración con Apple";
+"settings.apple.calendar.title" = "Sincronización con Calendario de Apple";
+"settings.apple.calendar.desc" = "Muestra los eventos del Calendario de Apple en tu dispositivo";
+"settings.apple.reminders.title" = "Importar Recordatorios de Apple";
+"settings.apple.reminders.desc" = "Importa recordatorios como tareas";
+"settings.google.skip.card" = "Usar sin Google";
+"settings.google.skip.title" = "Omitir inicio de sesión con Google";
+"settings.google.skip.desc" = "Usa las funciones de IA sin Google Calendar";
+"settings.notifications.subtitle" = "Establece los horarios de notificación del resumen matutino y la revisión vespertina";
+"settings.morning.card" = "Resumen matutino";
+"settings.morning.time.title" = "Hora del resumen matutino";
+"settings.morning.time.desc" = "Te notifica el resumen de tu agenda del día y el progreso de tus objetivos";
+"settings.evening.card" = "Revisión vespertina";
+"settings.evening.time.title" = "Hora de la revisión vespertina";
+"settings.evening.time.desc" = "Revisa los horarios completados y planifica para mañana";
+"settings.notifications.permission.card" = "Permiso de notificaciones";
+"settings.notifications.permission.title" = "Se requiere permiso del sistema para notificaciones";
+"settings.notifications.permission.desc" = "Ajustes del sistema de macOS → Notificaciones → Permitir Calen";
+"settings.notifications.open.system" = "Abrir Ajustes del sistema";
+"settings.hour.format" = "%d:00";
+"settings.advanced.subtitle" = "Opciones de gestión de datos y restablecimiento de la app";
+"settings.onboarding.card" = "Introducción";
+"settings.onboarding.restart.title" = "Reiniciar introducción";
+"settings.onboarding.restart.desc" = "Vuelve a realizar la pantalla de configuración de objetivos desde el principio";
+"settings.onboarding.restart.button" = "Reiniciar";
+"settings.data.reset.card" = "Restablecer datos";
+"settings.completions.reset.title" = "Restablecer historial de completados";
+"settings.completions.reset.desc" = "Elimina todos los registros de eventos completados";
+"settings.completions.reset.button" = "Restablecer";
+"settings.review.reset.title" = "Restablecer revisión diaria";
+"settings.review.reset.desc" = "Restablece la revisión completada de hoy para mostrarla de nuevo";
+"settings.review.reset.button" = "Restablecer";
+"settings.goals.delete.title" = "Eliminar todos los objetivos";
+"settings.goals.delete.desc" = "Elimina todos los objetivos registrados. Esta acción no se puede deshacer.";
+"settings.goals.delete.button" = "Eliminar";
+"settings.language.card" = "Idioma";
+"settings.language.desc" = "Selecciona un idioma. La app se reiniciará para aplicar el cambio.";
+"settings.app.info.card" = "Información de la app";
+"settings.app.version" = "Versión 1.0 · Asistente de calendario personal con IA";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "Plan de mañana listo";
+"review.today.lookback" = "Revisión de hoy";
+"review.move.all" = "Mover todo a mañana";
+"review.generating.button" = "Generando plan...";
+"review.generate.tomorrow" = "Generar automáticamente el plan de mañana";
+"review.no.past.events" = "Sin eventos pasados hoy";
+"review.generate.now.hint" = "Puedes generar el plan de mañana ahora";
+"review.on.track" = "Todo va bien";
+"review.evening.auto.plan" = "Generaremos automáticamente el plan de mañana por la tarde";
+"review.ok.button" = "Aceptar";
+"review.close.button" = "Cerrar";
+"review.add.button" = "Añadir";
+"review.skip.button" = "Omitir";
+"review.period.week" = "Esta semana";
+"review.period.month" = "Este mes";
+"review.period.year" = "Este año";
+"review.completion.rate" = "Tasa de completado";
+"review.completion.count.format" = "%d / %d completados";
+"review.no.todos" = "Sin tareas registradas";
+"review.added.to.calendar" = "Añadido al calendario";
+"review.tomorrow.sufficient" = "La agenda de mañana ya está llena";
+
+/* ===== MainView ===== */
+"event.category.label" = "Categoría";
+"event.category.none" = "Ninguna";
