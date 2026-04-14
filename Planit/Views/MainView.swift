@@ -120,6 +120,7 @@ struct MainCalendarView: View {
                 ReviewView(
                     reviewService: reviewService,
                     goalService: goalService,
+                    viewModel: viewModel,
                     onCreateEvent: { title, start, end in
                         Task {
                             _ = try? await viewModel.googleService.createEvent(

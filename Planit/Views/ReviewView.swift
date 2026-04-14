@@ -3,13 +3,14 @@ import SwiftUI
 struct ReviewView: View {
     @ObservedObject var reviewService: ReviewService
     @ObservedObject var goalService: GoalService
+    @ObservedObject var viewModel: CalendarViewModel
     let onCreateEvent: (String, Date, Date) -> Void
     let onDismiss: () -> Void
 
     @State private var isGenerating = false
     @State private var showPlanResult = false
     @State private var aiPlan: ReviewAIPlan?
-    @State private var selectedPeriod: GoalService.CompletionPeriod = .week
+    @State private var selectedPeriod: GoalService.CompletionPeriod = .day
     // 저녁 리뷰 중 사용자가 마킹한 이벤트 추적
     @State private var reviewedItems: [(title: String, status: CompletionStatus, start: Date, end: Date)] = []
 
@@ -300,21 +301,44 @@ struct ReviewView: View {
                 : Color(nsColor: .controlBackgroundColor)))
     }
 
-    // MARK: - Progress Card (period-selectable)
+    // MARK: - Progress Card (todos 기반)
+
+    private func todosInPeriod(_ period: GoalService.CompletionPeriod) -> [TodoItem] {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        let allTodos = viewModel.todos.filter { $0.source == .local }
+        switch period {
+        case .day:
+            return allTodos.filter { cal.isDate($0.date, inSameDayAs: Date()) }
+        case .week:
+            let weekAgo = cal.date(byAdding: .day, value: -6, to: today)!
+            return allTodos.filter {
+                let d = cal.startOfDay(for: $0.date)
+                return d >= weekAgo && d <= today
+            }
+        case .month:
+            let monthStart = cal.date(from: cal.dateComponents([.year, .month], from: today))!
+            return allTodos.filter { cal.startOfDay(for: $0.date) >= monthStart }
+        case .year:
+            let yearStart = cal.date(from: cal.dateComponents([.year], from: today))!
+            return allTodos.filter { cal.startOfDay(for: $0.date) >= yearStart }
+        }
+    }
 
     private var weeklyProgressCard: some View {
-        let rate = goalService.completionRate(for: selectedPeriod)
-        let percent = Int(rate * 100)
-        let hasData = !goalService.completions.isEmpty
+        let todos = todosInPeriod(selectedPeriod)
+        let total = todos.count
+        let done = todos.filter { $0.isCompleted }.count
+        let rate = total > 0 ? Double(done) / Double(total) : 0
 
         return VStack(alignment: .leading, spacing: 8) {
             // 기간 탭
             HStack(spacing: 2) {
                 ForEach([
-                    (GoalService.CompletionPeriod.day, "일"),
-                    (.week, "주"),
-                    (.month, "월"),
-                    (.year, "년"),
+                    (GoalService.CompletionPeriod.day, "오늘"),
+                    (.week, "이번주"),
+                    (.month, "이번달"),
+                    (.year, "올해"),
                 ], id: \.1) { period, label in
                     Button { selectedPeriod = period } label: {
                         Text(label)
@@ -333,14 +357,13 @@ struct ReviewView: View {
             .padding(3)
             .background(RoundedRectangle(cornerRadius: 6).fill(Color.secondary.opacity(0.1)))
 
-            // 달성률 표시
-            if hasData {
+            if total > 0 {
                 HStack {
-                    Text(periodLabel)
+                    Text("할일 달성률")
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Text("\(percent)%")
+                    Text("\(Int(rate * 100))%")
                         .font(.system(size: 13, weight: .bold))
                         .foregroundStyle(rate >= 0.7 ? .green : rate >= 0.4 ? .orange : .red)
                 }
@@ -349,16 +372,16 @@ struct ReviewView: View {
                         RoundedRectangle(cornerRadius: 3).fill(Color.secondary.opacity(0.15))
                         RoundedRectangle(cornerRadius: 3)
                             .fill(rate >= 0.7 ? Color.green : rate >= 0.4 ? Color.orange : Color.red)
-                            .frame(width: geo.size.width * CGFloat(max(0, min(1, rate))))
+                            .frame(width: geo.size.width * CGFloat(rate))
                             .animation(.easeInOut(duration: 0.3), value: rate)
                     }
                 }
                 .frame(height: 6)
-                Text(statLabel)
+                Text("\(done) / \(total) 완료")
                     .font(.system(size: 10))
                     .foregroundStyle(.secondary)
             } else {
-                Text("할일을 완료하면 달성률이 표시돼요")
+                Text("등록된 할일이 없어요")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -367,30 +390,6 @@ struct ReviewView: View {
         }
         .padding(10)
         .background(RoundedRectangle(cornerRadius: 8).fill(Color(nsColor: .controlBackgroundColor)))
-    }
-
-    private var periodLabel: String {
-        switch selectedPeriod {
-        case .day: return "오늘 달성률"
-        case .week: return "이번 주 달성률"
-        case .month: return "이번 달 달성률"
-        case .year: return "올해 달성률"
-        }
-    }
-
-    private var statLabel: String {
-        let cal = Calendar.current
-        let today = cal.startOfDay(for: Date())
-        let from: Date
-        switch selectedPeriod {
-        case .day: from = today
-        case .week: from = cal.date(byAdding: .day, value: -7, to: today)!
-        case .month: from = cal.date(byAdding: .month, value: -1, to: today)!
-        case .year: from = cal.date(byAdding: .year, value: -1, to: today)!
-        }
-        let records = goalService.completions.values.filter { $0.date >= from }
-        let done = records.filter { $0.status == .done }.count
-        return "\(done) / \(records.count) 완료"
     }
 
     // MARK: - AI Plan Result View
