@@ -199,7 +199,8 @@ final class GoogleCalendarService {
             endDate: endDate,
             color: color,
             isAllDay: isAllDay,
-            calendarName: "Google"
+            calendarName: "Google",
+            calendarID: "google:primary"
         )
     }
 }

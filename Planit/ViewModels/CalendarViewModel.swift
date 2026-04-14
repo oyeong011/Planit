@@ -19,6 +19,7 @@ final class CalendarViewModel: ObservableObject {
     @Published var calendarEvents: [CalendarEvent] = []
     @Published var completedEventIDs: Set<String> = []
     @Published var categories: [TodoCategory] = []
+    @Published var calendarCategoryMappings: [String: CalendarCategoryMapping] = [:]  // calendarID → mapping
     @Published var isOffline: Bool = false
     @Published var pendingEditsCount: Int = 0
     @Published var appleCalendarEnabled: Bool = UserDefaults.standard.bool(forKey: "planit.appleCalendarEnabled") {
@@ -74,6 +75,7 @@ final class CalendarViewModel: ObservableObject {
     private var categoriesPath: URL { appSupportDir.appendingPathComponent("categories.json") }
     private var eventCachePath: URL { appSupportDir.appendingPathComponent("events_cache.json") }
     private var pendingEditsPath: URL { appSupportDir.appendingPathComponent("pending_edits.json") }
+    private var calendarCategoryMappingsPath: URL { appSupportDir.appendingPathComponent("calendar_category_mappings.json") }
 
     // MARK: - Init
 
@@ -87,6 +89,7 @@ final class CalendarViewModel: ObservableObject {
         loadTodos()
         loadCompletedEvents()
         loadPendingEdits()
+        loadCalendarCategoryMappings()
         startPeriodicRefresh()
 
         // Load cached events first (instant display), then try network
@@ -188,6 +191,7 @@ final class CalendarViewModel: ObservableObject {
                 color: Color(cgColor: cgColor),
                 isAllDay: event.isAllDay,
                 calendarName: event.calendar.title,
+                calendarID: "apple:\(event.calendar.calendarIdentifier)",
                 source: .apple
             )
         }
@@ -200,6 +204,7 @@ final class CalendarViewModel: ObservableObject {
         // 기존 Apple 이벤트 제거 후 다시 추가 (중복 방지)
         calendarEvents.removeAll { $0.source == .apple }
         calendarEvents.append(contentsOf: appleEvents)
+        applyCalendarCategoryMappings()
     }
 
     // MARK: - Apple Reminders (EventKit)
@@ -345,12 +350,14 @@ final class CalendarViewModel: ObservableObject {
                 cacheEvents(events)
                 // Apple Calendar 이벤트 병합
                 mergeAppleCalendarEvents(for: month)
+                applyCalendarCategoryMappings()
             } catch {
                 print("[Calen] Google Calendar fetch failed — using cached data")
                 self.isOffline = true
                 loadCachedEvents()
                 // 오프라인에서도 Apple Calendar 병합
                 mergeAppleCalendarEvents(for: month)
+                applyCalendarCategoryMappings()
             }
         }
     }
@@ -369,8 +376,10 @@ final class CalendarViewModel: ObservableObject {
                 let tempEvent = CalendarEvent(
                     id: "pending-\(UUID().uuidString)", title: title,
                     startDate: startDate, endDate: endDate,
-                    color: .blue, isAllDay: isAllDay)
+                    color: .blue, isAllDay: isAllDay,
+                    calendarName: "Google", calendarID: "google:primary", source: .google)
                 calendarEvents.append(tempEvent)
+                applyCalendarCategoryMappings()
                 cacheEvents(calendarEvents)
             }
         }
@@ -470,9 +479,11 @@ final class CalendarViewModel: ObservableObject {
                 color: Color(cgColor: cgColor),
                 isAllDay: event.isAllDay,
                 calendarName: event.calendar.title,
+                calendarID: "apple:\(event.calendar.calendarIdentifier)",
                 source: .local
             )
         }
+        applyCalendarCategoryMappings()
     }
 
     // EventKit write methods (fallback)
@@ -817,6 +828,10 @@ final class CalendarViewModel: ObservableObject {
         }
         categories.removeAll { $0.id == id }
         saveCategories()
+        // 삭제된 카테고리를 참조하는 캘린더 매핑 제거
+        calendarCategoryMappings = calendarCategoryMappings.filter { $0.value.categoryID != id }
+        saveCalendarCategoryMappings()
+        applyCalendarCategoryMappings()
     }
 
     func updateCategory(id: UUID, name: String, colorHex: String) {
@@ -824,6 +839,60 @@ final class CalendarViewModel: ObservableObject {
         categories[index].name = name
         categories[index].colorHex = colorHex
         saveCategories()
+    }
+
+    // MARK: - Calendar Category Mappings
+
+    /// 이벤트의 카테고리를 반환 (매핑 없으면 nil)
+    func categoryForEvent(_ event: CalendarEvent) -> TodoCategory? {
+        guard let catID = event.categoryID else { return nil }
+        return categories.first { $0.id == catID }
+    }
+
+    /// 캘린더에 카테고리 매핑 설정 (categoryID == nil이면 매핑 제거)
+    func setCalendarCategory(calendarID: String, calendarName: String, categoryID: UUID?) {
+        if let catID = categoryID {
+            calendarCategoryMappings[calendarID] = CalendarCategoryMapping(
+                calendarID: calendarID,
+                calendarName: calendarName,
+                categoryID: catID
+            )
+        } else {
+            calendarCategoryMappings.removeValue(forKey: calendarID)
+        }
+        saveCalendarCategoryMappings()
+        applyCalendarCategoryMappings()
+    }
+
+    /// 현재 로드된 이벤트에 매핑 적용 (존재하지 않는 카테고리는 무시)
+    func applyCalendarCategoryMappings() {
+        let validCategoryIDs = Set(categories.map { $0.id })
+        for i in calendarEvents.indices {
+            let cid = calendarEvents[i].calendarID
+            if let mapping = calendarCategoryMappings[cid],
+               validCategoryIDs.contains(mapping.categoryID) {
+                calendarEvents[i].categoryID = mapping.categoryID
+            } else {
+                calendarEvents[i].categoryID = nil
+            }
+        }
+    }
+
+    private func saveCalendarCategoryMappings() {
+        let store = CalendarCategoryMappingsStore(
+            version: 1,
+            mappings: Array(calendarCategoryMappings.values)
+        )
+        do {
+            let data = try JSONEncoder().encode(store)
+            try data.write(to: calendarCategoryMappingsPath, options: .atomic)
+        } catch { print("[Calen] Failed to save calendar category mappings: \(error)") }
+    }
+
+    func loadCalendarCategoryMappings() {
+        guard let data = try? Data(contentsOf: calendarCategoryMappingsPath),
+              let store = try? JSONDecoder().decode(CalendarCategoryMappingsStore.self, from: data) else { return }
+        calendarCategoryMappings = store.mappings.reduce(into: [:]) { $0[$1.calendarID] = $1 }
     }
 
     // MARK: - Event Completion
@@ -921,6 +990,7 @@ final class CalendarViewModel: ObservableObject {
             // Only use cache if we don't already have live data
             if calendarEvents.isEmpty {
                 calendarEvents = cached.map { $0.toCalendarEvent() }
+                applyCalendarCategoryMappings()
             }
         } catch { print("[Calen] Failed to load cached events") }
     }

@@ -284,6 +284,7 @@ struct CalendarGridView: View {
                                     events: viewModel.eventsForDate(date),
                                     todos: viewModel.todosForDate(date),
                                     categoryFor: { viewModel.category(for: $0) },
+                                    categoryForEvent: { viewModel.categoryForEvent($0) },
                                     onDrop: { payload, targetDate in
                                         switch CalendarDragPayload(payload) {
                                         case .todo(let id):
@@ -325,6 +326,7 @@ struct DayCellView: View {
     let events: [CalendarEvent]
     let todos: [TodoItem]
     let categoryFor: (UUID) -> TodoCategory
+    var categoryForEvent: ((CalendarEvent) -> TodoCategory?)? = nil
     var onDrop: ((String, Date) -> Void)? = nil
 
     @State private var isDropTarget = false
@@ -386,14 +388,15 @@ struct DayCellView: View {
     @ViewBuilder private var dayCellItems: some View {
         VStack(alignment: .leading, spacing: 2) {
             ForEach(Array(events.prefix(4).enumerated()), id: \.offset) { _, event in
+                let displayColor = categoryForEvent?(event)?.color ?? event.color
                 Text(event.title)
                     .font(.system(size: 10))
                     .lineLimit(1)
                     .padding(.horizontal, 4)
                     .padding(.vertical, 1.5)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(RoundedRectangle(cornerRadius: 3).fill(event.color.opacity(0.15)))
-                    .foregroundStyle(isCurrentMonth ? event.color.opacity(0.85) : .secondary.opacity(0.3))
+                    .background(RoundedRectangle(cornerRadius: 3).fill(displayColor.opacity(0.15)))
+                    .foregroundStyle(isCurrentMonth ? displayColor.opacity(0.85) : .secondary.opacity(0.3))
             }
             ForEach(Array(todos.prefix(max(0, 4 - events.count)).enumerated()), id: \.offset) { _, todo in
                 DayCellTodoRow(todo: todo, cat: categoryFor(todo.categoryID), isCurrentMonth: isCurrentMonth)
@@ -526,6 +529,7 @@ struct DailyDetailView: View {
                         ForEach(events) { event in
                             EventRowView(
                                 event: event,
+                                category: viewModel.categoryForEvent(event),
                                 isCompleted: viewModel.isEventCompleted(event.id),
                                 onTap: {
                                     tappedEvent = event
@@ -792,6 +796,45 @@ struct ModalEventDetail: View {
                             .font(.system(size: 13))
                             .foregroundStyle(viewModel.isEventCompleted(event.id) ? .green : .secondary)
                         Text(viewModel.isEventCompleted(event.id) ? String(localized: "common.completed") : String(localized: "common.incomplete")).font(.system(size: 13)).foregroundStyle(.secondary)
+                    }
+
+                    // 캘린더 카테고리 매핑 (이 캘린더의 모든 이벤트에 적용)
+                    if !event.calendarID.isEmpty {
+                        let mappedCatID = viewModel.calendarCategoryMappings[event.calendarID]?.categoryID
+                        Divider()
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("이 캘린더의 카테고리")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(.secondary)
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 6) {
+                                    // 없음 버튼
+                                    Button {
+                                        viewModel.setCalendarCategory(calendarID: event.calendarID, calendarName: event.calendarName, categoryID: nil)
+                                    } label: {
+                                        Text("없음")
+                                            .font(.system(size: 11))
+                                            .padding(.horizontal, 8).padding(.vertical, 4)
+                                            .background(RoundedRectangle(cornerRadius: 5).fill(mappedCatID == nil ? Color.secondary.opacity(0.3) : Color.secondary.opacity(0.1)))
+                                            .foregroundStyle(mappedCatID == nil ? .primary : .secondary)
+                                    }.buttonStyle(.plain)
+
+                                    ForEach(viewModel.categories) { cat in
+                                        Button {
+                                            viewModel.setCalendarCategory(calendarID: event.calendarID, calendarName: event.calendarName, categoryID: cat.id)
+                                        } label: {
+                                            HStack(spacing: 4) {
+                                                Circle().fill(cat.color).frame(width: 8, height: 8)
+                                                Text(cat.name).font(.system(size: 11))
+                                            }
+                                            .padding(.horizontal, 8).padding(.vertical, 4)
+                                            .background(RoundedRectangle(cornerRadius: 5).fill(mappedCatID == cat.id ? cat.color.opacity(0.25) : cat.color.opacity(0.08)))
+                                            .foregroundStyle(mappedCatID == cat.id ? cat.color : .secondary)
+                                        }.buttonStyle(.plain)
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1154,9 +1197,12 @@ struct DragGhostRow: View {
 
 struct EventRowView: View {
     let event: CalendarEvent
+    var category: TodoCategory? = nil    // 매핑된 카테고리 (있으면 색상 오버라이드)
     var isCompleted: Bool = false
     var onTap: () -> Void = {}
     var onToggle: (() -> Void)? = nil
+
+    private var displayColor: Color { category?.color ?? event.color }
 
     private var timeText: String {
         if event.isAllDay { return String(localized: "event.detail.allday") }
@@ -1168,13 +1214,22 @@ struct EventRowView: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            RoundedRectangle(cornerRadius: 2).fill(event.color).frame(width: 4)
+            RoundedRectangle(cornerRadius: 2).fill(displayColor).frame(width: 4)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(event.title)
-                    .font(.system(size: 14, weight: .medium))
-                    .strikethrough(isCompleted)
-                    .foregroundStyle(isCompleted ? .secondary : .primary)
+                HStack(spacing: 6) {
+                    Text(event.title)
+                        .font(.system(size: 14, weight: .medium))
+                        .strikethrough(isCompleted)
+                        .foregroundStyle(isCompleted ? .secondary : .primary)
+                    if let cat = category {
+                        Text(cat.name)
+                            .font(.system(size: 10))
+                            .padding(.horizontal, 5).padding(.vertical, 2)
+                            .background(RoundedRectangle(cornerRadius: 4).fill(cat.color.opacity(0.15)))
+                            .foregroundStyle(cat.color)
+                    }
+                }
                 Text(timeText).font(.system(size: 11)).foregroundStyle(.secondary)
             }
 
@@ -1183,11 +1238,11 @@ struct EventRowView: View {
             Button { onToggle?() } label: {
                 ZStack {
                     Circle()
-                        .stroke(isCompleted ? event.color : Color.secondary.opacity(0.4), lineWidth: 2)
+                        .stroke(isCompleted ? displayColor : Color.secondary.opacity(0.4), lineWidth: 2)
                         .frame(width: 22, height: 22)
                     if isCompleted {
-                        Circle().fill(event.color.opacity(0.15)).frame(width: 22, height: 22)
-                        Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundStyle(event.color)
+                        Circle().fill(displayColor.opacity(0.15)).frame(width: 22, height: 22)
+                        Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundStyle(displayColor)
                     }
                 }
                 .frame(width: 32, height: 32)
@@ -1205,7 +1260,7 @@ struct EventRowView: View {
         .contentShape(Rectangle())
         .onTapGesture { onTap() }
         .draggable("event:\(event.id)") {
-            DragGhostRow(title: event.title, color: event.color, subtitle: timeText)
+            DragGhostRow(title: event.title, color: displayColor, subtitle: timeText)
         }
     }
 }
