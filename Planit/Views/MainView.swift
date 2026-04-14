@@ -48,6 +48,7 @@ struct MainCalendarView: View {
             calendarService: vm.googleService
         ))
         let gs = GoalService()
+        vm.goalService = gs
         self._goalService = StateObject(wrappedValue: gs)
         self._reviewService = StateObject(wrappedValue: ReviewService(
             goalService: gs,

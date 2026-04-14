@@ -86,6 +86,12 @@ final class GoalService: ObservableObject {
         completions[eventId]
     }
 
+    func removeCompletion(eventId: String) {
+        guard let record = completions.removeValue(forKey: eventId) else { return }
+        saveCompletions()
+        updateDailyMetrics(for: record.date)
+    }
+
     // MARK: - Daily Metrics
 
     private func updateDailyMetrics(for date: Date) {
