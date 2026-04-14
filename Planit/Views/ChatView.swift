@@ -96,6 +96,8 @@ struct ChatView: View {
                     Text(String(localized: "chat.redetect"))
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.blue)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -183,6 +185,7 @@ struct ChatView: View {
                     Image(systemName: "paperclip")
                         .font(.system(size: 14))
                         .foregroundStyle(.secondary)
+                        .frame(width: 28, height: 28)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -199,6 +202,7 @@ struct ChatView: View {
                     Image(systemName: "arrow.up.circle.fill")
                         .font(.system(size: 20))
                         .foregroundStyle(canSend ? Color.purple : Color.secondary)
+                        .frame(width: 28, height: 28)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -206,6 +210,11 @@ struct ChatView: View {
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
+        }
+        .onAppear {
+            // 앱 시작 시 이전 세션의 paste 임시 파일 정리
+            let tmpPasteDir = FileManager.default.temporaryDirectory.appendingPathComponent("calen-paste")
+            try? FileManager.default.removeItem(at: tmpPasteDir)
         }
         .onDrop(of: [.fileURL], isTargeted: $isDragOver) { providers in
             handleDrop(providers)
@@ -267,8 +276,9 @@ struct ChatView: View {
                             Image(systemName: "xmark.circle.fill")
                                 .font(.system(size: 12))
                                 .foregroundStyle(.white)
-                                .contentShape(Rectangle())
                                 .background(Circle().fill(.gray))
+                                .frame(width: 22, height: 22)
+                                .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
                         .offset(x: 4, y: -4)
@@ -391,11 +401,11 @@ struct ChatView: View {
                         Text(String(localized: "common.execute"))
                             .font(.system(size: 10, weight: .semibold))
                     }
-                    .contentShape(Rectangle())
                     .foregroundStyle(.white)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 5)
                     .background(RoundedRectangle(cornerRadius: 5).fill(.purple))
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
 
@@ -406,10 +416,10 @@ struct ChatView: View {
                     Text(String(localized: "common.cancel"))
                         .font(.system(size: 10))
                         .foregroundStyle(.secondary)
-                        .contentShape(Rectangle())
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
                         .background(RoundedRectangle(cornerRadius: 5).stroke(Color.secondary.opacity(0.3)))
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
@@ -444,6 +454,14 @@ struct ChatView: View {
         messages.append(ChatMessage(role: .user, content: displayText, attachments: currentAttachments))
         inputText = ""
         attachments = []
+
+        // 전송 후 임시 paste 파일 정리
+        let tmpPasteDir = FileManager.default.temporaryDirectory.appendingPathComponent("calen-paste")
+        for att in currentAttachments {
+            if att.url.path.hasPrefix(tmpPasteDir.path) {
+                try? FileManager.default.removeItem(at: att.url)
+            }
+        }
 
         Task {
             let response = await aiService.sendMessage(text, attachments: currentAttachments, history: Array(messages.dropLast()))
@@ -558,9 +576,9 @@ struct AISettingsPopover: View {
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
-                    .contentShape(Rectangle())
                     .padding(.vertical, 6)
                     .background(RoundedRectangle(cornerRadius: 6).fill(Color.purple))
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
         }

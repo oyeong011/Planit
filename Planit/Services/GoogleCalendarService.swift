@@ -99,6 +99,20 @@ final class GoogleCalendarService {
 
     // MARK: - Update Event
 
+    /// 제목만 변경 (날짜 유지) — 이모지 제거 등 title-only 업데이트
+    func patchEventTitle(eventID: String, title: String) async throws -> Bool {
+        let token = try await auth.getValidToken()
+        guard let encoded = eventID.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
+              let url = URL(string: "\(baseURL)/calendars/primary/events/\(encoded)") else { return false }
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: ["summary": title])
+        let (_, response) = try await URLSession.shared.data(for: request)
+        return (response as? HTTPURLResponse)?.statusCode == 200
+    }
+
     func updateEvent(eventID: String, title: String?, startDate: Date, endDate: Date, isAllDay: Bool) async throws -> Bool {
         let token = try await auth.getValidToken()
         guard let encoded = eventID.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),

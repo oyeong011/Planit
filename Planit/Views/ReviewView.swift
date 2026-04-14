@@ -53,6 +53,7 @@ struct ReviewView: View {
                 Image(systemName: "xmark")
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(.secondary)
+                    .frame(width: 24, height: 24)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -106,6 +107,8 @@ struct ReviewView: View {
                         Text("모두 내일로")
                             .font(.system(size: 11))
                             .foregroundStyle(.orange)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
@@ -179,6 +182,7 @@ struct ReviewView: View {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 20))
                         .foregroundStyle(.green)
+                        .frame(width: 28, height: 28)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -188,6 +192,7 @@ struct ReviewView: View {
                     Image(systemName: "arrow.right.circle.fill")
                         .font(.system(size: 20))
                         .foregroundStyle(.orange)
+                        .frame(width: 28, height: 28)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -197,6 +202,7 @@ struct ReviewView: View {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 20))
                         .foregroundStyle(Color.secondary)
+                        .frame(width: 28, height: 28)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -250,6 +256,8 @@ struct ReviewView: View {
                     Text("확인")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.purple)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -286,10 +294,10 @@ struct ReviewView: View {
                                 .font(.system(size: 11, weight: .semibold))
                                 .foregroundStyle(.white)
                         }
-                        .contentShape(Rectangle())
                         .padding(.horizontal, 12)
                         .padding(.vertical, 4)
                         .background(RoundedRectangle(cornerRadius: 5).fill(.purple))
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
 
@@ -297,6 +305,8 @@ struct ReviewView: View {
                         Text("건너뜀")
                             .font(.system(size: 11))
                             .foregroundStyle(.secondary)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
@@ -311,34 +321,57 @@ struct ReviewView: View {
                 : Color(nsColor: .controlBackgroundColor)))
     }
 
-    // MARK: - Progress Card (todos 기반)
+    // MARK: - Progress Card
 
-    private func todosInPeriod(_ period: GoalService.CompletionPeriod) -> [TodoItem] {
-        let cal = Calendar.current
-        let today = cal.startOfDay(for: Date())
-        let allTodos = viewModel.todos.filter { $0.source == .local }
+    /// 기간별 (완료, 전체) 카운트 반환
+    private func progressCounts(for period: GoalService.CompletionPeriod) -> (done: Int, total: Int) {
+        // 그레고리력, 일요일 시작, minimumDaysInFirstWeek=1로 고정 (로케일 독립)
+        var cal = Calendar(identifier: .gregorian)
+        cal.firstWeekday = 1
+        cal.minimumDaysInFirstWeek = 1
+
+        let component: Calendar.Component
         switch period {
-        case .day:
-            return allTodos.filter { cal.isDate($0.date, inSameDayAs: Date()) }
-        case .week:
-            let weekAgo = cal.date(byAdding: .day, value: -6, to: today)!
-            return allTodos.filter {
-                let d = cal.startOfDay(for: $0.date)
-                return d >= weekAgo && d <= today
-            }
-        case .month:
-            let monthStart = cal.date(from: cal.dateComponents([.year, .month], from: today))!
-            return allTodos.filter { cal.startOfDay(for: $0.date) >= monthStart }
-        case .year:
-            let yearStart = cal.date(from: cal.dateComponents([.year], from: today))!
-            return allTodos.filter { cal.startOfDay(for: $0.date) >= yearStart }
+        case .day:   component = .day
+        case .week:  component = .weekOfYear
+        case .month: component = .month
+        case .year:  component = .year
         }
+        guard let interval = cal.dateInterval(of: component, for: Date()) else { return (0, 0) }
+
+        // 할일로 등록된 Google 이벤트 ID — calendarEvents와 중복 제외
+        let todoEventIds = Set(viewModel.todos.compactMap { $0.googleEventId })
+        let completedIDs = viewModel.completedEventIDs
+
+        // 이벤트: 구간 겹침 테스트 (멀티데이·종일 이벤트 포함)
+        let events = viewModel.calendarEvents.filter { event in
+            guard !todoEventIds.contains(event.id) else { return false }
+            let eventEnd = event.endDate > event.startDate ? event.endDate : event.startDate.addingTimeInterval(1)
+            return event.startDate < interval.end && eventEnd > interval.start
+        }
+
+        // 할일: 모든 기간 동일 로직 — appleReminders는 캐시 날짜와 interval이 일치할 때만 포함됨
+        let localTodos = viewModel.todos.filter {
+            let d = cal.startOfDay(for: $0.date)
+            return d >= interval.start && d < interval.end
+        }
+        let reminderTodos = viewModel.appleReminders.filter {
+            let d = cal.startOfDay(for: $0.date)
+            return d >= interval.start && d < interval.end
+        }
+        let baseTodos = localTodos + reminderTodos
+
+        // 완료 판정: todo+event 쌍은 어느 쪽이든 완료면 done
+        let doneTodos = baseTodos.filter { todo in
+            todo.isCompleted || (todo.googleEventId.map { completedIDs.contains($0) } ?? false)
+        }.count
+        let doneEvents = events.filter { completedIDs.contains($0.id) }.count
+
+        return (doneTodos + doneEvents, baseTodos.count + events.count)
     }
 
     private var weeklyProgressCard: some View {
-        let todos = todosInPeriod(selectedPeriod)
-        let total = todos.count
-        let done = todos.filter { $0.isCompleted }.count
+        let (done, total) = progressCounts(for: selectedPeriod)
         let rate = total > 0 ? Double(done) / Double(total) : 0
 
         return VStack(alignment: .leading, spacing: 8) {
@@ -355,12 +388,12 @@ struct ReviewView: View {
                             .font(.system(size: 10, weight: selectedPeriod == period ? .semibold : .regular))
                             .foregroundStyle(selectedPeriod == period ? .white : .secondary)
                             .frame(maxWidth: .infinity)
-                            .contentShape(Rectangle())
                             .padding(.vertical, 3)
                             .background(
                                 RoundedRectangle(cornerRadius: 4)
                                     .fill(selectedPeriod == period ? Color.purple : Color.clear)
                             )
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
@@ -476,6 +509,8 @@ struct ReviewView: View {
                     Text("닫기")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.indigo)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)

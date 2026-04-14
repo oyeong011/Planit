@@ -66,6 +66,7 @@ struct SettingsView: View {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(.secondary)
                         .font(.title3)
+                        .frame(width: 24, height: 24)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -107,13 +108,13 @@ struct SettingsView: View {
                     .foregroundStyle(selectedSection == section ? .primary : .secondary)
                 Spacer()
             }
-            .contentShape(Rectangle())
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 7)
                     .fill(selectedSection == section ? Color.purple.opacity(0.12) : Color.clear)
             )
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -184,7 +185,6 @@ struct SettingsView: View {
                     .font(.system(size: 12, weight: profile.energyType == type ? .semibold : .regular))
                     .foregroundStyle(profile.energyType == type ? .primary : .secondary)
             }
-            .contentShape(Rectangle())
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
             .background(
@@ -195,6 +195,7 @@ struct SettingsView: View {
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(profile.energyType == type ? Color.purple.opacity(0.4) : Color.clear, lineWidth: 1.5)
             )
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -225,13 +226,13 @@ struct SettingsView: View {
                 }
                 Spacer()
             }
-            .contentShape(Rectangle())
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 8)
                     .fill(profile.aggressiveness == mode ? Color.purple.opacity(0.08) : Color.clear)
             )
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -357,9 +358,9 @@ struct SettingsView: View {
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
-                        .contentShape(Rectangle())
                         .padding(.vertical, 9)
                         .background(RoundedRectangle(cornerRadius: 8).fill(Color.purple))
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
@@ -407,7 +408,6 @@ struct SettingsView: View {
                     .font(.system(size: 10, design: .monospaced))
                     .foregroundStyle(.tertiary)
             }
-            .contentShape(Rectangle())
             .padding(12)
             .background(
                 RoundedRectangle(cornerRadius: 10)
@@ -417,6 +417,7 @@ struct SettingsView: View {
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(isSelected ? Color.purple.opacity(0.35) : Color.clear, lineWidth: 1.5)
             )
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }

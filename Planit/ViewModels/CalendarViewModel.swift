@@ -115,11 +115,14 @@ final class CalendarViewModel: ObservableObject {
         if let observer = notificationObserver {
             NotificationCenter.default.removeObserver(observer)
         }
+        if let observer = reminderObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 
-    /// Periodic refresh every 15 seconds
+    /// Periodic refresh every 60 seconds
     private func startPeriodicRefresh() {
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { [weak self] _ in
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.refreshEvents()
             }

@@ -50,7 +50,7 @@ final class NotificationService: NSObject, ObservableObject, UNUserNotificationC
         }
     }
 
-    func updateDailyBriefingContent(events: [String], todos: [String]) {
+    func updateDailyBriefingContent(events: [String], todos: [String], morningBriefHour: Int = 8) {
         center.removePendingNotificationRequests(withIdentifiers: ["calen.daily.briefing"])
 
         // Rebuild content with actual data
@@ -68,10 +68,11 @@ final class NotificationService: NSObject, ObservableObject, UNUserNotificationC
         content.body = body
         content.sound = .default
 
-        // Re-schedule with same calendar trigger (next occurrence)
+        // Re-schedule with fixed morningBriefHour trigger (prevents time drift)
         var dateComponents = DateComponents()
-        dateComponents.hour = Calendar.current.component(.hour, from: .now)
-        dateComponents.minute = Calendar.current.component(.minute, from: .now)
+        dateComponents.hour = morningBriefHour
+        dateComponents.minute = 0
+        dateComponents.second = 0
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
 
         let request = UNNotificationRequest(

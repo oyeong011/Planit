@@ -234,7 +234,7 @@ final class AIService: ObservableObject {
         do {
             var allEvents: [CalendarEvent] = []
             for dayOffset in 0..<14 {
-                let date = cal.date(byAdding: .day, value: dayOffset, to: today)!
+                guard let date = cal.date(byAdding: .day, value: dayOffset, to: today) else { continue }
                 let events = try await service.fetchEvents(for: date)
                 allEvents.append(contentsOf: events)
             }
@@ -282,7 +282,9 @@ final class AIService: ObservableObject {
             context += "일정 로드 실패: \(error.localizedDescription)\n"
         }
 
-        return (context, ids)
+        // context 크기 제한: 20KB 초과 시 먼 미래 끝부분을 잘라냄 (오늘~가까운 날짜 우선 유지)
+        let cappedContext = String(context.prefix(20_000))
+        return (cappedContext, ids)
     }
 
     private func buildSystemPrompt(calendarContext: String) -> String {
@@ -417,11 +419,16 @@ final class AIService: ObservableObject {
 
         for action in actions {
             // Validate eventId for delete/update against known IDs
+            // guard로 바인딩한 eventId를 아래 switch case에서 직접 재사용
+            let validatedEventId: String?
             if action.action == "delete" || action.action == "update" {
                 guard let eventId = action.eventId, knownEventIds.contains(eventId) else {
                     results.append(ChatMessage(role: .toolCall, content: "\(action.action) 실패: 유효하지 않은 eventId"))
                     continue
                 }
+                validatedEventId = eventId
+            } else {
+                validatedEventId = nil
             }
 
             switch action.action {
@@ -443,7 +450,10 @@ final class AIService: ObservableObject {
                 }
 
             case "delete":
-                let eventId = action.eventId!
+                guard let eventId = validatedEventId else {
+                    results.append(ChatMessage(role: .toolCall, content: "삭제 실패: 유효하지 않은 eventId"))
+                    continue
+                }
                 do {
                     let ok = try await service.deleteEvent(eventID: eventId)
                     results.append(ChatMessage(role: .toolCall, content: ok ? "삭제 완료" : "삭제 실패"))
@@ -452,9 +462,22 @@ final class AIService: ObservableObject {
                 }
 
             case "update":
-                let eventId = action.eventId!
+                guard let eventId = validatedEventId else {
+                    results.append(ChatMessage(role: .toolCall, content: "수정 실패: 유효하지 않은 eventId"))
+                    continue
+                }
                 // Only pass title if explicitly provided by the LLM — never overwrite with a placeholder
                 let updateTitle: String? = action.title.flatMap { $0.isEmpty ? nil : $0 }
+                // 날짜 없이 제목만 변경하는 경우 (이모지 제거 등) → patchEventTitle
+                if action.startDate == nil, let newTitle = updateTitle {
+                    do {
+                        let ok = try await service.patchEventTitle(eventID: eventId, title: newTitle)
+                        results.append(ChatMessage(role: .toolCall, content: ok ? "수정 완료" : "수정 실패"))
+                    } catch {
+                        results.append(ChatMessage(role: .toolCall, content: "수정 실패: \(error.localizedDescription)"))
+                    }
+                    continue
+                }
                 let startDate: Date
                 let endDate: Date
                 if let startStr = action.startDate, let s = parseDate(startStr) {
@@ -602,18 +625,16 @@ final class AIService: ObservableObject {
         case .claude:
             guard let path = claudePath else { return [ChatMessage(role: .assistant, content: "Claude Code가 설치되지 않았습니다. /opt/homebrew/bin 또는 ~/.local/bin에 claude가 있는지 확인하세요.")] }
             // --system-prompt: 시스템 프롬프트 분리, --no-session-persistence: 세션 파일 충돌 방지
-            // 이미지는 claude -p에서 직접 지원하지 않으므로 파일명을 텍스트에 포함
-            let claudeArgs = ["-p", "--output-format", "text",
+            // --image: 이미지 파일 직접 전달 (비전 분석)
+            var claudeArgs = ["-p", "--output-format", "text",
                               "--no-session-persistence",
                               "--system-prompt", systemPrompt]
-            var claudeMessage = augmentedMessage
-            if !imageAttachments.isEmpty {
-                let names = imageAttachments.map { $0.fileName }.joined(separator: ", ")
-                claudeMessage += "\n\n[첨부 이미지: \(names) — 이미지 내용을 직접 분석할 수 없으므로 이미지 파일명만 참고하세요]"
+            for img in imageAttachments {
+                claudeArgs += ["--image", img.url.path]
             }
             // system: "" — 시스템 프롬프트는 이미 args에 포함됨
             rawResponse = await sendCLI(executablePath: path, args: claudeArgs,
-                                         system: "", userMessage: claudeMessage, history: history)
+                                         system: "", userMessage: augmentedMessage, history: history)
         case .codex:
             guard let path = codexPath else { return [ChatMessage(role: .assistant, content: "Codex CLI가 설치되지 않았습니다. /opt/homebrew/bin 또는 ~/.local/bin에 codex가 있는지 확인하세요.")] }
             // codex는 -i/--image 플래그로 이미지 첨부 지원, --ephemeral로 세션 저장 방지

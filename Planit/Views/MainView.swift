@@ -151,13 +151,13 @@ struct MainCalendarView: View {
                     .font(.system(size: 11, weight: leftPanelMode == mode ? .semibold : .regular))
             }
             .foregroundStyle(leftPanelMode == mode ? .purple : .secondary)
-            .contentShape(Rectangle())
             .frame(maxWidth: .infinity)
             .padding(.vertical, 5)
             .background(
                 RoundedRectangle(cornerRadius: 5)
                     .fill(leftPanelMode == mode ? Color.purple.opacity(0.1) : Color.clear)
             )
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -637,6 +637,7 @@ struct CategoryManagerView: View {
                             Image(systemName: "xmark.circle.fill")
                                 .font(.system(size: 14))
                                 .foregroundStyle(.secondary)
+                                .frame(width: 24, height: 24)
                                 .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
@@ -1040,15 +1041,17 @@ struct InlineAddTodoForm: View {
                 Spacer()
                 Button { onCancel() } label: {
                     Text(String(localized: "common.cancel")).font(.system(size: 11)).foregroundStyle(.secondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
                         .contentShape(Rectangle())
                 }.buttonStyle(.plain)
 
                 Button { submit() } label: {
                     Text(String(localized: "common.add")).font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(.white)
-                        .contentShape(Rectangle())
                         .padding(.horizontal, 14).padding(.vertical, 5)
                         .background(RoundedRectangle(cornerRadius: 6).fill(Color.blue))
+                        .contentShape(Rectangle())
                 }.buttonStyle(.plain)
             }
         }
