@@ -20,7 +20,7 @@ struct PlanitApp: App {
 class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem!
     var popover: NSPopover!
-    var globalClickMonitor: Any?   // 팝오버 외부 클릭 감지
+    var globalClickMonitor: Any?   // 팝오버 외부 클릭 감지 — applicationWillTerminate에서 제거
     var localPasteMonitor: Any?    // Cmd+V 이미지 붙여넣기 인터셉트
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -114,6 +114,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 extension AppDelegate: NSPopoverDelegate {
     func popoverDidClose(_ notification: Notification) {
         teardownPasteMonitor()
+    }
+}
+
+extension AppDelegate {
+    func applicationWillTerminate(_ notification: Notification) {
+        if let monitor = globalClickMonitor {
+            NSEvent.removeMonitor(monitor)
+            globalClickMonitor = nil
+        }
     }
 }
 

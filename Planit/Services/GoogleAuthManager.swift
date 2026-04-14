@@ -39,6 +39,7 @@ final class GoogleAuthManager: ObservableObject {
     private var accessToken: String?
     private var refreshToken: String?
     private var tokenExpiry: Date?
+    private var refreshTask: Task<String, Error>?
 
     init() {
         // Suppress SIGPIPE process-wide (socket writes to closed connections)
@@ -125,16 +126,24 @@ final class GoogleAuthManager: ObservableObject {
         if let token = accessToken, let expiry = tokenExpiry, expiry > Date().addingTimeInterval(60) {
             return token
         }
-        guard let rt = refreshToken else { throw AuthError.notAuthenticated }
-        try await refreshAccessToken(rt)
-        guard let token = accessToken else { throw AuthError.notAuthenticated }
-        return token
+        if let existing = refreshTask {
+            return try await existing.value
+        }
+        let task = Task<String, Error> { [weak self] in
+            defer { Task { @MainActor in self?.refreshTask = nil } }
+            guard let self, let rt = self.refreshToken else { throw AuthError.notAuthenticated }
+            try await self.refreshAccessToken(rt)
+            guard let token = self.accessToken else { throw AuthError.notAuthenticated }
+            return token
+        }
+        refreshTask = task
+        return try await task.value
     }
 
     // MARK: - PKCE
 
     private static func generateCodeVerifier() -> String {
-        var bytes = [UInt8](repeating: 0, count: 32)
+        var bytes = [UInt8](repeating: 0, count: 48)
         _ = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
         return Data(bytes).base64EncodedString()
             .replacingOccurrences(of: "+", with: "-")
@@ -353,8 +362,7 @@ final class GoogleAuthManager: ObservableObject {
 
         let (data, response) = try await URLSession.shared.data(for: request)
         if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
-            let errorBody = String(data: data, encoding: .utf8) ?? "Unknown error"
-            throw AuthError.tokenExchangeFailed("HTTP \(httpResponse.statusCode): \(errorBody)")
+            throw AuthError.tokenExchangeFailed("HTTP \(httpResponse.statusCode)")
         }
 
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
@@ -396,8 +404,14 @@ final class GoogleAuthManager: ObservableObject {
             throw AuthError.tokenExchangeFailed("Refresh HTTP \((response as? HTTPURLResponse)?.statusCode ?? 0)")
         }
 
-        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let newToken = json["access_token"] as? String else {
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw AuthError.tokenExchangeFailed("Refresh failed")
+        }
+        if let error = json["error"] as? String {
+            let desc = json["error_description"] as? String ?? error
+            throw AuthError.tokenExchangeFailed("Refresh: \(desc)")
+        }
+        guard let newToken = json["access_token"] as? String else {
             throw AuthError.tokenExchangeFailed("Refresh failed")
         }
 

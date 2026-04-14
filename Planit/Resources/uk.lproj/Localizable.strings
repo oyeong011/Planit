@@ -1,0 +1,225 @@
+/* Ukrainian Localization for Calen */
+
+/* ===== Common ===== */
+"common.save" = "Зберегти";
+"common.cancel" = "Скасувати";
+"common.add" = "Додати";
+"common.delete" = "Видалити";
+"common.edit" = "Редагувати";
+"common.done" = "Готово";
+"common.close" = "Закрити";
+"common.confirm" = "Підтвердити";
+"common.skip" = "Пропустити";
+"common.next" = "Далі";
+"common.previous" = "Назад";
+"common.execute" = "Виконати";
+"common.today" = "Сьогодні";
+"common.completed" = "Виконано";
+"common.incomplete" = "Незавершено";
+"common.repeat" = "Повторити";
+
+/* ===== Login View ===== */
+"login.subtitle" = "Підключіть Google Календар\nдля керування розкладом";
+"login.google.api.setup" = "Налаштування Google API";
+"login.google.api.description" = "Створіть клієнт OAuth у Google Cloud Console та введіть облікові дані.";
+"login.google.signin" = "Увійти через Google";
+"login.change.credentials" = "Змінити облікові дані";
+"login.skip.google" = "Почати без Google (Локальний календар)";
+
+/* ===== Calendar Grid ===== */
+"calendar.weekdays.sun" = "Нд";
+"calendar.weekdays.mon" = "Пн";
+"calendar.weekdays.tue" = "Вт";
+"calendar.weekdays.wed" = "Ср";
+"calendar.weekdays.thu" = "Чт";
+"calendar.weekdays.fri" = "Пт";
+"calendar.weekdays.sat" = "Сб";
+"calendar.month.format" = "%d";
+"calendar.help.chat" = "ШІ-чат";
+"calendar.help.google.connected" = "Підключено до Google Календаря";
+
+/* ===== Daily Detail ===== */
+"detail.dday.today" = "Сьогодні";
+"detail.no.events" = "Немає подій";
+"detail.add.todo" = "Додати завдання";
+"detail.category.manage" = "Керування категоріями";
+"detail.google.logout" = "Вийти з Google";
+"detail.google.login" = "Увійти в Google";
+"detail.apple.calendar.on" = "Увімкнути Apple Календар";
+"detail.apple.calendar.off" = "Вимкнути Apple Календар";
+"detail.reminders" = "Нагадування";
+"detail.reminders.on" = "Увімкнути нагадування";
+"detail.reminders.off" = "Вимкнути нагадування";
+
+/* ===== Panel Tabs ===== */
+"panel.review" = "Огляд";
+"panel.chat" = "Чат";
+
+/* ===== Event Detail Modal ===== */
+"event.detail.title" = "Деталі події";
+"event.detail.allday" = "Весь день";
+"event.detail.start" = "Початок";
+"event.detail.end" = "Кінець";
+"event.field.title" = "Назва";
+"event.toggle.allday" = "Весь день";
+
+/* ===== Todo Detail Modal ===== */
+"todo.detail.title" = "Деталі завдання";
+
+/* ===== Inline Add Todo ===== */
+"todo.input.placeholder" = "Введіть завдання";
+"todo.type.normal" = "Звичайне";
+"todo.type.repeating" = "Повторюване";
+
+/* ===== Category Manager ===== */
+"category.manage.title" = "Керування категоріями";
+"category.new" = "Нова категорія";
+"category.name.placeholder" = "Назва";
+
+/* ===== Default Categories ===== */
+"category.default.daily" = "Щоденні";
+"category.default.important" = "Важливі";
+"category.default.study" = "Навчання";
+"category.default.exercise" = "Вправи";
+"category.default.project" = "Проєкт";
+"category.default.parttime" = "Підробіток";
+
+/* ===== Chat View ===== */
+"chat.claude.not.installed" = "Claude Code не встановлено";
+"chat.claude.install.hint" = "brew install claude-code\nабо npm install -g @anthropic-ai/claude-code";
+"chat.codex.not.installed" = "Codex CLI не встановлено";
+"chat.codex.install.hint" = "brew install codex\nабо npm install -g @openai/codex";
+"chat.redetect" = "Виявити повторно";
+"chat.select.other.ai" = "Вибрати інший ШІ";
+"chat.assistant.title" = "ШІ-помічник календаря";
+"chat.examples" = "\"Додай зустріч завтра о 15:00\"\n\"Покажи розклад на цей тиждень\"\n\"Видали подію з іспитом\"";
+"chat.thinking" = "Думаю...";
+"chat.input.placeholder" = "Введіть повідомлення...";
+"chat.action.confirm.title" = "Підтвердити зміну розкладу";
+"chat.action.create" = "Створити";
+"chat.action.update" = "Оновити";
+"chat.action.delete" = "Видалити";
+
+/* ===== AI Settings ===== */
+"ai.settings.title" = "Налаштування ШІ";
+"ai.settings.model" = "Модель: %@";
+"ai.provider.installed" = "Встановлено — Готово до використання";
+"ai.provider.not.installed" = "Не встановлено";
+
+/* ===== AI Service Messages ===== */
+"ai.action.cancelled" = "Дію скасовано.";
+"ai.batch.delete.rejected" = "⚠️ Масове видалення (%d елементів) відхилено з міркувань безпеки. Видаляйте по одному.";
+"ai.create.failed.params" = "⚠️ Не вдалося створити: Недійсні параметри";
+"ai.create.success" = "✅ Створено: %@";
+"ai.create.failed" = "⚠️ Не вдалося створити: %@";
+"ai.delete.success" = "✅ Видалено";
+"ai.delete.failed" = "⚠️ Не вдалося видалити";
+"ai.delete.failed.detail" = "⚠️ Не вдалося видалити: %@";
+"ai.update.success" = "✅ Оновлено";
+"ai.update.failed" = "⚠️ Не вдалося оновити";
+"ai.update.failed.detail" = "⚠️ Не вдалося оновити: %@";
+"ai.update.failed.nodate" = "⚠️ Не вдалося оновити: Немає дати";
+"ai.invalid.eventid" = "⚠️ %@ не вдалося: Недійсний eventId";
+"ai.cli.failed" = "Помилка виконання CLI: %@";
+"ai.output.truncated" = "... (вивід скорочено)";
+"ai.error.prefix" = "Помилка: %@";
+"ai.no.response" = "Відповіді не отримано.";
+"ai.claude.not.found" = "Claude Code не встановлено. Перевірте наявність claude у /opt/homebrew/bin або ~/.local/bin.";
+"ai.codex.not.found" = "Codex CLI не встановлено. Перевірте наявність codex у /opt/homebrew/bin або ~/.local/bin.";
+"ai.pending.confirm" = "⚠️ Виконати наступні дії?\n%@\n\nВведіть 'підтвердити' або 'виконати' для продовження.";
+
+/* ===== Notifications ===== */
+"notification.daily.title" = "Розклад на сьогодні";
+"notification.daily.body" = "Перегляньте свій розклад на сьогодні.";
+"notification.daily.events" = "Події: %@";
+"notification.daily.todos" = "Завдання: %@";
+"notification.daily.empty" = "На сьогодні подій немає.";
+"notification.event.title" = "Нагадування про подію";
+"notification.event.body" = "Через %d хвилин: %@";
+"notification.evening.title" = "Вечірній огляд";
+"notification.evening.body" = "Перегляньте виконані події та підготуйтесь до завтра";
+
+/* ===== Onboarding ===== */
+"onboarding.title" = "Налаштування Calen";
+"onboarding.start" = "Почати";
+
+/* Onboarding - Goals */
+"onboarding.goals.title" = "Розкажіть про свої цілі";
+"onboarding.goals.subtitle" = "Встановіть 1–3 головні цілі і\nШІ автоматично спланує їх щодня";
+"onboarding.goals.placeholder" = "Ціль (напр., Скласти сертифікаційний іспит)";
+"onboarding.goals.target.date" = "Цільова дата";
+"onboarding.goals.quick.select" = "Швидкий вибір";
+"onboarding.goals.preset.certification" = "Скласти сертифікацію";
+"onboarding.goals.preset.sideproject" = "Сторонній проєкт";
+"onboarding.goals.preset.health" = "Здоров'я/Вправи";
+
+/* Onboarding - Schedule */
+"onboarding.schedule.title" = "Розкажіть про свій розпорядок дня";
+"onboarding.schedule.subtitle" = "Використовується для оптимізації розкладу";
+"onboarding.schedule.work.start" = "Початок роботи";
+"onboarding.schedule.work.end" = "Кінець роботи";
+"onboarding.schedule.lunch" = "Обід";
+"onboarding.schedule.commute" = "Дорога на роботу";
+"onboarding.schedule.unit.hour" = "год";
+"onboarding.schedule.unit.minute" = "хв";
+
+/* Onboarding - Energy */
+"onboarding.energy.title" = "Який ваш тип енергії?";
+"onboarding.energy.subtitle" = "Важливі завдання будуть розміщені\nу час найвищої концентрації";
+"onboarding.energy.morning.desc" = "Найкраща концентрація вранці";
+"onboarding.energy.evening.desc" = "Найкраща концентрація ввечері";
+"onboarding.energy.balanced.desc" = "Стабільно протягом дня";
+
+/* Onboarding - Capacity */
+"onboarding.capacity.title" = "Щоденний час концентрації";
+"onboarding.capacity.subtitle" = "Встановіть скільки часу на день\nви можете приділити своїм цілям";
+"onboarding.capacity.weekday" = "Будні";
+"onboarding.capacity.weekend" = "Вихідні";
+"onboarding.capacity.minutes.format" = "%d хв";
+"onboarding.capacity.ai.level" = "Рівень ШІ-планування";
+
+/* Aggressiveness */
+"aggressiveness.manual" = "Вручну";
+"aggressiveness.assist" = "Допомога";
+"aggressiveness.semiauto" = "Напівавтомат";
+"aggressiveness.auto" = "Автоматично";
+"aggressiveness.manual.desc" = "Лише показувати пропозиції, без автододавання";
+"aggressiveness.assist.desc" = "Автододавання лише блоків до 30 хв";
+"aggressiveness.semiauto.desc" = "Автододавання 1–2 головних, решта — пропозиції";
+"aggressiveness.auto.desc" = "Автододавання всіх, підтвердження лише при конфліктах";
+
+/* Energy Types */
+"energy.morning" = "Ранок";
+"energy.evening" = "Вечір";
+"energy.balanced" = "Збалансований";
+
+/* ===== Review View ===== */
+"review.daily.title" = "Корекція на сьогодні";
+"review.evening.title" = "Вечірній огляд";
+"review.suggestion.count" = "· %d пропозицій";
+"review.empty.title" = "Все гаразд!";
+"review.empty.subtitle" = "Ви в графіку на сьогодні";
+"review.weekly.rate" = "Тижневе виконання";
+"review.tomorrow.title" = "План на завтра";
+"review.tomorrow.auto.created" = "%d створено автоматично";
+"review.tomorrow.suggested" = "%d запропоновано (перевірте в ранковому огляді)";
+"review.tomorrow.minutes.format" = "%d/%d хв заплановано";
+"review.move.all.tomorrow" = "Перенести всі незавершені на завтра";
+"review.generating.plan" = "Генерую план на завтра...";
+"review.go.to.chat" = "Перейти до чату";
+"review.help.done" = "Готово";
+"review.help.tomorrow" = "Завтра";
+"review.help.skip" = "Пропустити";
+
+/* Suggestion Types */
+"suggestion.carryover" = "Перенесення";
+"suggestion.deadline" = "Дедлайн";
+"suggestion.habit" = "Звичка";
+"suggestion.spread" = "Розподіл";
+"suggestion.prep" = "Підготовка";
+"suggestion.focus" = "Фокус";
+"suggestion.health" = "Здоров'я";
+"suggestion.buffer" = "Дорога";
+
+/* ===== ViewModel ===== */
+"viewmodel.default.category" = "Щоденні";

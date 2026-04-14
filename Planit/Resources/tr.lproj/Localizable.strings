@@ -1,0 +1,225 @@
+/* Turkish Localization for Calen */
+
+/* ===== Common ===== */
+"common.save" = "Kaydet";
+"common.cancel" = "İptal";
+"common.add" = "Ekle";
+"common.delete" = "Sil";
+"common.edit" = "Düzenle";
+"common.done" = "Tamam";
+"common.close" = "Kapat";
+"common.confirm" = "Onayla";
+"common.skip" = "Atla";
+"common.next" = "Sonraki";
+"common.previous" = "Önceki";
+"common.execute" = "Çalıştır";
+"common.today" = "Bugün";
+"common.completed" = "Tamamlandı";
+"common.incomplete" = "Tamamlanmadı";
+"common.repeat" = "Tekrar";
+
+/* ===== Login View ===== */
+"login.subtitle" = "Takviminizi yönetmek için\nGoogle Takvim ile bağlanın";
+"login.google.api.setup" = "Google API Kurulumu";
+"login.google.api.description" = "Google Cloud Console'da bir OAuth istemcisi oluşturun ve kimlik bilgilerini girin.";
+"login.google.signin" = "Google ile Giriş Yap";
+"login.change.credentials" = "Kimlik Bilgilerini Değiştir";
+"login.skip.google" = "Google olmadan başla (Yerel takvim kullan)";
+
+/* ===== Calendar Grid ===== */
+"calendar.weekdays.sun" = "Paz";
+"calendar.weekdays.mon" = "Pzt";
+"calendar.weekdays.tue" = "Sal";
+"calendar.weekdays.wed" = "Çar";
+"calendar.weekdays.thu" = "Per";
+"calendar.weekdays.fri" = "Cum";
+"calendar.weekdays.sat" = "Cmt";
+"calendar.month.format" = "%d";
+"calendar.help.chat" = "AI Sohbet";
+"calendar.help.google.connected" = "Google Takvim'e bağlandı";
+
+/* ===== Daily Detail ===== */
+"detail.dday.today" = "Bugün";
+"detail.no.events" = "Etkinlik yok";
+"detail.add.todo" = "Yapılacak Ekle";
+"detail.category.manage" = "Kategorileri Yönet";
+"detail.google.logout" = "Google'dan Çıkış Yap";
+"detail.google.login" = "Google'a Giriş Yap";
+"detail.apple.calendar.on" = "Apple Takvim'i Etkinleştir";
+"detail.apple.calendar.off" = "Apple Takvim'i Devre Dışı Bırak";
+"detail.reminders" = "Hatırlatıcılar";
+"detail.reminders.on" = "Hatırlatıcıları Etkinleştir";
+"detail.reminders.off" = "Hatırlatıcıları Devre Dışı Bırak";
+
+/* ===== Panel Tabs ===== */
+"panel.review" = "İnceleme";
+"panel.chat" = "Sohbet";
+
+/* ===== Event Detail Modal ===== */
+"event.detail.title" = "Etkinlik Detayları";
+"event.detail.allday" = "Tüm Gün";
+"event.detail.start" = "Başlangıç";
+"event.detail.end" = "Bitiş";
+"event.field.title" = "Başlık";
+"event.toggle.allday" = "Tüm Gün";
+
+/* ===== Todo Detail Modal ===== */
+"todo.detail.title" = "Yapılacak Detayları";
+
+/* ===== Inline Add Todo ===== */
+"todo.input.placeholder" = "Yapılacak girin";
+"todo.type.normal" = "Normal";
+"todo.type.repeating" = "Tekrar";
+
+/* ===== Category Manager ===== */
+"category.manage.title" = "Kategorileri Yönet";
+"category.new" = "Yeni Kategori";
+"category.name.placeholder" = "Ad";
+
+/* ===== Default Categories ===== */
+"category.default.daily" = "Günlük";
+"category.default.important" = "Önemli";
+"category.default.study" = "Çalışma";
+"category.default.exercise" = "Egzersiz";
+"category.default.project" = "Proje";
+"category.default.parttime" = "Yarı Zamanlı";
+
+/* ===== Chat View ===== */
+"chat.claude.not.installed" = "Claude Code Yüklü Değil";
+"chat.claude.install.hint" = "brew install claude-code\nveya npm install -g @anthropic-ai/claude-code";
+"chat.codex.not.installed" = "Codex CLI Yüklü Değil";
+"chat.codex.install.hint" = "brew install codex\nveya npm install -g @openai/codex";
+"chat.redetect" = "Yeniden Algıla";
+"chat.select.other.ai" = "Başka AI Seç";
+"chat.assistant.title" = "Takvim AI Asistanı";
+"chat.examples" = "\"Yarın saat 3'e toplantı ekle\"\n\"Bu haftanın programını göster\"\n\"Sınav etkinliğini sil\"";
+"chat.thinking" = "Düşünüyor...";
+"chat.input.placeholder" = "Mesaj yazın...";
+"chat.action.confirm.title" = "Takvim Değişikliğini Onayla";
+"chat.action.create" = "Oluştur";
+"chat.action.update" = "Güncelle";
+"chat.action.delete" = "Sil";
+
+/* ===== AI Settings ===== */
+"ai.settings.title" = "AI Ayarları";
+"ai.settings.model" = "Model: %@";
+"ai.provider.installed" = "Yüklü — Kullanıma hazır";
+"ai.provider.not.installed" = "Yüklü değil";
+
+/* ===== AI Service Messages ===== */
+"ai.action.cancelled" = "İşlem iptal edildi.";
+"ai.batch.delete.rejected" = "⚠️ Toplu silme (%d öğe) güvenlik nedeniyle reddedildi. Lütfen tek tek silin.";
+"ai.create.failed.params" = "⚠️ Oluşturma başarısız: Geçersiz parametreler";
+"ai.create.success" = "✅ Oluşturuldu: %@";
+"ai.create.failed" = "⚠️ Oluşturma başarısız: %@";
+"ai.delete.success" = "✅ Silindi";
+"ai.delete.failed" = "⚠️ Silme başarısız";
+"ai.delete.failed.detail" = "⚠️ Silme başarısız: %@";
+"ai.update.success" = "✅ Güncellendi";
+"ai.update.failed" = "⚠️ Güncelleme başarısız";
+"ai.update.failed.detail" = "⚠️ Güncelleme başarısız: %@";
+"ai.update.failed.nodate" = "⚠️ Güncelleme başarısız: Tarih bilgisi yok";
+"ai.invalid.eventid" = "⚠️ %@ başarısız: Geçersiz eventId";
+"ai.cli.failed" = "CLI çalıştırma başarısız: %@";
+"ai.output.truncated" = "... (çıktı kısaltıldı)";
+"ai.error.prefix" = "Hata: %@";
+"ai.no.response" = "Yanıt alınamadı.";
+"ai.claude.not.found" = "Claude Code yüklü değil. /opt/homebrew/bin veya ~/.local/bin içinde claude olup olmadığını kontrol edin.";
+"ai.codex.not.found" = "Codex CLI yüklü değil. /opt/homebrew/bin veya ~/.local/bin içinde codex olup olmadığını kontrol edin.";
+"ai.pending.confirm" = "⚠️ Aşağıdaki işlemler çalıştırılsın mı?\n%@\n\nDevam etmek için 'onayla' veya 'çalıştır' yazın.";
+
+/* ===== Notifications ===== */
+"notification.daily.title" = "Bugünün Programı";
+"notification.daily.body" = "Bugünkü programınızı kontrol edin.";
+"notification.daily.events" = "Etkinlikler: %@";
+"notification.daily.todos" = "Yapılacaklar: %@";
+"notification.daily.empty" = "Bugün için planlanmış etkinlik yok.";
+"notification.event.title" = "Etkinlik Hatırlatıcısı";
+"notification.event.body" = "%d dakika içinde: %@";
+"notification.evening.title" = "Günlük İnceleme";
+"notification.evening.body" = "Tamamlanan etkinlikleri inceleyin ve yarına hazırlanın";
+
+/* ===== Onboarding ===== */
+"onboarding.title" = "Calen Kurulumu";
+"onboarding.start" = "Başla";
+
+/* Onboarding - Goals */
+"onboarding.goals.title" = "Hedeflerinizi belirtin";
+"onboarding.goals.subtitle" = "1-3 ana hedef belirleyin ve\nAI bunları her gün otomatik planlasın";
+"onboarding.goals.placeholder" = "Hedef (örn., Sertifika sınavını geç)";
+"onboarding.goals.target.date" = "Hedef Tarihi";
+"onboarding.goals.quick.select" = "Hızlı Seçim";
+"onboarding.goals.preset.certification" = "Sertifika Al";
+"onboarding.goals.preset.sideproject" = "Yan Proje";
+"onboarding.goals.preset.health" = "Sağlık/Egzersiz";
+
+/* Onboarding - Schedule */
+"onboarding.schedule.title" = "Günlük rutininizi belirtin";
+"onboarding.schedule.subtitle" = "Planlama optimizasyonu için kullanılır";
+"onboarding.schedule.work.start" = "İş Başlangıcı";
+"onboarding.schedule.work.end" = "İş Bitişi";
+"onboarding.schedule.lunch" = "Öğle Yemeği";
+"onboarding.schedule.commute" = "Ulaşım";
+"onboarding.schedule.unit.hour" = "sa";
+"onboarding.schedule.unit.minute" = "dk";
+
+/* Onboarding - Energy */
+"onboarding.energy.title" = "Enerji tipiniz nedir?";
+"onboarding.energy.subtitle" = "Önemli görevler en yüksek odaklanma\nsaatlerinize yerleştirilecek";
+"onboarding.energy.morning.desc" = "Sabah en yüksek odaklanma";
+"onboarding.energy.evening.desc" = "Öğleden sonra/akşam en yüksek odaklanma";
+"onboarding.energy.balanced.desc" = "Gün boyunca dengeli";
+
+/* Onboarding - Capacity */
+"onboarding.capacity.title" = "Günlük Odaklanma Süresi";
+"onboarding.capacity.subtitle" = "Hedeflerinize günde ne kadar\nzaman ayırabileceğinizi belirleyin";
+"onboarding.capacity.weekday" = "Hafta İçi";
+"onboarding.capacity.weekend" = "Hafta Sonu";
+"onboarding.capacity.minutes.format" = "%d dk";
+"onboarding.capacity.ai.level" = "AI Otomatik Planlama Seviyesi";
+
+/* Aggressiveness */
+"aggressiveness.manual" = "Manuel";
+"aggressiveness.assist" = "Yardım";
+"aggressiveness.semiauto" = "Yarı Otomatik";
+"aggressiveness.auto" = "Otomatik";
+"aggressiveness.manual.desc" = "Sadece öneri göster, otomatik ekleme yok";
+"aggressiveness.assist.desc" = "Sadece 30 dk altı blokları otomatik ekle";
+"aggressiveness.semiauto.desc" = "İlk 1-2'yi otomatik ekle, kalanını öner";
+"aggressiveness.auto.desc" = "Tümünü otomatik ekle, sadece çakışmalarda onayla";
+
+/* Energy Types */
+"energy.morning" = "Sabah";
+"energy.evening" = "Akşam";
+"energy.balanced" = "Dengeli";
+
+/* ===== Review View ===== */
+"review.daily.title" = "Bugünün Ayarlaması";
+"review.evening.title" = "Akşam İncelemesi";
+"review.suggestion.count" = "· %d öneri";
+"review.empty.title" = "Her Şey Yolunda!";
+"review.empty.subtitle" = "Bugün için doğru yoldasınız";
+"review.weekly.rate" = "Haftalık Tamamlanma";
+"review.tomorrow.title" = "Yarının Planı";
+"review.tomorrow.auto.created" = "%d otomatik oluşturuldu";
+"review.tomorrow.suggested" = "%d önerildi (sabah brifinginde kontrol edin)";
+"review.tomorrow.minutes.format" = "%d/%d dk planlandı";
+"review.move.all.tomorrow" = "Tamamlanmayanları yarına taşı";
+"review.generating.plan" = "Yarının planı oluşturuluyor...";
+"review.go.to.chat" = "Sohbete Git";
+"review.help.done" = "Tamam";
+"review.help.tomorrow" = "Yarın";
+"review.help.skip" = "Atla";
+
+/* Suggestion Types */
+"suggestion.carryover" = "Devir";
+"suggestion.deadline" = "Son Tarih";
+"suggestion.habit" = "Alışkanlık";
+"suggestion.spread" = "Dağıt";
+"suggestion.prep" = "Hazırlık";
+"suggestion.focus" = "Odaklanma";
+"suggestion.health" = "Sağlık";
+"suggestion.buffer" = "Yolculuk";
+
+/* ===== ViewModel ===== */
+"viewmodel.default.category" = "Günlük";

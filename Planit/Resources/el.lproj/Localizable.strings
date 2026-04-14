@@ -1,0 +1,225 @@
+/* Greek Localization for Calen */
+
+/* ===== Common ===== */
+"common.save" = "Αποθήκευση";
+"common.cancel" = "Ακύρωση";
+"common.add" = "Προσθήκη";
+"common.delete" = "Διαγραφή";
+"common.edit" = "Επεξεργασία";
+"common.done" = "Τέλος";
+"common.close" = "Κλείσιμο";
+"common.confirm" = "Επιβεβαίωση";
+"common.skip" = "Παράλειψη";
+"common.next" = "Επόμενο";
+"common.previous" = "Προηγούμενο";
+"common.execute" = "Εκτέλεση";
+"common.today" = "Σήμερα";
+"common.completed" = "Ολοκληρώθηκε";
+"common.incomplete" = "Ημιτελές";
+"common.repeat" = "Επανάληψη";
+
+/* ===== Login View ===== */
+"login.subtitle" = "Συνδέστε το Ημερολόγιο Google\nγια να διαχειριστείτε το πρόγραμμά σας";
+"login.google.api.setup" = "Ρύθμιση Google API";
+"login.google.api.description" = "Δημιουργήστε ένα πελάτη OAuth στο Google Cloud Console και εισαγάγετε τα διαπιστευτήρια.";
+"login.google.signin" = "Σύνδεση με Google";
+"login.change.credentials" = "Αλλαγή διαπιστευτηρίων";
+"login.skip.google" = "Έναρξη χωρίς Google (Τοπικό ημερολόγιο)";
+
+/* ===== Calendar Grid ===== */
+"calendar.weekdays.sun" = "Κυρ";
+"calendar.weekdays.mon" = "Δευ";
+"calendar.weekdays.tue" = "Τρι";
+"calendar.weekdays.wed" = "Τετ";
+"calendar.weekdays.thu" = "Πεμ";
+"calendar.weekdays.fri" = "Παρ";
+"calendar.weekdays.sat" = "Σαβ";
+"calendar.month.format" = "%d";
+"calendar.help.chat" = "Συνομιλία AI";
+"calendar.help.google.connected" = "Συνδεδεμένο στο Ημερολόγιο Google";
+
+/* ===== Daily Detail ===== */
+"detail.dday.today" = "Σήμερα";
+"detail.no.events" = "Δεν υπάρχουν εκδηλώσεις";
+"detail.add.todo" = "Προσθήκη εργασίας";
+"detail.category.manage" = "Διαχείριση κατηγοριών";
+"detail.google.logout" = "Αποσύνδεση από Google";
+"detail.google.login" = "Σύνδεση στο Google";
+"detail.apple.calendar.on" = "Ενεργοποίηση Apple Calendar";
+"detail.apple.calendar.off" = "Απενεργοποίηση Apple Calendar";
+"detail.reminders" = "Υπενθυμίσεις";
+"detail.reminders.on" = "Ενεργοποίηση υπενθυμίσεων";
+"detail.reminders.off" = "Απενεργοποίηση υπενθυμίσεων";
+
+/* ===== Panel Tabs ===== */
+"panel.review" = "Ανασκόπηση";
+"panel.chat" = "Συνομιλία";
+
+/* ===== Event Detail Modal ===== */
+"event.detail.title" = "Λεπτομέρειες εκδήλωσης";
+"event.detail.allday" = "Ολοήμερο";
+"event.detail.start" = "Έναρξη";
+"event.detail.end" = "Λήξη";
+"event.field.title" = "Τίτλος";
+"event.toggle.allday" = "Ολοήμερο";
+
+/* ===== Todo Detail Modal ===== */
+"todo.detail.title" = "Λεπτομέρειες εργασίας";
+
+/* ===== Inline Add Todo ===== */
+"todo.input.placeholder" = "Εισαγάγετε εργασία";
+"todo.type.normal" = "Κανονική";
+"todo.type.repeating" = "Επαναλαμβανόμενη";
+
+/* ===== Category Manager ===== */
+"category.manage.title" = "Διαχείριση κατηγοριών";
+"category.new" = "Νέα κατηγορία";
+"category.name.placeholder" = "Όνομα";
+
+/* ===== Default Categories ===== */
+"category.default.daily" = "Καθημερινά";
+"category.default.important" = "Σημαντικά";
+"category.default.study" = "Μελέτη";
+"category.default.exercise" = "Άσκηση";
+"category.default.project" = "Έργο";
+"category.default.parttime" = "Μερική απασχόληση";
+
+/* ===== Chat View ===== */
+"chat.claude.not.installed" = "Το Claude Code δεν είναι εγκατεστημένο";
+"chat.claude.install.hint" = "brew install claude-code\nή npm install -g @anthropic-ai/claude-code";
+"chat.codex.not.installed" = "Το Codex CLI δεν είναι εγκατεστημένο";
+"chat.codex.install.hint" = "brew install codex\nή npm install -g @openai/codex";
+"chat.redetect" = "Επανανίχνευση";
+"chat.select.other.ai" = "Επιλογή άλλου AI";
+"chat.assistant.title" = "Βοηθός AI ημερολογίου";
+"chat.examples" = "\"Πρόσθεσε μια συνάντηση αύριο στις 3μμ\"\n\"Δείξε το πρόγραμμα αυτής της εβδομάδας\"\n\"Διέγραψε την εξέταση\"";
+"chat.thinking" = "Σκέφτομαι...";
+"chat.input.placeholder" = "Γράψτε μήνυμα...";
+"chat.action.confirm.title" = "Επιβεβαίωση αλλαγής προγράμματος";
+"chat.action.create" = "Δημιουργία";
+"chat.action.update" = "Ενημέρωση";
+"chat.action.delete" = "Διαγραφή";
+
+/* ===== AI Settings ===== */
+"ai.settings.title" = "Ρυθμίσεις AI";
+"ai.settings.model" = "Μοντέλο: %@";
+"ai.provider.installed" = "Εγκατεστημένο — Έτοιμο προς χρήση";
+"ai.provider.not.installed" = "Δεν είναι εγκατεστημένο";
+
+/* ===== AI Service Messages ===== */
+"ai.action.cancelled" = "Η ενέργεια ακυρώθηκε.";
+"ai.batch.delete.rejected" = "⚠️ Η μαζική διαγραφή (%d στοιχείων) απορρίφθηκε για λόγους ασφαλείας. Διαγράψτε ένα-ένα.";
+"ai.create.failed.params" = "⚠️ Αποτυχία δημιουργίας: Μη έγκυρες παράμετροι";
+"ai.create.success" = "✅ Δημιουργήθηκε: %@";
+"ai.create.failed" = "⚠️ Αποτυχία δημιουργίας: %@";
+"ai.delete.success" = "✅ Διαγράφηκε";
+"ai.delete.failed" = "⚠️ Αποτυχία διαγραφής";
+"ai.delete.failed.detail" = "⚠️ Αποτυχία διαγραφής: %@";
+"ai.update.success" = "✅ Ενημερώθηκε";
+"ai.update.failed" = "⚠️ Αποτυχία ενημέρωσης";
+"ai.update.failed.detail" = "⚠️ Αποτυχία ενημέρωσης: %@";
+"ai.update.failed.nodate" = "⚠️ Αποτυχία ενημέρωσης: Δεν υπάρχουν πληροφορίες ημερομηνίας";
+"ai.invalid.eventid" = "⚠️ %@ απέτυχε: Μη έγκυρο eventId";
+"ai.cli.failed" = "Αποτυχία εκτέλεσης CLI: %@";
+"ai.output.truncated" = "... (η έξοδος περικόπηκε)";
+"ai.error.prefix" = "Σφάλμα: %@";
+"ai.no.response" = "Δεν ελήφθη απάντηση.";
+"ai.claude.not.found" = "Το Claude Code δεν είναι εγκατεστημένο. Ελέγξτε αν το claude υπάρχει στο /opt/homebrew/bin ή ~/.local/bin.";
+"ai.codex.not.found" = "Το Codex CLI δεν είναι εγκατεστημένο. Ελέγξτε αν το codex υπάρχει στο /opt/homebrew/bin ή ~/.local/bin.";
+"ai.pending.confirm" = "⚠️ Εκτέλεση των ακόλουθων ενεργειών;\n%@\n\nΠληκτρολογήστε 'επιβεβαίωση' ή 'εκτέλεση' για να συνεχίσετε.";
+
+/* ===== Notifications ===== */
+"notification.daily.title" = "Σημερινό πρόγραμμα";
+"notification.daily.body" = "Ελέγξτε το πρόγραμμα της ημέρας.";
+"notification.daily.events" = "Εκδηλώσεις: %@";
+"notification.daily.todos" = "Εργασίες: %@";
+"notification.daily.empty" = "Δεν υπάρχουν εκδηλώσεις σήμερα.";
+"notification.event.title" = "Υπενθύμιση εκδήλωσης";
+"notification.event.body" = "Σε %d λεπτά: %@";
+"notification.evening.title" = "Βραδινή ανασκόπηση";
+"notification.evening.body" = "Ελέγξτε τα ολοκληρωμένα και προετοιμαστείτε για αύριο";
+
+/* ===== Onboarding ===== */
+"onboarding.title" = "Ρύθμιση Calen";
+"onboarding.start" = "Ξεκινήστε";
+
+/* Onboarding - Goals */
+"onboarding.goals.title" = "Πείτε μας τους στόχους σας";
+"onboarding.goals.subtitle" = "Ορίστε 1–3 βασικούς στόχους και\nτο AI θα τους προγραμματίσει αυτόματα καθημερινά";
+"onboarding.goals.placeholder" = "Στόχος (π.χ. Πιστοποίηση)";
+"onboarding.goals.target.date" = "Ημερομηνία-στόχος";
+"onboarding.goals.quick.select" = "Γρήγορη επιλογή";
+"onboarding.goals.preset.certification" = "Απόκτηση πιστοποίησης";
+"onboarding.goals.preset.sideproject" = "Παράλληλο έργο";
+"onboarding.goals.preset.health" = "Υγεία/Άσκηση";
+
+/* Onboarding - Schedule */
+"onboarding.schedule.title" = "Πείτε μας την καθημερινή σας ρουτίνα";
+"onboarding.schedule.subtitle" = "Χρησιμοποιείται για βελτιστοποίηση προγράμματος";
+"onboarding.schedule.work.start" = "Έναρξη εργασίας";
+"onboarding.schedule.work.end" = "Λήξη εργασίας";
+"onboarding.schedule.lunch" = "Μεσημεριανό";
+"onboarding.schedule.commute" = "Μετακίνηση";
+"onboarding.schedule.unit.hour" = "ω";
+"onboarding.schedule.unit.minute" = "λ";
+
+/* Onboarding - Energy */
+"onboarding.energy.title" = "Ποιος είναι ο τύπος ενέργειάς σας;";
+"onboarding.energy.subtitle" = "Οι σημαντικές εργασίες θα τοποθετηθούν\nστις ώρες κορυφαίας συγκέντρωσής σας";
+"onboarding.energy.morning.desc" = "Κορυφαία συγκέντρωση το πρωί";
+"onboarding.energy.evening.desc" = "Κορυφαία συγκέντρωση το απόγευμα/βράδυ";
+"onboarding.energy.balanced.desc" = "Σταθερή καθ' όλη τη διάρκεια της ημέρας";
+
+/* Onboarding - Capacity */
+"onboarding.capacity.title" = "Ημερήσιος χρόνος συγκέντρωσης";
+"onboarding.capacity.subtitle" = "Ορίστε πόσο χρόνο την ημέρα\nμπορείτε να αφιερώσετε στους στόχους σας";
+"onboarding.capacity.weekday" = "Καθημερινή";
+"onboarding.capacity.weekend" = "Σαββατοκύριακο";
+"onboarding.capacity.minutes.format" = "%d λεπτά";
+"onboarding.capacity.ai.level" = "Επίπεδο αυτόματου προγραμματισμού AI";
+
+/* Aggressiveness */
+"aggressiveness.manual" = "Χειροκίνητο";
+"aggressiveness.assist" = "Βοηθητικό";
+"aggressiveness.semiauto" = "Ημιαυτόματο";
+"aggressiveness.auto" = "Αυτόματο";
+"aggressiveness.manual.desc" = "Μόνο εμφάνιση προτάσεων, χωρίς αυτόματη προσθήκη";
+"aggressiveness.assist.desc" = "Αυτόματη προσθήκη μόνο μπλοκ κάτω από 30 λεπτά";
+"aggressiveness.semiauto.desc" = "Αυτόματα τα κορυφαία 1–2, πρόταση για τα υπόλοιπα";
+"aggressiveness.auto.desc" = "Αυτόματη προσθήκη όλων, επιβεβαίωση μόνο σε συγκρούσεις";
+
+/* Energy Types */
+"energy.morning" = "Πρωί";
+"energy.evening" = "Βράδυ";
+"energy.balanced" = "Ισορροπημένο";
+
+/* ===== Review View ===== */
+"review.daily.title" = "Σημερινή προσαρμογή";
+"review.evening.title" = "Βραδινή ανασκόπηση";
+"review.suggestion.count" = "· %d προτάσεις";
+"review.empty.title" = "Όλα καλά!";
+"review.empty.subtitle" = "Είστε στο πρόγραμμα σήμερα";
+"review.weekly.rate" = "Εβδομαδιαία ολοκλήρωση";
+"review.tomorrow.title" = "Πλάνο αυριανής ημέρας";
+"review.tomorrow.auto.created" = "%d δημιουργήθηκαν αυτόματα";
+"review.tomorrow.suggested" = "%d προτεινόμενα (ελέγξτε στην πρωινή ενημέρωση)";
+"review.tomorrow.minutes.format" = "%d/%d λεπτά προγραμματισμένα";
+"review.move.all.tomorrow" = "Μεταφορά όλων των ημιτελών σε αύριο";
+"review.generating.plan" = "Δημιουργία αυριανού πλάνου...";
+"review.go.to.chat" = "Μετάβαση στη συνομιλία";
+"review.help.done" = "Τέλος";
+"review.help.tomorrow" = "Αύριο";
+"review.help.skip" = "Παράλειψη";
+
+/* Suggestion Types */
+"suggestion.carryover" = "Μεταφορά";
+"suggestion.deadline" = "Προθεσμία";
+"suggestion.habit" = "Συνήθεια";
+"suggestion.spread" = "Κατανομή";
+"suggestion.prep" = "Προετοιμασία";
+"suggestion.focus" = "Εστίαση";
+"suggestion.health" = "Υγεία";
+"suggestion.buffer" = "Μετακίνηση";
+
+/* ===== ViewModel ===== */
+"viewmodel.default.category" = "Καθημερινά";

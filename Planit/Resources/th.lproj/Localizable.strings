@@ -1,0 +1,225 @@
+/* Thai Localization for Calen */
+
+/* ===== Common ===== */
+"common.save" = "บันทึก";
+"common.cancel" = "ยกเลิก";
+"common.add" = "เพิ่ม";
+"common.delete" = "ลบ";
+"common.edit" = "แก้ไข";
+"common.done" = "เสร็จ";
+"common.close" = "ปิด";
+"common.confirm" = "ยืนยัน";
+"common.skip" = "ข้าม";
+"common.next" = "ถัดไป";
+"common.previous" = "ก่อนหน้า";
+"common.execute" = "ดำเนินการ";
+"common.today" = "วันนี้";
+"common.completed" = "เสร็จสิ้น";
+"common.incomplete" = "ยังไม่เสร็จ";
+"common.repeat" = "ทำซ้ำ";
+
+/* ===== Login View ===== */
+"login.subtitle" = "เชื่อมต่อ Google Calendar\nเพื่อจัดการตารางเวลาของคุณ";
+"login.google.api.setup" = "ตั้งค่า Google API";
+"login.google.api.description" = "สร้าง OAuth client ใน Google Cloud Console แล้วกรอกข้อมูลรับรอง";
+"login.google.signin" = "ลงชื่อเข้าด้วย Google";
+"login.change.credentials" = "เปลี่ยนข้อมูลรับรอง";
+"login.skip.google" = "เริ่มโดยไม่ใช้ Google (ใช้ปฏิทินในเครื่อง)";
+
+/* ===== Calendar Grid ===== */
+"calendar.weekdays.sun" = "อา";
+"calendar.weekdays.mon" = "จ";
+"calendar.weekdays.tue" = "อ";
+"calendar.weekdays.wed" = "พ";
+"calendar.weekdays.thu" = "พฤ";
+"calendar.weekdays.fri" = "ศ";
+"calendar.weekdays.sat" = "ส";
+"calendar.month.format" = "%d";
+"calendar.help.chat" = "แชท AI";
+"calendar.help.google.connected" = "เชื่อมต่อ Google Calendar แล้ว";
+
+/* ===== Daily Detail ===== */
+"detail.dday.today" = "วันนี้";
+"detail.no.events" = "ไม่มีกิจกรรม";
+"detail.add.todo" = "เพิ่มสิ่งที่ต้องทำ";
+"detail.category.manage" = "จัดการหมวดหมู่";
+"detail.google.logout" = "ออกจาก Google";
+"detail.google.login" = "ลงชื่อเข้า Google";
+"detail.apple.calendar.on" = "เปิดปฏิทิน Apple";
+"detail.apple.calendar.off" = "ปิดปฏิทิน Apple";
+"detail.reminders" = "การเตือน";
+"detail.reminders.on" = "เปิดการเตือน";
+"detail.reminders.off" = "ปิดการเตือน";
+
+/* ===== Panel Tabs ===== */
+"panel.review" = "สรุป";
+"panel.chat" = "แชท";
+
+/* ===== Event Detail Modal ===== */
+"event.detail.title" = "รายละเอียดกิจกรรม";
+"event.detail.allday" = "ทั้งวัน";
+"event.detail.start" = "เริ่ม";
+"event.detail.end" = "สิ้นสุด";
+"event.field.title" = "ชื่อ";
+"event.toggle.allday" = "ทั้งวัน";
+
+/* ===== Todo Detail Modal ===== */
+"todo.detail.title" = "รายละเอียดสิ่งที่ต้องทำ";
+
+/* ===== Inline Add Todo ===== */
+"todo.input.placeholder" = "กรอกสิ่งที่ต้องทำ";
+"todo.type.normal" = "ปกติ";
+"todo.type.repeating" = "ทำซ้ำ";
+
+/* ===== Category Manager ===== */
+"category.manage.title" = "จัดการหมวดหมู่";
+"category.new" = "หมวดหมู่ใหม่";
+"category.name.placeholder" = "ชื่อ";
+
+/* ===== Default Categories ===== */
+"category.default.daily" = "ประจำวัน";
+"category.default.important" = "สำคัญ";
+"category.default.study" = "การเรียน";
+"category.default.exercise" = "ออกกำลังกาย";
+"category.default.project" = "โปรเจกต์";
+"category.default.parttime" = "พาร์ทไทม์";
+
+/* ===== Chat View ===== */
+"chat.claude.not.installed" = "ยังไม่ได้ติดตั้ง Claude Code";
+"chat.claude.install.hint" = "brew install claude-code\nหรือ npm install -g @anthropic-ai/claude-code";
+"chat.codex.not.installed" = "ยังไม่ได้ติดตั้ง Codex CLI";
+"chat.codex.install.hint" = "brew install codex\nหรือ npm install -g @openai/codex";
+"chat.redetect" = "ตรวจหาอีกครั้ง";
+"chat.select.other.ai" = "เลือก AI อื่น";
+"chat.assistant.title" = "ผู้ช่วย AI ปฏิทิน";
+"chat.examples" = "\"เพิ่มการประชุมพรุ่งนี้บ่าย 3 โมง\"\n\"แสดงตารางสัปดาห์นี้\"\n\"ลบกิจกรรมสอบ\"";
+"chat.thinking" = "กำลังคิด...";
+"chat.input.placeholder" = "พิมพ์ข้อความ...";
+"chat.action.confirm.title" = "ยืนยันการเปลี่ยนแปลงตาราง";
+"chat.action.create" = "สร้าง";
+"chat.action.update" = "อัปเดต";
+"chat.action.delete" = "ลบ";
+
+/* ===== AI Settings ===== */
+"ai.settings.title" = "ตั้งค่า AI";
+"ai.settings.model" = "โมเดล: %@";
+"ai.provider.installed" = "ติดตั้งแล้ว — พร้อมใช้งาน";
+"ai.provider.not.installed" = "ยังไม่ได้ติดตั้ง";
+
+/* ===== AI Service Messages ===== */
+"ai.action.cancelled" = "ยกเลิกการดำเนินการแล้ว";
+"ai.batch.delete.rejected" = "⚠️ การลบจำนวนมาก (%d รายการ) ถูกปฏิเสธเพื่อความปลอดภัย กรุณาลบทีละรายการ";
+"ai.create.failed.params" = "⚠️ สร้างไม่สำเร็จ: พารามิเตอร์ไม่ถูกต้อง";
+"ai.create.success" = "✅ สร้างแล้ว: %@";
+"ai.create.failed" = "⚠️ สร้างไม่สำเร็จ: %@";
+"ai.delete.success" = "✅ ลบแล้ว";
+"ai.delete.failed" = "⚠️ ลบไม่สำเร็จ";
+"ai.delete.failed.detail" = "⚠️ ลบไม่สำเร็จ: %@";
+"ai.update.success" = "✅ อัปเดตแล้ว";
+"ai.update.failed" = "⚠️ อัปเดตไม่สำเร็จ";
+"ai.update.failed.detail" = "⚠️ อัปเดตไม่สำเร็จ: %@";
+"ai.update.failed.nodate" = "⚠️ อัปเดตไม่สำเร็จ: ไม่มีข้อมูลวันที่";
+"ai.invalid.eventid" = "⚠️ %@ ล้มเหลว: eventId ไม่ถูกต้อง";
+"ai.cli.failed" = "การทำงาน CLI ล้มเหลว: %@";
+"ai.output.truncated" = "... (ตัดเอาต์พุตแล้ว)";
+"ai.error.prefix" = "ข้อผิดพลาด: %@";
+"ai.no.response" = "ไม่ได้รับการตอบกลับ";
+"ai.claude.not.found" = "ยังไม่ได้ติดตั้ง Claude Code ตรวจสอบว่า claude อยู่ใน /opt/homebrew/bin หรือ ~/.local/bin";
+"ai.codex.not.found" = "ยังไม่ได้ติดตั้ง Codex CLI ตรวจสอบว่า codex อยู่ใน /opt/homebrew/bin หรือ ~/.local/bin";
+"ai.pending.confirm" = "⚠️ ดำเนินการต่อไปนี้หรือไม่?\n%@\n\nพิมพ์ 'ยืนยัน' หรือ 'ดำเนินการ' เพื่อดำเนินต่อ";
+
+/* ===== Notifications ===== */
+"notification.daily.title" = "ตารางวันนี้";
+"notification.daily.body" = "ตรวจสอบตารางของคุณสำหรับวันนี้";
+"notification.daily.events" = "กิจกรรม: %@";
+"notification.daily.todos" = "สิ่งที่ต้องทำ: %@";
+"notification.daily.empty" = "วันนี้ไม่มีกิจกรรมที่กำหนดไว้";
+"notification.event.title" = "การเตือนกิจกรรม";
+"notification.event.body" = "อีก %d นาที: %@";
+"notification.evening.title" = "สรุปประจำวัน";
+"notification.evening.body" = "ทบทวนกิจกรรมที่เสร็จแล้วและเตรียมตัวสำหรับพรุ่งนี้";
+
+/* ===== Onboarding ===== */
+"onboarding.title" = "ตั้งค่า Calen";
+"onboarding.start" = "เริ่มต้น";
+
+/* Onboarding - Goals */
+"onboarding.goals.title" = "บอกเป้าหมายของคุณ";
+"onboarding.goals.subtitle" = "ตั้งเป้าหมายสำคัญ 1-3 อย่าง\nAI จะจัดตารางให้อัตโนมัติทุกวัน";
+"onboarding.goals.placeholder" = "เป้าหมาย (เช่น สอบใบรับรองให้ผ่าน)";
+"onboarding.goals.target.date" = "วันเป้าหมาย";
+"onboarding.goals.quick.select" = "เลือกด่วน";
+"onboarding.goals.preset.certification" = "สอบใบรับรอง";
+"onboarding.goals.preset.sideproject" = "โปรเจกต์ส่วนตัว";
+"onboarding.goals.preset.health" = "สุขภาพ/ออกกำลังกาย";
+
+/* Onboarding - Schedule */
+"onboarding.schedule.title" = "บอกกิจวัตรประจำวันของคุณ";
+"onboarding.schedule.subtitle" = "ใช้เพื่อปรับตารางให้เหมาะสม";
+"onboarding.schedule.work.start" = "เริ่มงาน";
+"onboarding.schedule.work.end" = "เลิกงาน";
+"onboarding.schedule.lunch" = "มื้อเที่ยง";
+"onboarding.schedule.commute" = "เดินทาง";
+"onboarding.schedule.unit.hour" = "ชม.";
+"onboarding.schedule.unit.minute" = "นาที";
+
+/* Onboarding - Energy */
+"onboarding.energy.title" = "คุณเป็นคนประเภทไหน?";
+"onboarding.energy.subtitle" = "งานสำคัญจะถูกจัดในช่วงเวลา\nที่คุณมีสมาธิสูงสุด";
+"onboarding.energy.morning.desc" = "มีสมาธิสูงสุดในตอนเช้า";
+"onboarding.energy.evening.desc" = "มีสมาธิสูงสุดช่วงบ่าย/เย็น";
+"onboarding.energy.balanced.desc" = "สม่ำเสมอตลอดวัน";
+
+/* Onboarding - Capacity */
+"onboarding.capacity.title" = "เวลาโฟกัสต่อวัน";
+"onboarding.capacity.subtitle" = "ตั้งเวลาต่อวันที่คุณสามารถ\nทุ่มเทให้กับเป้าหมายได้";
+"onboarding.capacity.weekday" = "วันธรรมดา";
+"onboarding.capacity.weekend" = "วันหยุดสุดสัปดาห์";
+"onboarding.capacity.minutes.format" = "%d นาที";
+"onboarding.capacity.ai.level" = "ระดับการจัดตาราง AI อัตโนมัติ";
+
+/* Aggressiveness */
+"aggressiveness.manual" = "ด้วยตนเอง";
+"aggressiveness.assist" = "ช่วยเหลือ";
+"aggressiveness.semiauto" = "กึ่งอัตโนมัติ";
+"aggressiveness.auto" = "อัตโนมัติ";
+"aggressiveness.manual.desc" = "แสดงคำแนะนำเท่านั้น ไม่เพิ่มอัตโนมัติ";
+"aggressiveness.assist.desc" = "เพิ่มอัตโนมัติเฉพาะช่วงไม่เกิน 30 นาที";
+"aggressiveness.semiauto.desc" = "อัตโนมัติ 1-2 อันดับแรก แนะนำที่เหลือ";
+"aggressiveness.auto.desc" = "เพิ่มอัตโนมัติทั้งหมด ยืนยันเฉพาะเมื่อขัดแย้ง";
+
+/* Energy Types */
+"energy.morning" = "เช้า";
+"energy.evening" = "เย็น";
+"energy.balanced" = "สมดุล";
+
+/* ===== Review View ===== */
+"review.daily.title" = "การปรับวันนี้";
+"review.evening.title" = "สรุปตอนเย็น";
+"review.suggestion.count" = "· %d คำแนะนำ";
+"review.empty.title" = "ทุกอย่างดี!";
+"review.empty.subtitle" = "คุณเป็นไปตามแผนวันนี้";
+"review.weekly.rate" = "ความสำเร็จรายสัปดาห์";
+"review.tomorrow.title" = "แผนพรุ่งนี้";
+"review.tomorrow.auto.created" = "%d สร้างอัตโนมัติ";
+"review.tomorrow.suggested" = "%d แนะนำ (ตรวจในสรุปเช้า)";
+"review.tomorrow.minutes.format" = "%d/%d นาทีที่จัดไว้";
+"review.move.all.tomorrow" = "ย้ายที่ยังไม่เสร็จทั้งหมดไปพรุ่งนี้";
+"review.generating.plan" = "กำลังสร้างแผนพรุ่งนี้...";
+"review.go.to.chat" = "ไปที่แชท";
+"review.help.done" = "เสร็จ";
+"review.help.tomorrow" = "พรุ่งนี้";
+"review.help.skip" = "ข้าม";
+
+/* Suggestion Types */
+"suggestion.carryover" = "ยกมา";
+"suggestion.deadline" = "กำหนด";
+"suggestion.habit" = "นิสัย";
+"suggestion.spread" = "กระจาย";
+"suggestion.prep" = "เตรียม";
+"suggestion.focus" = "โฟกัส";
+"suggestion.health" = "สุขภาพ";
+"suggestion.buffer" = "เดินทาง";
+
+/* ===== ViewModel ===== */
+"viewmodel.default.category" = "ประจำวัน";

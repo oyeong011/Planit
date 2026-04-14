@@ -6,15 +6,15 @@ PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 BUILD_DIR="$PROJECT_DIR/.build/release"
 APP_NAME="Calen"
 APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
-DMG_NAME="Calen-${VERSION}-arm64.dmg"
-ZIP_NAME="Calen-${VERSION}-arm64.zip"
+DMG_NAME="Calen-${VERSION}-universal.dmg"
+ZIP_NAME="Calen-${VERSION}-universal.zip"
 
 echo "=== Building Calen v${VERSION} ==="
 
 # 1. Release build
 echo "→ Building release binary..."
 cd "$PROJECT_DIR"
-swift build -c release --arch arm64
+swift build -c release --arch arm64 --arch x86_64
 
 # 2. Create .app bundle
 echo "→ Creating .app bundle..."

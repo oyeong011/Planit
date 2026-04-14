@@ -64,6 +64,13 @@ struct CategoryColor: Identifiable {
     ]
 }
 
+// MARK: - TodoItem Source
+
+enum TodoSource: String, Codable {
+    case local
+    case appleReminder
+}
+
 // MARK: - TodoItem
 
 struct TodoItem: Identifiable, Codable {
@@ -75,8 +82,10 @@ struct TodoItem: Identifiable, Codable {
     var isRepeating: Bool
     var endDate: Date?
     var googleEventId: String?
+    var source: TodoSource
+    var appleReminderIdentifier: String?
 
-    init(id: UUID = UUID(), title: String, categoryID: UUID, isCompleted: Bool = false, date: Date = Date(), isRepeating: Bool = false, endDate: Date? = nil, googleEventId: String? = nil) {
+    init(id: UUID = UUID(), title: String, categoryID: UUID, isCompleted: Bool = false, date: Date = Date(), isRepeating: Bool = false, endDate: Date? = nil, googleEventId: String? = nil, source: TodoSource = .local, appleReminderIdentifier: String? = nil) {
         self.id = id
         self.title = title
         self.categoryID = categoryID
@@ -85,10 +94,33 @@ struct TodoItem: Identifiable, Codable {
         self.isRepeating = isRepeating
         self.endDate = endDate
         self.googleEventId = googleEventId
+        self.source = source
+        self.appleReminderIdentifier = appleReminderIdentifier
+    }
+
+    // 기존 JSON 호환성: source/appleReminderIdentifier 없는 데이터도 디코딩
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        title = try container.decode(String.self, forKey: .title)
+        categoryID = try container.decode(UUID.self, forKey: .categoryID)
+        isCompleted = try container.decode(Bool.self, forKey: .isCompleted)
+        date = try container.decode(Date.self, forKey: .date)
+        isRepeating = try container.decode(Bool.self, forKey: .isRepeating)
+        endDate = try container.decodeIfPresent(Date.self, forKey: .endDate)
+        googleEventId = try container.decodeIfPresent(String.self, forKey: .googleEventId)
+        source = try container.decodeIfPresent(TodoSource.self, forKey: .source) ?? .local
+        appleReminderIdentifier = try container.decodeIfPresent(String.self, forKey: .appleReminderIdentifier)
     }
 }
 
 // MARK: - CalendarEvent
+
+enum CalendarEventSource: String, Codable {
+    case google
+    case apple
+    case local // EventKit 단독 모드 (Google 미인증)
+}
 
 struct CalendarEvent: Identifiable, Hashable {
     static func == (lhs: CalendarEvent, rhs: CalendarEvent) -> Bool { lhs.id == rhs.id }
@@ -100,6 +132,7 @@ struct CalendarEvent: Identifiable, Hashable {
     var color: Color
     var isAllDay: Bool
     var calendarName: String = ""
+    var source: CalendarEventSource = .google
 }
 
 // MARK: - Offline Cache Models
@@ -113,6 +146,7 @@ struct CachedCalendarEvent: Codable, Identifiable {
     var colorHex: String
     var isAllDay: Bool
     var calendarName: String
+    var source: CalendarEventSource
 
     func toCalendarEvent() -> CalendarEvent {
         CalendarEvent(
@@ -122,7 +156,8 @@ struct CachedCalendarEvent: Codable, Identifiable {
             endDate: endDate,
             color: Color(hex: colorHex) ?? .blue,
             isAllDay: isAllDay,
-            calendarName: calendarName
+            calendarName: calendarName,
+            source: source
         )
     }
 
@@ -134,7 +169,8 @@ struct CachedCalendarEvent: Codable, Identifiable {
             endDate: event.endDate,
             colorHex: event.color.toHex(),
             isAllDay: event.isAllDay,
-            calendarName: event.calendarName
+            calendarName: event.calendarName,
+            source: event.source
         )
     }
 }

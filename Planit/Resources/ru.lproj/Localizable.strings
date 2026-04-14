@@ -1,0 +1,225 @@
+/* Russian Localization for Calen */
+
+/* ===== Common ===== */
+"common.save" = "Сохранить";
+"common.cancel" = "Отмена";
+"common.add" = "Добавить";
+"common.delete" = "Удалить";
+"common.edit" = "Изменить";
+"common.done" = "Готово";
+"common.close" = "Закрыть";
+"common.confirm" = "Подтвердить";
+"common.skip" = "Пропустить";
+"common.next" = "Далее";
+"common.previous" = "Назад";
+"common.execute" = "Выполнить";
+"common.today" = "Сегодня";
+"common.completed" = "Выполнено";
+"common.incomplete" = "Не выполнено";
+"common.repeat" = "Повторить";
+
+/* ===== Login View ===== */
+"login.subtitle" = "Подключитесь к Google Календарю\nдля управления расписанием";
+"login.google.api.setup" = "Настройка Google API";
+"login.google.api.description" = "Создайте клиент OAuth в Google Cloud Console и введите учётные данные.";
+"login.google.signin" = "Войти через Google";
+"login.change.credentials" = "Изменить учётные данные";
+"login.skip.google" = "Начать без Google (Локальный календарь)";
+
+/* ===== Calendar Grid ===== */
+"calendar.weekdays.sun" = "Вс";
+"calendar.weekdays.mon" = "Пн";
+"calendar.weekdays.tue" = "Вт";
+"calendar.weekdays.wed" = "Ср";
+"calendar.weekdays.thu" = "Чт";
+"calendar.weekdays.fri" = "Пт";
+"calendar.weekdays.sat" = "Сб";
+"calendar.month.format" = "%d";
+"calendar.help.chat" = "ИИ-чат";
+"calendar.help.google.connected" = "Подключён к Google Календарю";
+
+/* ===== Daily Detail ===== */
+"detail.dday.today" = "Сегодня";
+"detail.no.events" = "Нет событий";
+"detail.add.todo" = "Добавить задачу";
+"detail.category.manage" = "Управление категориями";
+"detail.google.logout" = "Выйти из Google";
+"detail.google.login" = "Войти в Google";
+"detail.apple.calendar.on" = "Включить Календарь Apple";
+"detail.apple.calendar.off" = "Отключить Календарь Apple";
+"detail.reminders" = "Напоминания";
+"detail.reminders.on" = "Включить напоминания";
+"detail.reminders.off" = "Отключить напоминания";
+
+/* ===== Panel Tabs ===== */
+"panel.review" = "Обзор";
+"panel.chat" = "Чат";
+
+/* ===== Event Detail Modal ===== */
+"event.detail.title" = "Детали события";
+"event.detail.allday" = "Весь день";
+"event.detail.start" = "Начало";
+"event.detail.end" = "Конец";
+"event.field.title" = "Название";
+"event.toggle.allday" = "Весь день";
+
+/* ===== Todo Detail Modal ===== */
+"todo.detail.title" = "Детали задачи";
+
+/* ===== Inline Add Todo ===== */
+"todo.input.placeholder" = "Введите задачу";
+"todo.type.normal" = "Обычная";
+"todo.type.repeating" = "Повтор";
+
+/* ===== Category Manager ===== */
+"category.manage.title" = "Управление категориями";
+"category.new" = "Новая категория";
+"category.name.placeholder" = "Название";
+
+/* ===== Default Categories ===== */
+"category.default.daily" = "Ежедневные";
+"category.default.important" = "Важное";
+"category.default.study" = "Учёба";
+"category.default.exercise" = "Спорт";
+"category.default.project" = "Проект";
+"category.default.parttime" = "Подработка";
+
+/* ===== Chat View ===== */
+"chat.claude.not.installed" = "Claude Code не установлен";
+"chat.claude.install.hint" = "brew install claude-code\nили npm install -g @anthropic-ai/claude-code";
+"chat.codex.not.installed" = "Codex CLI не установлен";
+"chat.codex.install.hint" = "brew install codex\nили npm install -g @openai/codex";
+"chat.redetect" = "Обнаружить заново";
+"chat.select.other.ai" = "Выбрать другой ИИ";
+"chat.assistant.title" = "ИИ-помощник календаря";
+"chat.examples" = "\"Добавь встречу завтра в 15:00\"\n\"Покажи расписание на неделю\"\n\"Удали событие «экзамен»\"";
+"chat.thinking" = "Думаю...";
+"chat.input.placeholder" = "Введите сообщение...";
+"chat.action.confirm.title" = "Подтверждение изменения расписания";
+"chat.action.create" = "Создать";
+"chat.action.update" = "Обновить";
+"chat.action.delete" = "Удалить";
+
+/* ===== AI Settings ===== */
+"ai.settings.title" = "Настройки ИИ";
+"ai.settings.model" = "Модель: %@";
+"ai.provider.installed" = "Установлен — Готов к использованию";
+"ai.provider.not.installed" = "Не установлен";
+
+/* ===== AI Service Messages ===== */
+"ai.action.cancelled" = "Действие отменено.";
+"ai.batch.delete.rejected" = "⚠️ Массовое удаление (%d элементов) отклонено из соображений безопасности. Удаляйте по одному.";
+"ai.create.failed.params" = "⚠️ Ошибка создания: Недопустимые параметры";
+"ai.create.success" = "✅ Создано: %@";
+"ai.create.failed" = "⚠️ Ошибка создания: %@";
+"ai.delete.success" = "✅ Удалено";
+"ai.delete.failed" = "⚠️ Ошибка удаления";
+"ai.delete.failed.detail" = "⚠️ Ошибка удаления: %@";
+"ai.update.success" = "✅ Обновлено";
+"ai.update.failed" = "⚠️ Ошибка обновления";
+"ai.update.failed.detail" = "⚠️ Ошибка обновления: %@";
+"ai.update.failed.nodate" = "⚠️ Ошибка обновления: Нет данных о дате";
+"ai.invalid.eventid" = "⚠️ Ошибка %@: Недопустимый eventId";
+"ai.cli.failed" = "Ошибка выполнения CLI: %@";
+"ai.output.truncated" = "... (вывод сокращён)";
+"ai.error.prefix" = "Ошибка: %@";
+"ai.no.response" = "Ответ не получен.";
+"ai.claude.not.found" = "Claude Code не установлен. Проверьте наличие claude в /opt/homebrew/bin или ~/.local/bin.";
+"ai.codex.not.found" = "Codex CLI не установлен. Проверьте наличие codex в /opt/homebrew/bin или ~/.local/bin.";
+"ai.pending.confirm" = "⚠️ Выполнить следующие действия?\n%@\n\nВведите 'подтвердить' или 'выполнить' для продолжения.";
+
+/* ===== Notifications ===== */
+"notification.daily.title" = "Расписание на сегодня";
+"notification.daily.body" = "Проверьте своё расписание на сегодня.";
+"notification.daily.events" = "События: %@";
+"notification.daily.todos" = "Задачи: %@";
+"notification.daily.empty" = "На сегодня нет запланированных событий.";
+"notification.event.title" = "Напоминание о событии";
+"notification.event.body" = "Через %d мин: %@";
+"notification.evening.title" = "Вечерний обзор";
+"notification.evening.body" = "Просмотрите выполненное и подготовьтесь к завтрашнему дню";
+
+/* ===== Onboarding ===== */
+"onboarding.title" = "Настройка Calen";
+"onboarding.start" = "Начать";
+
+/* Onboarding - Goals */
+"onboarding.goals.title" = "Расскажите о ваших целях";
+"onboarding.goals.subtitle" = "Задайте 1-3 ключевые цели, и\nИИ автоматически спланирует их на каждый день";
+"onboarding.goals.placeholder" = "Цель (напр., Сдать сертификационный экзамен)";
+"onboarding.goals.target.date" = "Целевая дата";
+"onboarding.goals.quick.select" = "Быстрый выбор";
+"onboarding.goals.preset.certification" = "Сдать сертификацию";
+"onboarding.goals.preset.sideproject" = "Пет-проект";
+"onboarding.goals.preset.health" = "Здоровье/Спорт";
+
+/* Onboarding - Schedule */
+"onboarding.schedule.title" = "Расскажите о вашем распорядке дня";
+"onboarding.schedule.subtitle" = "Используется для оптимизации расписания";
+"onboarding.schedule.work.start" = "Начало работы";
+"onboarding.schedule.work.end" = "Конец работы";
+"onboarding.schedule.lunch" = "Обед";
+"onboarding.schedule.commute" = "Дорога";
+"onboarding.schedule.unit.hour" = "ч";
+"onboarding.schedule.unit.minute" = "мин";
+
+/* Onboarding - Energy */
+"onboarding.energy.title" = "Какой у вас тип энергии?";
+"onboarding.energy.subtitle" = "Важные задачи будут размещены\nв часы максимальной концентрации";
+"onboarding.energy.morning.desc" = "Максимальная концентрация утром";
+"onboarding.energy.evening.desc" = "Максимальная концентрация днём/вечером";
+"onboarding.energy.balanced.desc" = "Стабильно в течение дня";
+
+/* Onboarding - Capacity */
+"onboarding.capacity.title" = "Ежедневное время для концентрации";
+"onboarding.capacity.subtitle" = "Укажите, сколько времени в день\nвы можете посвятить своим целям";
+"onboarding.capacity.weekday" = "Будни";
+"onboarding.capacity.weekend" = "Выходные";
+"onboarding.capacity.minutes.format" = "%d мин";
+"onboarding.capacity.ai.level" = "Уровень автопланирования ИИ";
+
+/* Aggressiveness */
+"aggressiveness.manual" = "Вручную";
+"aggressiveness.assist" = "Помощь";
+"aggressiveness.semiauto" = "Полуавто";
+"aggressiveness.auto" = "Авто";
+"aggressiveness.manual.desc" = "Только предложения, без автодобавления";
+"aggressiveness.assist.desc" = "Автодобавление только для блоков до 30 мин";
+"aggressiveness.semiauto.desc" = "Авто для топ 1-2, предложения для остальных";
+"aggressiveness.auto.desc" = "Полное автодобавление, подтверждение только при конфликтах";
+
+/* Energy Types */
+"energy.morning" = "Утро";
+"energy.evening" = "Вечер";
+"energy.balanced" = "Сбалансированный";
+
+/* ===== Review View ===== */
+"review.daily.title" = "Корректировка на сегодня";
+"review.evening.title" = "Вечерний обзор";
+"review.suggestion.count" = "· %d предложений";
+"review.empty.title" = "Всё отлично!";
+"review.empty.subtitle" = "Вы идёте по плану на сегодня";
+"review.weekly.rate" = "Недельное выполнение";
+"review.tomorrow.title" = "План на завтра";
+"review.tomorrow.auto.created" = "%d создано автоматически";
+"review.tomorrow.suggested" = "%d предложено (проверьте в утреннем брифинге)";
+"review.tomorrow.minutes.format" = "%d/%d мин запланировано";
+"review.move.all.tomorrow" = "Перенести всё незавершённое на завтра";
+"review.generating.plan" = "Составляю план на завтра...";
+"review.go.to.chat" = "Перейти в чат";
+"review.help.done" = "Готово";
+"review.help.tomorrow" = "Завтра";
+"review.help.skip" = "Пропустить";
+
+/* Suggestion Types */
+"suggestion.carryover" = "Перенос";
+"suggestion.deadline" = "Дедлайн";
+"suggestion.habit" = "Привычка";
+"suggestion.spread" = "Распределение";
+"suggestion.prep" = "Подготовка";
+"suggestion.focus" = "Фокус";
+"suggestion.health" = "Здоровье";
+"suggestion.buffer" = "Дорога";
+
+/* ===== ViewModel ===== */
+"viewmodel.default.category" = "Ежедневные";

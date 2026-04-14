@@ -1,0 +1,225 @@
+/* Finnish Localization for Calen */
+
+/* ===== Common ===== */
+"common.save" = "Tallenna";
+"common.cancel" = "Peruuta";
+"common.add" = "Lisää";
+"common.delete" = "Poista";
+"common.edit" = "Muokkaa";
+"common.done" = "Valmis";
+"common.close" = "Sulje";
+"common.confirm" = "Vahvista";
+"common.skip" = "Ohita";
+"common.next" = "Seuraava";
+"common.previous" = "Edellinen";
+"common.execute" = "Suorita";
+"common.today" = "Tänään";
+"common.completed" = "Valmis";
+"common.incomplete" = "Keskeneräinen";
+"common.repeat" = "Toista";
+
+/* ===== Login View ===== */
+"login.subtitle" = "Yhdistä Google-kalenteriin\nhallitaksesi aikatauluasi";
+"login.google.api.setup" = "Google API -asetukset";
+"login.google.api.description" = "Luo OAuth-asiakastunnus Google Cloud Consolessa ja syötä tunnistetiedot.";
+"login.google.signin" = "Kirjaudu Google-tilillä";
+"login.change.credentials" = "Vaihda tunnistetiedot";
+"login.skip.google" = "Aloita ilman Googlea (Käytä paikallista kalenteria)";
+
+/* ===== Calendar Grid ===== */
+"calendar.weekdays.sun" = "Su";
+"calendar.weekdays.mon" = "Ma";
+"calendar.weekdays.tue" = "Ti";
+"calendar.weekdays.wed" = "Ke";
+"calendar.weekdays.thu" = "To";
+"calendar.weekdays.fri" = "Pe";
+"calendar.weekdays.sat" = "La";
+"calendar.month.format" = "%d";
+"calendar.help.chat" = "Tekoälykeskustelu";
+"calendar.help.google.connected" = "Yhdistetty Google-kalenteriin";
+
+/* ===== Daily Detail ===== */
+"detail.dday.today" = "Tänään";
+"detail.no.events" = "Ei tapahtumia";
+"detail.add.todo" = "Lisää tehtävä";
+"detail.category.manage" = "Hallitse luokkia";
+"detail.google.logout" = "Kirjaudu ulos Googlesta";
+"detail.google.login" = "Kirjaudu Googleen";
+"detail.apple.calendar.on" = "Ota Apple-kalenteri käyttöön";
+"detail.apple.calendar.off" = "Poista Apple-kalenteri käytöstä";
+"detail.reminders" = "Muistutukset";
+"detail.reminders.on" = "Ota muistutukset käyttöön";
+"detail.reminders.off" = "Poista muistutukset käytöstä";
+
+/* ===== Panel Tabs ===== */
+"panel.review" = "Katsaus";
+"panel.chat" = "Keskustelu";
+
+/* ===== Event Detail Modal ===== */
+"event.detail.title" = "Tapahtuman tiedot";
+"event.detail.allday" = "Koko päivä";
+"event.detail.start" = "Alkaa";
+"event.detail.end" = "Päättyy";
+"event.field.title" = "Otsikko";
+"event.toggle.allday" = "Koko päivä";
+
+/* ===== Todo Detail Modal ===== */
+"todo.detail.title" = "Tehtävän tiedot";
+
+/* ===== Inline Add Todo ===== */
+"todo.input.placeholder" = "Kirjoita tehtävä";
+"todo.type.normal" = "Normaali";
+"todo.type.repeating" = "Toistuva";
+
+/* ===== Category Manager ===== */
+"category.manage.title" = "Hallitse luokkia";
+"category.new" = "Uusi luokka";
+"category.name.placeholder" = "Nimi";
+
+/* ===== Default Categories ===== */
+"category.default.daily" = "Päivittäinen";
+"category.default.important" = "Tärkeä";
+"category.default.study" = "Opiskelu";
+"category.default.exercise" = "Liikunta";
+"category.default.project" = "Projekti";
+"category.default.parttime" = "Osa-aikatyö";
+
+/* ===== Chat View ===== */
+"chat.claude.not.installed" = "Claude Codea ei ole asennettu";
+"chat.claude.install.hint" = "brew install claude-code\ntai npm install -g @anthropic-ai/claude-code";
+"chat.codex.not.installed" = "Codex CLI:tä ei ole asennettu";
+"chat.codex.install.hint" = "brew install codex\ntai npm install -g @openai/codex";
+"chat.redetect" = "Tunnista uudelleen";
+"chat.select.other.ai" = "Valitse toinen tekoäly";
+"chat.assistant.title" = "Kalenterin tekoälyavustaja";
+"chat.examples" = "\"Lisää kokous huomenna klo 15\"\n\"Näytä tämän viikon aikataulu\"\n\"Poista tenttitapahtuma\"";
+"chat.thinking" = "Ajattelee...";
+"chat.input.placeholder" = "Kirjoita viesti...";
+"chat.action.confirm.title" = "Vahvista aikataulun muutos";
+"chat.action.create" = "Luo";
+"chat.action.update" = "Päivitä";
+"chat.action.delete" = "Poista";
+
+/* ===== AI Settings ===== */
+"ai.settings.title" = "Tekoälyasetukset";
+"ai.settings.model" = "Malli: %@";
+"ai.provider.installed" = "Asennettu — Käyttövalmis";
+"ai.provider.not.installed" = "Ei asennettu";
+
+/* ===== AI Service Messages ===== */
+"ai.action.cancelled" = "Toiminto peruutettu.";
+"ai.batch.delete.rejected" = "⚠️ Joukkopoistoesto (%d kohdetta) turvallisuussyistä. Poista yksi kerrallaan.";
+"ai.create.failed.params" = "⚠️ Luonti epäonnistui: Virheelliset parametrit";
+"ai.create.success" = "✅ Luotu: %@";
+"ai.create.failed" = "⚠️ Luonti epäonnistui: %@";
+"ai.delete.success" = "✅ Poistettu";
+"ai.delete.failed" = "⚠️ Poisto epäonnistui";
+"ai.delete.failed.detail" = "⚠️ Poisto epäonnistui: %@";
+"ai.update.success" = "✅ Päivitetty";
+"ai.update.failed" = "⚠️ Päivitys epäonnistui";
+"ai.update.failed.detail" = "⚠️ Päivitys epäonnistui: %@";
+"ai.update.failed.nodate" = "⚠️ Päivitys epäonnistui: Ei päivämäärätietoa";
+"ai.invalid.eventid" = "⚠️ %@ epäonnistui: Virheellinen eventId";
+"ai.cli.failed" = "CLI-suoritus epäonnistui: %@";
+"ai.output.truncated" = "... (tuloste lyhennetty)";
+"ai.error.prefix" = "Virhe: %@";
+"ai.no.response" = "Vastausta ei saatu.";
+"ai.claude.not.found" = "Claude Codea ei ole asennettu. Tarkista, löytyykö claude polusta /opt/homebrew/bin tai ~/.local/bin.";
+"ai.codex.not.found" = "Codex CLI:tä ei ole asennettu. Tarkista, löytyykö codex polusta /opt/homebrew/bin tai ~/.local/bin.";
+"ai.pending.confirm" = "⚠️ Suoritetaanko seuraavat toiminnot?\n%@\n\nKirjoita 'vahvista' tai 'suorita' jatkaaksesi.";
+
+/* ===== Notifications ===== */
+"notification.daily.title" = "Päivän aikataulu";
+"notification.daily.body" = "Tarkista tämän päivän aikataulusi.";
+"notification.daily.events" = "Tapahtumat: %@";
+"notification.daily.todos" = "Tehtävät: %@";
+"notification.daily.empty" = "Tälle päivälle ei ole tapahtumia.";
+"notification.event.title" = "Tapahtumamuistutus";
+"notification.event.body" = "%d minuutin kuluttua: %@";
+"notification.evening.title" = "Iltakatsaus";
+"notification.evening.body" = "Tarkista suoritetut tapahtumat ja valmistaudu huomiseen";
+
+/* ===== Onboarding ===== */
+"onboarding.title" = "Calenin asetukset";
+"onboarding.start" = "Aloita";
+
+/* Onboarding - Goals */
+"onboarding.goals.title" = "Kerro tavoitteistasi";
+"onboarding.goals.subtitle" = "Aseta 1–3 päätavoitetta ja\ntekoäly aikatauluttaa ne automaattisesti";
+"onboarding.goals.placeholder" = "Tavoite (esim. Läpäise sertifiointikoe)";
+"onboarding.goals.target.date" = "Tavoitepäivä";
+"onboarding.goals.quick.select" = "Pikavalinnat";
+"onboarding.goals.preset.certification" = "Läpäise sertifiointi";
+"onboarding.goals.preset.sideproject" = "Sivuprojekti";
+"onboarding.goals.preset.health" = "Terveys/Liikunta";
+
+/* Onboarding - Schedule */
+"onboarding.schedule.title" = "Kerro päivärytmistäsi";
+"onboarding.schedule.subtitle" = "Käytetään aikataulun optimointiin";
+"onboarding.schedule.work.start" = "Työn alku";
+"onboarding.schedule.work.end" = "Työn loppu";
+"onboarding.schedule.lunch" = "Lounas";
+"onboarding.schedule.commute" = "Työmatka";
+"onboarding.schedule.unit.hour" = "t";
+"onboarding.schedule.unit.minute" = "min";
+
+/* Onboarding - Energy */
+"onboarding.energy.title" = "Mikä on energiatyyppisi?";
+"onboarding.energy.subtitle" = "Tärkeät tehtävät sijoitetaan\nparhaaseen keskittymisaikaasi";
+"onboarding.energy.morning.desc" = "Paras keskittyminen aamulla";
+"onboarding.energy.evening.desc" = "Paras keskittyminen iltapäivällä/illalla";
+"onboarding.energy.balanced.desc" = "Tasainen koko päivän";
+
+/* Onboarding - Capacity */
+"onboarding.capacity.title" = "Päivittäinen keskittymisaika";
+"onboarding.capacity.subtitle" = "Aseta kuinka paljon aikaa päivässä\nvoit käyttää tavoitteisiisi";
+"onboarding.capacity.weekday" = "Arkipäivä";
+"onboarding.capacity.weekend" = "Viikonloppu";
+"onboarding.capacity.minutes.format" = "%d min";
+"onboarding.capacity.ai.level" = "Tekoälyn automaatiotaso";
+
+/* Aggressiveness */
+"aggressiveness.manual" = "Manuaalinen";
+"aggressiveness.assist" = "Avustava";
+"aggressiveness.semiauto" = "Puoliautomaattinen";
+"aggressiveness.auto" = "Automaattinen";
+"aggressiveness.manual.desc" = "Näytä vain ehdotukset, ei automaattista lisäystä";
+"aggressiveness.assist.desc" = "Lisää automaattisesti vain alle 30 min tehtävät";
+"aggressiveness.semiauto.desc" = "Lisää automaattisesti 1–2 tärkeintä, ehdota loput";
+"aggressiveness.auto.desc" = "Lisää kaikki automaattisesti, vahvista vain ristiriidat";
+
+/* Energy Types */
+"energy.morning" = "Aamu";
+"energy.evening" = "Ilta";
+"energy.balanced" = "Tasapainoinen";
+
+/* ===== Review View ===== */
+"review.daily.title" = "Päivän säätö";
+"review.evening.title" = "Iltakatsaus";
+"review.suggestion.count" = "· %d ehdotusta";
+"review.empty.title" = "Kaikki kunnossa!";
+"review.empty.subtitle" = "Olet aikataulussa tänään";
+"review.weekly.rate" = "Viikon suoritusaste";
+"review.tomorrow.title" = "Huomisen suunnitelma";
+"review.tomorrow.auto.created" = "%d luotu automaattisesti";
+"review.tomorrow.suggested" = "%d ehdotettu (tarkista aamukatsauksessa)";
+"review.tomorrow.minutes.format" = "%d/%d min aikataulutettu";
+"review.move.all.tomorrow" = "Siirrä kaikki keskeneräiset huomiselle";
+"review.generating.plan" = "Luodaan huomisen suunnitelmaa...";
+"review.go.to.chat" = "Siirry keskusteluun";
+"review.help.done" = "Valmis";
+"review.help.tomorrow" = "Huomenna";
+"review.help.skip" = "Ohita";
+
+/* Suggestion Types */
+"suggestion.carryover" = "Siirto";
+"suggestion.deadline" = "Määräaika";
+"suggestion.habit" = "Tapa";
+"suggestion.spread" = "Jakautus";
+"suggestion.prep" = "Valmistelu";
+"suggestion.focus" = "Keskittyminen";
+"suggestion.health" = "Terveys";
+"suggestion.buffer" = "Matka";
+
+/* ===== ViewModel ===== */
+"viewmodel.default.category" = "Päivittäinen";

@@ -1,0 +1,225 @@
+/* Arabic Localization for Calen */
+
+/* ===== Common ===== */
+"common.save" = "حفظ";
+"common.cancel" = "إلغاء";
+"common.add" = "إضافة";
+"common.delete" = "حذف";
+"common.edit" = "تعديل";
+"common.done" = "تم";
+"common.close" = "إغلاق";
+"common.confirm" = "تأكيد";
+"common.skip" = "تخطي";
+"common.next" = "التالي";
+"common.previous" = "السابق";
+"common.execute" = "تنفيذ";
+"common.today" = "اليوم";
+"common.completed" = "مكتمل";
+"common.incomplete" = "غير مكتمل";
+"common.repeat" = "تكرار";
+
+/* ===== Login View ===== */
+"login.subtitle" = "اتصل بتقويم Google\nلإدارة جدولك الزمني";
+"login.google.api.setup" = "إعداد Google API";
+"login.google.api.description" = "أنشئ عميل OAuth في Google Cloud Console وأدخل بيانات الاعتماد.";
+"login.google.signin" = "تسجيل الدخول بـ Google";
+"login.change.credentials" = "تغيير بيانات الاعتماد";
+"login.skip.google" = "البدء بدون Google (استخدام التقويم المحلي)";
+
+/* ===== Calendar Grid ===== */
+"calendar.weekdays.sun" = "أحد";
+"calendar.weekdays.mon" = "اثنين";
+"calendar.weekdays.tue" = "ثلاثاء";
+"calendar.weekdays.wed" = "أربعاء";
+"calendar.weekdays.thu" = "خميس";
+"calendar.weekdays.fri" = "جمعة";
+"calendar.weekdays.sat" = "سبت";
+"calendar.month.format" = "%d";
+"calendar.help.chat" = "محادثة الذكاء الاصطناعي";
+"calendar.help.google.connected" = "متصل بتقويم Google";
+
+/* ===== Daily Detail ===== */
+"detail.dday.today" = "اليوم";
+"detail.no.events" = "لا توجد أحداث";
+"detail.add.todo" = "إضافة مهمة";
+"detail.category.manage" = "إدارة الفئات";
+"detail.google.logout" = "تسجيل الخروج من Google";
+"detail.google.login" = "تسجيل الدخول إلى Google";
+"detail.apple.calendar.on" = "تفعيل تقويم Apple";
+"detail.apple.calendar.off" = "تعطيل تقويم Apple";
+"detail.reminders" = "التذكيرات";
+"detail.reminders.on" = "تفعيل التذكيرات";
+"detail.reminders.off" = "تعطيل التذكيرات";
+
+/* ===== Panel Tabs ===== */
+"panel.review" = "مراجعة";
+"panel.chat" = "محادثة";
+
+/* ===== Event Detail Modal ===== */
+"event.detail.title" = "تفاصيل الحدث";
+"event.detail.allday" = "طوال اليوم";
+"event.detail.start" = "البداية";
+"event.detail.end" = "النهاية";
+"event.field.title" = "العنوان";
+"event.toggle.allday" = "طوال اليوم";
+
+/* ===== Todo Detail Modal ===== */
+"todo.detail.title" = "تفاصيل المهمة";
+
+/* ===== Inline Add Todo ===== */
+"todo.input.placeholder" = "أدخل مهمة";
+"todo.type.normal" = "عادي";
+"todo.type.repeating" = "تكرار";
+
+/* ===== Category Manager ===== */
+"category.manage.title" = "إدارة الفئات";
+"category.new" = "فئة جديدة";
+"category.name.placeholder" = "الاسم";
+
+/* ===== Default Categories ===== */
+"category.default.daily" = "يومي";
+"category.default.important" = "مهم";
+"category.default.study" = "دراسة";
+"category.default.exercise" = "تمارين";
+"category.default.project" = "مشروع";
+"category.default.parttime" = "دوام جزئي";
+
+/* ===== Chat View ===== */
+"chat.claude.not.installed" = "Claude Code غير مثبّت";
+"chat.claude.install.hint" = "brew install claude-code\nأو npm install -g @anthropic-ai/claude-code";
+"chat.codex.not.installed" = "Codex CLI غير مثبّت";
+"chat.codex.install.hint" = "brew install codex\nأو npm install -g @openai/codex";
+"chat.redetect" = "إعادة الكشف";
+"chat.select.other.ai" = "اختيار ذكاء اصطناعي آخر";
+"chat.assistant.title" = "مساعد التقويم الذكي";
+"chat.examples" = "\"أضف اجتماعاً غداً الساعة 3 مساءً\"\n\"أظهر جدول هذا الأسبوع\"\n\"احذف حدث الامتحان\"";
+"chat.thinking" = "جارٍ التفكير...";
+"chat.input.placeholder" = "اكتب رسالة...";
+"chat.action.confirm.title" = "تأكيد تغيير الجدول";
+"chat.action.create" = "إنشاء";
+"chat.action.update" = "تحديث";
+"chat.action.delete" = "حذف";
+
+/* ===== AI Settings ===== */
+"ai.settings.title" = "إعدادات الذكاء الاصطناعي";
+"ai.settings.model" = "النموذج: %@";
+"ai.provider.installed" = "مثبّت — جاهز للاستخدام";
+"ai.provider.not.installed" = "غير مثبّت";
+
+/* ===== AI Service Messages ===== */
+"ai.action.cancelled" = "تم إلغاء الإجراء.";
+"ai.batch.delete.rejected" = "⚠️ تم رفض الحذف الجماعي (%d عنصر) لأسباب أمنية. يرجى الحذف واحداً تلو الآخر.";
+"ai.create.failed.params" = "⚠️ فشل الإنشاء: معاملات غير صالحة";
+"ai.create.success" = "✅ تم الإنشاء: %@";
+"ai.create.failed" = "⚠️ فشل الإنشاء: %@";
+"ai.delete.success" = "✅ تم الحذف";
+"ai.delete.failed" = "⚠️ فشل الحذف";
+"ai.delete.failed.detail" = "⚠️ فشل الحذف: %@";
+"ai.update.success" = "✅ تم التحديث";
+"ai.update.failed" = "⚠️ فشل التحديث";
+"ai.update.failed.detail" = "⚠️ فشل التحديث: %@";
+"ai.update.failed.nodate" = "⚠️ فشل التحديث: لا توجد معلومات تاريخ";
+"ai.invalid.eventid" = "⚠️ فشل %@: معرّف حدث غير صالح";
+"ai.cli.failed" = "فشل تنفيذ CLI: %@";
+"ai.output.truncated" = "... (تم اقتطاع المخرجات)";
+"ai.error.prefix" = "خطأ: %@";
+"ai.no.response" = "لم يتم تلقي أي رد.";
+"ai.claude.not.found" = "Claude Code غير مثبّت. تحقق من وجود claude في /opt/homebrew/bin أو ~/.local/bin.";
+"ai.codex.not.found" = "Codex CLI غير مثبّت. تحقق من وجود codex في /opt/homebrew/bin أو ~/.local/bin.";
+"ai.pending.confirm" = "⚠️ هل تريد تنفيذ الإجراءات التالية؟\n%@\n\nاكتب 'تأكيد' أو 'تنفيذ' للمتابعة.";
+
+/* ===== Notifications ===== */
+"notification.daily.title" = "جدول اليوم";
+"notification.daily.body" = "تحقق من جدولك لهذا اليوم.";
+"notification.daily.events" = "الأحداث: %@";
+"notification.daily.todos" = "المهام: %@";
+"notification.daily.empty" = "لا توجد أحداث مجدولة لهذا اليوم.";
+"notification.event.title" = "تذكير بالحدث";
+"notification.event.body" = "بعد %d دقيقة: %@";
+"notification.evening.title" = "المراجعة المسائية";
+"notification.evening.body" = "راجع الأحداث المكتملة واستعد للغد";
+
+/* ===== Onboarding ===== */
+"onboarding.title" = "إعداد Calen";
+"onboarding.start" = "ابدأ";
+
+/* Onboarding - Goals */
+"onboarding.goals.title" = "أخبرنا عن أهدافك";
+"onboarding.goals.subtitle" = "حدد 1-3 أهداف رئيسية\nوسيقوم الذكاء الاصطناعي بجدولتها يومياً تلقائياً";
+"onboarding.goals.placeholder" = "هدف (مثال: اجتياز امتحان الشهادة)";
+"onboarding.goals.target.date" = "التاريخ المستهدف";
+"onboarding.goals.quick.select" = "اختيار سريع";
+"onboarding.goals.preset.certification" = "اجتياز الشهادة";
+"onboarding.goals.preset.sideproject" = "مشروع جانبي";
+"onboarding.goals.preset.health" = "صحة/تمارين";
+
+/* Onboarding - Schedule */
+"onboarding.schedule.title" = "أخبرنا عن روتينك اليومي";
+"onboarding.schedule.subtitle" = "يُستخدم لتحسين الجدولة";
+"onboarding.schedule.work.start" = "بداية العمل";
+"onboarding.schedule.work.end" = "نهاية العمل";
+"onboarding.schedule.lunch" = "الغداء";
+"onboarding.schedule.commute" = "التنقل";
+"onboarding.schedule.unit.hour" = "س";
+"onboarding.schedule.unit.minute" = "د";
+
+/* Onboarding - Energy */
+"onboarding.energy.title" = "ما هو نمط طاقتك؟";
+"onboarding.energy.subtitle" = "سيتم وضع المهام المهمة\nخلال ساعات ذروة التركيز";
+"onboarding.energy.morning.desc" = "ذروة التركيز في الصباح";
+"onboarding.energy.evening.desc" = "ذروة التركيز بعد الظهر/المساء";
+"onboarding.energy.balanced.desc" = "متساوي طوال اليوم";
+
+/* Onboarding - Capacity */
+"onboarding.capacity.title" = "وقت التركيز اليومي";
+"onboarding.capacity.subtitle" = "حدد مقدار الوقت يومياً\nالذي يمكنك تخصيصه لأهدافك";
+"onboarding.capacity.weekday" = "أيام العمل";
+"onboarding.capacity.weekend" = "عطلة نهاية الأسبوع";
+"onboarding.capacity.minutes.format" = "%d د";
+"onboarding.capacity.ai.level" = "مستوى الجدولة التلقائية للذكاء الاصطناعي";
+
+/* Aggressiveness */
+"aggressiveness.manual" = "يدوي";
+"aggressiveness.assist" = "مساعد";
+"aggressiveness.semiauto" = "شبه تلقائي";
+"aggressiveness.auto" = "تلقائي";
+"aggressiveness.manual.desc" = "عرض الاقتراحات فقط، بدون إضافة تلقائية";
+"aggressiveness.assist.desc" = "إضافة تلقائية للفترات أقل من 30 دقيقة فقط";
+"aggressiveness.semiauto.desc" = "تلقائي لأهم 1-2، اقتراحات للباقي";
+"aggressiveness.auto.desc" = "إضافة تلقائية للكل، تأكيد فقط عند التعارض";
+
+/* Energy Types */
+"energy.morning" = "صباحي";
+"energy.evening" = "مسائي";
+"energy.balanced" = "متوازن";
+
+/* ===== Review View ===== */
+"review.daily.title" = "تعديلات اليوم";
+"review.evening.title" = "المراجعة المسائية";
+"review.suggestion.count" = "· %d اقتراحات";
+"review.empty.title" = "كل شيء على ما يرام!";
+"review.empty.subtitle" = "أنت على المسار الصحيح لهذا اليوم";
+"review.weekly.rate" = "الإنجاز الأسبوعي";
+"review.tomorrow.title" = "خطة الغد";
+"review.tomorrow.auto.created" = "%d تم إنشاؤها تلقائياً";
+"review.tomorrow.suggested" = "%d مقترحة (تحقق في الإحاطة الصباحية)";
+"review.tomorrow.minutes.format" = "%d/%d د مجدولة";
+"review.move.all.tomorrow" = "نقل جميع المهام غير المكتملة إلى الغد";
+"review.generating.plan" = "جارٍ إنشاء خطة الغد...";
+"review.go.to.chat" = "الانتقال إلى المحادثة";
+"review.help.done" = "تم";
+"review.help.tomorrow" = "الغد";
+"review.help.skip" = "تخطي";
+
+/* Suggestion Types */
+"suggestion.carryover" = "مؤجّل";
+"suggestion.deadline" = "موعد نهائي";
+"suggestion.habit" = "عادة";
+"suggestion.spread" = "توزيع";
+"suggestion.prep" = "تحضير";
+"suggestion.focus" = "تركيز";
+"suggestion.health" = "صحة";
+"suggestion.buffer" = "تنقل";
+
+/* ===== ViewModel ===== */
+"viewmodel.default.category" = "يومي";

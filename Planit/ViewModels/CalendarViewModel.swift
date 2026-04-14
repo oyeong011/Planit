@@ -7,7 +7,13 @@ final class CalendarViewModel: ObservableObject {
 
     // MARK: - Published Properties
 
-    @Published var selectedDate: Date = Date()
+    @Published var selectedDate: Date = Date() {
+        didSet {
+            if appleRemindersEnabled {
+                fetchAppleReminders(for: selectedDate)
+            }
+        }
+    }
     @Published var currentMonth: Date = Date()
     @Published var todos: [TodoItem] = []
     @Published var calendarEvents: [CalendarEvent] = []
@@ -15,6 +21,32 @@ final class CalendarViewModel: ObservableObject {
     @Published var categories: [TodoCategory] = []
     @Published var isOffline: Bool = false
     @Published var pendingEditsCount: Int = 0
+    @Published var appleCalendarEnabled: Bool = UserDefaults.standard.bool(forKey: "planit.appleCalendarEnabled") {
+        didSet {
+            UserDefaults.standard.set(appleCalendarEnabled, forKey: "planit.appleCalendarEnabled")
+            if appleCalendarEnabled {
+                requestAppleCalendarAccess()
+            } else {
+                // Google 인증 상태면 Google 이벤트만 다시 불러오기
+                if authManager.isAuthenticated {
+                    fetchEventsFromGoogle(for: currentMonth)
+                }
+            }
+        }
+    }
+    @Published var appleCalendarAccessGranted: Bool = false
+    @Published var appleRemindersEnabled: Bool = UserDefaults.standard.bool(forKey: "planit.appleRemindersEnabled") {
+        didSet {
+            UserDefaults.standard.set(appleRemindersEnabled, forKey: "planit.appleRemindersEnabled")
+            if appleRemindersEnabled {
+                requestAppleRemindersAccess()
+            } else {
+                appleReminders = []
+            }
+        }
+    }
+    @Published var appleRemindersAccessGranted: Bool = false
+    @Published var appleReminders: [TodoItem] = []
 
     // MARK: - Services
 
@@ -24,11 +56,14 @@ final class CalendarViewModel: ObservableObject {
     private let calendar = Calendar.current
     private let fileManager = FileManager.default
 
+    /// Apple Reminders 전용 카테고리 ID (고정)
+    static let remindersCategoryID = UUID(uuidString: "00000000-0000-0000-0000-AE1D0DE50001")!
+
     private var appSupportDir: URL {
         let support = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         let dir = support.appendingPathComponent("Planit", isDirectory: true)
         if !fileManager.fileExists(atPath: dir.path) {
-            try? fileManager.createDirectory(at: dir, withIntermediateDirectories: true)
+            try? fileManager.createDirectory(at: dir, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
         }
         return dir
     }
@@ -58,9 +93,18 @@ final class CalendarViewModel: ObservableObject {
 
         if authManager.isAuthenticated {
             fetchEventsFromGoogle(for: currentMonth)
+            // Apple Calendar도 활성화되어 있으면 병합
+            if appleCalendarEnabled {
+                requestAppleCalendarAccess()
+            }
         } else {
             requestCalendarAccess()
             observeCalendarChanges()
+        }
+
+        // Apple Reminders 활성화되어 있으면 접근 요청
+        if appleRemindersEnabled {
+            requestAppleRemindersAccess()
         }
     }
 
@@ -87,6 +131,196 @@ final class CalendarViewModel: ObservableObject {
         } else {
             fetchEventsFromEventKit(for: currentMonth)
         }
+        // Reminders도 갱신
+        if appleRemindersEnabled {
+            fetchAppleReminders(for: selectedDate)
+        }
+    }
+
+    // MARK: - Apple Calendar (EventKit 병합 모드)
+
+    /// Apple Calendar 접근 권한 요청 (Google 인증 상태에서 병합용)
+    func requestAppleCalendarAccess() {
+        if #available(macOS 14.0, *) {
+            eventStore.requestFullAccessToEvents { [weak self] granted, error in
+                Task { @MainActor in
+                    self?.appleCalendarAccessGranted = granted && error == nil
+                    if granted {
+                        self?.observeCalendarChanges()
+                        // 현재 Google 이벤트에 Apple Calendar 이벤트 병합
+                        self?.mergeAppleCalendarEvents(for: self?.currentMonth ?? Date())
+                    }
+                }
+            }
+        } else {
+            eventStore.requestAccess(to: .event) { [weak self] granted, error in
+                Task { @MainActor in
+                    self?.appleCalendarAccessGranted = granted && error == nil
+                    if granted {
+                        self?.observeCalendarChanges()
+                        self?.mergeAppleCalendarEvents(for: self?.currentMonth ?? Date())
+                    }
+                }
+            }
+        }
+    }
+
+    /// EventKit에서 이벤트를 가져와 로컬 Apple Calendar 이벤트 목록 반환
+    func fetchLocalCalendarEvents(for month: Date) -> [CalendarEvent] {
+        guard let monthInterval = calendar.dateInterval(of: .month, for: month) else { return [] }
+        let predicate = eventStore.predicateForEvents(
+            withStart: monthInterval.start,
+            end: monthInterval.end,
+            calendars: nil
+        )
+        let ekEvents = eventStore.events(matching: predicate)
+        return ekEvents.map { event in
+            let cgColor = event.calendar.cgColor ?? CGColor(red: 0.4, green: 0.6, blue: 1.0, alpha: 1.0)
+            return CalendarEvent(
+                id: "apple-\(event.eventIdentifier ?? UUID().uuidString)",
+                title: event.title ?? "",
+                startDate: event.startDate,
+                endDate: event.endDate,
+                color: Color(cgColor: cgColor),
+                isAllDay: event.isAllDay,
+                calendarName: event.calendar.title,
+                source: .apple
+            )
+        }
+    }
+
+    /// Google 이벤트에 Apple Calendar 이벤트를 병합
+    func mergeAppleCalendarEvents(for month: Date) {
+        guard appleCalendarEnabled, appleCalendarAccessGranted else { return }
+        let appleEvents = fetchLocalCalendarEvents(for: month)
+        // 기존 Apple 이벤트 제거 후 다시 추가 (중복 방지)
+        calendarEvents.removeAll { $0.source == .apple }
+        calendarEvents.append(contentsOf: appleEvents)
+    }
+
+    // MARK: - Apple Reminders (EventKit)
+
+    /// Apple Reminders 접근 권한 요청
+    func requestAppleRemindersAccess() {
+        if #available(macOS 14.0, *) {
+            eventStore.requestFullAccessToReminders { [weak self] granted, error in
+                Task { @MainActor in
+                    self?.appleRemindersAccessGranted = granted && error == nil
+                    if granted {
+                        self?.fetchAppleReminders(for: self?.selectedDate ?? Date())
+                        self?.observeReminderChanges()
+                    }
+                }
+            }
+        } else {
+            eventStore.requestAccess(to: .reminder) { [weak self] granted, error in
+                Task { @MainActor in
+                    self?.appleRemindersAccessGranted = granted && error == nil
+                    if granted {
+                        self?.fetchAppleReminders(for: self?.selectedDate ?? Date())
+                        self?.observeReminderChanges()
+                    }
+                }
+            }
+        }
+    }
+
+    private var reminderObserver: Any?
+
+    private func observeReminderChanges() {
+        // EKEventStoreChanged는 reminders 변경도 포함
+        guard reminderObserver == nil else { return }
+        reminderObserver = NotificationCenter.default.addObserver(
+            forName: .EKEventStoreChanged,
+            object: eventStore,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                guard let self = self, self.appleRemindersEnabled else { return }
+                self.fetchAppleReminders(for: self.selectedDate)
+            }
+        }
+    }
+
+    /// Reminders 카테고리가 없으면 생성
+    func ensureRemindersCategory() {
+        guard !categories.contains(where: { $0.id == Self.remindersCategoryID }) else { return }
+        let cat = TodoCategory(id: Self.remindersCategoryID, name: "미리알림", colorHex: "#FF9500")
+        categories.append(cat)
+        saveCategories()
+    }
+
+    /// 특정 날짜의 Apple Reminders를 가져와 appleReminders에 저장
+    func fetchAppleReminders(for date: Date) {
+        guard appleRemindersEnabled, appleRemindersAccessGranted else {
+            appleReminders = []
+            return
+        }
+        ensureRemindersCategory()
+
+        let startOfDay = calendar.startOfDay(for: date)
+        guard let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else { return }
+
+        // 미완료 + 완료된 미리알림 모두 가져오기 (해당 날짜)
+        let predicate = eventStore.predicateForReminders(in: nil)
+
+        eventStore.fetchReminders(matching: predicate) { [weak self] reminders in
+            Task { @MainActor in
+                guard let self = self, let reminders = reminders else { return }
+
+                let targetDay = self.calendar.startOfDay(for: date)
+                let items: [TodoItem] = reminders.compactMap { reminder in
+                    // due date가 있는 경우 해당 날짜만 표시
+                    if let dueDateComponents = reminder.dueDateComponents,
+                       let dueDate = Calendar.current.date(from: dueDateComponents) {
+                        let reminderDay = self.calendar.startOfDay(for: dueDate)
+                        guard reminderDay == targetDay else { return nil }
+                    } else {
+                        // due date가 없는 미리알림은 오늘만 표시
+                        guard self.calendar.isDateInToday(date) else { return nil }
+                    }
+
+                    let dueDate: Date
+                    if let dc = reminder.dueDateComponents,
+                       let d = Calendar.current.date(from: dc) {
+                        dueDate = d
+                    } else {
+                        dueDate = date
+                    }
+
+                    return TodoItem(
+                        title: reminder.title ?? "(제목 없음)",
+                        categoryID: Self.remindersCategoryID,
+                        isCompleted: reminder.isCompleted,
+                        date: dueDate,
+                        source: .appleReminder,
+                        appleReminderIdentifier: reminder.calendarItemIdentifier
+                    )
+                }
+
+                self.appleReminders = items
+            }
+        }
+    }
+
+    /// Apple Reminder의 완료 상태를 토글
+    func toggleAppleReminder(identifier: String) {
+        guard let reminder = eventStore.calendarItem(withIdentifier: identifier) as? EKReminder else { return }
+        reminder.isCompleted.toggle()
+        do {
+            try eventStore.save(reminder, commit: true)
+            // UI 업데이트
+            if let idx = appleReminders.firstIndex(where: { $0.appleReminderIdentifier == identifier }) {
+                appleReminders[idx].isCompleted = reminder.isCompleted
+            }
+        } catch {
+            print("[Calen] Failed to toggle Apple Reminder: \(error)")
+        }
+    }
+
+    /// 특정 날짜의 Apple Reminders 반환 (이미 fetch된 것에서 필터)
+    func appleRemindersForDate(_ date: Date) -> [TodoItem] {
+        appleReminders.filter { calendar.isDate($0.date, inSameDayAs: date) }
     }
 
     // MARK: - Google Calendar API
@@ -97,14 +331,22 @@ final class CalendarViewModel: ObservableObject {
             await syncPendingEdits()
 
             do {
-                let events = try await googleService.fetchEvents(for: month)
+                var events = try await googleService.fetchEvents(for: month)
+                // Google 이벤트에 source 태그 설정
+                for i in events.indices {
+                    events[i].source = .google
+                }
                 self.calendarEvents = events
                 self.isOffline = false
                 cacheEvents(events)
+                // Apple Calendar 이벤트 병합
+                mergeAppleCalendarEvents(for: month)
             } catch {
                 print("[Calen] Google Calendar fetch failed — using cached data")
                 self.isOffline = true
                 loadCachedEvents()
+                // 오프라인에서도 Apple Calendar 병합
+                mergeAppleCalendarEvents(for: month)
             }
         }
     }
@@ -221,7 +463,8 @@ final class CalendarViewModel: ObservableObject {
                 endDate: event.endDate,
                 color: Color(cgColor: cgColor),
                 isAllDay: event.isAllDay,
-                calendarName: event.calendar.title
+                calendarName: event.calendar.title,
+                source: .local
             )
         }
     }
@@ -291,7 +534,7 @@ final class CalendarViewModel: ObservableObject {
     // MARK: - Category Helpers
 
     func category(for id: UUID) -> TodoCategory {
-        categories.first(where: { $0.id == id }) ?? categories.first ?? TodoCategory(name: "일상", colorHex: "#6699FF")
+        categories.first(where: { $0.id == id }) ?? categories.first ?? TodoCategory(name: String(localized: "viewmodel.default.category"), colorHex: "#6699FF")
     }
 
     var defaultCategoryID: UUID {
@@ -320,7 +563,12 @@ final class CalendarViewModel: ObservableObject {
         return slots
     }
 
-    func monthTitle() -> String { "\(calendar.component(.month, from: currentMonth))월" }
+    func monthTitle() -> String {
+        let fmt = DateFormatter()
+        fmt.locale = Locale.current
+        fmt.setLocalizedDateFormatFromTemplate("MMMM")
+        return fmt.string(from: currentMonth)
+    }
     func yearTitle() -> String { "\(calendar.component(.year, from: currentMonth))" }
 
     func previousMonth() {
@@ -350,30 +598,38 @@ final class CalendarViewModel: ObservableObject {
 
     func formattedDate(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "ko_KR")
-        formatter.dateFormat = "M월 d일 (E)"
+        formatter.locale = Locale.current
+        formatter.setLocalizedDateFormatFromTemplate("MMMd EEEE")
         return formatter.string(from: date)
     }
 
     // MARK: - Filtering
 
     func eventsForDate(_ date: Date) -> [CalendarEvent] {
-        calendarEvents.filter { event in
-            let eventStart = calendar.startOfDay(for: event.startDate)
-            let target = calendar.startOfDay(for: date)
+        // 할 일로 등록된 Google 이벤트는 ID로 제외 (오탐 없는 정확한 방식)
+        let todoEventIds = Set(todos.compactMap { $0.googleEventId })
+
+        let dayStart = calendar.startOfDay(for: date)
+        let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart)!
+
+        return calendarEvents.filter { event in
+            guard !todoEventIds.contains(event.id) else { return false }
             if event.isAllDay {
-                // Google all-day events use exclusive end date
+                // All-day: [start, end) 반개구간 — Google은 end가 exclusive
+                let eventStart = calendar.startOfDay(for: event.startDate)
                 let eventEnd = calendar.startOfDay(for: event.endDate)
-                return target >= eventStart && target < eventEnd
+                return dayStart >= eventStart && dayStart < eventEnd
             } else {
-                let eventEnd = calendar.startOfDay(for: event.endDate)
-                return target >= eventStart && target <= eventEnd
+                // Timed: 구간 겹침 [start, end) vs [dayStart, dayEnd)
+                return event.startDate < dayEnd && event.endDate > dayStart
             }
         }
     }
 
     func todosForDate(_ date: Date) -> [TodoItem] {
-        todos.filter { calendar.isDate($0.date, inSameDayAs: date) }
+        let localTodos = todos.filter { calendar.isDate($0.date, inSameDayAs: date) }
+        let reminders = appleRemindersForDate(date)
+        return localTodos + reminders
     }
 
     // MARK: - Todo Bulk Sync
@@ -419,18 +675,28 @@ final class CalendarViewModel: ObservableObject {
             Task {
                 let startOfDay = Calendar.current.startOfDay(for: todo.date)
                 let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay)!
-                if let event = try? await googleService.createEvent(title: title, startDate: startOfDay, endDate: endOfDay, isAllDay: true) {
-                    if let idx = self.todos.firstIndex(where: { $0.id == todo.id }) {
+                do {
+                    let event = try await googleService.createEvent(title: title, startDate: startOfDay, endDate: endOfDay, isAllDay: true)
+                    if let event, let idx = self.todos.firstIndex(where: { $0.id == todo.id }) {
                         self.todos[idx].googleEventId = event.id
                         self.saveTodos()
-                        self.refreshEvents()
                     }
+                } catch {
+                    print("[Calen] Todo Google sync failed: \(error)")
                 }
+                self.refreshEvents()
             }
         }
     }
 
     func toggleTodo(id: UUID) {
+        // Apple Reminder인 경우 EventKit으로 토글
+        if let reminderItem = appleReminders.first(where: { $0.id == id }),
+           let identifier = reminderItem.appleReminderIdentifier {
+            toggleAppleReminder(identifier: identifier)
+            return
+        }
+
         guard let index = todos.firstIndex(where: { $0.id == id }) else { return }
         todos[index].isCompleted.toggle()
         saveTodos()
@@ -476,6 +742,44 @@ final class CalendarViewModel: ObservableObject {
                 _ = try? await googleService.updateEvent(eventID: eventId, title: "\(prefix)\(title)", startDate: startOfDay, endDate: endOfDay, isAllDay: true)
                 self.refreshEvents()
             }
+        }
+    }
+
+    // MARK: - Drag & Drop Move
+
+    func moveTodo(id: UUID, toDate: Date) {
+        guard let idx = todos.firstIndex(where: { $0.id == id }) else { return }
+        todos[idx].date = Calendar.current.startOfDay(for: toDate)
+        saveTodos()
+
+        if authManager.isAuthenticated, let eventId = todos[idx].googleEventId {
+            let todo = todos[idx]
+            let prefix = todo.isCompleted ? "✅ " : ""
+            let todoPrefix = "✅ "
+            let clean = todo.title.hasPrefix(todoPrefix) ? String(todo.title.dropFirst(todoPrefix.count)) : todo.title
+            Task {
+                let start = Calendar.current.startOfDay(for: toDate)
+                let end = Calendar.current.date(byAdding: .day, value: 1, to: start)!
+                _ = try? await googleService.updateEvent(eventID: eventId, title: "\(prefix)\(clean)", startDate: start, endDate: end, isAllDay: true)
+                self.refreshEvents()
+            }
+        }
+    }
+
+    func moveCalendarEvent(id: String, toDate: Date) {
+        guard let event = calendarEvents.first(where: { $0.id == id }) else { return }
+        let cal = Calendar.current
+        let srcDay = cal.startOfDay(for: event.startDate)
+        let dstDay = cal.startOfDay(for: toDate)
+        let delta = dstDay.timeIntervalSince(srcDay)
+        let newStart = event.startDate.addingTimeInterval(delta)
+        let newEnd = event.endDate.addingTimeInterval(delta)
+
+        switch event.source {
+        case .google:
+            updateGoogleEvent(eventID: id, title: event.title, startDate: newStart, endDate: newEnd, isAllDay: event.isAllDay)
+        case .apple, .local:
+            _ = updateCalendarEvent(eventID: id, title: event.title, startDate: newStart, endDate: newEnd, isAllDay: event.isAllDay)
         }
     }
 
@@ -526,6 +830,7 @@ final class CalendarViewModel: ObservableObject {
         do {
             let data = try JSONEncoder().encode(todos)
             try data.write(to: todosPath, options: .atomic)
+            try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: todosPath.path)
         } catch { print("[Calen] Failed to save todos: \(error)") }
     }
 
@@ -585,6 +890,7 @@ final class CalendarViewModel: ObservableObject {
         do {
             let data = try JSONEncoder().encode(cached)
             try data.write(to: eventCachePath, options: .atomic)
+            try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: eventCachePath.path)
         } catch { print("[Calen] Failed to cache events") }
     }
 
@@ -614,6 +920,7 @@ final class CalendarViewModel: ObservableObject {
         do {
             let data = try JSONEncoder().encode(pendingEdits)
             try data.write(to: pendingEditsPath, options: .atomic)
+            try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: pendingEditsPath.path)
         } catch { print("[Calen] Failed to save pending edits") }
     }
 

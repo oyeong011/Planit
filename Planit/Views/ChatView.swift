@@ -7,7 +7,6 @@ struct ChatView: View {
     @ObservedObject var viewModel: CalendarViewModel
     @State private var messages: [ChatMessage] = []
     @State private var inputText: String = ""
-    @State private var showSettings: Bool = false
     @State private var attachments: [ChatAttachment] = []
     @State private var isDragOver: Bool = false
 
@@ -26,28 +25,23 @@ struct ChatView: View {
                 Text("AI")
                     .font(.system(size: 14, weight: .bold))
 
-                // Provider badge
-                HStack(spacing: 3) {
-                    Image(systemName: aiService.provider.icon)
-                        .font(.system(size: 8))
-                    Text(aiService.provider.rawValue)
-                        .font(.system(size: 9, weight: .medium))
+                // Provider picker
+                Picker("", selection: $aiService.provider) {
+                    ForEach(AIProvider.allCases, id: \.self) { p in
+                        HStack(spacing: 4) {
+                            Image(systemName: p.icon)
+                            Text(p.rawValue)
+                        }
+                        .tag(p)
+                    }
                 }
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 5)
-                .padding(.vertical, 2)
-                .background(Capsule().fill(Color.secondary.opacity(0.1)))
+                .pickerStyle(.menu)
+                .labelsHidden()
+                .frame(width: 100)
+                .font(.system(size: 11))
+                .onChange(of: aiService.provider) { _ in aiService.saveSettings() }
 
                 Spacer()
-                Button { showSettings.toggle() } label: {
-                    Image(systemName: "gearshape")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-                .popover(isPresented: $showSettings) {
-                    AISettingsPopover(aiService: aiService)
-                }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
@@ -105,12 +99,14 @@ struct ChatView: View {
                 }
                 .buttonStyle(.plain)
 
-                Button { showSettings = true } label: {
-                    Text(String(localized: "chat.select.other.ai"))
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.purple)
+                Picker(String(localized: "chat.select.other.ai"), selection: $aiService.provider) {
+                    ForEach(AIProvider.allCases, id: \.self) { p in
+                        Text(p.rawValue).tag(p)
+                    }
                 }
-                .buttonStyle(.plain)
+                .labelsHidden()
+                .frame(width: 90)
+                .font(.system(size: 11))
             }
 
             Spacer()

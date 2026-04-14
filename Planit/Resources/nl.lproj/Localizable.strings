@@ -1,0 +1,225 @@
+/* Dutch Localization for Calen */
+
+/* ===== Common ===== */
+"common.save" = "Bewaar";
+"common.cancel" = "Annuleer";
+"common.add" = "Voeg toe";
+"common.delete" = "Verwijder";
+"common.edit" = "Bewerk";
+"common.done" = "Klaar";
+"common.close" = "Sluit";
+"common.confirm" = "Bevestig";
+"common.skip" = "Sla over";
+"common.next" = "Volgende";
+"common.previous" = "Vorige";
+"common.execute" = "Uitvoeren";
+"common.today" = "Vandaag";
+"common.completed" = "Voltooid";
+"common.incomplete" = "Onvoltooid";
+"common.repeat" = "Herhaal";
+
+/* ===== Login View ===== */
+"login.subtitle" = "Verbind met Google Agenda\nom je planning te beheren";
+"login.google.api.setup" = "Google API-configuratie";
+"login.google.api.description" = "Maak een OAuth-client aan in Google Cloud Console en voer de inloggegevens in.";
+"login.google.signin" = "Inloggen met Google";
+"login.change.credentials" = "Inloggegevens wijzigen";
+"login.skip.google" = "Start zonder Google (Gebruik lokale agenda)";
+
+/* ===== Calendar Grid ===== */
+"calendar.weekdays.sun" = "Zo";
+"calendar.weekdays.mon" = "Ma";
+"calendar.weekdays.tue" = "Di";
+"calendar.weekdays.wed" = "Wo";
+"calendar.weekdays.thu" = "Do";
+"calendar.weekdays.fri" = "Vr";
+"calendar.weekdays.sat" = "Za";
+"calendar.month.format" = "%d";
+"calendar.help.chat" = "AI Chat";
+"calendar.help.google.connected" = "Verbonden met Google Agenda";
+
+/* ===== Daily Detail ===== */
+"detail.dday.today" = "Vandaag";
+"detail.no.events" = "Geen afspraken";
+"detail.add.todo" = "Taak toevoegen";
+"detail.category.manage" = "Categorieën beheren";
+"detail.google.logout" = "Uitloggen bij Google";
+"detail.google.login" = "Inloggen bij Google";
+"detail.apple.calendar.on" = "Apple Agenda inschakelen";
+"detail.apple.calendar.off" = "Apple Agenda uitschakelen";
+"detail.reminders" = "Herinneringen";
+"detail.reminders.on" = "Herinneringen inschakelen";
+"detail.reminders.off" = "Herinneringen uitschakelen";
+
+/* ===== Panel Tabs ===== */
+"panel.review" = "Overzicht";
+"panel.chat" = "Chat";
+
+/* ===== Event Detail Modal ===== */
+"event.detail.title" = "Afspraakdetails";
+"event.detail.allday" = "Hele dag";
+"event.detail.start" = "Begin";
+"event.detail.end" = "Einde";
+"event.field.title" = "Titel";
+"event.toggle.allday" = "Hele dag";
+
+/* ===== Todo Detail Modal ===== */
+"todo.detail.title" = "Taakdetails";
+
+/* ===== Inline Add Todo ===== */
+"todo.input.placeholder" = "Voer een taak in";
+"todo.type.normal" = "Normaal";
+"todo.type.repeating" = "Herhalend";
+
+/* ===== Category Manager ===== */
+"category.manage.title" = "Categorieën beheren";
+"category.new" = "Nieuwe categorie";
+"category.name.placeholder" = "Naam";
+
+/* ===== Default Categories ===== */
+"category.default.daily" = "Dagelijks";
+"category.default.important" = "Belangrijk";
+"category.default.study" = "Studie";
+"category.default.exercise" = "Beweging";
+"category.default.project" = "Project";
+"category.default.parttime" = "Bijbaan";
+
+/* ===== Chat View ===== */
+"chat.claude.not.installed" = "Claude Code niet geïnstalleerd";
+"chat.claude.install.hint" = "brew install claude-code\nof npm install -g @anthropic-ai/claude-code";
+"chat.codex.not.installed" = "Codex CLI niet geïnstalleerd";
+"chat.codex.install.hint" = "brew install codex\nof npm install -g @openai/codex";
+"chat.redetect" = "Opnieuw detecteren";
+"chat.select.other.ai" = "Andere AI selecteren";
+"chat.assistant.title" = "Agenda AI-assistent";
+"chat.examples" = "\"Voeg morgen om 15:00 een vergadering toe\"\n\"Toon het schema van deze week\"\n\"Verwijder de examenafspraak\"";
+"chat.thinking" = "Aan het denken...";
+"chat.input.placeholder" = "Typ een bericht...";
+"chat.action.confirm.title" = "Agendawijziging bevestigen";
+"chat.action.create" = "Aanmaken";
+"chat.action.update" = "Bijwerken";
+"chat.action.delete" = "Verwijderen";
+
+/* ===== AI Settings ===== */
+"ai.settings.title" = "AI-instellingen";
+"ai.settings.model" = "Model: %@";
+"ai.provider.installed" = "Geïnstalleerd — Klaar voor gebruik";
+"ai.provider.not.installed" = "Niet geïnstalleerd";
+
+/* ===== AI Service Messages ===== */
+"ai.action.cancelled" = "Actie geannuleerd.";
+"ai.batch.delete.rejected" = "⚠️ Bulkverwijdering (%d items) geweigerd voor de veiligheid. Verwijder ze één voor één.";
+"ai.create.failed.params" = "⚠️ Aanmaken mislukt: Ongeldige parameters";
+"ai.create.success" = "✅ Aangemaakt: %@";
+"ai.create.failed" = "⚠️ Aanmaken mislukt: %@";
+"ai.delete.success" = "✅ Verwijderd";
+"ai.delete.failed" = "⚠️ Verwijderen mislukt";
+"ai.delete.failed.detail" = "⚠️ Verwijderen mislukt: %@";
+"ai.update.success" = "✅ Bijgewerkt";
+"ai.update.failed" = "⚠️ Bijwerken mislukt";
+"ai.update.failed.detail" = "⚠️ Bijwerken mislukt: %@";
+"ai.update.failed.nodate" = "⚠️ Bijwerken mislukt: Geen datumgegevens";
+"ai.invalid.eventid" = "⚠️ %@ mislukt: Ongeldig eventId";
+"ai.cli.failed" = "CLI-uitvoering mislukt: %@";
+"ai.output.truncated" = "... (uitvoer afgekapt)";
+"ai.error.prefix" = "Fout: %@";
+"ai.no.response" = "Geen reactie ontvangen.";
+"ai.claude.not.found" = "Claude Code is niet geïnstalleerd. Controleer of claude bestaat in /opt/homebrew/bin of ~/.local/bin.";
+"ai.codex.not.found" = "Codex CLI is niet geïnstalleerd. Controleer of codex bestaat in /opt/homebrew/bin of ~/.local/bin.";
+"ai.pending.confirm" = "⚠️ De volgende acties uitvoeren?\n%@\n\nTyp 'bevestig' of 'uitvoeren' om door te gaan.";
+
+/* ===== Notifications ===== */
+"notification.daily.title" = "Planning van vandaag";
+"notification.daily.body" = "Bekijk je planning voor vandaag.";
+"notification.daily.events" = "Afspraken: %@";
+"notification.daily.todos" = "Taken: %@";
+"notification.daily.empty" = "Geen afspraken gepland voor vandaag.";
+"notification.event.title" = "Afspraakherinnering";
+"notification.event.body" = "Over %d minuten: %@";
+"notification.evening.title" = "Dagelijks overzicht";
+"notification.evening.body" = "Bekijk voltooide afspraken en bereid je voor op morgen";
+
+/* ===== Onboarding ===== */
+"onboarding.title" = "Calen instellen";
+"onboarding.start" = "Aan de slag";
+
+/* Onboarding - Goals */
+"onboarding.goals.title" = "Vertel ons je doelen";
+"onboarding.goals.subtitle" = "Stel 1-3 hoofddoelen in en\nAI plant ze automatisch dagelijks in";
+"onboarding.goals.placeholder" = "Doel (bijv. Certificeringsexamen halen)";
+"onboarding.goals.target.date" = "Streefdatum";
+"onboarding.goals.quick.select" = "Snel kiezen";
+"onboarding.goals.preset.certification" = "Certificering halen";
+"onboarding.goals.preset.sideproject" = "Zijproject";
+"onboarding.goals.preset.health" = "Gezondheid/Beweging";
+
+/* Onboarding - Schedule */
+"onboarding.schedule.title" = "Vertel ons je dagelijkse routine";
+"onboarding.schedule.subtitle" = "Wordt gebruikt voor planningsoptimalisatie";
+"onboarding.schedule.work.start" = "Werkstart";
+"onboarding.schedule.work.end" = "Werkeinde";
+"onboarding.schedule.lunch" = "Lunch";
+"onboarding.schedule.commute" = "Woon-werkverkeer";
+"onboarding.schedule.unit.hour" = "u";
+"onboarding.schedule.unit.minute" = "min";
+
+/* Onboarding - Energy */
+"onboarding.energy.title" = "Wat is jouw energietype?";
+"onboarding.energy.subtitle" = "Belangrijke taken worden ingepland\ntijdens je piekfocusuren";
+"onboarding.energy.morning.desc" = "Piekfocus in de ochtend";
+"onboarding.energy.evening.desc" = "Piekfocus in de middag/avond";
+"onboarding.energy.balanced.desc" = "Constant gedurende de dag";
+
+/* Onboarding - Capacity */
+"onboarding.capacity.title" = "Dagelijkse focustijd";
+"onboarding.capacity.subtitle" = "Stel in hoeveel tijd per dag\nje aan je doelen kunt besteden";
+"onboarding.capacity.weekday" = "Doordeweeks";
+"onboarding.capacity.weekend" = "Weekend";
+"onboarding.capacity.minutes.format" = "%d min";
+"onboarding.capacity.ai.level" = "AI Auto-planningsniveau";
+
+/* Aggressiveness */
+"aggressiveness.manual" = "Handmatig";
+"aggressiveness.assist" = "Assistentie";
+"aggressiveness.semiauto" = "Semi-auto";
+"aggressiveness.auto" = "Automatisch";
+"aggressiveness.manual.desc" = "Alleen suggesties, niet automatisch toevoegen";
+"aggressiveness.assist.desc" = "Alleen blokken onder 30 min automatisch toevoegen";
+"aggressiveness.semiauto.desc" = "Top 1-2 automatisch, rest suggereren";
+"aggressiveness.auto.desc" = "Alles automatisch toevoegen, alleen bij conflicten bevestigen";
+
+/* Energy Types */
+"energy.morning" = "Ochtend";
+"energy.evening" = "Avond";
+"energy.balanced" = "Gebalanceerd";
+
+/* ===== Review View ===== */
+"review.daily.title" = "Aanpassing van vandaag";
+"review.evening.title" = "Avondoverzicht";
+"review.suggestion.count" = "· %d suggesties";
+"review.empty.title" = "Alles goed!";
+"review.empty.subtitle" = "Je ligt op schema voor vandaag";
+"review.weekly.rate" = "Wekelijkse voltooiing";
+"review.tomorrow.title" = "Planning voor morgen";
+"review.tomorrow.auto.created" = "%d automatisch aangemaakt";
+"review.tomorrow.suggested" = "%d voorgesteld (controleer in ochtendbriefing)";
+"review.tomorrow.minutes.format" = "%d/%d min ingepland";
+"review.move.all.tomorrow" = "Verplaats onvoltooide naar morgen";
+"review.generating.plan" = "Planning voor morgen genereren...";
+"review.go.to.chat" = "Ga naar Chat";
+"review.help.done" = "Klaar";
+"review.help.tomorrow" = "Morgen";
+"review.help.skip" = "Sla over";
+
+/* Suggestion Types */
+"suggestion.carryover" = "Overdracht";
+"suggestion.deadline" = "Deadline";
+"suggestion.habit" = "Gewoonte";
+"suggestion.spread" = "Verdeel";
+"suggestion.prep" = "Voorbereiding";
+"suggestion.focus" = "Focus";
+"suggestion.health" = "Gezondheid";
+"suggestion.buffer" = "Reistijd";
+
+/* ===== ViewModel ===== */
+"viewmodel.default.category" = "Dagelijks";

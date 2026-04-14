@@ -1,0 +1,225 @@
+/* Hebrew Localization for Calen */
+
+/* ===== Common ===== */
+"common.save" = "שמור";
+"common.cancel" = "ביטול";
+"common.add" = "הוסף";
+"common.delete" = "מחק";
+"common.edit" = "ערוך";
+"common.done" = "סיום";
+"common.close" = "סגור";
+"common.confirm" = "אישור";
+"common.skip" = "דלג";
+"common.next" = "הבא";
+"common.previous" = "הקודם";
+"common.execute" = "בצע";
+"common.today" = "היום";
+"common.completed" = "הושלם";
+"common.incomplete" = "לא הושלם";
+"common.repeat" = "חזור";
+
+/* ===== Login View ===== */
+"login.subtitle" = "התחבר ליומן Google\nלניהול לוח הזמנים שלך";
+"login.google.api.setup" = "הגדרת Google API";
+"login.google.api.description" = "צור לקוח OAuth ב-Google Cloud Console והזן את פרטי ההתחברות.";
+"login.google.signin" = "התחבר עם Google";
+"login.change.credentials" = "שנה פרטי התחברות";
+"login.skip.google" = "התחל ללא Google (יומן מקומי)";
+
+/* ===== Calendar Grid ===== */
+"calendar.weekdays.sun" = "א'";
+"calendar.weekdays.mon" = "ב'";
+"calendar.weekdays.tue" = "ג'";
+"calendar.weekdays.wed" = "ד'";
+"calendar.weekdays.thu" = "ה'";
+"calendar.weekdays.fri" = "ו'";
+"calendar.weekdays.sat" = "ש'";
+"calendar.month.format" = "%d";
+"calendar.help.chat" = "צ'אט AI";
+"calendar.help.google.connected" = "מחובר ליומן Google";
+
+/* ===== Daily Detail ===== */
+"detail.dday.today" = "היום";
+"detail.no.events" = "אין אירועים";
+"detail.add.todo" = "הוסף משימה";
+"detail.category.manage" = "ניהול קטגוריות";
+"detail.google.logout" = "התנתק מ-Google";
+"detail.google.login" = "התחבר ל-Google";
+"detail.apple.calendar.on" = "הפעל יומן Apple";
+"detail.apple.calendar.off" = "השבת יומן Apple";
+"detail.reminders" = "תזכורות";
+"detail.reminders.on" = "הפעל תזכורות";
+"detail.reminders.off" = "השבת תזכורות";
+
+/* ===== Panel Tabs ===== */
+"panel.review" = "סקירה";
+"panel.chat" = "צ'אט";
+
+/* ===== Event Detail Modal ===== */
+"event.detail.title" = "פרטי אירוע";
+"event.detail.allday" = "כל היום";
+"event.detail.start" = "התחלה";
+"event.detail.end" = "סיום";
+"event.field.title" = "כותרת";
+"event.toggle.allday" = "כל היום";
+
+/* ===== Todo Detail Modal ===== */
+"todo.detail.title" = "פרטי משימה";
+
+/* ===== Inline Add Todo ===== */
+"todo.input.placeholder" = "הזן משימה";
+"todo.type.normal" = "רגילה";
+"todo.type.repeating" = "חוזרת";
+
+/* ===== Category Manager ===== */
+"category.manage.title" = "ניהול קטגוריות";
+"category.new" = "קטגוריה חדשה";
+"category.name.placeholder" = "שם";
+
+/* ===== Default Categories ===== */
+"category.default.daily" = "יומי";
+"category.default.important" = "חשוב";
+"category.default.study" = "לימודים";
+"category.default.exercise" = "פעילות גופנית";
+"category.default.project" = "פרויקט";
+"category.default.parttime" = "עבודה חלקית";
+
+/* ===== Chat View ===== */
+"chat.claude.not.installed" = "Claude Code אינו מותקן";
+"chat.claude.install.hint" = "brew install claude-code\nאו npm install -g @anthropic-ai/claude-code";
+"chat.codex.not.installed" = "Codex CLI אינו מותקן";
+"chat.codex.install.hint" = "brew install codex\nאו npm install -g @openai/codex";
+"chat.redetect" = "זהה מחדש";
+"chat.select.other.ai" = "בחר AI אחר";
+"chat.assistant.title" = "עוזר AI ליומן";
+"chat.examples" = "\"הוסף פגישה מחר בשעה 15:00\"\n\"הראה את לוח הזמנים לשבוע\"\n\"מחק את אירוע הבחינה\"";
+"chat.thinking" = "חושב...";
+"chat.input.placeholder" = "הקלד הודעה...";
+"chat.action.confirm.title" = "אשר שינוי בלוח הזמנים";
+"chat.action.create" = "צור";
+"chat.action.update" = "עדכן";
+"chat.action.delete" = "מחק";
+
+/* ===== AI Settings ===== */
+"ai.settings.title" = "הגדרות AI";
+"ai.settings.model" = "מודל: %@";
+"ai.provider.installed" = "מותקן — מוכן לשימוש";
+"ai.provider.not.installed" = "לא מותקן";
+
+/* ===== AI Service Messages ===== */
+"ai.action.cancelled" = "הפעולה בוטלה.";
+"ai.batch.delete.rejected" = "⚠️ מחיקה מרובה (%d פריטים) נדחתה מטעמי בטיחות. מחק אחד בכל פעם.";
+"ai.create.failed.params" = "⚠️ היצירה נכשלה: פרמטרים לא תקינים";
+"ai.create.success" = "✅ נוצר: %@";
+"ai.create.failed" = "⚠️ היצירה נכשלה: %@";
+"ai.delete.success" = "✅ נמחק";
+"ai.delete.failed" = "⚠️ המחיקה נכשלה";
+"ai.delete.failed.detail" = "⚠️ המחיקה נכשלה: %@";
+"ai.update.success" = "✅ עודכן";
+"ai.update.failed" = "⚠️ העדכון נכשל";
+"ai.update.failed.detail" = "⚠️ העדכון נכשל: %@";
+"ai.update.failed.nodate" = "⚠️ העדכון נכשל: אין מידע על תאריך";
+"ai.invalid.eventid" = "⚠️ %@ נכשל: eventId לא תקין";
+"ai.cli.failed" = "הרצת CLI נכשלה: %@";
+"ai.output.truncated" = "... (הפלט קוצר)";
+"ai.error.prefix" = "שגיאה: %@";
+"ai.no.response" = "לא התקבלה תשובה.";
+"ai.claude.not.found" = "Claude Code אינו מותקן. בדוק אם claude קיים ב-/opt/homebrew/bin או ~/.local/bin.";
+"ai.codex.not.found" = "Codex CLI אינו מותקן. בדוק אם codex קיים ב-/opt/homebrew/bin או ~/.local/bin.";
+"ai.pending.confirm" = "⚠️ לבצע את הפעולות הבאות?\n%@\n\nהקלד 'אישור' או 'ביצוע' כדי להמשיך.";
+
+/* ===== Notifications ===== */
+"notification.daily.title" = "לוח הזמנים להיום";
+"notification.daily.body" = "בדוק את לוח הזמנים שלך להיום.";
+"notification.daily.events" = "אירועים: %@";
+"notification.daily.todos" = "משימות: %@";
+"notification.daily.empty" = "אין אירועים מתוכננים להיום.";
+"notification.event.title" = "תזכורת אירוע";
+"notification.event.body" = "בעוד %d דקות: %@";
+"notification.evening.title" = "סקירת ערב";
+"notification.evening.body" = "סקור אירועים שהושלמו והתכונן למחר";
+
+/* ===== Onboarding ===== */
+"onboarding.title" = "הגדרת Calen";
+"onboarding.start" = "התחל";
+
+/* Onboarding - Goals */
+"onboarding.goals.title" = "ספר לנו על היעדים שלך";
+"onboarding.goals.subtitle" = "הגדר 1-3 יעדים מרכזיים\nו-AI יתזמן אותם אוטומטית מדי יום";
+"onboarding.goals.placeholder" = "יעד (למשל, לעבור מבחן הסמכה)";
+"onboarding.goals.target.date" = "תאריך יעד";
+"onboarding.goals.quick.select" = "בחירה מהירה";
+"onboarding.goals.preset.certification" = "עבור הסמכה";
+"onboarding.goals.preset.sideproject" = "פרויקט צד";
+"onboarding.goals.preset.health" = "בריאות/פעילות גופנית";
+
+/* Onboarding - Schedule */
+"onboarding.schedule.title" = "ספר לנו על השגרה היומית שלך";
+"onboarding.schedule.subtitle" = "משמש לאופטימיזציית לוח הזמנים";
+"onboarding.schedule.work.start" = "תחילת עבודה";
+"onboarding.schedule.work.end" = "סיום עבודה";
+"onboarding.schedule.lunch" = "ארוחת צהריים";
+"onboarding.schedule.commute" = "נסיעה לעבודה";
+"onboarding.schedule.unit.hour" = "שע'";
+"onboarding.schedule.unit.minute" = "דק'";
+
+/* Onboarding - Energy */
+"onboarding.energy.title" = "מהו סוג האנרגיה שלך?";
+"onboarding.energy.subtitle" = "משימות חשובות ימוקמו\nבשעות הריכוז המרבי שלך";
+"onboarding.energy.morning.desc" = "ריכוז מרבי בבוקר";
+"onboarding.energy.evening.desc" = "ריכוז מרבי אחרי הצהריים/בערב";
+"onboarding.energy.balanced.desc" = "עקבי לאורך כל היום";
+
+/* Onboarding - Capacity */
+"onboarding.capacity.title" = "זמן ריכוז יומי";
+"onboarding.capacity.subtitle" = "הגדר כמה זמן ביום\nאתה יכול להקדיש ליעדים שלך";
+"onboarding.capacity.weekday" = "יום חול";
+"onboarding.capacity.weekend" = "סוף שבוע";
+"onboarding.capacity.minutes.format" = "%d דק'";
+"onboarding.capacity.ai.level" = "רמת תזמון אוטומטי AI";
+
+/* Aggressiveness */
+"aggressiveness.manual" = "ידני";
+"aggressiveness.assist" = "סיוע";
+"aggressiveness.semiauto" = "חצי-אוטומטי";
+"aggressiveness.auto" = "אוטומטי";
+"aggressiveness.manual.desc" = "הצג הצעות בלבד, ללא הוספה אוטומטית";
+"aggressiveness.assist.desc" = "הוסף אוטומטית רק בלוקים מתחת ל-30 דקות";
+"aggressiveness.semiauto.desc" = "אוטומטי 1-2 עיקריים, הצע את השאר";
+"aggressiveness.auto.desc" = "הוסף הכל אוטומטית, אשר רק בהתנגשויות";
+
+/* Energy Types */
+"energy.morning" = "בוקר";
+"energy.evening" = "ערב";
+"energy.balanced" = "מאוזן";
+
+/* ===== Review View ===== */
+"review.daily.title" = "התאמה להיום";
+"review.evening.title" = "סקירת ערב";
+"review.suggestion.count" = "· %d הצעות";
+"review.empty.title" = "הכל בסדר!";
+"review.empty.subtitle" = "אתה בלוח הזמנים להיום";
+"review.weekly.rate" = "השלמה שבועית";
+"review.tomorrow.title" = "תוכנית למחר";
+"review.tomorrow.auto.created" = "%d נוצרו אוטומטית";
+"review.tomorrow.suggested" = "%d הוצעו (בדוק בתדריך הבוקר)";
+"review.tomorrow.minutes.format" = "%d/%d דק' מתוזמנות";
+"review.move.all.tomorrow" = "העבר הכל שלא הושלם למחר";
+"review.generating.plan" = "מייצר תוכנית למחר...";
+"review.go.to.chat" = "עבור לצ'אט";
+"review.help.done" = "סיום";
+"review.help.tomorrow" = "מחר";
+"review.help.skip" = "דלג";
+
+/* Suggestion Types */
+"suggestion.carryover" = "העברה";
+"suggestion.deadline" = "מועד אחרון";
+"suggestion.habit" = "הרגל";
+"suggestion.spread" = "פיזור";
+"suggestion.prep" = "הכנה";
+"suggestion.focus" = "ריכוז";
+"suggestion.health" = "בריאות";
+"suggestion.buffer" = "נסיעה";
+
+/* ===== ViewModel ===== */
+"viewmodel.default.category" = "יומי";

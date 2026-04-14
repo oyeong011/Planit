@@ -1,0 +1,225 @@
+/* Japanese Localization for Calen */
+
+/* ===== Common ===== */
+"common.save" = "保存";
+"common.cancel" = "キャンセル";
+"common.add" = "追加";
+"common.delete" = "削除";
+"common.edit" = "編集";
+"common.done" = "完了";
+"common.close" = "閉じる";
+"common.confirm" = "確認";
+"common.skip" = "スキップ";
+"common.next" = "次へ";
+"common.previous" = "前へ";
+"common.execute" = "実行";
+"common.today" = "今日";
+"common.completed" = "完了";
+"common.incomplete" = "未完了";
+"common.repeat" = "繰り返し";
+
+/* ===== Login View ===== */
+"login.subtitle" = "Googleカレンダーと連携して\nスケジュールを管理しましょう";
+"login.google.api.setup" = "Google API設定";
+"login.google.api.description" = "Google Cloud ConsoleでOAuthクライアントを作成し、認証情報を入力してください。";
+"login.google.signin" = "Googleでサインイン";
+"login.change.credentials" = "認証情報を変更";
+"login.skip.google" = "Googleなしで始める（ローカルカレンダーを使用）";
+
+/* ===== Calendar Grid ===== */
+"calendar.weekdays.sun" = "日";
+"calendar.weekdays.mon" = "月";
+"calendar.weekdays.tue" = "火";
+"calendar.weekdays.wed" = "水";
+"calendar.weekdays.thu" = "木";
+"calendar.weekdays.fri" = "金";
+"calendar.weekdays.sat" = "土";
+"calendar.month.format" = "%d";
+"calendar.help.chat" = "AIチャット";
+"calendar.help.google.connected" = "Googleカレンダーに接続済み";
+
+/* ===== Daily Detail ===== */
+"detail.dday.today" = "今日";
+"detail.no.events" = "予定なし";
+"detail.add.todo" = "ToDo追加";
+"detail.category.manage" = "カテゴリ管理";
+"detail.google.logout" = "Googleからサインアウト";
+"detail.google.login" = "Googleにサインイン";
+"detail.apple.calendar.on" = "Appleカレンダーを有効にする";
+"detail.apple.calendar.off" = "Appleカレンダーを無効にする";
+"detail.reminders" = "リマインダー";
+"detail.reminders.on" = "リマインダーを有効にする";
+"detail.reminders.off" = "リマインダーを無効にする";
+
+/* ===== Panel Tabs ===== */
+"panel.review" = "レビュー";
+"panel.chat" = "チャット";
+
+/* ===== Event Detail Modal ===== */
+"event.detail.title" = "予定の詳細";
+"event.detail.allday" = "終日";
+"event.detail.start" = "開始";
+"event.detail.end" = "終了";
+"event.field.title" = "タイトル";
+"event.toggle.allday" = "終日";
+
+/* ===== Todo Detail Modal ===== */
+"todo.detail.title" = "ToDoの詳細";
+
+/* ===== Inline Add Todo ===== */
+"todo.input.placeholder" = "ToDoを入力";
+"todo.type.normal" = "通常";
+"todo.type.repeating" = "繰り返し";
+
+/* ===== Category Manager ===== */
+"category.manage.title" = "カテゴリ管理";
+"category.new" = "新規カテゴリ";
+"category.name.placeholder" = "名前";
+
+/* ===== Default Categories ===== */
+"category.default.daily" = "日常";
+"category.default.important" = "重要";
+"category.default.study" = "勉強";
+"category.default.exercise" = "運動";
+"category.default.project" = "プロジェクト";
+"category.default.parttime" = "アルバイト";
+
+/* ===== Chat View ===== */
+"chat.claude.not.installed" = "Claude Codeが未インストール";
+"chat.claude.install.hint" = "brew install claude-code\nまたは npm install -g @anthropic-ai/claude-code";
+"chat.codex.not.installed" = "Codex CLIが未インストール";
+"chat.codex.install.hint" = "brew install codex\nまたは npm install -g @openai/codex";
+"chat.redetect" = "再検出";
+"chat.select.other.ai" = "他のAIを選択";
+"chat.assistant.title" = "カレンダーAIアシスタント";
+"chat.examples" = "「明日の15時に会議を追加して」\n「今週のスケジュールを見せて」\n「試験の予定を削除して」";
+"chat.thinking" = "考え中...";
+"chat.input.placeholder" = "メッセージを入力...";
+"chat.action.confirm.title" = "スケジュール変更の確認";
+"chat.action.create" = "作成";
+"chat.action.update" = "更新";
+"chat.action.delete" = "削除";
+
+/* ===== AI Settings ===== */
+"ai.settings.title" = "AI設定";
+"ai.settings.model" = "モデル: %@";
+"ai.provider.installed" = "インストール済み — 使用可能";
+"ai.provider.not.installed" = "未インストール";
+
+/* ===== AI Service Messages ===== */
+"ai.action.cancelled" = "操作がキャンセルされました。";
+"ai.batch.delete.rejected" = "⚠️ 一括削除（%d件）は安全のため拒否されました。1件ずつ削除してください。";
+"ai.create.failed.params" = "⚠️ 作成失敗: パラメータが無効です";
+"ai.create.success" = "✅ 作成しました: %@";
+"ai.create.failed" = "⚠️ 作成失敗: %@";
+"ai.delete.success" = "✅ 削除しました";
+"ai.delete.failed" = "⚠️ 削除失敗";
+"ai.delete.failed.detail" = "⚠️ 削除失敗: %@";
+"ai.update.success" = "✅ 更新しました";
+"ai.update.failed" = "⚠️ 更新失敗";
+"ai.update.failed.detail" = "⚠️ 更新失敗: %@";
+"ai.update.failed.nodate" = "⚠️ 更新失敗: 日付情報がありません";
+"ai.invalid.eventid" = "⚠️ %@ 失敗: 無効なeventId";
+"ai.cli.failed" = "CLI実行失敗: %@";
+"ai.output.truncated" = "...（出力が省略されました）";
+"ai.error.prefix" = "エラー: %@";
+"ai.no.response" = "応答がありません。";
+"ai.claude.not.found" = "Claude Codeがインストールされていません。/opt/homebrew/binまたは~/.local/binにclaudeが存在するか確認してください。";
+"ai.codex.not.found" = "Codex CLIがインストールされていません。/opt/homebrew/binまたは~/.local/binにcodexが存在するか確認してください。";
+"ai.pending.confirm" = "⚠️ 以下の操作を実行しますか？\n%@\n\n続行するには「確認」または「実行」と入力してください。";
+
+/* ===== Notifications ===== */
+"notification.daily.title" = "今日のスケジュール";
+"notification.daily.body" = "今日のスケジュールを確認しましょう。";
+"notification.daily.events" = "予定: %@";
+"notification.daily.todos" = "ToDo: %@";
+"notification.daily.empty" = "今日の予定はありません。";
+"notification.event.title" = "予定のリマインダー";
+"notification.event.body" = "%d分後: %@";
+"notification.evening.title" = "1日の振り返り";
+"notification.evening.body" = "完了した予定を振り返り、明日の準備をしましょう";
+
+/* ===== Onboarding ===== */
+"onboarding.title" = "Calenセットアップ";
+"onboarding.start" = "始める";
+
+/* Onboarding - Goals */
+"onboarding.goals.title" = "目標を教えてください";
+"onboarding.goals.subtitle" = "1〜3つの主要目標を設定すると\nAIが毎日自動でスケジュールします";
+"onboarding.goals.placeholder" = "目標（例: 資格試験に合格する）";
+"onboarding.goals.target.date" = "目標日";
+"onboarding.goals.quick.select" = "クイック選択";
+"onboarding.goals.preset.certification" = "資格取得";
+"onboarding.goals.preset.sideproject" = "サイドプロジェクト";
+"onboarding.goals.preset.health" = "健康・運動";
+
+/* Onboarding - Schedule */
+"onboarding.schedule.title" = "日常のルーティンを教えてください";
+"onboarding.schedule.subtitle" = "スケジュール最適化に使用されます";
+"onboarding.schedule.work.start" = "勤務開始";
+"onboarding.schedule.work.end" = "勤務終了";
+"onboarding.schedule.lunch" = "昼食";
+"onboarding.schedule.commute" = "通勤";
+"onboarding.schedule.unit.hour" = "時間";
+"onboarding.schedule.unit.minute" = "分";
+
+/* Onboarding - Energy */
+"onboarding.energy.title" = "あなたのエネルギータイプは？";
+"onboarding.energy.subtitle" = "集中力がピークの時間帯に\n重要なタスクを配置します";
+"onboarding.energy.morning.desc" = "午前中に集中力がピーク";
+"onboarding.energy.evening.desc" = "午後・夜に集中力がピーク";
+"onboarding.energy.balanced.desc" = "1日を通して安定";
+
+/* Onboarding - Capacity */
+"onboarding.capacity.title" = "1日の集中時間";
+"onboarding.capacity.subtitle" = "目標に1日どれくらいの時間を\n割けるか設定してください";
+"onboarding.capacity.weekday" = "平日";
+"onboarding.capacity.weekend" = "週末";
+"onboarding.capacity.minutes.format" = "%d分";
+"onboarding.capacity.ai.level" = "AI自動スケジューリングレベル";
+
+/* Aggressiveness */
+"aggressiveness.manual" = "手動";
+"aggressiveness.assist" = "アシスト";
+"aggressiveness.semiauto" = "半自動";
+"aggressiveness.auto" = "自動";
+"aggressiveness.manual.desc" = "提案のみ表示、自動追加なし";
+"aggressiveness.assist.desc" = "30分以下のブロックのみ自動追加";
+"aggressiveness.semiauto.desc" = "上位1-2件を自動追加、残りは提案";
+"aggressiveness.auto.desc" = "すべて自動追加、競合時のみ確認";
+
+/* Energy Types */
+"energy.morning" = "朝型";
+"energy.evening" = "夜型";
+"energy.balanced" = "バランス型";
+
+/* ===== Review View ===== */
+"review.daily.title" = "今日の調整";
+"review.evening.title" = "夜の振り返り";
+"review.suggestion.count" = "· %d件の提案";
+"review.empty.title" = "順調です！";
+"review.empty.subtitle" = "今日の予定は順調です";
+"review.weekly.rate" = "週間達成率";
+"review.tomorrow.title" = "明日の予定";
+"review.tomorrow.auto.created" = "%d件自動作成";
+"review.tomorrow.suggested" = "%d件提案あり（朝のブリーフィングで確認）";
+"review.tomorrow.minutes.format" = "%d/%d分スケジュール済み";
+"review.move.all.tomorrow" = "未完了をすべて明日に移動";
+"review.generating.plan" = "明日の予定を作成中...";
+"review.go.to.chat" = "チャットへ";
+"review.help.done" = "完了";
+"review.help.tomorrow" = "明日";
+"review.help.skip" = "スキップ";
+
+/* Suggestion Types */
+"suggestion.carryover" = "持ち越し";
+"suggestion.deadline" = "締切";
+"suggestion.habit" = "習慣";
+"suggestion.spread" = "分散";
+"suggestion.prep" = "準備";
+"suggestion.focus" = "集中";
+"suggestion.health" = "健康";
+"suggestion.buffer" = "移動";
+
+/* ===== ViewModel ===== */
+"viewmodel.default.category" = "日常";

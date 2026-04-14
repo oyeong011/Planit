@@ -1,0 +1,225 @@
+/* Hungarian Localization for Calen */
+
+/* ===== Common ===== */
+"common.save" = "Mentés";
+"common.cancel" = "Mégse";
+"common.add" = "Hozzáadás";
+"common.delete" = "Törlés";
+"common.edit" = "Szerkesztés";
+"common.done" = "Kész";
+"common.close" = "Bezárás";
+"common.confirm" = "Megerősítés";
+"common.skip" = "Kihagyás";
+"common.next" = "Következő";
+"common.previous" = "Előző";
+"common.execute" = "Végrehajtás";
+"common.today" = "Ma";
+"common.completed" = "Befejezve";
+"common.incomplete" = "Befejezetlen";
+"common.repeat" = "Ismétlés";
+
+/* ===== Login View ===== */
+"login.subtitle" = "Csatlakozz a Google Naptárhoz\na beosztásod kezeléséhez";
+"login.google.api.setup" = "Google API beállítás";
+"login.google.api.description" = "Hozz létre egy OAuth klienst a Google Cloud Console-ban, és add meg a hitelesítő adatokat.";
+"login.google.signin" = "Bejelentkezés Google-lal";
+"login.change.credentials" = "Hitelesítő adatok módosítása";
+"login.skip.google" = "Indítás Google nélkül (Helyi naptár használata)";
+
+/* ===== Calendar Grid ===== */
+"calendar.weekdays.sun" = "V";
+"calendar.weekdays.mon" = "H";
+"calendar.weekdays.tue" = "K";
+"calendar.weekdays.wed" = "Sze";
+"calendar.weekdays.thu" = "Cs";
+"calendar.weekdays.fri" = "P";
+"calendar.weekdays.sat" = "Szo";
+"calendar.month.format" = "%d";
+"calendar.help.chat" = "AI csevegés";
+"calendar.help.google.connected" = "Csatlakozva a Google Naptárhoz";
+
+/* ===== Daily Detail ===== */
+"detail.dday.today" = "Ma";
+"detail.no.events" = "Nincsenek események";
+"detail.add.todo" = "Teendő hozzáadása";
+"detail.category.manage" = "Kategóriák kezelése";
+"detail.google.logout" = "Kijelentkezés a Google-ból";
+"detail.google.login" = "Bejelentkezés a Google-ba";
+"detail.apple.calendar.on" = "Apple Naptár bekapcsolása";
+"detail.apple.calendar.off" = "Apple Naptár kikapcsolása";
+"detail.reminders" = "Emlékeztetők";
+"detail.reminders.on" = "Emlékeztetők bekapcsolása";
+"detail.reminders.off" = "Emlékeztetők kikapcsolása";
+
+/* ===== Panel Tabs ===== */
+"panel.review" = "Áttekintés";
+"panel.chat" = "Csevegés";
+
+/* ===== Event Detail Modal ===== */
+"event.detail.title" = "Esemény részletei";
+"event.detail.allday" = "Egész nap";
+"event.detail.start" = "Kezdés";
+"event.detail.end" = "Befejezés";
+"event.field.title" = "Cím";
+"event.toggle.allday" = "Egész nap";
+
+/* ===== Todo Detail Modal ===== */
+"todo.detail.title" = "Teendő részletei";
+
+/* ===== Inline Add Todo ===== */
+"todo.input.placeholder" = "Írd be a teendőt";
+"todo.type.normal" = "Normál";
+"todo.type.repeating" = "Ismétlődő";
+
+/* ===== Category Manager ===== */
+"category.manage.title" = "Kategóriák kezelése";
+"category.new" = "Új kategória";
+"category.name.placeholder" = "Név";
+
+/* ===== Default Categories ===== */
+"category.default.daily" = "Napi";
+"category.default.important" = "Fontos";
+"category.default.study" = "Tanulás";
+"category.default.exercise" = "Edzés";
+"category.default.project" = "Projekt";
+"category.default.parttime" = "Részmunkaidő";
+
+/* ===== Chat View ===== */
+"chat.claude.not.installed" = "A Claude Code nincs telepítve";
+"chat.claude.install.hint" = "brew install claude-code\nvagy npm install -g @anthropic-ai/claude-code";
+"chat.codex.not.installed" = "A Codex CLI nincs telepítve";
+"chat.codex.install.hint" = "brew install codex\nvagy npm install -g @openai/codex";
+"chat.redetect" = "Újra felismerni";
+"chat.select.other.ai" = "Másik AI kiválasztása";
+"chat.assistant.title" = "Naptár AI asszisztens";
+"chat.examples" = "\"Adj hozzá egy megbeszélést holnap 15:00-ra\"\n\"Mutasd a heti beosztást\"\n\"Töröld a vizsga eseményt\"";
+"chat.thinking" = "Gondolkodom...";
+"chat.input.placeholder" = "Írj üzenetet...";
+"chat.action.confirm.title" = "Beosztás módosítás megerősítése";
+"chat.action.create" = "Létrehozás";
+"chat.action.update" = "Frissítés";
+"chat.action.delete" = "Törlés";
+
+/* ===== AI Settings ===== */
+"ai.settings.title" = "AI beállítások";
+"ai.settings.model" = "Modell: %@";
+"ai.provider.installed" = "Telepítve — Használatra kész";
+"ai.provider.not.installed" = "Nincs telepítve";
+
+/* ===== AI Service Messages ===== */
+"ai.action.cancelled" = "Művelet megszakítva.";
+"ai.batch.delete.rejected" = "⚠️ Tömeges törlés (%d elem) biztonsági okokból elutasítva. Kérjük, egyenként töröljön.";
+"ai.create.failed.params" = "⚠️ Létrehozás sikertelen: Érvénytelen paraméterek";
+"ai.create.success" = "✅ Létrehozva: %@";
+"ai.create.failed" = "⚠️ Létrehozás sikertelen: %@";
+"ai.delete.success" = "✅ Törölve";
+"ai.delete.failed" = "⚠️ Törlés sikertelen";
+"ai.delete.failed.detail" = "⚠️ Törlés sikertelen: %@";
+"ai.update.success" = "✅ Frissítve";
+"ai.update.failed" = "⚠️ Frissítés sikertelen";
+"ai.update.failed.detail" = "⚠️ Frissítés sikertelen: %@";
+"ai.update.failed.nodate" = "⚠️ Frissítés sikertelen: Nincs dátum adat";
+"ai.invalid.eventid" = "⚠️ %@ sikertelen: Érvénytelen eventId";
+"ai.cli.failed" = "CLI végrehajtás sikertelen: %@";
+"ai.output.truncated" = "... (kimenet csonkolva)";
+"ai.error.prefix" = "Hiba: %@";
+"ai.no.response" = "Nem érkezett válasz.";
+"ai.claude.not.found" = "A Claude Code nincs telepítve. Ellenőrizd, hogy a claude elérhető-e a /opt/homebrew/bin vagy ~/.local/bin útvonalon.";
+"ai.codex.not.found" = "A Codex CLI nincs telepítve. Ellenőrizd, hogy a codex elérhető-e a /opt/homebrew/bin vagy ~/.local/bin útvonalon.";
+"ai.pending.confirm" = "⚠️ Végrehajtod a következő műveleteket?\n%@\n\nÍrd be a 'megerősítés' vagy 'végrehajtás' szót a folytatáshoz.";
+
+/* ===== Notifications ===== */
+"notification.daily.title" = "Mai beosztás";
+"notification.daily.body" = "Ellenőrizd a mai beosztásod.";
+"notification.daily.events" = "Események: %@";
+"notification.daily.todos" = "Teendők: %@";
+"notification.daily.empty" = "Nincsenek események mára.";
+"notification.event.title" = "Esemény emlékeztető";
+"notification.event.body" = "%d perc múlva: %@";
+"notification.evening.title" = "Esti áttekintés";
+"notification.evening.body" = "Tekintsd át a befejezett eseményeket és készülj holnapra";
+
+/* ===== Onboarding ===== */
+"onboarding.title" = "Calen beállítás";
+"onboarding.start" = "Kezdés";
+
+/* Onboarding - Goals */
+"onboarding.goals.title" = "Mondd el a céljaidat";
+"onboarding.goals.subtitle" = "Állíts be 1–3 fő célt és\naz AI automatikusan beütemezi naponta";
+"onboarding.goals.placeholder" = "Cél (pl. Vizsgaletétel)";
+"onboarding.goals.target.date" = "Céldátum";
+"onboarding.goals.quick.select" = "Gyorsválasztás";
+"onboarding.goals.preset.certification" = "Bizonyítvány megszerzése";
+"onboarding.goals.preset.sideproject" = "Mellékprojekt";
+"onboarding.goals.preset.health" = "Egészség/Edzés";
+
+/* Onboarding - Schedule */
+"onboarding.schedule.title" = "Mondd el a napi rutinod";
+"onboarding.schedule.subtitle" = "Az ütemezés optimalizálásához használjuk";
+"onboarding.schedule.work.start" = "Munkakezdés";
+"onboarding.schedule.work.end" = "Munka vége";
+"onboarding.schedule.lunch" = "Ebéd";
+"onboarding.schedule.commute" = "Ingázás";
+"onboarding.schedule.unit.hour" = "ó";
+"onboarding.schedule.unit.minute" = "perc";
+
+/* Onboarding - Energy */
+"onboarding.energy.title" = "Mi az energiatípusod?";
+"onboarding.energy.subtitle" = "A fontos feladatok a csúcs\nkoncentrációs időszakodba kerülnek";
+"onboarding.energy.morning.desc" = "Csúcskoncentráció reggel";
+"onboarding.energy.evening.desc" = "Csúcskoncentráció délután/este";
+"onboarding.energy.balanced.desc" = "Egyenletes egész nap";
+
+/* Onboarding - Capacity */
+"onboarding.capacity.title" = "Napi koncentrációs idő";
+"onboarding.capacity.subtitle" = "Állítsd be mennyi időt tudsz\nnaponta a céljaidra szánni";
+"onboarding.capacity.weekday" = "Hétköznap";
+"onboarding.capacity.weekend" = "Hétvége";
+"onboarding.capacity.minutes.format" = "%d perc";
+"onboarding.capacity.ai.level" = "AI automatikus ütemezés szintje";
+
+/* Aggressiveness */
+"aggressiveness.manual" = "Kézi";
+"aggressiveness.assist" = "Segítő";
+"aggressiveness.semiauto" = "Félautomata";
+"aggressiveness.auto" = "Automatikus";
+"aggressiveness.manual.desc" = "Csak javaslatok megjelenítése, nincs automatikus hozzáadás";
+"aggressiveness.assist.desc" = "Csak 30 perc alatti blokkok automatikus hozzáadása";
+"aggressiveness.semiauto.desc" = "Automatikusan a top 1–2, a többi javaslat";
+"aggressiveness.auto.desc" = "Mindent automatikusan hozzáad, csak ütközésnél kér megerősítést";
+
+/* Energy Types */
+"energy.morning" = "Reggel";
+"energy.evening" = "Este";
+"energy.balanced" = "Kiegyensúlyozott";
+
+/* ===== Review View ===== */
+"review.daily.title" = "Mai módosítás";
+"review.evening.title" = "Esti áttekintés";
+"review.suggestion.count" = "· %d javaslat";
+"review.empty.title" = "Minden rendben!";
+"review.empty.subtitle" = "Ma jól haladsz";
+"review.weekly.rate" = "Heti teljesítés";
+"review.tomorrow.title" = "Holnapi terv";
+"review.tomorrow.auto.created" = "%d automatikusan létrehozva";
+"review.tomorrow.suggested" = "%d javasolt (ellenőrizd a reggeli áttekintésben)";
+"review.tomorrow.minutes.format" = "%d/%d perc ütemezve";
+"review.move.all.tomorrow" = "Összes befejezetlen áthelyezése holnapra";
+"review.generating.plan" = "Holnapi terv készítése...";
+"review.go.to.chat" = "Ugrás a csevegésre";
+"review.help.done" = "Kész";
+"review.help.tomorrow" = "Holnap";
+"review.help.skip" = "Kihagyás";
+
+/* Suggestion Types */
+"suggestion.carryover" = "Átvitel";
+"suggestion.deadline" = "Határidő";
+"suggestion.habit" = "Szokás";
+"suggestion.spread" = "Elosztás";
+"suggestion.prep" = "Előkészítés";
+"suggestion.focus" = "Fókusz";
+"suggestion.health" = "Egészség";
+"suggestion.buffer" = "Utazás";
+
+/* ===== ViewModel ===== */
+"viewmodel.default.category" = "Napi";

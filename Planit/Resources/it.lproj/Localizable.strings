@@ -1,0 +1,225 @@
+/* Italian Localization for Calen */
+
+/* ===== Common ===== */
+"common.save" = "Salva";
+"common.cancel" = "Annulla";
+"common.add" = "Aggiungi";
+"common.delete" = "Elimina";
+"common.edit" = "Modifica";
+"common.done" = "Fatto";
+"common.close" = "Chiudi";
+"common.confirm" = "Conferma";
+"common.skip" = "Salta";
+"common.next" = "Avanti";
+"common.previous" = "Indietro";
+"common.execute" = "Esegui";
+"common.today" = "Oggi";
+"common.completed" = "Completato";
+"common.incomplete" = "Incompleto";
+"common.repeat" = "Ripeti";
+
+/* ===== Login View ===== */
+"login.subtitle" = "Collegati a Google Calendar\nper gestire i tuoi impegni";
+"login.google.api.setup" = "Configurazione API Google";
+"login.google.api.description" = "Crea un client OAuth nella Google Cloud Console e inserisci le credenziali.";
+"login.google.signin" = "Accedi con Google";
+"login.change.credentials" = "Modifica credenziali";
+"login.skip.google" = "Inizia senza Google (Usa calendario locale)";
+
+/* ===== Calendar Grid ===== */
+"calendar.weekdays.sun" = "Dom";
+"calendar.weekdays.mon" = "Lun";
+"calendar.weekdays.tue" = "Mar";
+"calendar.weekdays.wed" = "Mer";
+"calendar.weekdays.thu" = "Gio";
+"calendar.weekdays.fri" = "Ven";
+"calendar.weekdays.sat" = "Sab";
+"calendar.month.format" = "%d";
+"calendar.help.chat" = "Chat IA";
+"calendar.help.google.connected" = "Connesso a Google Calendar";
+
+/* ===== Daily Detail ===== */
+"detail.dday.today" = "Oggi";
+"detail.no.events" = "Nessun evento";
+"detail.add.todo" = "Aggiungi attività";
+"detail.category.manage" = "Gestisci categorie";
+"detail.google.logout" = "Esci da Google";
+"detail.google.login" = "Accedi a Google";
+"detail.apple.calendar.on" = "Attiva Calendario Apple";
+"detail.apple.calendar.off" = "Disattiva Calendario Apple";
+"detail.reminders" = "Promemoria";
+"detail.reminders.on" = "Attiva Promemoria";
+"detail.reminders.off" = "Disattiva Promemoria";
+
+/* ===== Panel Tabs ===== */
+"panel.review" = "Riepilogo";
+"panel.chat" = "Chat";
+
+/* ===== Event Detail Modal ===== */
+"event.detail.title" = "Dettagli evento";
+"event.detail.allday" = "Tutto il giorno";
+"event.detail.start" = "Inizio";
+"event.detail.end" = "Fine";
+"event.field.title" = "Titolo";
+"event.toggle.allday" = "Tutto il giorno";
+
+/* ===== Todo Detail Modal ===== */
+"todo.detail.title" = "Dettagli attività";
+
+/* ===== Inline Add Todo ===== */
+"todo.input.placeholder" = "Inserisci un'attività";
+"todo.type.normal" = "Normale";
+"todo.type.repeating" = "Ripeti";
+
+/* ===== Category Manager ===== */
+"category.manage.title" = "Gestisci categorie";
+"category.new" = "Nuova categoria";
+"category.name.placeholder" = "Nome";
+
+/* ===== Default Categories ===== */
+"category.default.daily" = "Quotidiano";
+"category.default.important" = "Importante";
+"category.default.study" = "Studio";
+"category.default.exercise" = "Esercizio";
+"category.default.project" = "Progetto";
+"category.default.parttime" = "Lavoro part-time";
+
+/* ===== Chat View ===== */
+"chat.claude.not.installed" = "Claude Code non installato";
+"chat.claude.install.hint" = "brew install claude-code\noppure npm install -g @anthropic-ai/claude-code";
+"chat.codex.not.installed" = "Codex CLI non installato";
+"chat.codex.install.hint" = "brew install codex\noppure npm install -g @openai/codex";
+"chat.redetect" = "Rileva di nuovo";
+"chat.select.other.ai" = "Seleziona altra IA";
+"chat.assistant.title" = "Assistente IA Calendario";
+"chat.examples" = "\"Aggiungi una riunione domani alle 15\"\n\"Mostra il programma della settimana\"\n\"Elimina l'evento esame\"";
+"chat.thinking" = "Sto pensando...";
+"chat.input.placeholder" = "Scrivi un messaggio...";
+"chat.action.confirm.title" = "Conferma modifica programma";
+"chat.action.create" = "Crea";
+"chat.action.update" = "Aggiorna";
+"chat.action.delete" = "Elimina";
+
+/* ===== AI Settings ===== */
+"ai.settings.title" = "Impostazioni IA";
+"ai.settings.model" = "Modello: %@";
+"ai.provider.installed" = "Installato — Pronto all'uso";
+"ai.provider.not.installed" = "Non installato";
+
+/* ===== AI Service Messages ===== */
+"ai.action.cancelled" = "Azione annullata.";
+"ai.batch.delete.rejected" = "⚠️ Eliminazione in blocco (%d elementi) rifiutata per sicurezza. Elimina uno alla volta.";
+"ai.create.failed.params" = "⚠️ Creazione fallita: Parametri non validi";
+"ai.create.success" = "✅ Creato: %@";
+"ai.create.failed" = "⚠️ Creazione fallita: %@";
+"ai.delete.success" = "✅ Eliminato";
+"ai.delete.failed" = "⚠️ Eliminazione fallita";
+"ai.delete.failed.detail" = "⚠️ Eliminazione fallita: %@";
+"ai.update.success" = "✅ Aggiornato";
+"ai.update.failed" = "⚠️ Aggiornamento fallito";
+"ai.update.failed.detail" = "⚠️ Aggiornamento fallito: %@";
+"ai.update.failed.nodate" = "⚠️ Aggiornamento fallito: Nessuna data";
+"ai.invalid.eventid" = "⚠️ %@ fallito: eventId non valido";
+"ai.cli.failed" = "Esecuzione CLI fallita: %@";
+"ai.output.truncated" = "... (output troncato)";
+"ai.error.prefix" = "Errore: %@";
+"ai.no.response" = "Nessuna risposta ricevuta.";
+"ai.claude.not.found" = "Claude Code non è installato. Verifica che claude esista in /opt/homebrew/bin o ~/.local/bin.";
+"ai.codex.not.found" = "Codex CLI non è installato. Verifica che codex esista in /opt/homebrew/bin o ~/.local/bin.";
+"ai.pending.confirm" = "⚠️ Eseguire le seguenti azioni?\n%@\n\nDigita 'conferma' o 'esegui' per procedere.";
+
+/* ===== Notifications ===== */
+"notification.daily.title" = "Programma di oggi";
+"notification.daily.body" = "Controlla il tuo programma per oggi.";
+"notification.daily.events" = "Eventi: %@";
+"notification.daily.todos" = "Attività: %@";
+"notification.daily.empty" = "Nessun evento in programma per oggi.";
+"notification.event.title" = "Promemoria evento";
+"notification.event.body" = "Tra %d minuti: %@";
+"notification.evening.title" = "Riepilogo giornaliero";
+"notification.evening.body" = "Rivedi gli eventi completati e preparati per domani";
+
+/* ===== Onboarding ===== */
+"onboarding.title" = "Configurazione Calen";
+"onboarding.start" = "Inizia";
+
+/* Onboarding - Goals */
+"onboarding.goals.title" = "Parlaci dei tuoi obiettivi";
+"onboarding.goals.subtitle" = "Imposta 1-3 obiettivi chiave e\nl'IA li pianificherà automaticamente ogni giorno";
+"onboarding.goals.placeholder" = "Obiettivo (es. Superare l'esame di certificazione)";
+"onboarding.goals.target.date" = "Data obiettivo";
+"onboarding.goals.quick.select" = "Selezione rapida";
+"onboarding.goals.preset.certification" = "Superare certificazione";
+"onboarding.goals.preset.sideproject" = "Progetto personale";
+"onboarding.goals.preset.health" = "Salute/Esercizio";
+
+/* Onboarding - Schedule */
+"onboarding.schedule.title" = "Parlaci della tua routine";
+"onboarding.schedule.subtitle" = "Utilizzata per ottimizzare la pianificazione";
+"onboarding.schedule.work.start" = "Inizio lavoro";
+"onboarding.schedule.work.end" = "Fine lavoro";
+"onboarding.schedule.lunch" = "Pranzo";
+"onboarding.schedule.commute" = "Tragitto";
+"onboarding.schedule.unit.hour" = "h";
+"onboarding.schedule.unit.minute" = "min";
+
+/* Onboarding - Energy */
+"onboarding.energy.title" = "Qual è il tuo tipo di energia?";
+"onboarding.energy.subtitle" = "Le attività importanti saranno posizionate\nnelle ore di massima concentrazione";
+"onboarding.energy.morning.desc" = "Massima concentrazione al mattino";
+"onboarding.energy.evening.desc" = "Massima concentrazione al pomeriggio/sera";
+"onboarding.energy.balanced.desc" = "Costante durante la giornata";
+
+/* Onboarding - Capacity */
+"onboarding.capacity.title" = "Tempo di concentrazione giornaliero";
+"onboarding.capacity.subtitle" = "Imposta quanto tempo al giorno\npuoi dedicare ai tuoi obiettivi";
+"onboarding.capacity.weekday" = "Giorni feriali";
+"onboarding.capacity.weekend" = "Fine settimana";
+"onboarding.capacity.minutes.format" = "%d min";
+"onboarding.capacity.ai.level" = "Livello di pianificazione automatica IA";
+
+/* Aggressiveness */
+"aggressiveness.manual" = "Manuale";
+"aggressiveness.assist" = "Assistito";
+"aggressiveness.semiauto" = "Semi-auto";
+"aggressiveness.auto" = "Automatico";
+"aggressiveness.manual.desc" = "Solo suggerimenti, nessuna aggiunta automatica";
+"aggressiveness.assist.desc" = "Aggiunta automatica solo per blocchi sotto i 30 min";
+"aggressiveness.semiauto.desc" = "Auto per i primi 1-2, suggerimenti per il resto";
+"aggressiveness.auto.desc" = "Aggiunta automatica totale, conferma solo in caso di conflitti";
+
+/* Energy Types */
+"energy.morning" = "Mattina";
+"energy.evening" = "Sera";
+"energy.balanced" = "Equilibrato";
+
+/* ===== Review View ===== */
+"review.daily.title" = "Aggiustamenti di oggi";
+"review.evening.title" = "Riepilogo serale";
+"review.suggestion.count" = "· %d suggerimenti";
+"review.empty.title" = "Tutto a posto!";
+"review.empty.subtitle" = "Sei in linea con il programma di oggi";
+"review.weekly.rate" = "Completamento settimanale";
+"review.tomorrow.title" = "Piano per domani";
+"review.tomorrow.auto.created" = "%d creati automaticamente";
+"review.tomorrow.suggested" = "%d suggeriti (controlla nel briefing mattutino)";
+"review.tomorrow.minutes.format" = "%d/%d min pianificati";
+"review.move.all.tomorrow" = "Sposta tutto l'incompleto a domani";
+"review.generating.plan" = "Generazione piano per domani...";
+"review.go.to.chat" = "Vai alla Chat";
+"review.help.done" = "Fatto";
+"review.help.tomorrow" = "Domani";
+"review.help.skip" = "Salta";
+
+/* Suggestion Types */
+"suggestion.carryover" = "Riporto";
+"suggestion.deadline" = "Scadenza";
+"suggestion.habit" = "Abitudine";
+"suggestion.spread" = "Distribuzione";
+"suggestion.prep" = "Preparazione";
+"suggestion.focus" = "Concentrazione";
+"suggestion.health" = "Salute";
+"suggestion.buffer" = "Spostamento";
+
+/* ===== ViewModel ===== */
+"viewmodel.default.category" = "Quotidiano";

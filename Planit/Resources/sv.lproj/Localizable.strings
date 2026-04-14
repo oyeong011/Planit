@@ -1,0 +1,225 @@
+/* Swedish Localization for Calen */
+
+/* ===== Common ===== */
+"common.save" = "Spara";
+"common.cancel" = "Avbryt";
+"common.add" = "Lägg till";
+"common.delete" = "Radera";
+"common.edit" = "Redigera";
+"common.done" = "Klar";
+"common.close" = "Stäng";
+"common.confirm" = "Bekräfta";
+"common.skip" = "Hoppa över";
+"common.next" = "Nästa";
+"common.previous" = "Föregående";
+"common.execute" = "Utför";
+"common.today" = "Idag";
+"common.completed" = "Slutförd";
+"common.incomplete" = "Ofullständig";
+"common.repeat" = "Upprepa";
+
+/* ===== Login View ===== */
+"login.subtitle" = "Anslut till Google Kalender\nför att hantera ditt schema";
+"login.google.api.setup" = "Google API-konfiguration";
+"login.google.api.description" = "Skapa en OAuth-klient i Google Cloud Console och ange inloggningsuppgifterna.";
+"login.google.signin" = "Logga in med Google";
+"login.change.credentials" = "Ändra inloggningsuppgifter";
+"login.skip.google" = "Starta utan Google (Använd lokal kalender)";
+
+/* ===== Calendar Grid ===== */
+"calendar.weekdays.sun" = "Sön";
+"calendar.weekdays.mon" = "Mån";
+"calendar.weekdays.tue" = "Tis";
+"calendar.weekdays.wed" = "Ons";
+"calendar.weekdays.thu" = "Tor";
+"calendar.weekdays.fri" = "Fre";
+"calendar.weekdays.sat" = "Lör";
+"calendar.month.format" = "%d";
+"calendar.help.chat" = "AI-chatt";
+"calendar.help.google.connected" = "Ansluten till Google Kalender";
+
+/* ===== Daily Detail ===== */
+"detail.dday.today" = "Idag";
+"detail.no.events" = "Inga händelser";
+"detail.add.todo" = "Lägg till uppgift";
+"detail.category.manage" = "Hantera kategorier";
+"detail.google.logout" = "Logga ut från Google";
+"detail.google.login" = "Logga in på Google";
+"detail.apple.calendar.on" = "Aktivera Apple Kalender";
+"detail.apple.calendar.off" = "Inaktivera Apple Kalender";
+"detail.reminders" = "Påminnelser";
+"detail.reminders.on" = "Aktivera påminnelser";
+"detail.reminders.off" = "Inaktivera påminnelser";
+
+/* ===== Panel Tabs ===== */
+"panel.review" = "Översikt";
+"panel.chat" = "Chatt";
+
+/* ===== Event Detail Modal ===== */
+"event.detail.title" = "Händelsedetaljer";
+"event.detail.allday" = "Heldag";
+"event.detail.start" = "Start";
+"event.detail.end" = "Slut";
+"event.field.title" = "Titel";
+"event.toggle.allday" = "Heldag";
+
+/* ===== Todo Detail Modal ===== */
+"todo.detail.title" = "Uppgiftsdetaljer";
+
+/* ===== Inline Add Todo ===== */
+"todo.input.placeholder" = "Ange en uppgift";
+"todo.type.normal" = "Normal";
+"todo.type.repeating" = "Upprepande";
+
+/* ===== Category Manager ===== */
+"category.manage.title" = "Hantera kategorier";
+"category.new" = "Ny kategori";
+"category.name.placeholder" = "Namn";
+
+/* ===== Default Categories ===== */
+"category.default.daily" = "Dagligt";
+"category.default.important" = "Viktigt";
+"category.default.study" = "Studier";
+"category.default.exercise" = "Träning";
+"category.default.project" = "Projekt";
+"category.default.parttime" = "Deltid";
+
+/* ===== Chat View ===== */
+"chat.claude.not.installed" = "Claude Code ej installerat";
+"chat.claude.install.hint" = "brew install claude-code\neller npm install -g @anthropic-ai/claude-code";
+"chat.codex.not.installed" = "Codex CLI ej installerat";
+"chat.codex.install.hint" = "brew install codex\neller npm install -g @openai/codex";
+"chat.redetect" = "Identifiera igen";
+"chat.select.other.ai" = "Välj annan AI";
+"chat.assistant.title" = "Kalender-AI-assistent";
+"chat.examples" = "\"Lägg till ett möte kl 15 imorgon\"\n\"Visa veckans schema\"\n\"Ta bort tentahändelsen\"";
+"chat.thinking" = "Tänker...";
+"chat.input.placeholder" = "Skriv ett meddelande...";
+"chat.action.confirm.title" = "Bekräfta schemaändring";
+"chat.action.create" = "Skapa";
+"chat.action.update" = "Uppdatera";
+"chat.action.delete" = "Radera";
+
+/* ===== AI Settings ===== */
+"ai.settings.title" = "AI-inställningar";
+"ai.settings.model" = "Modell: %@";
+"ai.provider.installed" = "Installerad — Redo att använda";
+"ai.provider.not.installed" = "Ej installerad";
+
+/* ===== AI Service Messages ===== */
+"ai.action.cancelled" = "Åtgärd avbruten.";
+"ai.batch.delete.rejected" = "⚠️ Massradering (%d objekt) avvisad av säkerhetsskäl. Radera en i taget.";
+"ai.create.failed.params" = "⚠️ Skapande misslyckades: Ogiltiga parametrar";
+"ai.create.success" = "✅ Skapad: %@";
+"ai.create.failed" = "⚠️ Skapande misslyckades: %@";
+"ai.delete.success" = "✅ Raderad";
+"ai.delete.failed" = "⚠️ Radering misslyckades";
+"ai.delete.failed.detail" = "⚠️ Radering misslyckades: %@";
+"ai.update.success" = "✅ Uppdaterad";
+"ai.update.failed" = "⚠️ Uppdatering misslyckades";
+"ai.update.failed.detail" = "⚠️ Uppdatering misslyckades: %@";
+"ai.update.failed.nodate" = "⚠️ Uppdatering misslyckades: Ingen datuminformation";
+"ai.invalid.eventid" = "⚠️ %@ misslyckades: Ogiltigt eventId";
+"ai.cli.failed" = "CLI-körning misslyckades: %@";
+"ai.output.truncated" = "... (utdata avkortade)";
+"ai.error.prefix" = "Fel: %@";
+"ai.no.response" = "Inget svar mottaget.";
+"ai.claude.not.found" = "Claude Code är inte installerat. Kontrollera om claude finns i /opt/homebrew/bin eller ~/.local/bin.";
+"ai.codex.not.found" = "Codex CLI är inte installerat. Kontrollera om codex finns i /opt/homebrew/bin eller ~/.local/bin.";
+"ai.pending.confirm" = "⚠️ Utför följande åtgärder?\n%@\n\nSkriv 'bekräfta' eller 'utför' för att fortsätta.";
+
+/* ===== Notifications ===== */
+"notification.daily.title" = "Dagens schema";
+"notification.daily.body" = "Kolla ditt schema för idag.";
+"notification.daily.events" = "Händelser: %@";
+"notification.daily.todos" = "Uppgifter: %@";
+"notification.daily.empty" = "Inga händelser schemalagda idag.";
+"notification.event.title" = "Händelsepåminnelse";
+"notification.event.body" = "Om %d minuter: %@";
+"notification.evening.title" = "Daglig översikt";
+"notification.evening.body" = "Granska avslutade händelser och förbered dig för imorgon";
+
+/* ===== Onboarding ===== */
+"onboarding.title" = "Calen-konfiguration";
+"onboarding.start" = "Kom igång";
+
+/* Onboarding - Goals */
+"onboarding.goals.title" = "Berätta om dina mål";
+"onboarding.goals.subtitle" = "Ställ in 1-3 huvudmål så\nschemalägger AI dem automatiskt varje dag";
+"onboarding.goals.placeholder" = "Mål (t.ex. Klara certifieringsprovet)";
+"onboarding.goals.target.date" = "Måldatum";
+"onboarding.goals.quick.select" = "Snabbval";
+"onboarding.goals.preset.certification" = "Klara certifiering";
+"onboarding.goals.preset.sideproject" = "Sidoprojekt";
+"onboarding.goals.preset.health" = "Hälsa/Träning";
+
+/* Onboarding - Schedule */
+"onboarding.schedule.title" = "Berätta om din dagliga rutin";
+"onboarding.schedule.subtitle" = "Används för schemaoptimering";
+"onboarding.schedule.work.start" = "Arbetsstart";
+"onboarding.schedule.work.end" = "Arbetsslut";
+"onboarding.schedule.lunch" = "Lunch";
+"onboarding.schedule.commute" = "Pendling";
+"onboarding.schedule.unit.hour" = "t";
+"onboarding.schedule.unit.minute" = "min";
+
+/* Onboarding - Energy */
+"onboarding.energy.title" = "Vad är din energityp?";
+"onboarding.energy.subtitle" = "Viktiga uppgifter placeras under\ndina timmar med toppfokus";
+"onboarding.energy.morning.desc" = "Toppfokus på morgonen";
+"onboarding.energy.evening.desc" = "Toppfokus på eftermiddagen/kvällen";
+"onboarding.energy.balanced.desc" = "Jämnt fördelad under dagen";
+
+/* Onboarding - Capacity */
+"onboarding.capacity.title" = "Daglig fokustid";
+"onboarding.capacity.subtitle" = "Ställ in hur mycket tid per dag\ndu kan ägna åt dina mål";
+"onboarding.capacity.weekday" = "Vardag";
+"onboarding.capacity.weekend" = "Helg";
+"onboarding.capacity.minutes.format" = "%d min";
+"onboarding.capacity.ai.level" = "AI-autoschemaläggningsnivå";
+
+/* Aggressiveness */
+"aggressiveness.manual" = "Manuell";
+"aggressiveness.assist" = "Assistans";
+"aggressiveness.semiauto" = "Halvautomatisk";
+"aggressiveness.auto" = "Automatisk";
+"aggressiveness.manual.desc" = "Visa bara förslag, ingen automatisk tillägg";
+"aggressiveness.assist.desc" = "Lägg automatiskt till block under 30 min";
+"aggressiveness.semiauto.desc" = "Automatisk topp 1-2, föreslå resten";
+"aggressiveness.auto.desc" = "Lägg till allt automatiskt, bekräfta bara vid konflikter";
+
+/* Energy Types */
+"energy.morning" = "Morgon";
+"energy.evening" = "Kväll";
+"energy.balanced" = "Balanserad";
+
+/* ===== Review View ===== */
+"review.daily.title" = "Dagens justering";
+"review.evening.title" = "Kvällsöversikt";
+"review.suggestion.count" = "· %d förslag";
+"review.empty.title" = "Allt ser bra ut!";
+"review.empty.subtitle" = "Du ligger i fas för idag";
+"review.weekly.rate" = "Veckovis slutförande";
+"review.tomorrow.title" = "Morgondagens plan";
+"review.tomorrow.auto.created" = "%d automatiskt skapade";
+"review.tomorrow.suggested" = "%d föreslagna (kolla morgonbriefing)";
+"review.tomorrow.minutes.format" = "%d/%d min schemalagda";
+"review.move.all.tomorrow" = "Flytta ofullständiga till imorgon";
+"review.generating.plan" = "Genererar morgondagens plan...";
+"review.go.to.chat" = "Gå till Chatt";
+"review.help.done" = "Klar";
+"review.help.tomorrow" = "Imorgon";
+"review.help.skip" = "Hoppa över";
+
+/* Suggestion Types */
+"suggestion.carryover" = "Överföring";
+"suggestion.deadline" = "Deadline";
+"suggestion.habit" = "Vana";
+"suggestion.spread" = "Fördela";
+"suggestion.prep" = "Förberedelse";
+"suggestion.focus" = "Fokus";
+"suggestion.health" = "Hälsa";
+"suggestion.buffer" = "Restid";
+
+/* ===== ViewModel ===== */
+"viewmodel.default.category" = "Dagligt";

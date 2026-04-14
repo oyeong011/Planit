@@ -8,6 +8,8 @@
     <true/>
     <key>com.apple.security.personal-information.calendars</key>
     <true/>
+    <key>com.apple.security.personal-information.reminders</key>
+    <true/>
     <key>com.apple.security.keychain-access-groups</key>
     <array>
         <string>$(AppIdentifierPrefix)com.oy.planit</string>

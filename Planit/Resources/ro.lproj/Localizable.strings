@@ -1,0 +1,225 @@
+/* Romanian Localization for Calen */
+
+/* ===== Common ===== */
+"common.save" = "Salvează";
+"common.cancel" = "Anulează";
+"common.add" = "Adaugă";
+"common.delete" = "Șterge";
+"common.edit" = "Editează";
+"common.done" = "Gata";
+"common.close" = "Închide";
+"common.confirm" = "Confirmă";
+"common.skip" = "Omite";
+"common.next" = "Următorul";
+"common.previous" = "Anteriorul";
+"common.execute" = "Execută";
+"common.today" = "Astăzi";
+"common.completed" = "Finalizat";
+"common.incomplete" = "Nefinalizat";
+"common.repeat" = "Repetă";
+
+/* ===== Login View ===== */
+"login.subtitle" = "Conectează Google Calendar\npentru a-ți gestiona programul";
+"login.google.api.setup" = "Configurare Google API";
+"login.google.api.description" = "Creează un client OAuth în Google Cloud Console și introdu datele de autentificare.";
+"login.google.signin" = "Conectare cu Google";
+"login.change.credentials" = "Schimbă datele de autentificare";
+"login.skip.google" = "Începe fără Google (Calendar local)";
+
+/* ===== Calendar Grid ===== */
+"calendar.weekdays.sun" = "Du";
+"calendar.weekdays.mon" = "Lu";
+"calendar.weekdays.tue" = "Ma";
+"calendar.weekdays.wed" = "Mi";
+"calendar.weekdays.thu" = "Jo";
+"calendar.weekdays.fri" = "Vi";
+"calendar.weekdays.sat" = "Sâ";
+"calendar.month.format" = "%d";
+"calendar.help.chat" = "Chat AI";
+"calendar.help.google.connected" = "Conectat la Google Calendar";
+
+/* ===== Daily Detail ===== */
+"detail.dday.today" = "Astăzi";
+"detail.no.events" = "Niciun eveniment";
+"detail.add.todo" = "Adaugă sarcină";
+"detail.category.manage" = "Gestionează categoriile";
+"detail.google.logout" = "Deconectare Google";
+"detail.google.login" = "Conectare Google";
+"detail.apple.calendar.on" = "Activează Apple Calendar";
+"detail.apple.calendar.off" = "Dezactivează Apple Calendar";
+"detail.reminders" = "Memento-uri";
+"detail.reminders.on" = "Activează memento-urile";
+"detail.reminders.off" = "Dezactivează memento-urile";
+
+/* ===== Panel Tabs ===== */
+"panel.review" = "Recenzie";
+"panel.chat" = "Chat";
+
+/* ===== Event Detail Modal ===== */
+"event.detail.title" = "Detalii eveniment";
+"event.detail.allday" = "Toată ziua";
+"event.detail.start" = "Început";
+"event.detail.end" = "Sfârșit";
+"event.field.title" = "Titlu";
+"event.toggle.allday" = "Toată ziua";
+
+/* ===== Todo Detail Modal ===== */
+"todo.detail.title" = "Detalii sarcină";
+
+/* ===== Inline Add Todo ===== */
+"todo.input.placeholder" = "Introduceți o sarcină";
+"todo.type.normal" = "Normal";
+"todo.type.repeating" = "Recurent";
+
+/* ===== Category Manager ===== */
+"category.manage.title" = "Gestionează categoriile";
+"category.new" = "Categorie nouă";
+"category.name.placeholder" = "Nume";
+
+/* ===== Default Categories ===== */
+"category.default.daily" = "Zilnic";
+"category.default.important" = "Important";
+"category.default.study" = "Studiu";
+"category.default.exercise" = "Exerciții";
+"category.default.project" = "Proiect";
+"category.default.parttime" = "Part-time";
+
+/* ===== Chat View ===== */
+"chat.claude.not.installed" = "Claude Code nu este instalat";
+"chat.claude.install.hint" = "brew install claude-code\nsau npm install -g @anthropic-ai/claude-code";
+"chat.codex.not.installed" = "Codex CLI nu este instalat";
+"chat.codex.install.hint" = "brew install codex\nsau npm install -g @openai/codex";
+"chat.redetect" = "Redetectare";
+"chat.select.other.ai" = "Selectează alt AI";
+"chat.assistant.title" = "Asistent AI pentru calendar";
+"chat.examples" = "\"Adaugă o întâlnire mâine la 15:00\"\n\"Arată programul săptămânii\"\n\"Șterge evenimentul cu examenul\"";
+"chat.thinking" = "Se procesează...";
+"chat.input.placeholder" = "Scrie un mesaj...";
+"chat.action.confirm.title" = "Confirmă modificarea programului";
+"chat.action.create" = "Creează";
+"chat.action.update" = "Actualizează";
+"chat.action.delete" = "Șterge";
+
+/* ===== AI Settings ===== */
+"ai.settings.title" = "Setări AI";
+"ai.settings.model" = "Model: %@";
+"ai.provider.installed" = "Instalat — Gata de utilizare";
+"ai.provider.not.installed" = "Neinstalat";
+
+/* ===== AI Service Messages ===== */
+"ai.action.cancelled" = "Acțiune anulată.";
+"ai.batch.delete.rejected" = "⚠️ Ștergerea în masă (%d elemente) respinsă din motive de siguranță. Ștergeți câte unul.";
+"ai.create.failed.params" = "⚠️ Creare eșuată: Parametri invalizi";
+"ai.create.success" = "✅ Creat: %@";
+"ai.create.failed" = "⚠️ Creare eșuată: %@";
+"ai.delete.success" = "✅ Șters";
+"ai.delete.failed" = "⚠️ Ștergere eșuată";
+"ai.delete.failed.detail" = "⚠️ Ștergere eșuată: %@";
+"ai.update.success" = "✅ Actualizat";
+"ai.update.failed" = "⚠️ Actualizare eșuată";
+"ai.update.failed.detail" = "⚠️ Actualizare eșuată: %@";
+"ai.update.failed.nodate" = "⚠️ Actualizare eșuată: Lipsă informații despre dată";
+"ai.invalid.eventid" = "⚠️ %@ eșuat: eventId invalid";
+"ai.cli.failed" = "Executare CLI eșuată: %@";
+"ai.output.truncated" = "... (ieșire trunchiată)";
+"ai.error.prefix" = "Eroare: %@";
+"ai.no.response" = "Niciun răspuns primit.";
+"ai.claude.not.found" = "Claude Code nu este instalat. Verificați dacă claude există în /opt/homebrew/bin sau ~/.local/bin.";
+"ai.codex.not.found" = "Codex CLI nu este instalat. Verificați dacă codex există în /opt/homebrew/bin sau ~/.local/bin.";
+"ai.pending.confirm" = "⚠️ Executați următoarele acțiuni?\n%@\n\nScrieți 'confirmă' sau 'execută' pentru a continua.";
+
+/* ===== Notifications ===== */
+"notification.daily.title" = "Programul de astăzi";
+"notification.daily.body" = "Verifică programul de astăzi.";
+"notification.daily.events" = "Evenimente: %@";
+"notification.daily.todos" = "Sarcini: %@";
+"notification.daily.empty" = "Niciun eveniment programat pentru astăzi.";
+"notification.event.title" = "Memento eveniment";
+"notification.event.body" = "Peste %d minute: %@";
+"notification.evening.title" = "Recenzia de seară";
+"notification.evening.body" = "Verifică evenimentele finalizate și pregătește-te pentru mâine";
+
+/* ===== Onboarding ===== */
+"onboarding.title" = "Configurare Calen";
+"onboarding.start" = "Începe";
+
+/* Onboarding - Goals */
+"onboarding.goals.title" = "Spune-ne obiectivele tale";
+"onboarding.goals.subtitle" = "Setează 1–3 obiective cheie și\nAI le va programa automat zilnic";
+"onboarding.goals.placeholder" = "Obiectiv (ex., Promovare certificare)";
+"onboarding.goals.target.date" = "Data țintă";
+"onboarding.goals.quick.select" = "Selectare rapidă";
+"onboarding.goals.preset.certification" = "Promovare certificare";
+"onboarding.goals.preset.sideproject" = "Proiect secundar";
+"onboarding.goals.preset.health" = "Sănătate/Exerciții";
+
+/* Onboarding - Schedule */
+"onboarding.schedule.title" = "Spune-ne rutina ta zilnică";
+"onboarding.schedule.subtitle" = "Folosit pentru optimizarea programului";
+"onboarding.schedule.work.start" = "Început program";
+"onboarding.schedule.work.end" = "Sfârșit program";
+"onboarding.schedule.lunch" = "Prânz";
+"onboarding.schedule.commute" = "Navetă";
+"onboarding.schedule.unit.hour" = "h";
+"onboarding.schedule.unit.minute" = "min";
+
+/* Onboarding - Energy */
+"onboarding.energy.title" = "Care este tipul tău de energie?";
+"onboarding.energy.subtitle" = "Sarcinile importante vor fi plasate\nîn orele tale de concentrare maximă";
+"onboarding.energy.morning.desc" = "Concentrare maximă dimineața";
+"onboarding.energy.evening.desc" = "Concentrare maximă după-amiaza/seara";
+"onboarding.energy.balanced.desc" = "Constant pe tot parcursul zilei";
+
+/* Onboarding - Capacity */
+"onboarding.capacity.title" = "Timp zilnic de concentrare";
+"onboarding.capacity.subtitle" = "Setează cât timp pe zi\npoți dedica obiectivelor tale";
+"onboarding.capacity.weekday" = "Zi lucrătoare";
+"onboarding.capacity.weekend" = "Weekend";
+"onboarding.capacity.minutes.format" = "%d min";
+"onboarding.capacity.ai.level" = "Nivel programare automată AI";
+
+/* Aggressiveness */
+"aggressiveness.manual" = "Manual";
+"aggressiveness.assist" = "Asistare";
+"aggressiveness.semiauto" = "Semi-automat";
+"aggressiveness.auto" = "Automat";
+"aggressiveness.manual.desc" = "Doar sugestii, fără adăugare automată";
+"aggressiveness.assist.desc" = "Adaugă automat doar blocuri sub 30 min";
+"aggressiveness.semiauto.desc" = "Automat top 1–2, sugerează restul";
+"aggressiveness.auto.desc" = "Adaugă totul automat, confirmă doar la conflicte";
+
+/* Energy Types */
+"energy.morning" = "Dimineața";
+"energy.evening" = "Seara";
+"energy.balanced" = "Echilibrat";
+
+/* ===== Review View ===== */
+"review.daily.title" = "Ajustarea de astăzi";
+"review.evening.title" = "Recenzia de seară";
+"review.suggestion.count" = "· %d sugestii";
+"review.empty.title" = "Totul în regulă!";
+"review.empty.subtitle" = "Ești pe drumul cel bun astăzi";
+"review.weekly.rate" = "Realizare săptămânală";
+"review.tomorrow.title" = "Planul de mâine";
+"review.tomorrow.auto.created" = "%d create automat";
+"review.tomorrow.suggested" = "%d sugerate (verifică în briefingul de dimineață)";
+"review.tomorrow.minutes.format" = "%d/%d min programate";
+"review.move.all.tomorrow" = "Mută tot ce e nefinalizat pe mâine";
+"review.generating.plan" = "Se generează planul de mâine...";
+"review.go.to.chat" = "Mergi la chat";
+"review.help.done" = "Gata";
+"review.help.tomorrow" = "Mâine";
+"review.help.skip" = "Omite";
+
+/* Suggestion Types */
+"suggestion.carryover" = "Reportare";
+"suggestion.deadline" = "Termen";
+"suggestion.habit" = "Obicei";
+"suggestion.spread" = "Distribuire";
+"suggestion.prep" = "Pregătire";
+"suggestion.focus" = "Concentrare";
+"suggestion.health" = "Sănătate";
+"suggestion.buffer" = "Deplasare";
+
+/* ===== ViewModel ===== */
+"viewmodel.default.category" = "Zilnic";

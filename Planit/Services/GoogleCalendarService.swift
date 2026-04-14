@@ -53,7 +53,10 @@ final class GoogleCalendarService {
         var request = URLRequest(url: comps.url!)
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
-        let (data, _) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+            throw URLError(.badServerResponse)
+        }
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
               let items = json["items"] as? [[String: Any]] else { return [] }
 
@@ -85,14 +88,18 @@ final class GoogleCalendarService {
         }
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        let (data, _) = try await URLSession.shared.data(for: request)
-        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
-        return parseEvent(json)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+            throw URLError(.badServerResponse)
+        }
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let event = parseEvent(json) else { throw URLError(.cannotParseResponse) }
+        return event
     }
 
     // MARK: - Update Event
 
-    func updateEvent(eventID: String, title: String, startDate: Date, endDate: Date, isAllDay: Bool) async throws -> Bool {
+    func updateEvent(eventID: String, title: String?, startDate: Date, endDate: Date, isAllDay: Bool) async throws -> Bool {
         let token = try await auth.getValidToken()
         guard let encoded = eventID.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
               let url = URL(string: "\(baseURL)/calendars/primary/events/\(encoded)") else { return false }
@@ -102,7 +109,8 @@ final class GoogleCalendarService {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        var body: [String: Any] = ["summary": title]
+        // Only include summary when the caller explicitly provides a new title
+        var body: [String: Any] = title.map { ["summary": $0] } ?? [:]
         if isAllDay {
             let fmt = DateFormatter()
             fmt.dateFormat = "yyyy-MM-dd"

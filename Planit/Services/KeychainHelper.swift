@@ -75,8 +75,9 @@ enum KeychainHelper {
             let filePath = tokenDir.appendingPathComponent(fileName)
             if let data = try? Data(contentsOf: filePath),
                let value = String(data: data, encoding: .utf8) {
-                save(key: keychainKey, value: value)
-                try? FileManager.default.removeItem(at: filePath)
+                if save(key: keychainKey, value: value) {
+                    try? FileManager.default.removeItem(at: filePath)
+                }
             }
         }
 

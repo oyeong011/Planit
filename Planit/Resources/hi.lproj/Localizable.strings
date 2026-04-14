@@ -1,0 +1,225 @@
+/* Hindi Localization for Calen */
+
+/* ===== Common ===== */
+"common.save" = "सहेजें";
+"common.cancel" = "रद्द करें";
+"common.add" = "जोड़ें";
+"common.delete" = "हटाएँ";
+"common.edit" = "संपादित करें";
+"common.done" = "पूर्ण";
+"common.close" = "बंद करें";
+"common.confirm" = "पुष्टि करें";
+"common.skip" = "छोड़ें";
+"common.next" = "अगला";
+"common.previous" = "पिछला";
+"common.execute" = "चलाएँ";
+"common.today" = "आज";
+"common.completed" = "पूर्ण";
+"common.incomplete" = "अपूर्ण";
+"common.repeat" = "दोहराएँ";
+
+/* ===== Login View ===== */
+"login.subtitle" = "अपना शेड्यूल प्रबंधित करने के लिए\nGoogle Calendar से जुड़ें";
+"login.google.api.setup" = "Google API सेटअप";
+"login.google.api.description" = "Google Cloud Console में OAuth क्लाइंट बनाएँ और क्रेडेंशियल दर्ज करें।";
+"login.google.signin" = "Google से साइन इन करें";
+"login.change.credentials" = "क्रेडेंशियल बदलें";
+"login.skip.google" = "Google के बिना शुरू करें (स्थानीय कैलेंडर उपयोग करें)";
+
+/* ===== Calendar Grid ===== */
+"calendar.weekdays.sun" = "रवि";
+"calendar.weekdays.mon" = "सोम";
+"calendar.weekdays.tue" = "मंगल";
+"calendar.weekdays.wed" = "बुध";
+"calendar.weekdays.thu" = "गुरु";
+"calendar.weekdays.fri" = "शुक्र";
+"calendar.weekdays.sat" = "शनि";
+"calendar.month.format" = "%d";
+"calendar.help.chat" = "AI चैट";
+"calendar.help.google.connected" = "Google Calendar से जुड़ा है";
+
+/* ===== Daily Detail ===== */
+"detail.dday.today" = "आज";
+"detail.no.events" = "कोई इवेंट नहीं";
+"detail.add.todo" = "टू-डू जोड़ें";
+"detail.category.manage" = "श्रेणियाँ प्रबंधित करें";
+"detail.google.logout" = "Google से साइन आउट करें";
+"detail.google.login" = "Google में साइन इन करें";
+"detail.apple.calendar.on" = "Apple Calendar चालू करें";
+"detail.apple.calendar.off" = "Apple Calendar बंद करें";
+"detail.reminders" = "रिमाइंडर";
+"detail.reminders.on" = "रिमाइंडर चालू करें";
+"detail.reminders.off" = "रिमाइंडर बंद करें";
+
+/* ===== Panel Tabs ===== */
+"panel.review" = "समीक्षा";
+"panel.chat" = "चैट";
+
+/* ===== Event Detail Modal ===== */
+"event.detail.title" = "इवेंट विवरण";
+"event.detail.allday" = "पूरा दिन";
+"event.detail.start" = "शुरुआत";
+"event.detail.end" = "समाप्ति";
+"event.field.title" = "शीर्षक";
+"event.toggle.allday" = "पूरा दिन";
+
+/* ===== Todo Detail Modal ===== */
+"todo.detail.title" = "टू-डू विवरण";
+
+/* ===== Inline Add Todo ===== */
+"todo.input.placeholder" = "टू-डू दर्ज करें";
+"todo.type.normal" = "सामान्य";
+"todo.type.repeating" = "दोहराव";
+
+/* ===== Category Manager ===== */
+"category.manage.title" = "श्रेणियाँ प्रबंधित करें";
+"category.new" = "नई श्रेणी";
+"category.name.placeholder" = "नाम";
+
+/* ===== Default Categories ===== */
+"category.default.daily" = "दैनिक";
+"category.default.important" = "महत्वपूर्ण";
+"category.default.study" = "अध्ययन";
+"category.default.exercise" = "व्यायाम";
+"category.default.project" = "प्रोजेक्ट";
+"category.default.parttime" = "पार्ट-टाइम";
+
+/* ===== Chat View ===== */
+"chat.claude.not.installed" = "Claude Code इंस्टॉल नहीं है";
+"chat.claude.install.hint" = "brew install claude-code\nया npm install -g @anthropic-ai/claude-code";
+"chat.codex.not.installed" = "Codex CLI इंस्टॉल नहीं है";
+"chat.codex.install.hint" = "brew install codex\nया npm install -g @openai/codex";
+"chat.redetect" = "फिर से पहचानें";
+"chat.select.other.ai" = "अन्य AI चुनें";
+"chat.assistant.title" = "कैलेंडर AI सहायक";
+"chat.examples" = "\"कल दोपहर 3 बजे एक मीटिंग जोड़ें\"\n\"इस सप्ताह का शेड्यूल दिखाएँ\"\n\"परीक्षा इवेंट हटाएँ\"";
+"chat.thinking" = "सोच रहा हूँ...";
+"chat.input.placeholder" = "संदेश लिखें...";
+"chat.action.confirm.title" = "शेड्यूल परिवर्तन की पुष्टि करें";
+"chat.action.create" = "बनाएँ";
+"chat.action.update" = "अपडेट करें";
+"chat.action.delete" = "हटाएँ";
+
+/* ===== AI Settings ===== */
+"ai.settings.title" = "AI सेटिंग्स";
+"ai.settings.model" = "मॉडल: %@";
+"ai.provider.installed" = "इंस्टॉल — उपयोग के लिए तैयार";
+"ai.provider.not.installed" = "इंस्टॉल नहीं है";
+
+/* ===== AI Service Messages ===== */
+"ai.action.cancelled" = "कार्रवाई रद्द की गई।";
+"ai.batch.delete.rejected" = "⚠️ सुरक्षा के लिए सामूहिक हटाना (%d आइटम) अस्वीकृत। कृपया एक-एक करके हटाएँ।";
+"ai.create.failed.params" = "⚠️ बनाना विफल: अमान्य पैरामीटर";
+"ai.create.success" = "✅ बनाया गया: %@";
+"ai.create.failed" = "⚠️ बनाना विफल: %@";
+"ai.delete.success" = "✅ हटाया गया";
+"ai.delete.failed" = "⚠️ हटाना विफल";
+"ai.delete.failed.detail" = "⚠️ हटाना विफल: %@";
+"ai.update.success" = "✅ अपडेट किया गया";
+"ai.update.failed" = "⚠️ अपडेट विफल";
+"ai.update.failed.detail" = "⚠️ अपडेट विफल: %@";
+"ai.update.failed.nodate" = "⚠️ अपडेट विफल: तारीख की जानकारी नहीं";
+"ai.invalid.eventid" = "⚠️ %@ विफल: अमान्य eventId";
+"ai.cli.failed" = "CLI निष्पादन विफल: %@";
+"ai.output.truncated" = "... (आउटपुट छोटा किया गया)";
+"ai.error.prefix" = "त्रुटि: %@";
+"ai.no.response" = "कोई प्रतिक्रिया प्राप्त नहीं हुई।";
+"ai.claude.not.found" = "Claude Code इंस्टॉल नहीं है। जाँचें कि claude /opt/homebrew/bin या ~/.local/bin में मौजूद है।";
+"ai.codex.not.found" = "Codex CLI इंस्टॉल नहीं है। जाँचें कि codex /opt/homebrew/bin या ~/.local/bin में मौजूद है।";
+"ai.pending.confirm" = "⚠️ निम्नलिखित कार्रवाइयाँ करें?\n%@\n\nआगे बढ़ने के लिए 'पुष्टि' या 'चलाएँ' टाइप करें।";
+
+/* ===== Notifications ===== */
+"notification.daily.title" = "आज का शेड्यूल";
+"notification.daily.body" = "आज का अपना शेड्यूल देखें।";
+"notification.daily.events" = "इवेंट: %@";
+"notification.daily.todos" = "टू-डू: %@";
+"notification.daily.empty" = "आज कोई इवेंट निर्धारित नहीं है।";
+"notification.event.title" = "इवेंट रिमाइंडर";
+"notification.event.body" = "%d मिनट में: %@";
+"notification.evening.title" = "दैनिक समीक्षा";
+"notification.evening.body" = "पूर्ण इवेंट देखें और कल की तैयारी करें";
+
+/* ===== Onboarding ===== */
+"onboarding.title" = "Calen सेटअप";
+"onboarding.start" = "शुरू करें";
+
+/* Onboarding - Goals */
+"onboarding.goals.title" = "अपने लक्ष्य बताएँ";
+"onboarding.goals.subtitle" = "1-3 मुख्य लक्ष्य सेट करें और\nAI उन्हें हर दिन स्वचालित रूप से शेड्यूल करेगा";
+"onboarding.goals.placeholder" = "लक्ष्य (जैसे, प्रमाणपत्र परीक्षा पास करें)";
+"onboarding.goals.target.date" = "लक्ष्य तिथि";
+"onboarding.goals.quick.select" = "त्वरित चयन";
+"onboarding.goals.preset.certification" = "प्रमाणपत्र पास करें";
+"onboarding.goals.preset.sideproject" = "साइड प्रोजेक्ट";
+"onboarding.goals.preset.health" = "स्वास्थ्य/व्यायाम";
+
+/* Onboarding - Schedule */
+"onboarding.schedule.title" = "अपनी दैनिक दिनचर्या बताएँ";
+"onboarding.schedule.subtitle" = "शेड्यूल अनुकूलन के लिए उपयोग किया जाता है";
+"onboarding.schedule.work.start" = "काम की शुरुआत";
+"onboarding.schedule.work.end" = "काम का अंत";
+"onboarding.schedule.lunch" = "दोपहर का भोजन";
+"onboarding.schedule.commute" = "आवागमन";
+"onboarding.schedule.unit.hour" = "घंटा";
+"onboarding.schedule.unit.minute" = "मिनट";
+
+/* Onboarding - Energy */
+"onboarding.energy.title" = "आपका ऊर्जा प्रकार क्या है?";
+"onboarding.energy.subtitle" = "महत्वपूर्ण कार्य आपके\nसर्वोच्च फोकस घंटों में रखे जाएँगे";
+"onboarding.energy.morning.desc" = "सुबह सर्वोच्च फोकस";
+"onboarding.energy.evening.desc" = "दोपहर/शाम को सर्वोच्च फोकस";
+"onboarding.energy.balanced.desc" = "पूरे दिन समान";
+
+/* Onboarding - Capacity */
+"onboarding.capacity.title" = "दैनिक फोकस समय";
+"onboarding.capacity.subtitle" = "सेट करें कि प्रतिदिन कितना समय\nआप अपने लक्ष्यों को दे सकते हैं";
+"onboarding.capacity.weekday" = "कार्यदिवस";
+"onboarding.capacity.weekend" = "सप्ताहांत";
+"onboarding.capacity.minutes.format" = "%d मिनट";
+"onboarding.capacity.ai.level" = "AI ऑटो-शेड्यूलिंग स्तर";
+
+/* Aggressiveness */
+"aggressiveness.manual" = "मैनुअल";
+"aggressiveness.assist" = "सहायता";
+"aggressiveness.semiauto" = "अर्ध-ऑटो";
+"aggressiveness.auto" = "ऑटो";
+"aggressiveness.manual.desc" = "केवल सुझाव दिखाएँ, ऑटो-जोड़ नहीं";
+"aggressiveness.assist.desc" = "केवल 30 मिनट से कम के ब्लॉक ऑटो-जोड़ें";
+"aggressiveness.semiauto.desc" = "शीर्ष 1-2 ऑटो, बाकी सुझाव";
+"aggressiveness.auto.desc" = "सभी ऑटो-जोड़ें, केवल टकराव पर पुष्टि";
+
+/* Energy Types */
+"energy.morning" = "सुबह";
+"energy.evening" = "शाम";
+"energy.balanced" = "संतुलित";
+
+/* ===== Review View ===== */
+"review.daily.title" = "आज का समायोजन";
+"review.evening.title" = "शाम की समीक्षा";
+"review.suggestion.count" = "· %d सुझाव";
+"review.empty.title" = "सब ठीक है!";
+"review.empty.subtitle" = "आज के लिए आप सही रास्ते पर हैं";
+"review.weekly.rate" = "साप्ताहिक पूर्णता";
+"review.tomorrow.title" = "कल की योजना";
+"review.tomorrow.auto.created" = "%d स्वचालित रूप से बनाए गए";
+"review.tomorrow.suggested" = "%d सुझाए गए (सुबह की ब्रीफिंग में देखें)";
+"review.tomorrow.minutes.format" = "%d/%d मिनट शेड्यूल किए गए";
+"review.move.all.tomorrow" = "सभी अपूर्ण कल पर ले जाएँ";
+"review.generating.plan" = "कल की योजना बना रहे हैं...";
+"review.go.to.chat" = "चैट पर जाएँ";
+"review.help.done" = "पूर्ण";
+"review.help.tomorrow" = "कल";
+"review.help.skip" = "छोड़ें";
+
+/* Suggestion Types */
+"suggestion.carryover" = "स्थगित";
+"suggestion.deadline" = "समय-सीमा";
+"suggestion.habit" = "आदत";
+"suggestion.spread" = "वितरण";
+"suggestion.prep" = "तैयारी";
+"suggestion.focus" = "फोकस";
+"suggestion.health" = "स्वास्थ्य";
+"suggestion.buffer" = "यात्रा";
+
+/* ===== ViewModel ===== */
+"viewmodel.default.category" = "दैनिक";

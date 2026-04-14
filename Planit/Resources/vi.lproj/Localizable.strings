@@ -1,0 +1,225 @@
+/* Vietnamese Localization for Calen */
+
+/* ===== Common ===== */
+"common.save" = "Lưu";
+"common.cancel" = "Hủy";
+"common.add" = "Thêm";
+"common.delete" = "Xóa";
+"common.edit" = "Sửa";
+"common.done" = "Xong";
+"common.close" = "Đóng";
+"common.confirm" = "Xác nhận";
+"common.skip" = "Bỏ qua";
+"common.next" = "Tiếp";
+"common.previous" = "Trước";
+"common.execute" = "Thực hiện";
+"common.today" = "Hôm nay";
+"common.completed" = "Hoàn thành";
+"common.incomplete" = "Chưa xong";
+"common.repeat" = "Lặp lại";
+
+/* ===== Login View ===== */
+"login.subtitle" = "Kết nối Google Calendar\nđể quản lý lịch trình của bạn";
+"login.google.api.setup" = "Cài đặt Google API";
+"login.google.api.description" = "Tạo OAuth client trong Google Cloud Console và nhập thông tin xác thực.";
+"login.google.signin" = "Đăng nhập bằng Google";
+"login.change.credentials" = "Đổi thông tin xác thực";
+"login.skip.google" = "Bắt đầu không dùng Google (Dùng lịch cục bộ)";
+
+/* ===== Calendar Grid ===== */
+"calendar.weekdays.sun" = "CN";
+"calendar.weekdays.mon" = "T2";
+"calendar.weekdays.tue" = "T3";
+"calendar.weekdays.wed" = "T4";
+"calendar.weekdays.thu" = "T5";
+"calendar.weekdays.fri" = "T6";
+"calendar.weekdays.sat" = "T7";
+"calendar.month.format" = "%d";
+"calendar.help.chat" = "Chat AI";
+"calendar.help.google.connected" = "Đã kết nối Google Calendar";
+
+/* ===== Daily Detail ===== */
+"detail.dday.today" = "Hôm nay";
+"detail.no.events" = "Không có sự kiện";
+"detail.add.todo" = "Thêm việc cần làm";
+"detail.category.manage" = "Quản lý danh mục";
+"detail.google.logout" = "Đăng xuất Google";
+"detail.google.login" = "Đăng nhập Google";
+"detail.apple.calendar.on" = "Bật Lịch Apple";
+"detail.apple.calendar.off" = "Tắt Lịch Apple";
+"detail.reminders" = "Nhắc nhở";
+"detail.reminders.on" = "Bật nhắc nhở";
+"detail.reminders.off" = "Tắt nhắc nhở";
+
+/* ===== Panel Tabs ===== */
+"panel.review" = "Tổng kết";
+"panel.chat" = "Chat";
+
+/* ===== Event Detail Modal ===== */
+"event.detail.title" = "Chi tiết sự kiện";
+"event.detail.allday" = "Cả ngày";
+"event.detail.start" = "Bắt đầu";
+"event.detail.end" = "Kết thúc";
+"event.field.title" = "Tiêu đề";
+"event.toggle.allday" = "Cả ngày";
+
+/* ===== Todo Detail Modal ===== */
+"todo.detail.title" = "Chi tiết việc cần làm";
+
+/* ===== Inline Add Todo ===== */
+"todo.input.placeholder" = "Nhập việc cần làm";
+"todo.type.normal" = "Bình thường";
+"todo.type.repeating" = "Lặp lại";
+
+/* ===== Category Manager ===== */
+"category.manage.title" = "Quản lý danh mục";
+"category.new" = "Danh mục mới";
+"category.name.placeholder" = "Tên";
+
+/* ===== Default Categories ===== */
+"category.default.daily" = "Hàng ngày";
+"category.default.important" = "Quan trọng";
+"category.default.study" = "Học tập";
+"category.default.exercise" = "Tập thể dục";
+"category.default.project" = "Dự án";
+"category.default.parttime" = "Bán thời gian";
+
+/* ===== Chat View ===== */
+"chat.claude.not.installed" = "Chưa cài đặt Claude Code";
+"chat.claude.install.hint" = "brew install claude-code\nhoặc npm install -g @anthropic-ai/claude-code";
+"chat.codex.not.installed" = "Chưa cài đặt Codex CLI";
+"chat.codex.install.hint" = "brew install codex\nhoặc npm install -g @openai/codex";
+"chat.redetect" = "Phát hiện lại";
+"chat.select.other.ai" = "Chọn AI khác";
+"chat.assistant.title" = "Trợ lý AI Lịch";
+"chat.examples" = "\"Thêm cuộc họp lúc 3 giờ chiều ngày mai\"\n\"Hiển thị lịch tuần này\"\n\"Xóa sự kiện thi cử\"";
+"chat.thinking" = "Đang suy nghĩ...";
+"chat.input.placeholder" = "Nhập tin nhắn...";
+"chat.action.confirm.title" = "Xác nhận thay đổi lịch trình";
+"chat.action.create" = "Tạo";
+"chat.action.update" = "Cập nhật";
+"chat.action.delete" = "Xóa";
+
+/* ===== AI Settings ===== */
+"ai.settings.title" = "Cài đặt AI";
+"ai.settings.model" = "Mô hình: %@";
+"ai.provider.installed" = "Đã cài — Sẵn sàng sử dụng";
+"ai.provider.not.installed" = "Chưa cài đặt";
+
+/* ===== AI Service Messages ===== */
+"ai.action.cancelled" = "Đã hủy thao tác.";
+"ai.batch.delete.rejected" = "⚠️ Xóa hàng loạt (%d mục) bị từ chối vì an toàn. Vui lòng xóa từng mục một.";
+"ai.create.failed.params" = "⚠️ Tạo thất bại: Tham số không hợp lệ";
+"ai.create.success" = "✅ Đã tạo: %@";
+"ai.create.failed" = "⚠️ Tạo thất bại: %@";
+"ai.delete.success" = "✅ Đã xóa";
+"ai.delete.failed" = "⚠️ Xóa thất bại";
+"ai.delete.failed.detail" = "⚠️ Xóa thất bại: %@";
+"ai.update.success" = "✅ Đã cập nhật";
+"ai.update.failed" = "⚠️ Cập nhật thất bại";
+"ai.update.failed.detail" = "⚠️ Cập nhật thất bại: %@";
+"ai.update.failed.nodate" = "⚠️ Cập nhật thất bại: Không có thông tin ngày";
+"ai.invalid.eventid" = "⚠️ %@ thất bại: eventId không hợp lệ";
+"ai.cli.failed" = "Thực thi CLI thất bại: %@";
+"ai.output.truncated" = "... (đã cắt bớt kết quả)";
+"ai.error.prefix" = "Lỗi: %@";
+"ai.no.response" = "Không nhận được phản hồi.";
+"ai.claude.not.found" = "Chưa cài đặt Claude Code. Kiểm tra xem claude có trong /opt/homebrew/bin hoặc ~/.local/bin không.";
+"ai.codex.not.found" = "Chưa cài đặt Codex CLI. Kiểm tra xem codex có trong /opt/homebrew/bin hoặc ~/.local/bin không.";
+"ai.pending.confirm" = "⚠️ Thực hiện các thao tác sau?\n%@\n\nNhập 'xác nhận' hoặc 'thực hiện' để tiếp tục.";
+
+/* ===== Notifications ===== */
+"notification.daily.title" = "Lịch trình hôm nay";
+"notification.daily.body" = "Kiểm tra lịch trình của bạn hôm nay.";
+"notification.daily.events" = "Sự kiện: %@";
+"notification.daily.todos" = "Việc cần làm: %@";
+"notification.daily.empty" = "Hôm nay không có sự kiện nào.";
+"notification.event.title" = "Nhắc nhở sự kiện";
+"notification.event.body" = "Còn %d phút: %@";
+"notification.evening.title" = "Tổng kết cuối ngày";
+"notification.evening.body" = "Xem lại các sự kiện đã hoàn thành và chuẩn bị cho ngày mai";
+
+/* ===== Onboarding ===== */
+"onboarding.title" = "Thiết lập Calen";
+"onboarding.start" = "Bắt đầu";
+
+/* Onboarding - Goals */
+"onboarding.goals.title" = "Cho chúng tôi biết mục tiêu của bạn";
+"onboarding.goals.subtitle" = "Đặt 1-3 mục tiêu chính và\nAI sẽ tự động lên lịch mỗi ngày";
+"onboarding.goals.placeholder" = "Mục tiêu (VD: Đỗ kỳ thi chứng chỉ)";
+"onboarding.goals.target.date" = "Ngày mục tiêu";
+"onboarding.goals.quick.select" = "Chọn nhanh";
+"onboarding.goals.preset.certification" = "Đỗ chứng chỉ";
+"onboarding.goals.preset.sideproject" = "Dự án cá nhân";
+"onboarding.goals.preset.health" = "Sức khỏe/Tập luyện";
+
+/* Onboarding - Schedule */
+"onboarding.schedule.title" = "Cho chúng tôi biết thói quen hàng ngày";
+"onboarding.schedule.subtitle" = "Dùng để tối ưu hóa lịch trình";
+"onboarding.schedule.work.start" = "Bắt đầu làm việc";
+"onboarding.schedule.work.end" = "Kết thúc làm việc";
+"onboarding.schedule.lunch" = "Bữa trưa";
+"onboarding.schedule.commute" = "Đi lại";
+"onboarding.schedule.unit.hour" = "giờ";
+"onboarding.schedule.unit.minute" = "phút";
+
+/* Onboarding - Energy */
+"onboarding.energy.title" = "Bạn thuộc kiểu năng lượng nào?";
+"onboarding.energy.subtitle" = "Công việc quan trọng sẽ được xếp vào\ngiờ bạn tập trung tốt nhất";
+"onboarding.energy.morning.desc" = "Tập trung tốt nhất vào buổi sáng";
+"onboarding.energy.evening.desc" = "Tập trung tốt nhất vào chiều/tối";
+"onboarding.energy.balanced.desc" = "Đều đặn cả ngày";
+
+/* Onboarding - Capacity */
+"onboarding.capacity.title" = "Thời gian tập trung mỗi ngày";
+"onboarding.capacity.subtitle" = "Đặt thời gian mỗi ngày\nbạn có thể dành cho mục tiêu";
+"onboarding.capacity.weekday" = "Ngày thường";
+"onboarding.capacity.weekend" = "Cuối tuần";
+"onboarding.capacity.minutes.format" = "%d phút";
+"onboarding.capacity.ai.level" = "Mức độ lên lịch tự động AI";
+
+/* Aggressiveness */
+"aggressiveness.manual" = "Thủ công";
+"aggressiveness.assist" = "Hỗ trợ";
+"aggressiveness.semiauto" = "Bán tự động";
+"aggressiveness.auto" = "Tự động";
+"aggressiveness.manual.desc" = "Chỉ hiện gợi ý, không tự thêm";
+"aggressiveness.assist.desc" = "Tự thêm các khối dưới 30 phút";
+"aggressiveness.semiauto.desc" = "Tự động 1-2 đầu, gợi ý phần còn lại";
+"aggressiveness.auto.desc" = "Tự thêm tất cả, xác nhận khi có xung đột";
+
+/* Energy Types */
+"energy.morning" = "Buổi sáng";
+"energy.evening" = "Buổi tối";
+"energy.balanced" = "Cân bằng";
+
+/* ===== Review View ===== */
+"review.daily.title" = "Điều chỉnh hôm nay";
+"review.evening.title" = "Tổng kết buổi tối";
+"review.suggestion.count" = "· %d gợi ý";
+"review.empty.title" = "Mọi thứ ổn!";
+"review.empty.subtitle" = "Bạn đang đúng kế hoạch hôm nay";
+"review.weekly.rate" = "Hoàn thành tuần";
+"review.tomorrow.title" = "Kế hoạch ngày mai";
+"review.tomorrow.auto.created" = "%d tự động tạo";
+"review.tomorrow.suggested" = "%d gợi ý (kiểm tra trong bản tin buổi sáng)";
+"review.tomorrow.minutes.format" = "%d/%d phút đã lên lịch";
+"review.move.all.tomorrow" = "Chuyển tất cả chưa xong sang ngày mai";
+"review.generating.plan" = "Đang tạo kế hoạch ngày mai...";
+"review.go.to.chat" = "Đi tới Chat";
+"review.help.done" = "Xong";
+"review.help.tomorrow" = "Ngày mai";
+"review.help.skip" = "Bỏ qua";
+
+/* Suggestion Types */
+"suggestion.carryover" = "Chuyển tiếp";
+"suggestion.deadline" = "Hạn chót";
+"suggestion.habit" = "Thói quen";
+"suggestion.spread" = "Phân bổ";
+"suggestion.prep" = "Chuẩn bị";
+"suggestion.focus" = "Tập trung";
+"suggestion.health" = "Sức khỏe";
+"suggestion.buffer" = "Di chuyển";
+
+/* ===== ViewModel ===== */
+"viewmodel.default.category" = "Hàng ngày";

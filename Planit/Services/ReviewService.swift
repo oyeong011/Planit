@@ -64,7 +64,7 @@ final class ReviewService: ObservableObject {
         if !dailyDoneToday {
             if currentMode != .daily {
                 currentMode = .daily
-                Task { await generateDailySuggestions() }
+                Task { [weak self] in await self?.generateDailySuggestions() }
             }
             return
         }

@@ -1,0 +1,225 @@
+/* Simplified Chinese Localization for Calen */
+
+/* ===== Common ===== */
+"common.save" = "保存";
+"common.cancel" = "取消";
+"common.add" = "添加";
+"common.delete" = "删除";
+"common.edit" = "编辑";
+"common.done" = "完成";
+"common.close" = "关闭";
+"common.confirm" = "确认";
+"common.skip" = "跳过";
+"common.next" = "下一步";
+"common.previous" = "上一步";
+"common.execute" = "执行";
+"common.today" = "今天";
+"common.completed" = "已完成";
+"common.incomplete" = "未完成";
+"common.repeat" = "重复";
+
+/* ===== Login View ===== */
+"login.subtitle" = "连接Google日历\n管理您的日程";
+"login.google.api.setup" = "Google API 设置";
+"login.google.api.description" = "在Google Cloud Console中创建OAuth客户端并输入凭据。";
+"login.google.signin" = "使用Google登录";
+"login.change.credentials" = "更改凭据";
+"login.skip.google" = "不使用Google（使用本地日历）";
+
+/* ===== Calendar Grid ===== */
+"calendar.weekdays.sun" = "日";
+"calendar.weekdays.mon" = "一";
+"calendar.weekdays.tue" = "二";
+"calendar.weekdays.wed" = "三";
+"calendar.weekdays.thu" = "四";
+"calendar.weekdays.fri" = "五";
+"calendar.weekdays.sat" = "六";
+"calendar.month.format" = "%d";
+"calendar.help.chat" = "AI聊天";
+"calendar.help.google.connected" = "已连接Google日历";
+
+/* ===== Daily Detail ===== */
+"detail.dday.today" = "今天";
+"detail.no.events" = "暂无日程";
+"detail.add.todo" = "添加待办";
+"detail.category.manage" = "管理分类";
+"detail.google.logout" = "退出Google";
+"detail.google.login" = "登录Google";
+"detail.apple.calendar.on" = "启用Apple日历";
+"detail.apple.calendar.off" = "停用Apple日历";
+"detail.reminders" = "提醒事项";
+"detail.reminders.on" = "启用提醒事项";
+"detail.reminders.off" = "停用提醒事项";
+
+/* ===== Panel Tabs ===== */
+"panel.review" = "回顾";
+"panel.chat" = "聊天";
+
+/* ===== Event Detail Modal ===== */
+"event.detail.title" = "日程详情";
+"event.detail.allday" = "全天";
+"event.detail.start" = "开始";
+"event.detail.end" = "结束";
+"event.field.title" = "标题";
+"event.toggle.allday" = "全天";
+
+/* ===== Todo Detail Modal ===== */
+"todo.detail.title" = "待办详情";
+
+/* ===== Inline Add Todo ===== */
+"todo.input.placeholder" = "输入待办事项";
+"todo.type.normal" = "普通";
+"todo.type.repeating" = "重复";
+
+/* ===== Category Manager ===== */
+"category.manage.title" = "管理分类";
+"category.new" = "新建分类";
+"category.name.placeholder" = "名称";
+
+/* ===== Default Categories ===== */
+"category.default.daily" = "日常";
+"category.default.important" = "重要";
+"category.default.study" = "学习";
+"category.default.exercise" = "运动";
+"category.default.project" = "项目";
+"category.default.parttime" = "兼职";
+
+/* ===== Chat View ===== */
+"chat.claude.not.installed" = "未安装Claude Code";
+"chat.claude.install.hint" = "brew install claude-code\n或 npm install -g @anthropic-ai/claude-code";
+"chat.codex.not.installed" = "未安装Codex CLI";
+"chat.codex.install.hint" = "brew install codex\n或 npm install -g @openai/codex";
+"chat.redetect" = "重新检测";
+"chat.select.other.ai" = "选择其他AI";
+"chat.assistant.title" = "日历AI助手";
+"chat.examples" = ""明天下午3点添加会议"\n"显示本周日程"\n"删除考试日程"";
+"chat.thinking" = "思考中...";
+"chat.input.placeholder" = "输入消息...";
+"chat.action.confirm.title" = "确认日程更改";
+"chat.action.create" = "创建";
+"chat.action.update" = "更新";
+"chat.action.delete" = "删除";
+
+/* ===== AI Settings ===== */
+"ai.settings.title" = "AI设置";
+"ai.settings.model" = "模型: %@";
+"ai.provider.installed" = "已安装 — 可以使用";
+"ai.provider.not.installed" = "未安装";
+
+/* ===== AI Service Messages ===== */
+"ai.action.cancelled" = "操作已取消。";
+"ai.batch.delete.rejected" = "⚠️ 批量删除（%d项）已被安全拒绝。请逐项删除。";
+"ai.create.failed.params" = "⚠️ 创建失败: 参数无效";
+"ai.create.success" = "✅ 已创建: %@";
+"ai.create.failed" = "⚠️ 创建失败: %@";
+"ai.delete.success" = "✅ 已删除";
+"ai.delete.failed" = "⚠️ 删除失败";
+"ai.delete.failed.detail" = "⚠️ 删除失败: %@";
+"ai.update.success" = "✅ 已更新";
+"ai.update.failed" = "⚠️ 更新失败";
+"ai.update.failed.detail" = "⚠️ 更新失败: %@";
+"ai.update.failed.nodate" = "⚠️ 更新失败: 无日期信息";
+"ai.invalid.eventid" = "⚠️ %@ 失败: 无效的eventId";
+"ai.cli.failed" = "CLI执行失败: %@";
+"ai.output.truncated" = "...（输出已截断）";
+"ai.error.prefix" = "错误: %@";
+"ai.no.response" = "未收到响应。";
+"ai.claude.not.found" = "未安装Claude Code。请检查/opt/homebrew/bin或~/.local/bin中是否存在claude。";
+"ai.codex.not.found" = "未安装Codex CLI。请检查/opt/homebrew/bin或~/.local/bin中是否存在codex。";
+"ai.pending.confirm" = "⚠️ 是否执行以下操作？\n%@\n\n输入"确认"或"执行"以继续。";
+
+/* ===== Notifications ===== */
+"notification.daily.title" = "今日日程";
+"notification.daily.body" = "查看今天的日程安排。";
+"notification.daily.events" = "日程: %@";
+"notification.daily.todos" = "待办: %@";
+"notification.daily.empty" = "今天没有日程安排。";
+"notification.event.title" = "日程提醒";
+"notification.event.body" = "%d分钟后: %@";
+"notification.evening.title" = "每日回顾";
+"notification.evening.body" = "回顾已完成的日程，准备明天的计划";
+
+/* ===== Onboarding ===== */
+"onboarding.title" = "Calen设置";
+"onboarding.start" = "开始使用";
+
+/* Onboarding - Goals */
+"onboarding.goals.title" = "告诉我们你的目标";
+"onboarding.goals.subtitle" = "设置1-3个关键目标\nAI将每天自动安排日程";
+"onboarding.goals.placeholder" = "目标（如：通过资格考试）";
+"onboarding.goals.target.date" = "目标日期";
+"onboarding.goals.quick.select" = "快速选择";
+"onboarding.goals.preset.certification" = "通过认证";
+"onboarding.goals.preset.sideproject" = "副业项目";
+"onboarding.goals.preset.health" = "健康/运动";
+
+/* Onboarding - Schedule */
+"onboarding.schedule.title" = "告诉我们你的日常作息";
+"onboarding.schedule.subtitle" = "用于优化日程安排";
+"onboarding.schedule.work.start" = "上班时间";
+"onboarding.schedule.work.end" = "下班时间";
+"onboarding.schedule.lunch" = "午餐";
+"onboarding.schedule.commute" = "通勤";
+"onboarding.schedule.unit.hour" = "小时";
+"onboarding.schedule.unit.minute" = "分钟";
+
+/* Onboarding - Energy */
+"onboarding.energy.title" = "你的精力类型是？";
+"onboarding.energy.subtitle" = "重要任务将安排在\n你精力最集中的时段";
+"onboarding.energy.morning.desc" = "上午精力最集中";
+"onboarding.energy.evening.desc" = "下午/晚上精力最集中";
+"onboarding.energy.balanced.desc" = "全天保持稳定";
+
+/* Onboarding - Capacity */
+"onboarding.capacity.title" = "每日专注时间";
+"onboarding.capacity.subtitle" = "设置每天可以为目标\n投入多少时间";
+"onboarding.capacity.weekday" = "工作日";
+"onboarding.capacity.weekend" = "周末";
+"onboarding.capacity.minutes.format" = "%d分钟";
+"onboarding.capacity.ai.level" = "AI自动排程级别";
+
+/* Aggressiveness */
+"aggressiveness.manual" = "手动";
+"aggressiveness.assist" = "辅助";
+"aggressiveness.semiauto" = "半自动";
+"aggressiveness.auto" = "自动";
+"aggressiveness.manual.desc" = "仅显示建议，不自动添加";
+"aggressiveness.assist.desc" = "仅自动添加30分钟以下的时间块";
+"aggressiveness.semiauto.desc" = "自动添加前1-2项，其余为建议";
+"aggressiveness.auto.desc" = "全部自动添加，仅冲突时确认";
+
+/* Energy Types */
+"energy.morning" = "早起型";
+"energy.evening" = "夜猫型";
+"energy.balanced" = "均衡型";
+
+/* ===== Review View ===== */
+"review.daily.title" = "今日调整";
+"review.evening.title" = "晚间回顾";
+"review.suggestion.count" = "· %d条建议";
+"review.empty.title" = "一切顺利！";
+"review.empty.subtitle" = "今天的日程进展顺利";
+"review.weekly.rate" = "周完成率";
+"review.tomorrow.title" = "明日计划";
+"review.tomorrow.auto.created" = "已自动创建%d项";
+"review.tomorrow.suggested" = "%d项建议（在晨间简报中查看）";
+"review.tomorrow.minutes.format" = "已安排%d/%d分钟";
+"review.move.all.tomorrow" = "将所有未完成项移至明天";
+"review.generating.plan" = "正在生成明日计划...";
+"review.go.to.chat" = "前往聊天";
+"review.help.done" = "完成";
+"review.help.tomorrow" = "明天";
+"review.help.skip" = "跳过";
+
+/* Suggestion Types */
+"suggestion.carryover" = "延续";
+"suggestion.deadline" = "截止";
+"suggestion.habit" = "习惯";
+"suggestion.spread" = "分散";
+"suggestion.prep" = "准备";
+"suggestion.focus" = "专注";
+"suggestion.health" = "健康";
+"suggestion.buffer" = "通勤";
+
+/* ===== ViewModel ===== */
+"viewmodel.default.category" = "日常";

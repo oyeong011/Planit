@@ -1,0 +1,227 @@
+/* Korean Localization for Calen */
+
+/* ===== Common ===== */
+"common.save" = "저장";
+"common.cancel" = "취소";
+"common.add" = "추가";
+"common.delete" = "삭제";
+"common.edit" = "수정";
+"common.done" = "완료";
+"common.close" = "닫기";
+"common.confirm" = "확인";
+"common.skip" = "건너뛰기";
+"common.next" = "다음";
+"common.previous" = "이전";
+"common.execute" = "실행";
+"common.today" = "오늘";
+"common.completed" = "완료됨";
+"common.incomplete" = "미완료";
+"common.repeat" = "반복";
+
+/* ===== Login View ===== */
+"login.subtitle" = "Google 캘린더와 연동하여\n일정을 관리하세요";
+"login.google.api.setup" = "Google API 설정";
+"login.google.api.description" = "Google Cloud Console에서 OAuth 클라이언트를 생성하고 입력하세요.";
+"login.google.signin" = "Google 계정으로 로그인";
+"login.change.credentials" = "자격증명 변경";
+"login.skip.google" = "Google 없이 시작 (로컬 캘린더 사용)";
+
+/* ===== Calendar Grid ===== */
+"calendar.weekdays.sun" = "일";
+"calendar.weekdays.mon" = "월";
+"calendar.weekdays.tue" = "화";
+"calendar.weekdays.wed" = "수";
+"calendar.weekdays.thu" = "목";
+"calendar.weekdays.fri" = "금";
+"calendar.weekdays.sat" = "토";
+"calendar.month.format" = "%d월";
+"calendar.help.chat" = "AI 채팅";
+"calendar.help.google.connected" = "Google Calendar 연동됨";
+
+/* ===== Daily Detail ===== */
+"detail.dday.today" = "오늘";
+"detail.no.events" = "일정이 없습니다";
+"detail.add.todo" = "할 일 추가";
+"detail.category.manage" = "카테고리 관리";
+"detail.google.logout" = "Google 로그아웃";
+"detail.google.login" = "Google 로그인";
+"detail.apple.calendar.on" = "Apple 캘린더 켜기";
+"detail.apple.calendar.off" = "Apple 캘린더 끄기";
+"detail.reminders" = "미리알림";
+"detail.reminders.on" = "미리알림 켜기";
+"detail.reminders.off" = "미리알림 끄기";
+
+/* ===== Panel Tabs ===== */
+"panel.review" = "리뷰";
+"panel.chat" = "채팅";
+
+/* ===== Event Detail Modal ===== */
+"event.detail.title" = "일정 상세";
+"event.detail.allday" = "종일";
+"event.detail.start" = "시작";
+"event.detail.end" = "종료";
+"event.field.title" = "제목";
+"event.toggle.allday" = "종일";
+
+/* ===== Todo Detail Modal ===== */
+"todo.detail.title" = "할 일 상세";
+
+/* ===== Inline Add Todo ===== */
+"todo.input.placeholder" = "할 일을 입력하세요";
+"todo.type.normal" = "일반";
+"todo.type.repeating" = "반복";
+
+/* ===== Category Manager ===== */
+"category.manage.title" = "카테고리 관리";
+"category.new" = "새 카테고리";
+"category.name.placeholder" = "이름";
+
+/* ===== Default Categories ===== */
+"category.default.daily" = "일상";
+"category.default.important" = "중요";
+"category.default.study" = "공부";
+"category.default.exercise" = "운동";
+"category.default.project" = "플젝";
+"category.default.parttime" = "알바";
+
+/* ===== Chat View ===== */
+"chat.claude.not.installed" = "Claude Code 미설치";
+"chat.claude.install.hint" = "brew install claude-code\n또는 npm install -g @anthropic-ai/claude-code";
+"chat.codex.not.installed" = "Codex CLI 미설치";
+"chat.codex.install.hint" = "brew install codex\n또는 npm install -g @openai/codex";
+"chat.redetect" = "다시 감지";
+"chat.select.other.ai" = "다른 AI 선택";
+"chat.assistant.title" = "캘린더 AI 어시스턴트";
+"chat.examples" = "\"내일 3시에 회의 추가해줘\"\n\"이번주 일정 알려줘\"\n\"정처기 일정 삭제해줘\"";
+"chat.thinking" = "생각 중...";
+"chat.input.placeholder" = "메시지 입력...";
+"chat.action.confirm.title" = "일정 변경 확인";
+"chat.action.create" = "추가";
+"chat.action.update" = "수정";
+"chat.action.delete" = "삭제";
+"chat.attach.hint" = "이미지 또는 PDF 첨부 (최대 5개, 20MB)";
+"chat.attach.picker.message" = "첨부할 이미지 또는 PDF를 선택하세요";
+
+/* ===== AI Settings ===== */
+"ai.settings.title" = "AI 설정";
+"ai.settings.model" = "모델: %@";
+"ai.provider.installed" = "설치됨 — 바로 사용 가능";
+"ai.provider.not.installed" = "미설치";
+
+/* ===== AI Service Messages ===== */
+"ai.action.cancelled" = "작업이 취소되었습니다.";
+"ai.batch.delete.rejected" = "⚠️ 일괄 삭제(%d건)는 안전을 위해 거부되었습니다. 하나씩 삭제해주세요.";
+"ai.create.failed.params" = "⚠️ 생성 실패: 잘못된 파라미터";
+"ai.create.success" = "✅ 생성: %@";
+"ai.create.failed" = "⚠️ 생성 실패: %@";
+"ai.delete.success" = "✅ 삭제 완료";
+"ai.delete.failed" = "⚠️ 삭제 실패";
+"ai.delete.failed.detail" = "⚠️ 삭제 실패: %@";
+"ai.update.success" = "✅ 수정 완료";
+"ai.update.failed" = "⚠️ 수정 실패";
+"ai.update.failed.detail" = "⚠️ 수정 실패: %@";
+"ai.update.failed.nodate" = "⚠️ 수정 실패: 날짜 정보 없음";
+"ai.invalid.eventid" = "⚠️ %@ 실패: 유효하지 않은 eventId";
+"ai.cli.failed" = "CLI 실행 실패: %@";
+"ai.output.truncated" = "... (출력이 잘렸습니다)";
+"ai.error.prefix" = "오류: %@";
+"ai.no.response" = "응답을 받지 못했습니다.";
+"ai.claude.not.found" = "Claude Code가 설치되지 않았습니다. /opt/homebrew/bin 또는 ~/.local/bin에 claude가 있는지 확인하세요.";
+"ai.codex.not.found" = "Codex CLI가 설치되지 않았습니다. /opt/homebrew/bin 또는 ~/.local/bin에 codex가 있는지 확인하세요.";
+"ai.pending.confirm" = "⚠️ 아래 작업을 실행할까요?\n%@\n\n확인하려면 '확인' 또는 '실행'을 입력하세요.";
+
+/* ===== Notifications ===== */
+"notification.daily.title" = "오늘의 일정";
+"notification.daily.body" = "오늘의 일정을 확인하세요.";
+"notification.daily.events" = "일정: %@";
+"notification.daily.todos" = "할 일: %@";
+"notification.daily.empty" = "오늘 예정된 일정이 없습니다.";
+"notification.event.title" = "일정 알림";
+"notification.event.body" = "%d분 후: %@";
+"notification.evening.title" = "오늘 하루 리뷰";
+"notification.evening.body" = "완료한 일정을 확인하고 내일을 준비하세요";
+
+/* ===== Onboarding ===== */
+"onboarding.title" = "Calen 설정";
+"onboarding.start" = "시작하기";
+
+/* Onboarding - Goals */
+"onboarding.goals.title" = "올해 목표를 알려주세요";
+"onboarding.goals.subtitle" = "1~3개의 핵심 목표를 설정하면\nAI가 매일 일정을 자동으로 잡아줍니다";
+"onboarding.goals.placeholder" = "목표 (예: 정보처리기사 합격)";
+"onboarding.goals.target.date" = "목표일";
+"onboarding.goals.quick.select" = "빠른 선택";
+"onboarding.goals.preset.certification" = "자격증 합격";
+"onboarding.goals.preset.sideproject" = "사이드 프로젝트";
+"onboarding.goals.preset.health" = "건강/운동";
+
+/* Onboarding - Schedule */
+"onboarding.schedule.title" = "생활 패턴을 알려주세요";
+"onboarding.schedule.subtitle" = "일정 배치에 활용됩니다";
+"onboarding.schedule.work.start" = "출근";
+"onboarding.schedule.work.end" = "퇴근";
+"onboarding.schedule.lunch" = "점심";
+"onboarding.schedule.commute" = "통근";
+"onboarding.schedule.unit.hour" = "시";
+"onboarding.schedule.unit.minute" = "분";
+
+/* Onboarding - Energy */
+"onboarding.energy.title" = "에너지 타입은?";
+"onboarding.energy.subtitle" = "집중력이 높은 시간대에\n중요한 일정을 배치합니다";
+"onboarding.energy.morning.desc" = "오전에 집중력 최고";
+"onboarding.energy.evening.desc" = "오후/저녁에 집중력 최고";
+"onboarding.energy.balanced.desc" = "시간대 상관없이 고른 편";
+
+/* Onboarding - Capacity */
+"onboarding.capacity.title" = "하루 집중 가능 시간";
+"onboarding.capacity.subtitle" = "목표를 위해 하루에\n쓸 수 있는 시간을 설정하세요";
+"onboarding.capacity.weekday" = "평일";
+"onboarding.capacity.weekend" = "주말";
+"onboarding.capacity.minutes.format" = "%d분";
+"onboarding.capacity.ai.level" = "AI 자동 배치 수준";
+
+/* Aggressiveness */
+"aggressiveness.manual" = "수동";
+"aggressiveness.assist" = "보조";
+"aggressiveness.semiauto" = "반자동";
+"aggressiveness.auto" = "자동";
+"aggressiveness.manual.desc" = "제안만 보여줌, 자동 추가 안함";
+"aggressiveness.assist.desc" = "30분 이하 블록만 자동 추가";
+"aggressiveness.semiauto.desc" = "상위 1-2개 자동, 나머지 제안";
+"aggressiveness.auto.desc" = "모두 자동 추가, 충돌 시만 확인";
+
+/* Energy Types */
+"energy.morning" = "아침형";
+"energy.evening" = "저녁형";
+"energy.balanced" = "균형형";
+
+/* ===== Review View ===== */
+"review.daily.title" = "오늘의 조정";
+"review.evening.title" = "저녁 리뷰";
+"review.suggestion.count" = "· %d 제안";
+"review.empty.title" = "좋아요!";
+"review.empty.subtitle" = "오늘은 그대로 진행하면 됩니다";
+"review.weekly.rate" = "이번주 완수율";
+"review.tomorrow.title" = "내일 계획";
+"review.tomorrow.auto.created" = "%d개 자동 생성됨";
+"review.tomorrow.suggested" = "%d개 제안 (아침 브리핑에서 확인)";
+"review.tomorrow.minutes.format" = "%d/%d분 배치";
+"review.move.all.tomorrow" = "미완료 모두 내일로";
+"review.generating.plan" = "내일 계획 생성 중...";
+"review.go.to.chat" = "채팅으로";
+"review.help.done" = "완료";
+"review.help.tomorrow" = "내일로";
+"review.help.skip" = "건너뛰기";
+
+/* Suggestion Types */
+"suggestion.carryover" = "미완료";
+"suggestion.deadline" = "마감 임박";
+"suggestion.habit" = "습관";
+"suggestion.spread" = "분산";
+"suggestion.prep" = "준비";
+"suggestion.focus" = "집중";
+"suggestion.health" = "건강";
+"suggestion.buffer" = "이동";
+
+/* ===== ViewModel ===== */
+"viewmodel.default.category" = "일상";

@@ -147,7 +147,7 @@ final class ReviewAIService {
         var jsonStr = response
         if let start = response.range(of: "{"),
            let end = response.range(of: "}", options: .backwards) {
-            jsonStr = String(response[start.lowerBound...end.upperBound])
+            jsonStr = String(response[start.lowerBound..<end.upperBound])
         }
 
         guard let data = jsonStr.data(using: .utf8),

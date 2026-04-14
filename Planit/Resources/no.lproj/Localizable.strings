@@ -1,0 +1,225 @@
+/* Norwegian Localization for Calen */
+
+/* ===== Common ===== */
+"common.save" = "Lagre";
+"common.cancel" = "Avbryt";
+"common.add" = "Legg til";
+"common.delete" = "Slett";
+"common.edit" = "Rediger";
+"common.done" = "Ferdig";
+"common.close" = "Lukk";
+"common.confirm" = "Bekreft";
+"common.skip" = "Hopp over";
+"common.next" = "Neste";
+"common.previous" = "Forrige";
+"common.execute" = "Utfør";
+"common.today" = "I dag";
+"common.completed" = "Fullført";
+"common.incomplete" = "Ufullført";
+"common.repeat" = "Gjenta";
+
+/* ===== Login View ===== */
+"login.subtitle" = "Koble til Google Kalender\nfor å administrere timeplanen din";
+"login.google.api.setup" = "Google API-oppsett";
+"login.google.api.description" = "Opprett en OAuth-klient i Google Cloud Console og skriv inn legitimasjonen.";
+"login.google.signin" = "Logg inn med Google";
+"login.change.credentials" = "Endre legitimasjon";
+"login.skip.google" = "Start uten Google (Bruk lokal kalender)";
+
+/* ===== Calendar Grid ===== */
+"calendar.weekdays.sun" = "Søn";
+"calendar.weekdays.mon" = "Man";
+"calendar.weekdays.tue" = "Tir";
+"calendar.weekdays.wed" = "Ons";
+"calendar.weekdays.thu" = "Tor";
+"calendar.weekdays.fri" = "Fre";
+"calendar.weekdays.sat" = "Lør";
+"calendar.month.format" = "%d";
+"calendar.help.chat" = "AI-chat";
+"calendar.help.google.connected" = "Koblet til Google Kalender";
+
+/* ===== Daily Detail ===== */
+"detail.dday.today" = "I dag";
+"detail.no.events" = "Ingen hendelser";
+"detail.add.todo" = "Legg til oppgave";
+"detail.category.manage" = "Administrer kategorier";
+"detail.google.logout" = "Logg ut av Google";
+"detail.google.login" = "Logg inn på Google";
+"detail.apple.calendar.on" = "Aktiver Apple Kalender";
+"detail.apple.calendar.off" = "Deaktiver Apple Kalender";
+"detail.reminders" = "Påminnelser";
+"detail.reminders.on" = "Aktiver påminnelser";
+"detail.reminders.off" = "Deaktiver påminnelser";
+
+/* ===== Panel Tabs ===== */
+"panel.review" = "Oversikt";
+"panel.chat" = "Chat";
+
+/* ===== Event Detail Modal ===== */
+"event.detail.title" = "Hendelsesdetaljer";
+"event.detail.allday" = "Hele dagen";
+"event.detail.start" = "Start";
+"event.detail.end" = "Slutt";
+"event.field.title" = "Tittel";
+"event.toggle.allday" = "Hele dagen";
+
+/* ===== Todo Detail Modal ===== */
+"todo.detail.title" = "Oppgavedetaljer";
+
+/* ===== Inline Add Todo ===== */
+"todo.input.placeholder" = "Skriv inn en oppgave";
+"todo.type.normal" = "Normal";
+"todo.type.repeating" = "Gjentakende";
+
+/* ===== Category Manager ===== */
+"category.manage.title" = "Administrer kategorier";
+"category.new" = "Ny kategori";
+"category.name.placeholder" = "Navn";
+
+/* ===== Default Categories ===== */
+"category.default.daily" = "Daglig";
+"category.default.important" = "Viktig";
+"category.default.study" = "Studie";
+"category.default.exercise" = "Trening";
+"category.default.project" = "Prosjekt";
+"category.default.parttime" = "Deltid";
+
+/* ===== Chat View ===== */
+"chat.claude.not.installed" = "Claude Code ikke installert";
+"chat.claude.install.hint" = "brew install claude-code\neller npm install -g @anthropic-ai/claude-code";
+"chat.codex.not.installed" = "Codex CLI ikke installert";
+"chat.codex.install.hint" = "brew install codex\neller npm install -g @openai/codex";
+"chat.redetect" = "Oppdag på nytt";
+"chat.select.other.ai" = "Velg annen AI";
+"chat.assistant.title" = "Kalender-AI-assistent";
+"chat.examples" = "\"Legg til et møte kl. 15 i morgen\"\n\"Vis ukens timeplan\"\n\"Slett eksamen-hendelsen\"";
+"chat.thinking" = "Tenker...";
+"chat.input.placeholder" = "Skriv en melding...";
+"chat.action.confirm.title" = "Bekreft kalenderendring";
+"chat.action.create" = "Opprett";
+"chat.action.update" = "Oppdater";
+"chat.action.delete" = "Slett";
+
+/* ===== AI Settings ===== */
+"ai.settings.title" = "AI-innstillinger";
+"ai.settings.model" = "Modell: %@";
+"ai.provider.installed" = "Installert — Klar til bruk";
+"ai.provider.not.installed" = "Ikke installert";
+
+/* ===== AI Service Messages ===== */
+"ai.action.cancelled" = "Handling avbrutt.";
+"ai.batch.delete.rejected" = "⚠️ Massesletting (%d elementer) avvist av sikkerhetshensyn. Slett én om gangen.";
+"ai.create.failed.params" = "⚠️ Oppretting mislyktes: Ugyldige parametere";
+"ai.create.success" = "✅ Opprettet: %@";
+"ai.create.failed" = "⚠️ Oppretting mislyktes: %@";
+"ai.delete.success" = "✅ Slettet";
+"ai.delete.failed" = "⚠️ Sletting mislyktes";
+"ai.delete.failed.detail" = "⚠️ Sletting mislyktes: %@";
+"ai.update.success" = "✅ Oppdatert";
+"ai.update.failed" = "⚠️ Oppdatering mislyktes";
+"ai.update.failed.detail" = "⚠️ Oppdatering mislyktes: %@";
+"ai.update.failed.nodate" = "⚠️ Oppdatering mislyktes: Ingen datoinformasjon";
+"ai.invalid.eventid" = "⚠️ %@ mislyktes: Ugyldig eventId";
+"ai.cli.failed" = "CLI-kjøring mislyktes: %@";
+"ai.output.truncated" = "... (utdata avkortet)";
+"ai.error.prefix" = "Feil: %@";
+"ai.no.response" = "Ingen respons mottatt.";
+"ai.claude.not.found" = "Claude Code er ikke installert. Sjekk om claude finnes i /opt/homebrew/bin eller ~/.local/bin.";
+"ai.codex.not.found" = "Codex CLI er ikke installert. Sjekk om codex finnes i /opt/homebrew/bin eller ~/.local/bin.";
+"ai.pending.confirm" = "⚠️ Utfør følgende handlinger?\n%@\n\nSkriv 'bekreft' eller 'utfør' for å fortsette.";
+
+/* ===== Notifications ===== */
+"notification.daily.title" = "Dagens timeplan";
+"notification.daily.body" = "Sjekk timeplanen din for i dag.";
+"notification.daily.events" = "Hendelser: %@";
+"notification.daily.todos" = "Oppgaver: %@";
+"notification.daily.empty" = "Ingen hendelser planlagt i dag.";
+"notification.event.title" = "Hendelsespåminnelse";
+"notification.event.body" = "Om %d minutter: %@";
+"notification.evening.title" = "Daglig oversikt";
+"notification.evening.body" = "Gjennomgå fullførte hendelser og forbered deg til i morgen";
+
+/* ===== Onboarding ===== */
+"onboarding.title" = "Calen-oppsett";
+"onboarding.start" = "Kom i gang";
+
+/* Onboarding - Goals */
+"onboarding.goals.title" = "Fortell oss målene dine";
+"onboarding.goals.subtitle" = "Sett 1-3 hovedmål, og\nAI planlegger dem automatisk daglig";
+"onboarding.goals.placeholder" = "Mål (f.eks. Bestå sertifiseringseksamen)";
+"onboarding.goals.target.date" = "Måldato";
+"onboarding.goals.quick.select" = "Hurtigvalg";
+"onboarding.goals.preset.certification" = "Bestå sertifisering";
+"onboarding.goals.preset.sideproject" = "Sideprosjekt";
+"onboarding.goals.preset.health" = "Helse/Trening";
+
+/* Onboarding - Schedule */
+"onboarding.schedule.title" = "Fortell oss din daglige rutine";
+"onboarding.schedule.subtitle" = "Brukes til planleggingsoptimalisering";
+"onboarding.schedule.work.start" = "Arbeidsstart";
+"onboarding.schedule.work.end" = "Arbeidsslutt";
+"onboarding.schedule.lunch" = "Lunsj";
+"onboarding.schedule.commute" = "Pendling";
+"onboarding.schedule.unit.hour" = "t";
+"onboarding.schedule.unit.minute" = "min";
+
+/* Onboarding - Energy */
+"onboarding.energy.title" = "Hva er energitypen din?";
+"onboarding.energy.subtitle" = "Viktige oppgaver plasseres i\ntimene med toppfokus";
+"onboarding.energy.morning.desc" = "Toppfokus om morgenen";
+"onboarding.energy.evening.desc" = "Toppfokus på ettermiddagen/kvelden";
+"onboarding.energy.balanced.desc" = "Jevnt fordelt gjennom dagen";
+
+/* Onboarding - Capacity */
+"onboarding.capacity.title" = "Daglig fokustid";
+"onboarding.capacity.subtitle" = "Angi hvor mye tid per dag\ndu kan bruke på målene dine";
+"onboarding.capacity.weekday" = "Ukedag";
+"onboarding.capacity.weekend" = "Helg";
+"onboarding.capacity.minutes.format" = "%d min";
+"onboarding.capacity.ai.level" = "AI auto-planleggingsnivå";
+
+/* Aggressiveness */
+"aggressiveness.manual" = "Manuell";
+"aggressiveness.assist" = "Assistanse";
+"aggressiveness.semiauto" = "Semi-auto";
+"aggressiveness.auto" = "Automatisk";
+"aggressiveness.manual.desc" = "Vis kun forslag, ingen automatisk tillegg";
+"aggressiveness.assist.desc" = "Legg til blokker under 30 min automatisk";
+"aggressiveness.semiauto.desc" = "Automatisk topp 1-2, foreslå resten";
+"aggressiveness.auto.desc" = "Legg til alt automatisk, bekreft kun ved konflikter";
+
+/* Energy Types */
+"energy.morning" = "Morgen";
+"energy.evening" = "Kveld";
+"energy.balanced" = "Balansert";
+
+/* ===== Review View ===== */
+"review.daily.title" = "Dagens justering";
+"review.evening.title" = "Kveldsoversikt";
+"review.suggestion.count" = "· %d forslag";
+"review.empty.title" = "Alt er bra!";
+"review.empty.subtitle" = "Du er i rute for i dag";
+"review.weekly.rate" = "Ukentlig fullføring";
+"review.tomorrow.title" = "Morgendagens plan";
+"review.tomorrow.auto.created" = "%d automatisk opprettet";
+"review.tomorrow.suggested" = "%d foreslått (sjekk i morgenbriefing)";
+"review.tomorrow.minutes.format" = "%d/%d min planlagt";
+"review.move.all.tomorrow" = "Flytt ufullførte til i morgen";
+"review.generating.plan" = "Genererer morgendagens plan...";
+"review.go.to.chat" = "Gå til Chat";
+"review.help.done" = "Ferdig";
+"review.help.tomorrow" = "I morgen";
+"review.help.skip" = "Hopp over";
+
+/* Suggestion Types */
+"suggestion.carryover" = "Overføring";
+"suggestion.deadline" = "Frist";
+"suggestion.habit" = "Vane";
+"suggestion.spread" = "Fordel";
+"suggestion.prep" = "Forberedelse";
+"suggestion.focus" = "Fokus";
+"suggestion.health" = "Helse";
+"suggestion.buffer" = "Reisetid";
+
+/* ===== ViewModel ===== */
+"viewmodel.default.category" = "Daglig";

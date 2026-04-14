@@ -1,0 +1,225 @@
+/* Czech Localization for Calen */
+
+/* ===== Common ===== */
+"common.save" = "Uložit";
+"common.cancel" = "Zrušit";
+"common.add" = "Přidat";
+"common.delete" = "Smazat";
+"common.edit" = "Upravit";
+"common.done" = "Hotovo";
+"common.close" = "Zavřít";
+"common.confirm" = "Potvrdit";
+"common.skip" = "Přeskočit";
+"common.next" = "Další";
+"common.previous" = "Předchozí";
+"common.execute" = "Provést";
+"common.today" = "Dnes";
+"common.completed" = "Dokončeno";
+"common.incomplete" = "Nedokončeno";
+"common.repeat" = "Opakovat";
+
+/* ===== Login View ===== */
+"login.subtitle" = "Připojte Kalendář Google\npro správu rozvrhu";
+"login.google.api.setup" = "Nastavení Google API";
+"login.google.api.description" = "Vytvořte klienta OAuth v Google Cloud Console a zadejte přihlašovací údaje.";
+"login.google.signin" = "Přihlásit se přes Google";
+"login.change.credentials" = "Změnit přihlašovací údaje";
+"login.skip.google" = "Začít bez Googlu (Použít místní kalendář)";
+
+/* ===== Calendar Grid ===== */
+"calendar.weekdays.sun" = "Ne";
+"calendar.weekdays.mon" = "Po";
+"calendar.weekdays.tue" = "Út";
+"calendar.weekdays.wed" = "St";
+"calendar.weekdays.thu" = "Čt";
+"calendar.weekdays.fri" = "Pá";
+"calendar.weekdays.sat" = "So";
+"calendar.month.format" = "%d";
+"calendar.help.chat" = "AI chat";
+"calendar.help.google.connected" = "Připojeno ke Kalendáři Google";
+
+/* ===== Daily Detail ===== */
+"detail.dday.today" = "Dnes";
+"detail.no.events" = "Žádné události";
+"detail.add.todo" = "Přidat úkol";
+"detail.category.manage" = "Spravovat kategorie";
+"detail.google.logout" = "Odhlásit se z Googlu";
+"detail.google.login" = "Přihlásit se do Googlu";
+"detail.apple.calendar.on" = "Zapnout Apple Kalendář";
+"detail.apple.calendar.off" = "Vypnout Apple Kalendář";
+"detail.reminders" = "Připomínky";
+"detail.reminders.on" = "Zapnout připomínky";
+"detail.reminders.off" = "Vypnout připomínky";
+
+/* ===== Panel Tabs ===== */
+"panel.review" = "Přehled";
+"panel.chat" = "Chat";
+
+/* ===== Event Detail Modal ===== */
+"event.detail.title" = "Detail události";
+"event.detail.allday" = "Celý den";
+"event.detail.start" = "Začátek";
+"event.detail.end" = "Konec";
+"event.field.title" = "Název";
+"event.toggle.allday" = "Celý den";
+
+/* ===== Todo Detail Modal ===== */
+"todo.detail.title" = "Detail úkolu";
+
+/* ===== Inline Add Todo ===== */
+"todo.input.placeholder" = "Zadejte úkol";
+"todo.type.normal" = "Normální";
+"todo.type.repeating" = "Opakující se";
+
+/* ===== Category Manager ===== */
+"category.manage.title" = "Spravovat kategorie";
+"category.new" = "Nová kategorie";
+"category.name.placeholder" = "Název";
+
+/* ===== Default Categories ===== */
+"category.default.daily" = "Denní";
+"category.default.important" = "Důležité";
+"category.default.study" = "Studium";
+"category.default.exercise" = "Cvičení";
+"category.default.project" = "Projekt";
+"category.default.parttime" = "Brigáda";
+
+/* ===== Chat View ===== */
+"chat.claude.not.installed" = "Claude Code není nainstalován";
+"chat.claude.install.hint" = "brew install claude-code\nnebo npm install -g @anthropic-ai/claude-code";
+"chat.codex.not.installed" = "Codex CLI není nainstalován";
+"chat.codex.install.hint" = "brew install codex\nnebo npm install -g @openai/codex";
+"chat.redetect" = "Znovu detekovat";
+"chat.select.other.ai" = "Vybrat jinou AI";
+"chat.assistant.title" = "AI asistent kalendáře";
+"chat.examples" = "\"Přidej schůzku zítra ve 15:00\"\n\"Ukaž rozvrh na tento týden\"\n\"Smaž událost se zkouškou\"";
+"chat.thinking" = "Přemýšlím...";
+"chat.input.placeholder" = "Napište zprávu...";
+"chat.action.confirm.title" = "Potvrdit změnu rozvrhu";
+"chat.action.create" = "Vytvořit";
+"chat.action.update" = "Aktualizovat";
+"chat.action.delete" = "Smazat";
+
+/* ===== AI Settings ===== */
+"ai.settings.title" = "Nastavení AI";
+"ai.settings.model" = "Model: %@";
+"ai.provider.installed" = "Nainstalováno — Připraveno k použití";
+"ai.provider.not.installed" = "Nenainstalováno";
+
+/* ===== AI Service Messages ===== */
+"ai.action.cancelled" = "Akce zrušena.";
+"ai.batch.delete.rejected" = "⚠️ Hromadné smazání (%d položek) zamítnuto z bezpečnostních důvodů. Mažte po jednom.";
+"ai.create.failed.params" = "⚠️ Vytvoření selhalo: Neplatné parametry";
+"ai.create.success" = "✅ Vytvořeno: %@";
+"ai.create.failed" = "⚠️ Vytvoření selhalo: %@";
+"ai.delete.success" = "✅ Smazáno";
+"ai.delete.failed" = "⚠️ Smazání selhalo";
+"ai.delete.failed.detail" = "⚠️ Smazání selhalo: %@";
+"ai.update.success" = "✅ Aktualizováno";
+"ai.update.failed" = "⚠️ Aktualizace selhala";
+"ai.update.failed.detail" = "⚠️ Aktualizace selhala: %@";
+"ai.update.failed.nodate" = "⚠️ Aktualizace selhala: Chybí datum";
+"ai.invalid.eventid" = "⚠️ %@ selhalo: Neplatný eventId";
+"ai.cli.failed" = "Spuštění CLI selhalo: %@";
+"ai.output.truncated" = "... (výstup zkrácen)";
+"ai.error.prefix" = "Chyba: %@";
+"ai.no.response" = "Žádná odpověď.";
+"ai.claude.not.found" = "Claude Code není nainstalován. Ověřte, zda claude existuje v /opt/homebrew/bin nebo ~/.local/bin.";
+"ai.codex.not.found" = "Codex CLI není nainstalován. Ověřte, zda codex existuje v /opt/homebrew/bin nebo ~/.local/bin.";
+"ai.pending.confirm" = "⚠️ Provést následující akce?\n%@\n\nNapište 'potvrdit' nebo 'provést' pro pokračování.";
+
+/* ===== Notifications ===== */
+"notification.daily.title" = "Dnešní rozvrh";
+"notification.daily.body" = "Zkontrolujte si dnešní rozvrh.";
+"notification.daily.events" = "Události: %@";
+"notification.daily.todos" = "Úkoly: %@";
+"notification.daily.empty" = "Na dnešek nejsou naplánovány žádné události.";
+"notification.event.title" = "Připomínka události";
+"notification.event.body" = "Za %d minut: %@";
+"notification.evening.title" = "Večerní přehled";
+"notification.evening.body" = "Zkontrolujte splněné události a připravte se na zítřek";
+
+/* ===== Onboarding ===== */
+"onboarding.title" = "Nastavení Calenu";
+"onboarding.start" = "Začít";
+
+/* Onboarding - Goals */
+"onboarding.goals.title" = "Řekněte nám o svých cílech";
+"onboarding.goals.subtitle" = "Nastavte 1–3 hlavní cíle a\nAI je automaticky naplánuje každý den";
+"onboarding.goals.placeholder" = "Cíl (např. Složit certifikační zkoušku)";
+"onboarding.goals.target.date" = "Cílové datum";
+"onboarding.goals.quick.select" = "Rychlý výběr";
+"onboarding.goals.preset.certification" = "Složit certifikaci";
+"onboarding.goals.preset.sideproject" = "Vedlejší projekt";
+"onboarding.goals.preset.health" = "Zdraví/Cvičení";
+
+/* Onboarding - Schedule */
+"onboarding.schedule.title" = "Řekněte nám o svém denním režimu";
+"onboarding.schedule.subtitle" = "Používá se k optimalizaci rozvrhu";
+"onboarding.schedule.work.start" = "Začátek práce";
+"onboarding.schedule.work.end" = "Konec práce";
+"onboarding.schedule.lunch" = "Oběd";
+"onboarding.schedule.commute" = "Dojíždění";
+"onboarding.schedule.unit.hour" = "h";
+"onboarding.schedule.unit.minute" = "min";
+
+/* Onboarding - Energy */
+"onboarding.energy.title" = "Jaký je váš typ energie?";
+"onboarding.energy.subtitle" = "Důležité úkoly budou umístěny\ndo času vaší nejlepší koncentrace";
+"onboarding.energy.morning.desc" = "Nejlepší soustředění ráno";
+"onboarding.energy.evening.desc" = "Nejlepší soustředění odpoledne/večer";
+"onboarding.energy.balanced.desc" = "Vyrovnaně po celý den";
+
+/* Onboarding - Capacity */
+"onboarding.capacity.title" = "Denní čas soustředění";
+"onboarding.capacity.subtitle" = "Nastavte kolik času denně\nmůžete věnovat svým cílům";
+"onboarding.capacity.weekday" = "Pracovní den";
+"onboarding.capacity.weekend" = "Víkend";
+"onboarding.capacity.minutes.format" = "%d min";
+"onboarding.capacity.ai.level" = "Úroveň AI plánování";
+
+/* Aggressiveness */
+"aggressiveness.manual" = "Ruční";
+"aggressiveness.assist" = "Asistence";
+"aggressiveness.semiauto" = "Poloautomat";
+"aggressiveness.auto" = "Automaticky";
+"aggressiveness.manual.desc" = "Pouze zobrazit návrhy, bez automatického přidávání";
+"aggressiveness.assist.desc" = "Automaticky přidat pouze bloky do 30 min";
+"aggressiveness.semiauto.desc" = "Automaticky top 1–2, zbytek navrhnout";
+"aggressiveness.auto.desc" = "Automaticky přidat vše, potvrdit pouze při konfliktech";
+
+/* Energy Types */
+"energy.morning" = "Ráno";
+"energy.evening" = "Večer";
+"energy.balanced" = "Vyrovnaný";
+
+/* ===== Review View ===== */
+"review.daily.title" = "Dnešní úprava";
+"review.evening.title" = "Večerní přehled";
+"review.suggestion.count" = "· %d návrhů";
+"review.empty.title" = "Vše v pořádku!";
+"review.empty.subtitle" = "Jste dnes v plánu";
+"review.weekly.rate" = "Týdenní plnění";
+"review.tomorrow.title" = "Plán na zítřek";
+"review.tomorrow.auto.created" = "%d automaticky vytvořeno";
+"review.tomorrow.suggested" = "%d navrhnuto (zkontrolujte v ranním přehledu)";
+"review.tomorrow.minutes.format" = "%d/%d min naplánováno";
+"review.move.all.tomorrow" = "Přesunout vše nedokončené na zítřek";
+"review.generating.plan" = "Generuji plán na zítřek...";
+"review.go.to.chat" = "Přejít na chat";
+"review.help.done" = "Hotovo";
+"review.help.tomorrow" = "Zítra";
+"review.help.skip" = "Přeskočit";
+
+/* Suggestion Types */
+"suggestion.carryover" = "Přenesení";
+"suggestion.deadline" = "Termín";
+"suggestion.habit" = "Zvyk";
+"suggestion.spread" = "Rozložení";
+"suggestion.prep" = "Příprava";
+"suggestion.focus" = "Soustředění";
+"suggestion.health" = "Zdraví";
+"suggestion.buffer" = "Cesta";
+
+/* ===== ViewModel ===== */
+"viewmodel.default.category" = "Denní";

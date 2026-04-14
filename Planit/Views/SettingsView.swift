@@ -499,42 +499,45 @@ struct SettingsView: View {
             }
 
             settingsCard("Apple 연동") {
-                VStack(spacing: 12) {
-                    Toggle(isOn: Binding(
-                        get: { viewModel.appleCalendarEnabled },
-                        set: { viewModel.appleCalendarEnabled = $0 }
-                    )) {
-                        VStack(alignment: .leading, spacing: 2) {
+                VStack(spacing: 14) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 3) {
                             Text("Apple 캘린더 동기화")
                                 .font(.system(size: 13, weight: .medium))
                             Text("기기의 Apple 캘린더 이벤트를 함께 표시합니다")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
+                        Spacer()
+                        Toggle("", isOn: Binding(
+                            get: { viewModel.appleCalendarEnabled },
+                            set: { viewModel.appleCalendarEnabled = $0 }
+                        ))
+                        .toggleStyle(.switch)
+                        .labelsHidden()
                     }
-                    .toggleStyle(.switch)
 
                     Divider()
 
-                    Toggle(isOn: Binding(
-                        get: { viewModel.appleRemindersEnabled },
-                        set: { viewModel.appleRemindersEnabled = $0 }
-                    )) {
-                        VStack(alignment: .leading, spacing: 2) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 3) {
                             Text("Apple 미리 알림 가져오기")
                                 .font(.system(size: 13, weight: .medium))
                             Text("미리 알림 항목을 할 일로 가져옵니다")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
+                        Spacer()
+                        Toggle("", isOn: Binding(
+                            get: { viewModel.appleRemindersEnabled },
+                            set: { viewModel.appleRemindersEnabled = $0 }
+                        ))
+                        .toggleStyle(.switch)
+                        .labelsHidden()
                     }
-                    .toggleStyle(.switch)
                 }
             }
 
             settingsCard("Google 없이 사용") {
-                Toggle(isOn: Binding(
-                    get: { UserDefaults.standard.bool(forKey: "planit.skipGoogleAuth") },
-                    set: { UserDefaults.standard.set($0, forKey: "planit.skipGoogleAuth") }
-                )) {
+                HStack {
                     VStack(alignment: .leading, spacing: 3) {
                         Text("Google 로그인 건너뛰기")
                             .font(.system(size: 13, weight: .medium))
@@ -542,8 +545,14 @@ struct SettingsView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
+                    Spacer()
+                    Toggle("", isOn: Binding(
+                        get: { UserDefaults.standard.bool(forKey: "planit.skipGoogleAuth") },
+                        set: { UserDefaults.standard.set($0, forKey: "planit.skipGoogleAuth") }
+                    ))
+                    .toggleStyle(.switch)
+                    .labelsHidden()
                 }
-                .toggleStyle(.switch)
             }
         }
     }

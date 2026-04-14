@@ -1,0 +1,225 @@
+/* Indonesian Localization for Calen */
+
+/* ===== Common ===== */
+"common.save" = "Simpan";
+"common.cancel" = "Batal";
+"common.add" = "Tambah";
+"common.delete" = "Hapus";
+"common.edit" = "Edit";
+"common.done" = "Selesai";
+"common.close" = "Tutup";
+"common.confirm" = "Konfirmasi";
+"common.skip" = "Lewati";
+"common.next" = "Berikutnya";
+"common.previous" = "Sebelumnya";
+"common.execute" = "Jalankan";
+"common.today" = "Hari Ini";
+"common.completed" = "Selesai";
+"common.incomplete" = "Belum Selesai";
+"common.repeat" = "Ulangi";
+
+/* ===== Login View ===== */
+"login.subtitle" = "Hubungkan dengan Google Calendar\nuntuk mengatur jadwal Anda";
+"login.google.api.setup" = "Pengaturan Google API";
+"login.google.api.description" = "Buat OAuth client di Google Cloud Console dan masukkan kredensial.";
+"login.google.signin" = "Masuk dengan Google";
+"login.change.credentials" = "Ubah Kredensial";
+"login.skip.google" = "Mulai tanpa Google (Gunakan kalender lokal)";
+
+/* ===== Calendar Grid ===== */
+"calendar.weekdays.sun" = "Min";
+"calendar.weekdays.mon" = "Sen";
+"calendar.weekdays.tue" = "Sel";
+"calendar.weekdays.wed" = "Rab";
+"calendar.weekdays.thu" = "Kam";
+"calendar.weekdays.fri" = "Jum";
+"calendar.weekdays.sat" = "Sab";
+"calendar.month.format" = "%d";
+"calendar.help.chat" = "Chat AI";
+"calendar.help.google.connected" = "Terhubung ke Google Calendar";
+
+/* ===== Daily Detail ===== */
+"detail.dday.today" = "Hari Ini";
+"detail.no.events" = "Tidak ada acara";
+"detail.add.todo" = "Tambah Tugas";
+"detail.category.manage" = "Kelola Kategori";
+"detail.google.logout" = "Keluar dari Google";
+"detail.google.login" = "Masuk ke Google";
+"detail.apple.calendar.on" = "Aktifkan Kalender Apple";
+"detail.apple.calendar.off" = "Nonaktifkan Kalender Apple";
+"detail.reminders" = "Pengingat";
+"detail.reminders.on" = "Aktifkan Pengingat";
+"detail.reminders.off" = "Nonaktifkan Pengingat";
+
+/* ===== Panel Tabs ===== */
+"panel.review" = "Ringkasan";
+"panel.chat" = "Chat";
+
+/* ===== Event Detail Modal ===== */
+"event.detail.title" = "Detail Acara";
+"event.detail.allday" = "Sepanjang Hari";
+"event.detail.start" = "Mulai";
+"event.detail.end" = "Selesai";
+"event.field.title" = "Judul";
+"event.toggle.allday" = "Sepanjang Hari";
+
+/* ===== Todo Detail Modal ===== */
+"todo.detail.title" = "Detail Tugas";
+
+/* ===== Inline Add Todo ===== */
+"todo.input.placeholder" = "Masukkan tugas";
+"todo.type.normal" = "Normal";
+"todo.type.repeating" = "Ulangi";
+
+/* ===== Category Manager ===== */
+"category.manage.title" = "Kelola Kategori";
+"category.new" = "Kategori Baru";
+"category.name.placeholder" = "Nama";
+
+/* ===== Default Categories ===== */
+"category.default.daily" = "Harian";
+"category.default.important" = "Penting";
+"category.default.study" = "Belajar";
+"category.default.exercise" = "Olahraga";
+"category.default.project" = "Proyek";
+"category.default.parttime" = "Paruh Waktu";
+
+/* ===== Chat View ===== */
+"chat.claude.not.installed" = "Claude Code Belum Terpasang";
+"chat.claude.install.hint" = "brew install claude-code\natau npm install -g @anthropic-ai/claude-code";
+"chat.codex.not.installed" = "Codex CLI Belum Terpasang";
+"chat.codex.install.hint" = "brew install codex\natau npm install -g @openai/codex";
+"chat.redetect" = "Deteksi Ulang";
+"chat.select.other.ai" = "Pilih AI Lain";
+"chat.assistant.title" = "Asisten AI Kalender";
+"chat.examples" = "\"Tambahkan rapat besok jam 3 siang\"\n\"Tampilkan jadwal minggu ini\"\n\"Hapus acara ujian\"";
+"chat.thinking" = "Sedang berpikir...";
+"chat.input.placeholder" = "Ketik pesan...";
+"chat.action.confirm.title" = "Konfirmasi Perubahan Jadwal";
+"chat.action.create" = "Buat";
+"chat.action.update" = "Perbarui";
+"chat.action.delete" = "Hapus";
+
+/* ===== AI Settings ===== */
+"ai.settings.title" = "Pengaturan AI";
+"ai.settings.model" = "Model: %@";
+"ai.provider.installed" = "Terpasang — Siap digunakan";
+"ai.provider.not.installed" = "Belum terpasang";
+
+/* ===== AI Service Messages ===== */
+"ai.action.cancelled" = "Tindakan dibatalkan.";
+"ai.batch.delete.rejected" = "⚠️ Penghapusan massal (%d item) ditolak demi keamanan. Silakan hapus satu per satu.";
+"ai.create.failed.params" = "⚠️ Gagal membuat: Parameter tidak valid";
+"ai.create.success" = "✅ Dibuat: %@";
+"ai.create.failed" = "⚠️ Gagal membuat: %@";
+"ai.delete.success" = "✅ Dihapus";
+"ai.delete.failed" = "⚠️ Gagal menghapus";
+"ai.delete.failed.detail" = "⚠️ Gagal menghapus: %@";
+"ai.update.success" = "✅ Diperbarui";
+"ai.update.failed" = "⚠️ Gagal memperbarui";
+"ai.update.failed.detail" = "⚠️ Gagal memperbarui: %@";
+"ai.update.failed.nodate" = "⚠️ Gagal memperbarui: Tidak ada info tanggal";
+"ai.invalid.eventid" = "⚠️ %@ gagal: eventId tidak valid";
+"ai.cli.failed" = "Eksekusi CLI gagal: %@";
+"ai.output.truncated" = "... (output dipotong)";
+"ai.error.prefix" = "Error: %@";
+"ai.no.response" = "Tidak ada respons diterima.";
+"ai.claude.not.found" = "Claude Code belum terpasang. Periksa apakah claude ada di /opt/homebrew/bin atau ~/.local/bin.";
+"ai.codex.not.found" = "Codex CLI belum terpasang. Periksa apakah codex ada di /opt/homebrew/bin atau ~/.local/bin.";
+"ai.pending.confirm" = "⚠️ Jalankan tindakan berikut?\n%@\n\nKetik 'konfirmasi' atau 'jalankan' untuk melanjutkan.";
+
+/* ===== Notifications ===== */
+"notification.daily.title" = "Jadwal Hari Ini";
+"notification.daily.body" = "Cek jadwal Anda untuk hari ini.";
+"notification.daily.events" = "Acara: %@";
+"notification.daily.todos" = "Tugas: %@";
+"notification.daily.empty" = "Tidak ada acara terjadwal untuk hari ini.";
+"notification.event.title" = "Pengingat Acara";
+"notification.event.body" = "Dalam %d menit: %@";
+"notification.evening.title" = "Ringkasan Harian";
+"notification.evening.body" = "Tinjau acara yang selesai dan persiapkan untuk besok";
+
+/* ===== Onboarding ===== */
+"onboarding.title" = "Pengaturan Calen";
+"onboarding.start" = "Mulai";
+
+/* Onboarding - Goals */
+"onboarding.goals.title" = "Ceritakan tujuan Anda";
+"onboarding.goals.subtitle" = "Tetapkan 1-3 tujuan utama dan\nAI akan menjadwalkannya secara otomatis setiap hari";
+"onboarding.goals.placeholder" = "Tujuan (contoh: Lulus ujian sertifikasi)";
+"onboarding.goals.target.date" = "Tanggal Target";
+"onboarding.goals.quick.select" = "Pilih Cepat";
+"onboarding.goals.preset.certification" = "Lulus Sertifikasi";
+"onboarding.goals.preset.sideproject" = "Proyek Sampingan";
+"onboarding.goals.preset.health" = "Kesehatan/Olahraga";
+
+/* Onboarding - Schedule */
+"onboarding.schedule.title" = "Ceritakan rutinitas harian Anda";
+"onboarding.schedule.subtitle" = "Digunakan untuk optimasi penjadwalan";
+"onboarding.schedule.work.start" = "Mulai Kerja";
+"onboarding.schedule.work.end" = "Selesai Kerja";
+"onboarding.schedule.lunch" = "Makan Siang";
+"onboarding.schedule.commute" = "Perjalanan";
+"onboarding.schedule.unit.hour" = "jam";
+"onboarding.schedule.unit.minute" = "menit";
+
+/* Onboarding - Energy */
+"onboarding.energy.title" = "Apa tipe energi Anda?";
+"onboarding.energy.subtitle" = "Tugas penting akan ditempatkan\ndi jam fokus tertinggi Anda";
+"onboarding.energy.morning.desc" = "Fokus tertinggi di pagi hari";
+"onboarding.energy.evening.desc" = "Fokus tertinggi di sore/malam";
+"onboarding.energy.balanced.desc" = "Konsisten sepanjang hari";
+
+/* Onboarding - Capacity */
+"onboarding.capacity.title" = "Waktu Fokus Harian";
+"onboarding.capacity.subtitle" = "Atur berapa waktu per hari\nyang bisa Anda dedikasikan untuk tujuan";
+"onboarding.capacity.weekday" = "Hari Kerja";
+"onboarding.capacity.weekend" = "Akhir Pekan";
+"onboarding.capacity.minutes.format" = "%d menit";
+"onboarding.capacity.ai.level" = "Level Penjadwalan Otomatis AI";
+
+/* Aggressiveness */
+"aggressiveness.manual" = "Manual";
+"aggressiveness.assist" = "Bantu";
+"aggressiveness.semiauto" = "Semi-Otomatis";
+"aggressiveness.auto" = "Otomatis";
+"aggressiveness.manual.desc" = "Tampilkan saran saja, tanpa penambahan otomatis";
+"aggressiveness.assist.desc" = "Otomatis tambah blok di bawah 30 menit saja";
+"aggressiveness.semiauto.desc" = "Otomatis 1-2 teratas, sarankan sisanya";
+"aggressiveness.auto.desc" = "Tambah semua otomatis, konfirmasi hanya saat konflik";
+
+/* Energy Types */
+"energy.morning" = "Pagi";
+"energy.evening" = "Malam";
+"energy.balanced" = "Seimbang";
+
+/* ===== Review View ===== */
+"review.daily.title" = "Penyesuaian Hari Ini";
+"review.evening.title" = "Ringkasan Malam";
+"review.suggestion.count" = "· %d saran";
+"review.empty.title" = "Semua Baik!";
+"review.empty.subtitle" = "Anda sesuai rencana hari ini";
+"review.weekly.rate" = "Penyelesaian Mingguan";
+"review.tomorrow.title" = "Rencana Besok";
+"review.tomorrow.auto.created" = "%d dibuat otomatis";
+"review.tomorrow.suggested" = "%d disarankan (cek di briefing pagi)";
+"review.tomorrow.minutes.format" = "%d/%d menit terjadwal";
+"review.move.all.tomorrow" = "Pindahkan semua yang belum selesai ke besok";
+"review.generating.plan" = "Membuat rencana besok...";
+"review.go.to.chat" = "Buka Chat";
+"review.help.done" = "Selesai";
+"review.help.tomorrow" = "Besok";
+"review.help.skip" = "Lewati";
+
+/* Suggestion Types */
+"suggestion.carryover" = "Lanjutan";
+"suggestion.deadline" = "Tenggat";
+"suggestion.habit" = "Kebiasaan";
+"suggestion.spread" = "Sebar";
+"suggestion.prep" = "Persiapan";
+"suggestion.focus" = "Fokus";
+"suggestion.health" = "Kesehatan";
+"suggestion.buffer" = "Perjalanan";
+
+/* ===== ViewModel ===== */
+"viewmodel.default.category" = "Harian";
