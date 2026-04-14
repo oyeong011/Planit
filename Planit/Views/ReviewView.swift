@@ -11,7 +11,6 @@ struct ReviewView: View {
     @State private var showPlanResult = false
     @State private var aiPlan: ReviewAIPlan?
     @State private var selectedPeriod: GoalService.CompletionPeriod = .day
-    // 저녁 리뷰 중 사용자가 마킹한 이벤트 추적
     @State private var reviewedItems: [(title: String, status: CompletionStatus, start: Date, end: Date)] = []
 
     var body: some View {
@@ -20,11 +19,11 @@ struct ReviewView: View {
             Divider()
 
             if showPlanResult, let plan = aiPlan {
-                aiPlanResultView(plan)
+                planResultView(plan)
             } else if reviewService.currentMode == .evening {
-                eveningReviewContent
+                eveningView
             } else {
-                dailyModeContent
+                morningView
             }
         }
         .background(Color(nsColor: .windowBackgroundColor))
@@ -33,17 +32,21 @@ struct ReviewView: View {
     // MARK: - Header
 
     private var header: some View {
-        HStack(spacing: 6) {
-            Image(systemName: headerIcon)
-                .font(.system(size: 13))
-                .foregroundStyle(headerColor)
+        HStack(spacing: 8) {
+            Circle()
+                .fill(headerColor.opacity(0.15))
+                .frame(width: 28, height: 28)
+                .overlay(
+                    Image(systemName: headerIcon)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(headerColor)
+                )
 
-            Text(headerTitle)
-                .font(.system(size: 14, weight: .bold))
-
-            if reviewService.currentMode == .evening && !showPlanResult {
-                Text("· \(todayDateString)")
-                    .font(.system(size: 11))
+            VStack(alignment: .leading, spacing: 1) {
+                Text(headerTitle)
+                    .font(.system(size: 13, weight: .bold))
+                Text(todayDateString)
+                    .font(.system(size: 10))
                     .foregroundStyle(.secondary)
             }
 
@@ -54,6 +57,7 @@ struct ReviewView: View {
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(.secondary)
                     .frame(width: 24, height: 24)
+                    .background(Circle().fill(Color.secondary.opacity(0.1)))
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -64,52 +68,291 @@ struct ReviewView: View {
 
     private var headerIcon: String {
         if showPlanResult { return "calendar.badge.checkmark" }
-        return reviewService.currentMode == .evening ? "moon.fill" : "calendar.badge.clock"
+        return reviewService.currentMode == .evening ? "moon.fill" : "sun.max.fill"
     }
 
     private var headerColor: Color {
         if showPlanResult { return .green }
-        return reviewService.currentMode == .evening ? .indigo : .purple
+        return reviewService.currentMode == .evening ? .indigo : .orange
     }
 
     private var headerTitle: String {
         if showPlanResult { return String(localized: "review.plan.complete.title") }
-        return reviewService.currentMode == .evening ? String(localized: "review.evening.title") : String(localized: "review.daily.title")
+        return reviewService.currentMode == .evening
+            ? String(localized: "review.evening.title")
+            : String(localized: "review.daily.title")
     }
 
-    // MARK: - Evening Review Content
+    // MARK: - Morning View
 
-    private var eveningReviewContent: some View {
+    private var morningView: some View {
         VStack(spacing: 0) {
-            if reviewService.suggestions.isEmpty {
-                emptyTodayState
-            } else {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(String(localized: "review.today.lookback"))
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 4)
-
-                        ForEach(Array(reviewService.suggestions.enumerated()), id: \.element.id) { idx, suggestion in
-                            eveningCard(suggestion, index: idx)
-                        }
-                    }
-                    .padding(8)
+            ScrollView {
+                VStack(spacing: 10) {
+                    progressSection
+                    suggestionsSection
                 }
+                .padding(10)
             }
 
             Divider()
 
             HStack {
+                Spacer()
+                Button {
+                    reviewService.dismissReview()
+                    onDismiss()
+                } label: {
+                    Text(String(localized: "review.ok.button"))
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 6)
+                        .background(RoundedRectangle(cornerRadius: 7).fill(.orange))
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+        }
+    }
+
+    // MARK: - Progress Section
+
+    private var progressSection: some View {
+        let (done, total) = progressCounts(for: selectedPeriod)
+        let rate = total > 0 ? Double(done) / Double(total) : 0
+
+        return VStack(alignment: .leading, spacing: 10) {
+            // 기간 탭
+            HStack(spacing: 2) {
+                ForEach([
+                    (GoalService.CompletionPeriod.day,   String(localized: "common.today")),
+                    (.week,  String(localized: "review.period.week")),
+                    (.month, String(localized: "review.period.month")),
+                    (.year,  String(localized: "review.period.year")),
+                ], id: \.1) { period, label in
+                    Button { selectedPeriod = period } label: {
+                        Text(label)
+                            .font(.system(size: 10, weight: selectedPeriod == period ? .semibold : .regular))
+                            .foregroundStyle(selectedPeriod == period ? .white : .secondary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 4)
+                            .background(
+                                RoundedRectangle(cornerRadius: 5)
+                                    .fill(selectedPeriod == period ? Color.orange : Color.clear)
+                            )
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(3)
+            .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.08)))
+
+            if total > 0 {
+                HStack(alignment: .bottom) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(String(format: "%d / %d", done, total))
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundStyle(rate >= 0.7 ? .green : rate >= 0.4 ? .orange : .red)
+                        Text(String(localized: "review.completion.rate"))
+                            .font(.system(size: 10))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Text("\(Int(rate * 100))%")
+                        .font(.system(size: 28, weight: .heavy))
+                        .foregroundStyle(rate >= 0.7 ? Color.green : rate >= 0.4 ? Color.orange : Color.red)
+                }
+
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 4).fill(Color.secondary.opacity(0.12))
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(
+                                LinearGradient(
+                                    colors: rate >= 0.7 ? [.green, .mint] : rate >= 0.4 ? [.orange, .yellow] : [.red, .orange],
+                                    startPoint: .leading, endPoint: .trailing)
+                            )
+                            .frame(width: max(geo.size.width * CGFloat(rate), rate > 0 ? 8 : 0))
+                            .animation(.spring(duration: 0.4), value: rate)
+                    }
+                }
+                .frame(height: 8)
+            } else {
+                HStack(spacing: 6) {
+                    Image(systemName: "tray")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                    Text(String(localized: "review.no.todos"))
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.vertical, 10)
+            }
+        }
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color(nsColor: .controlBackgroundColor)))
+    }
+
+    // MARK: - Suggestions Section
+
+    @ViewBuilder
+    private var suggestionsSection: some View {
+        if reviewService.suggestions.isEmpty {
+            HStack(spacing: 8) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 18))
+                    .foregroundStyle(.green)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(String(localized: "review.on.track"))
+                        .font(.system(size: 12, weight: .semibold))
+                    Text(String(localized: "review.evening.auto.plan"))
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+            }
+            .padding(12)
+            .background(RoundedRectangle(cornerRadius: 10).fill(Color.green.opacity(0.06)))
+        } else {
+            VStack(alignment: .leading, spacing: 6) {
+                Label(String(localized: "review.today.lookback"), systemImage: "sparkles")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 2)
+
+                ForEach(Array(reviewService.suggestions.enumerated()), id: \.element.id) { idx, s in
+                    morningSuggestionCard(s, index: idx)
+                }
+            }
+        }
+    }
+
+    private func morningSuggestionCard(_ s: ReviewSuggestion, index: Int) -> some View {
+        HStack(spacing: 10) {
+            RoundedRectangle(cornerRadius: 2)
+                .fill(colorFor(s.type))
+                .frame(width: 3)
+                .padding(.vertical, 2)
+
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 4) {
+                    Image(systemName: iconFor(s.type))
+                        .font(.system(size: 9))
+                        .foregroundStyle(colorFor(s.type))
+                    Text(labelFor(s.type))
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(colorFor(s.type))
+                }
+                Text(s.title)
+                    .font(.system(size: 12, weight: .semibold))
+                Text(s.description)
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+
+                if s.status != .accepted {
+                    HStack(spacing: 6) {
+                        Button { acceptSuggestion(at: index) } label: {
+                            Text(String(localized: "review.add.button"))
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 3)
+                                .background(RoundedRectangle(cornerRadius: 5).fill(colorFor(s.type)))
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+
+                        Button { declineSuggestion(at: index) } label: {
+                            Text(String(localized: "review.skip.button"))
+                                .font(.system(size: 10))
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.top, 2)
+                }
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(s.status == .accepted ? colorFor(s.type).opacity(0.06) : Color(nsColor: .controlBackgroundColor))
+        )
+    }
+
+    // MARK: - Evening View
+
+    private var eveningView: some View {
+        VStack(spacing: 0) {
+            if reviewService.suggestions.isEmpty {
+                Spacer()
+                VStack(spacing: 10) {
+                    Image(systemName: "moon.stars.fill")
+                        .font(.system(size: 32))
+                        .foregroundStyle(.indigo)
+                    Text(String(localized: "review.no.past.events"))
+                        .font(.system(size: 13, weight: .semibold))
+                    Text(String(localized: "review.generate.now.hint"))
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 20)
+                Spacer()
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Label(String(localized: "review.today.lookback"), systemImage: "list.bullet.clipboard")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Text(String(format: "%d", reviewService.suggestions.count))
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(.indigo)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Capsule().fill(Color.indigo.opacity(0.1)))
+                        }
+                        .padding(.horizontal, 2)
+
+                        ForEach(Array(reviewService.suggestions.enumerated()), id: \.element.id) { idx, s in
+                            eveningCard(s, index: idx)
+                        }
+                    }
+                    .padding(10)
+                }
+            }
+
+            Divider()
+
+            HStack(spacing: 8) {
                 if !reviewService.suggestions.isEmpty {
                     Button { moveAllToTomorrow() } label: {
-                        Text(String(localized: "review.move.all"))
-                            .font(.system(size: 11))
-                            .foregroundStyle(.orange)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .contentShape(Rectangle())
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.right.to.line")
+                                .font(.system(size: 10))
+                            Text(String(localized: "review.move.all"))
+                                .font(.system(size: 11))
+                        }
+                        .foregroundStyle(.orange)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(RoundedRectangle(cornerRadius: 6).stroke(Color.orange.opacity(0.5), lineWidth: 1))
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
@@ -119,17 +362,20 @@ struct ReviewView: View {
                 Button { generatePlan() } label: {
                     if isGenerating {
                         HStack(spacing: 6) {
-                            ProgressView().controlSize(.small)
+                            ProgressView().controlSize(.small).tint(.white)
                             Text(String(localized: "review.generating.button"))
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(.indigo)
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(.white)
                         }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 6)
+                        .background(RoundedRectangle(cornerRadius: 8).fill(.indigo))
                     } else {
-                        HStack(spacing: 4) {
+                        HStack(spacing: 5) {
                             Image(systemName: "wand.and.stars")
                                 .font(.system(size: 11))
                             Text(String(localized: "review.generate.tomorrow"))
-                                .font(.system(size: 12, weight: .semibold))
+                                .font(.system(size: 11, weight: .semibold))
                         }
                         .foregroundStyle(.white)
                         .padding(.horizontal, 14)
@@ -145,357 +391,118 @@ struct ReviewView: View {
         }
     }
 
-    // MARK: - Empty Today State
-
-    private var emptyTodayState: some View {
-        VStack(spacing: 10) {
-            Spacer()
-            Image(systemName: "moon.stars")
-                .font(.system(size: 28))
-                .foregroundStyle(.indigo)
-            Text(String(localized: "review.no.past.events"))
-                .font(.system(size: 13, weight: .semibold))
-            Text(String(localized: "review.generate.now.hint"))
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-            Spacer()
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    // MARK: - Evening Card
-
-    private func eveningCard(_ suggestion: ReviewSuggestion, index: Int) -> some View {
-        HStack(spacing: 8) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(suggestion.title)
+    private func eveningCard(_ s: ReviewSuggestion, index: Int) -> some View {
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(s.title)
                     .font(.system(size: 12, weight: .medium))
-                Text(suggestion.description)
-                    .font(.system(size: 10))
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            HStack(spacing: 4) {
-                Button { markCompletion(at: index, status: .done) } label: {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 20))
-                        .foregroundStyle(.green)
-                        .frame(width: 28, height: 28)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .help(String(localized: "review.help.done"))
-
-                Button { markCompletion(at: index, status: .moved) } label: {
-                    Image(systemName: "arrow.right.circle.fill")
-                        .font(.system(size: 20))
-                        .foregroundStyle(.orange)
-                        .frame(width: 28, height: 28)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .help(String(localized: "review.help.tomorrow"))
-
-                Button { markCompletion(at: index, status: .skipped) } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 20))
-                        .foregroundStyle(Color.secondary)
-                        .frame(width: 28, height: 28)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .help(String(localized: "review.help.skip"))
-            }
-        }
-        .padding(10)
-        .frame(maxWidth: .infinity)
-        .background(RoundedRectangle(cornerRadius: 8).fill(Color(nsColor: .controlBackgroundColor)))
-    }
-
-    // MARK: - Daily Mode Content (simplified)
-
-    private var dailyModeContent: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                VStack(spacing: 8) {
-                    weeklyProgressCard
-
-                    if reviewService.suggestions.isEmpty {
-                        VStack(spacing: 6) {
-                            Spacer().frame(height: 12)
-                            Image(systemName: "checkmark.circle")
-                                .font(.system(size: 26))
-                                .foregroundStyle(.green)
-                            Text(String(localized: "review.on.track"))
-                                .font(.system(size: 12, weight: .semibold))
-                            Text(String(localized: "review.evening.auto.plan"))
-                                .font(.system(size: 11))
-                                .foregroundStyle(.secondary)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                    } else {
-                        ForEach(Array(reviewService.suggestions.enumerated()), id: \.element.id) { idx, s in
-                            morningCard(s, index: idx)
-                        }
-                    }
-                }
-                .padding(8)
-            }
-
-            Divider()
-
-            HStack {
-                Spacer()
-                Button {
-                    reviewService.dismissReview()
-                    onDismiss()
-                } label: {
-                    Text(String(localized: "review.ok.button"))
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(.purple)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-        }
-    }
-
-    // MARK: - Morning Card (daily mode suggestions)
-
-    private func morningCard(_ suggestion: ReviewSuggestion, index: Int) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
-            HStack(spacing: 4) {
-                Image(systemName: iconFor(suggestion.type))
-                    .font(.system(size: 9))
-                Text(labelFor(suggestion.type))
-                    .font(.system(size: 9, weight: .medium))
-            }
-            .foregroundStyle(colorFor(suggestion.type))
-
-            Text(suggestion.title)
-                .font(.system(size: 12, weight: .semibold))
-
-            Text(suggestion.description)
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-
-            if suggestion.status != .accepted {
-                HStack(spacing: 6) {
-                    Button { acceptSuggestion(at: index) } label: {
-                        HStack {
-                            Text(String(localized: "review.add.button"))
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundStyle(.white)
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 4)
-                        .background(RoundedRectangle(cornerRadius: 5).fill(.purple))
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-
-                    Button { declineSuggestion(at: index) } label: {
-                        Text(String(localized: "review.skip.button"))
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
-        .padding(10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 8).fill(
-            suggestion.status == .accepted
-                ? Color.green.opacity(0.06)
-                : Color(nsColor: .controlBackgroundColor)))
-    }
-
-    // MARK: - Progress Card
-
-    /// 기간별 (완료, 전체) 카운트 반환
-    private func progressCounts(for period: GoalService.CompletionPeriod) -> (done: Int, total: Int) {
-        // 그레고리력, 일요일 시작, minimumDaysInFirstWeek=1로 고정 (로케일 독립)
-        var cal = Calendar(identifier: .gregorian)
-        cal.firstWeekday = 1
-        cal.minimumDaysInFirstWeek = 1
-
-        let component: Calendar.Component
-        switch period {
-        case .day:   component = .day
-        case .week:  component = .weekOfYear
-        case .month: component = .month
-        case .year:  component = .year
-        }
-        guard let interval = cal.dateInterval(of: component, for: Date()) else { return (0, 0) }
-
-        // 할일로 등록된 Google 이벤트 ID — calendarEvents와 중복 제외
-        let todoEventIds = Set(viewModel.todos.compactMap { $0.googleEventId })
-        let completedIDs = viewModel.completedEventIDs
-
-        // 이벤트: 구간 겹침 테스트 (멀티데이·종일 이벤트 포함)
-        let events = viewModel.calendarEvents.filter { event in
-            guard !todoEventIds.contains(event.id) else { return false }
-            let eventEnd = event.endDate > event.startDate ? event.endDate : event.startDate.addingTimeInterval(1)
-            return event.startDate < interval.end && eventEnd > interval.start
-        }
-
-        // 할일: 모든 기간 동일 로직 — appleReminders는 캐시 날짜와 interval이 일치할 때만 포함됨
-        let localTodos = viewModel.todos.filter {
-            let d = cal.startOfDay(for: $0.date)
-            return d >= interval.start && d < interval.end
-        }
-        let reminderTodos = viewModel.appleReminders.filter {
-            let d = cal.startOfDay(for: $0.date)
-            return d >= interval.start && d < interval.end
-        }
-        let baseTodos = localTodos + reminderTodos
-
-        // 완료 판정: todo+event 쌍은 어느 쪽이든 완료면 done
-        let doneTodos = baseTodos.filter { todo in
-            todo.isCompleted || (todo.googleEventId.map { completedIDs.contains($0) } ?? false)
-        }.count
-        let doneEvents = events.filter { completedIDs.contains($0.id) }.count
-
-        return (doneTodos + doneEvents, baseTodos.count + events.count)
-    }
-
-    private var weeklyProgressCard: some View {
-        let (done, total) = progressCounts(for: selectedPeriod)
-        let rate = total > 0 ? Double(done) / Double(total) : 0
-
-        return VStack(alignment: .leading, spacing: 8) {
-            // 기간 탭
-            HStack(spacing: 2) {
-                ForEach([
-                    (GoalService.CompletionPeriod.day, String(localized: "common.today")),
-                    (.week, String(localized: "review.period.week")),
-                    (.month, String(localized: "review.period.month")),
-                    (.year, String(localized: "review.period.year")),
-                ], id: \.1) { period, label in
-                    Button { selectedPeriod = period } label: {
-                        Text(label)
-                            .font(.system(size: 10, weight: selectedPeriod == period ? .semibold : .regular))
-                            .foregroundStyle(selectedPeriod == period ? .white : .secondary)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 3)
-                            .background(
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(selectedPeriod == period ? Color.purple : Color.clear)
-                            )
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(3)
-            .background(RoundedRectangle(cornerRadius: 6).fill(Color.secondary.opacity(0.1)))
-
-            if total > 0 {
-                HStack {
-                    Text(String(localized: "review.completion.rate"))
-                        .font(.system(size: 11))
+                    .lineLimit(1)
+                if let start = s.proposedStart, let end = s.proposedEnd {
+                    Text("\(formatTime(start)) – \(formatTime(end))")
+                        .font(.system(size: 10))
                         .foregroundStyle(.secondary)
-                    Spacer()
-                    Text("\(Int(rate * 100))%")
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(rate >= 0.7 ? .green : rate >= 0.4 ? .orange : .red)
+                } else {
+                    Text(s.description)
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
                 }
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 3).fill(Color.secondary.opacity(0.15))
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(rate >= 0.7 ? Color.green : rate >= 0.4 ? Color.orange : Color.red)
-                            .frame(width: geo.size.width * CGFloat(rate))
-                            .animation(.easeInOut(duration: 0.3), value: rate)
-                    }
+            }
+
+            Spacer(minLength: 0)
+
+            HStack(spacing: 2) {
+                statusButton(sfSymbol: "checkmark.circle.fill", color: .green,
+                             help: String(localized: "review.help.done")) {
+                    markCompletion(at: index, status: .done)
                 }
-                .frame(height: 6)
-                Text(verbatim: String(format: String(localized: "review.completion.count.format"), done, total))
-                    .font(.system(size: 10))
-                    .foregroundStyle(.secondary)
-            } else {
-                Text(String(localized: "review.no.todos"))
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, 8)
+                statusButton(sfSymbol: "arrow.right.circle.fill", color: .orange,
+                             help: String(localized: "review.help.tomorrow")) {
+                    markCompletion(at: index, status: .moved)
+                }
+                statusButton(sfSymbol: "xmark.circle.fill", color: .secondary,
+                             help: String(localized: "review.help.skip")) {
+                    markCompletion(at: index, status: .skipped)
+                }
             }
         }
-        .padding(10)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
         .background(RoundedRectangle(cornerRadius: 8).fill(Color(nsColor: .controlBackgroundColor)))
+    }
+
+    private func statusButton(sfSymbol: String, color: Color, help: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: sfSymbol)
+                .font(.system(size: 22))
+                .foregroundStyle(color)
+                .frame(width: 30, height: 30)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(help)
     }
 
     // MARK: - AI Plan Result View
 
-    private func aiPlanResultView(_ plan: ReviewAIPlan) -> some View {
+    private func planResultView(_ plan: ReviewAIPlan) -> some View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
-                    // 헤더
+                    // 내일 날짜 헤더
                     HStack(spacing: 10) {
-                        Image(systemName: plan.isEmpty ? "calendar.badge.checkmark" : "calendar.badge.plus")
-                            .font(.system(size: 18))
-                            .foregroundStyle(.indigo)
+                        Circle()
+                            .fill(Color.indigo.opacity(0.12))
+                            .frame(width: 36, height: 36)
+                            .overlay(
+                                Image(systemName: plan.isEmpty ? "calendar.badge.checkmark" : "calendar.badge.plus")
+                                    .font(.system(size: 16))
+                                    .foregroundStyle(.indigo)
+                            )
                         VStack(alignment: .leading, spacing: 2) {
                             Text(tomorrowDateString)
                                 .font(.system(size: 13, weight: .bold))
-                            if !plan.summary.isEmpty {
-                                Text(plan.summary)
-                                    .font(.system(size: 10))
-                                    .foregroundStyle(.secondary)
-                            }
+                            Text(plan.summary.isEmpty ? String(localized: "review.added.to.calendar") : plan.summary)
+                                .font(.system(size: 10))
+                                .foregroundStyle(.secondary)
                         }
                         Spacer()
                     }
-                    .padding(10)
-                    .background(RoundedRectangle(cornerRadius: 8).fill(Color.indigo.opacity(0.07)))
+                    .padding(12)
+                    .background(RoundedRectangle(cornerRadius: 10).fill(Color.indigo.opacity(0.06)))
 
                     if plan.isEmpty {
-                        VStack(spacing: 8) {
-                            Image(systemName: "calendar.badge.checkmark")
-                                .font(.system(size: 26))
+                        HStack(spacing: 8) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 18))
                                 .foregroundStyle(.green)
                             Text(String(localized: "review.tomorrow.sufficient"))
-                                .font(.system(size: 12, weight: .semibold))
+                                .font(.system(size: 12, weight: .medium))
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 20)
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(RoundedRectangle(cornerRadius: 8).fill(Color.green.opacity(0.06)))
                     } else {
-                        // 캘린더에 추가된 이벤트 목록
                         VStack(alignment: .leading, spacing: 6) {
-                            Label(String(localized: "review.added.to.calendar"), systemImage: "checkmark.circle.fill")
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundStyle(.green)
-
                             ForEach(Array(plan.events.enumerated()), id: \.offset) { _, event in
-                                aiPlanEventRow(event)
+                                planEventRow(event)
                             }
                         }
                     }
 
                     if let error = plan.error {
-                        HStack(spacing: 4) {
-                            Image(systemName: "exclamationmark.triangle")
-                                .font(.system(size: 10))
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.system(size: 11))
                             Text(error)
-                                .font(.system(size: 10))
+                                .font(.system(size: 11))
                         }
                         .foregroundStyle(.orange)
-                        .padding(.top, 4)
+                        .padding(10)
+                        .background(RoundedRectangle(cornerRadius: 7).fill(Color.orange.opacity(0.07)))
                     }
                 }
-                .padding(8)
+                .padding(10)
             }
 
             Divider()
@@ -508,9 +515,10 @@ struct ReviewView: View {
                 } label: {
                     Text(String(localized: "review.close.button"))
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(.indigo)
-                        .padding(.horizontal, 12)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 16)
                         .padding(.vertical, 6)
+                        .background(RoundedRectangle(cornerRadius: 7).fill(.indigo))
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -520,16 +528,16 @@ struct ReviewView: View {
         }
     }
 
-    private func aiPlanEventRow(_ event: ReviewAIPlan.PlannedEvent) -> some View {
-        HStack(spacing: 8) {
+    private func planEventRow(_ event: ReviewAIPlan.PlannedEvent) -> some View {
+        HStack(spacing: 10) {
             RoundedRectangle(cornerRadius: 2)
-                .fill(Color.green)
-                .frame(width: 3, height: 36)
+                .fill(Color.indigo)
+                .frame(width: 3)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(event.title)
                     .font(.system(size: 11, weight: .medium))
-                Text("\(formatTime(event.start))~\(formatTime(event.end))")
+                Text("\(formatTime(event.start)) – \(formatTime(event.end))")
                     .font(.system(size: 10))
                     .foregroundStyle(.secondary)
             }
@@ -542,15 +550,13 @@ struct ReviewView: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
-        .background(RoundedRectangle(cornerRadius: 7).fill(Color.green.opacity(0.05)))
+        .background(RoundedRectangle(cornerRadius: 7).fill(Color(nsColor: .controlBackgroundColor)))
     }
 
     // MARK: - Actions
 
     private func generatePlan() {
         isGenerating = true
-
-        // 아직 마킹 안 된 항목 = 오늘 못 한 것 → 내일로
         let remaining = reviewService.suggestions.map { s in
             (title: s.title,
              status: CompletionStatus.moved,
@@ -558,18 +564,13 @@ struct ReviewView: View {
              end: s.proposedEnd ?? Date())
         }
         moveAllToTomorrow()
-
         let allReviewed = reviewedItems + remaining
 
         Task {
-            // AI가 내일 계획 생성
             let plan = await reviewService.generateAITomorrowPlan(reviewed: allReviewed)
-
-            // 각 이벤트를 실제로 캘린더에 추가
             for event in plan.events {
                 onCreateEvent(event.title, event.start, event.end)
             }
-
             aiPlan = plan
             isGenerating = false
             showPlanResult = true
@@ -602,7 +603,6 @@ struct ReviewView: View {
             status: status,
             plannedMinutes: max(minutes, 30)
         )
-        // AI에게 넘길 리뷰 데이터 기록
         reviewedItems.append((
             title: s.title,
             status: status,
@@ -618,7 +618,50 @@ struct ReviewView: View {
         }
     }
 
-    // MARK: - Helpers
+    // MARK: - Progress Helpers
+
+    private func progressCounts(for period: GoalService.CompletionPeriod) -> (done: Int, total: Int) {
+        var cal = Calendar(identifier: .gregorian)
+        cal.firstWeekday = 1
+        cal.minimumDaysInFirstWeek = 1
+
+        let component: Calendar.Component
+        switch period {
+        case .day:   component = .day
+        case .week:  component = .weekOfYear
+        case .month: component = .month
+        case .year:  component = .year
+        }
+        guard let interval = cal.dateInterval(of: component, for: Date()) else { return (0, 0) }
+
+        let todoEventIds = Set(viewModel.todos.compactMap { $0.googleEventId })
+        let completedIDs = viewModel.completedEventIDs
+
+        let events = viewModel.calendarEvents.filter { event in
+            guard !todoEventIds.contains(event.id) else { return false }
+            let eventEnd = event.endDate > event.startDate ? event.endDate : event.startDate.addingTimeInterval(1)
+            return event.startDate < interval.end && eventEnd > interval.start
+        }
+
+        let localTodos = viewModel.todos.filter {
+            let d = cal.startOfDay(for: $0.date)
+            return d >= interval.start && d < interval.end
+        }
+        let reminderTodos = viewModel.appleReminders.filter {
+            let d = cal.startOfDay(for: $0.date)
+            return d >= interval.start && d < interval.end
+        }
+        let baseTodos = localTodos + reminderTodos
+
+        let doneTodos = baseTodos.filter { todo in
+            todo.isCompleted || (todo.googleEventId.map { completedIDs.contains($0) } ?? false)
+        }.count
+        let doneEvents = events.filter { completedIDs.contains($0.id) }.count
+
+        return (doneTodos + doneEvents, baseTodos.count + events.count)
+    }
+
+    // MARK: - Formatting Helpers
 
     private var todayDateString: String {
         let fmt = DateFormatter()
@@ -642,44 +685,44 @@ struct ReviewView: View {
         return fmt.string(from: date)
     }
 
-    // MARK: - Styling Helpers
+    // MARK: - Type Styling
 
     private func iconFor(_ type: SuggestionType) -> String {
         switch type {
-        case .carryover: return "arrow.uturn.right"
-        case .deadline: return "exclamationmark.triangle"
-        case .habitGap: return "repeat"
+        case .carryover:      return "arrow.uturn.right"
+        case .deadline:       return "exclamationmark.triangle"
+        case .habitGap:       return "repeat"
         case .deadlineSpread: return "calendar.badge.clock"
-        case .prep: return "doc.text"
-        case .focusQuota: return "brain.head.profile"
-        case .health: return "heart"
-        case .buffer: return "car"
+        case .prep:           return "doc.text"
+        case .focusQuota:     return "brain.head.profile"
+        case .health:         return "heart"
+        case .buffer:         return "car"
         }
     }
 
     private func labelFor(_ type: SuggestionType) -> String {
         switch type {
-        case .carryover: return String(localized: "suggestion.carryover")
-        case .deadline: return String(localized: "suggestion.deadline")
-        case .habitGap: return String(localized: "suggestion.habit")
+        case .carryover:      return String(localized: "suggestion.carryover")
+        case .deadline:       return String(localized: "suggestion.deadline")
+        case .habitGap:       return String(localized: "suggestion.habit")
         case .deadlineSpread: return String(localized: "suggestion.spread")
-        case .prep: return String(localized: "suggestion.prep")
-        case .focusQuota: return String(localized: "suggestion.focus")
-        case .health: return String(localized: "suggestion.health")
-        case .buffer: return String(localized: "suggestion.buffer")
+        case .prep:           return String(localized: "suggestion.prep")
+        case .focusQuota:     return String(localized: "suggestion.focus")
+        case .health:         return String(localized: "suggestion.health")
+        case .buffer:         return String(localized: "suggestion.buffer")
         }
     }
 
     private func colorFor(_ type: SuggestionType) -> Color {
         switch type {
-        case .carryover: return .orange
-        case .deadline: return .red
-        case .habitGap: return .blue
+        case .carryover:      return .orange
+        case .deadline:       return .red
+        case .habitGap:       return .blue
         case .deadlineSpread: return .purple
-        case .prep: return .teal
-        case .focusQuota: return .indigo
-        case .health: return .green
-        case .buffer: return .brown
+        case .prep:           return .teal
+        case .focusQuota:     return .indigo
+        case .health:         return .green
+        case .buffer:         return .brown
         }
     }
 }
