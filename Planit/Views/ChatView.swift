@@ -87,33 +87,20 @@ struct ChatView: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .textSelection(.enabled)
-
-            case .claudeAPI:
-                Image(systemName: "key.fill")
-                    .font(.system(size: 28))
-                    .foregroundStyle(.purple)
-                Text(String(localized: "chat.apikey.needed.title"))
-                    .font(.system(size: 13, weight: .medium))
-                Text(String(localized: "chat.apikey.needed.hint"))
-                    .font(.system(size: 10))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
             }
 
             HStack(spacing: 12) {
-                if aiService.provider.requiresCLI {
-                    Button {
-                        aiService.recheckCLI()
-                    } label: {
-                        Text(String(localized: "chat.redetect"))
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(.blue)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
+                Button {
+                    aiService.recheckCLI()
+                } label: {
+                    Text(String(localized: "chat.redetect"))
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.blue)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
 
                 Picker(String(localized: "chat.select.other.ai"), selection: $aiService.provider) {
                     ForEach(AIProvider.allCases, id: \.self) { p in
@@ -121,7 +108,7 @@ struct ChatView: View {
                     }
                 }
                 .labelsHidden()
-                .frame(width: 110)
+                .frame(width: 90)
                 .font(.system(size: 11))
             }
 
@@ -701,17 +688,15 @@ struct ProviderRow: View {
 
     private var isAvailable: Bool {
         switch provider {
-        case .claude:    return aiService.claudeAvailable
-        case .codex:     return aiService.codexAvailable
-        case .claudeAPI: return !aiService.claudeAPIKey.isEmpty
+        case .claude: return aiService.claudeAvailable
+        case .codex: return aiService.codexAvailable
         }
     }
 
     private var statusText: String {
         switch provider {
-        case .claude:    return aiService.claudeAvailable ? String(localized: "ai.provider.installed") : String(localized: "ai.provider.not.installed")
-        case .codex:     return aiService.codexAvailable ? String(localized: "ai.provider.installed") : String(localized: "ai.provider.not.installed")
-        case .claudeAPI: return aiService.claudeAPIKey.isEmpty ? String(localized: "ai.provider.apikey.needed") : String(localized: "ai.provider.apikey.set")
+        case .claude: return aiService.claudeAvailable ? String(localized: "ai.provider.installed") : String(localized: "ai.provider.not.installed")
+        case .codex: return aiService.codexAvailable ? String(localized: "ai.provider.installed") : String(localized: "ai.provider.not.installed")
         }
     }
 
