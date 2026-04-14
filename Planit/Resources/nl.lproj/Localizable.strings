@@ -362,3 +362,10 @@
 "rollover.notification.body" = "Bekijk uw taken van vandaag";
 "rollover.moved.title" = "Taken verplaatst";
 "rollover.moved.body" = "%d onvoltooide taak/taken verplaatst naar vandaag";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "Tik op een voorbeeld hieronder om te beginnen";
+"chat.quick.today" = "Wat staat er vandaag op mijn schema?";
+"chat.quick.add.meeting" = "Vergadering toevoegen morgen om 15:00";
+"chat.quick.free.time" = "Vrije tijd zoeken deze week";
+"chat.quick.tomorrow.plan" = "Mijn dag van morgen plannen";

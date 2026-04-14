@@ -362,3 +362,10 @@
 "rollover.notification.body" = "בדוק את המשימות שלך להיום";
 "rollover.moved.title" = "משימות הועברו";
 "rollover.moved.body" = "%d משימה/ות שלא הושלמה/ו הועבר/ו להיום";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "לחץ על דוגמה למטה כדי להתחיל";
+"chat.quick.today" = "מה יש לי היום?";
+"chat.quick.add.meeting" = "הוסף פגישה מחר בשעה 15:00";
+"chat.quick.free.time" = "מצא זמן פנוי השבוע";
+"chat.quick.tomorrow.plan" = "תכנן את מחר שלי";

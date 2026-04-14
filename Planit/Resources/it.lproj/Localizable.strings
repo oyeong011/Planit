@@ -362,3 +362,10 @@
 "rollover.notification.body" = "Controlla le tue attività di oggi";
 "rollover.moved.title" = "Attività spostate";
 "rollover.moved.body" = "%d attività incompleta/e spostata/e a oggi";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "Tocca un esempio qui sotto";
+"chat.quick.today" = "Cosa ho oggi in programma?";
+"chat.quick.add.meeting" = "Aggiungi riunione domani alle 15";
+"chat.quick.free.time" = "Trova tempo libero questa settimana";
+"chat.quick.tomorrow.plan" = "Pianifica la mia giornata di domani";

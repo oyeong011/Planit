@@ -362,3 +362,10 @@
 "rollover.notification.body" = "Kiểm tra các nhiệm vụ hôm nay của bạn";
 "rollover.moved.title" = "Đã chuyển nhiệm vụ";
 "rollover.moved.body" = "Đã chuyển %d nhiệm vụ chưa hoàn thành sang hôm nay";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "Nhấn vào ví dụ bên dưới để bắt đầu";
+"chat.quick.today" = "Hôm nay tôi có gì?";
+"chat.quick.add.meeting" = "Thêm cuộc họp vào 3 giờ chiều ngày mai";
+"chat.quick.free.time" = "Tìm thời gian rảnh trong tuần này";
+"chat.quick.tomorrow.plan" = "Lên kế hoạch cho ngày mai";

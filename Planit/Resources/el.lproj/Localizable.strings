@@ -362,3 +362,10 @@
 "rollover.notification.body" = "Ελέγξτε τις σημερινές σας εργασίες";
 "rollover.moved.title" = "Οι εργασίες μεταφέρθηκαν";
 "rollover.moved.body" = "%d ημιτελής/-είς εργασία/-ες μεταφέρθηκε/-αν στη σημερινή ημέρα";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "Πατήστε ένα παράδειγμα παρακάτω για να ξεκινήσετε";
+"chat.quick.today" = "Τι έχω σήμερα;";
+"chat.quick.add.meeting" = "Προσθήκη συνάντησης αύριο στις 15:00";
+"chat.quick.free.time" = "Εύρεση ελεύθερου χρόνου αυτή την εβδομάδα";
+"chat.quick.tomorrow.plan" = "Προγραμματισμός της αυριανής ημέρας";

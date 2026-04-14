@@ -362,3 +362,10 @@
 "rollover.notification.body" = "Überprüfe deine heutigen Aufgaben";
 "rollover.moved.title" = "Aufgaben verschoben";
 "rollover.moved.body" = "%d unvollständige Aufgabe(n) auf heute verschoben";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "Tippe auf ein Beispiel unten";
+"chat.quick.today" = "Was steht heute auf meinem Plan?";
+"chat.quick.add.meeting" = "Meeting morgen um 15 Uhr hinzufügen";
+"chat.quick.free.time" = "Freie Zeit diese Woche finden";
+"chat.quick.tomorrow.plan" = "Morgen planen";

@@ -362,3 +362,10 @@
 "rollover.notification.body" = "Consultez vos tâches du jour";
 "rollover.moved.title" = "Tâches déplacées";
 "rollover.moved.body" = "%d tâche(s) incomplète(s) déplacée(s) à aujourd'hui";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "Appuyez sur un exemple ci-dessous";
+"chat.quick.today" = "Quel est mon programme aujourd'hui ?";
+"chat.quick.add.meeting" = "Ajouter une réunion demain à 15h";
+"chat.quick.free.time" = "Trouver du temps libre cette semaine";
+"chat.quick.tomorrow.plan" = "Planifier ma journée de demain";

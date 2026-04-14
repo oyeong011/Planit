@@ -362,3 +362,10 @@
 "rollover.notification.body" = "Verificați sarcinile dvs. de astăzi";
 "rollover.moved.title" = "Sarcini mutate";
 "rollover.moved.body" = "%d sarcină/sarcini nefinalizată(e) mutată(e) pentru astăzi";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "Atingeți un exemplu de mai jos pentru a începe";
+"chat.quick.today" = "Ce am azi în program?";
+"chat.quick.add.meeting" = "Adaugă o întâlnire mâine la ora 15";
+"chat.quick.free.time" = "Găsește timp liber săptămâna aceasta";
+"chat.quick.tomorrow.plan" = "Planifică-mi ziua de mâine";

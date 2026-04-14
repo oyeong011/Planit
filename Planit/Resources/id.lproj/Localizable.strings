@@ -362,3 +362,10 @@
 "rollover.notification.body" = "Periksa tugas hari ini Anda";
 "rollover.moved.title" = "Tugas dipindahkan";
 "rollover.moved.body" = "%d tugas yang belum selesai dipindahkan ke hari ini";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "Ketuk contoh di bawah untuk memulai";
+"chat.quick.today" = "Apa jadwal saya hari ini?";
+"chat.quick.add.meeting" = "Tambahkan rapat besok jam 3 sore";
+"chat.quick.free.time" = "Cari waktu luang minggu ini";
+"chat.quick.tomorrow.plan" = "Rencanakan hari saya besok";

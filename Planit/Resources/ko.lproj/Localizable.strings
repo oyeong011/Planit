@@ -364,3 +364,10 @@
 "rollover.notification.body" = "오늘의 할 일을 확인하세요";
 "rollover.moved.title" = "할 일 이동됨";
 "rollover.moved.body" = "%d개의 미완료 할 일을 오늘로 이동했습니다";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "아래 예시를 눌러 시작해보세요";
+"chat.quick.today" = "오늘 일정 알려줘";
+"chat.quick.add.meeting" = "내일 오후 3시에 회의 추가해줘";
+"chat.quick.free.time" = "이번 주 비어있는 시간 찾아줘";
+"chat.quick.tomorrow.plan" = "내일 일정 계획 세워줘";

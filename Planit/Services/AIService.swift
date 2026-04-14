@@ -651,12 +651,29 @@ final class AIService: ObservableObject {
         var results: [ChatMessage] = []
 
         if let actions = actions, !actions.isEmpty {
-            // Queue actions for user approval instead of executing immediately
-            pendingActions = actions
-            pendingMessage = message
-            let summary = actions.map { "\($0.action): \($0.title ?? "?")" }.joined(separator: "\n")
-            results.append(ChatMessage(role: .assistant, content: message))
-            results.append(ChatMessage(role: .toolCall, content: "아래 작업을 실행할까요?\n\(summary)"))
+            // create는 즉시 실행, delete/update만 승인 요청
+            let createActions = actions.filter { $0.action == "create" }
+            let riskyActions  = actions.filter { $0.action != "create" }
+
+            if !message.isEmpty {
+                results.append(ChatMessage(role: .assistant, content: message))
+            }
+
+            // create 즉시 실행
+            if !createActions.isEmpty {
+                let (_, freshIds) = await buildCalendarContext()
+                knownEventIds = freshIds
+                let createResults = await executeActions(createActions)
+                results.append(contentsOf: createResults)
+            }
+
+            // delete/update는 승인 카드
+            if !riskyActions.isEmpty {
+                pendingActions = riskyActions
+                pendingMessage = nil
+                let summary = riskyActions.map { "\($0.action): \($0.title ?? "?")" }.joined(separator: "\n")
+                results.append(ChatMessage(role: .toolCall, content: "아래 작업을 실행할까요?\n\(summary)"))
+            }
         } else if !message.isEmpty {
             results.append(ChatMessage(role: .assistant, content: message))
         }

@@ -362,3 +362,10 @@
 "rollover.notification.body" = "تحقق من مهامك اليوم";
 "rollover.moved.title" = "تم نقل المهام";
 "rollover.moved.body" = "تم نقل %d مهمة غير مكتملة إلى اليوم";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "اضغط على أحد الأمثلة أدناه";
+"chat.quick.today" = "ما جدولي اليوم؟";
+"chat.quick.add.meeting" = "إضافة اجتماع غداً الساعة 3 مساءً";
+"chat.quick.free.time" = "إيجاد وقت فراغ هذا الأسبوع";
+"chat.quick.tomorrow.plan" = "تخطيط يومي لغد";

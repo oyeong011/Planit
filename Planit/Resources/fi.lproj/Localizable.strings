@@ -362,3 +362,10 @@
 "rollover.notification.body" = "Tarkista tämän päivän tehtäväsi";
 "rollover.moved.title" = "Tehtävät siirretty";
 "rollover.moved.body" = "%d keskeneräinen tehtävä siirretty tähän päivään";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "Aloita napauttamalla alla olevaa esimerkkiä";
+"chat.quick.today" = "Mitä minulla on tänään?";
+"chat.quick.add.meeting" = "Lisää kokous huomenna klo 15";
+"chat.quick.free.time" = "Etsi vapaata aikaa tällä viikolla";
+"chat.quick.tomorrow.plan" = "Suunnittele huominen päivä";

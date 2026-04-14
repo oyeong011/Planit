@@ -362,3 +362,10 @@
 "rollover.notification.body" = "查看今天的任務";
 "rollover.moved.title" = "任務已移動";
 "rollover.moved.body" = "已將 %d 個未完成任務移至今天";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "點擊下方示例開始";
+"chat.quick.today" = "今天有什麼日程？";
+"chat.quick.add.meeting" = "明天下午3點新增會議";
+"chat.quick.free.time" = "找出本週的空閒時間";
+"chat.quick.tomorrow.plan" = "幫我規劃明天的日程";

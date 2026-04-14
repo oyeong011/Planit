@@ -362,3 +362,10 @@
 "rollover.notification.body" = "Перевірте завдання на сьогодні";
 "rollover.moved.title" = "Завдання перенесено";
 "rollover.moved.body" = "%d незавершене(-их) завдання(-ь) перенесено на сьогодні";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "Натисніть на приклад нижче, щоб почати";
+"chat.quick.today" = "Що в мене сьогодні?";
+"chat.quick.add.meeting" = "Додати зустріч завтра о 15:00";
+"chat.quick.free.time" = "Знайти вільний час цього тижня";
+"chat.quick.tomorrow.plan" = "Планувати завтрашній день";

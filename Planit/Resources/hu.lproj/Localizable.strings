@@ -362,3 +362,10 @@
 "rollover.notification.body" = "Ellenőrizze mai feladatait";
 "rollover.moved.title" = "Feladatok áthelyezve";
 "rollover.moved.body" = "%d befejezetlen feladat áthelyezve a mai napra";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "Érintsen meg egy példát alább a kezdéshez";
+"chat.quick.today" = "Mi van ma a programomban?";
+"chat.quick.add.meeting" = "Értekezlet hozzáadása holnap 15:00-kor";
+"chat.quick.free.time" = "Szabad idő keresése ezen a héten";
+"chat.quick.tomorrow.plan" = "Holnapi napom megtervezése";

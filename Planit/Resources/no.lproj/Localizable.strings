@@ -362,3 +362,10 @@
 "rollover.notification.body" = "Sjekk oppgavene dine for i dag";
 "rollover.moved.title" = "Oppgaver flyttet";
 "rollover.moved.body" = "%d ufullstendig(e) oppgave(r) flyttet til i dag";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "Trykk på et eksempel nedenfor for å starte";
+"chat.quick.today" = "Hva har jeg i dag?";
+"chat.quick.add.meeting" = "Legg til møte i morgen kl. 15";
+"chat.quick.free.time" = "Finn ledig tid denne uken";
+"chat.quick.tomorrow.plan" = "Planlegg dagen min i morgen";

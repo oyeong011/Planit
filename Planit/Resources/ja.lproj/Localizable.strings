@@ -362,3 +362,10 @@
 "rollover.notification.body" = "今日のタスクを確認しましょう";
 "rollover.moved.title" = "タスクを移動しました";
 "rollover.moved.body" = "%d件の未完了タスクを今日に移動しました";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "以下の例をクリックして始めましょう";
+"chat.quick.today" = "今日のスケジュールは？";
+"chat.quick.add.meeting" = "明日の午後3時に会議を追加";
+"chat.quick.free.time" = "今週の空き時間を探して";
+"chat.quick.tomorrow.plan" = "明日の予定を計画して";

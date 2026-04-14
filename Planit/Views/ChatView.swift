@@ -125,17 +125,7 @@ struct ChatView: View {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 8) {
                         if messages.isEmpty {
-                            VStack(spacing: 8) {
-                                Text(String(localized: "chat.assistant.title"))
-                                    .font(.system(size: 12, weight: .semibold))
-                                    .foregroundStyle(.secondary)
-                                Text(String(localized: "chat.examples"))
-                                    .font(.system(size: 11))
-                                    .foregroundStyle(.tertiary)
-                                    .multilineTextAlignment(.center)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.top, 40)
+                            emptyStateView
                         }
 
                         ForEach(messages) { msg in
@@ -241,6 +231,87 @@ struct ChatView: View {
 
     private var canSend: Bool {
         (!inputText.isEmpty || !attachments.isEmpty) && !aiService.isLoading
+    }
+
+    // MARK: - Empty State
+
+    private var emptyStateView: some View {
+        VStack(spacing: 16) {
+            Spacer().frame(height: 20)
+
+            VStack(spacing: 4) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 24))
+                    .foregroundStyle(.purple)
+                Text(String(localized: "chat.assistant.title"))
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.primary)
+                Text(String(localized: "chat.empty.subtitle"))
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            VStack(spacing: 6) {
+                ForEach(quickActions, id: \.self) { action in
+                    Button {
+                        inputText = action
+                        sendMessage()
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: quickActionIcon(action))
+                                .font(.system(size: 10))
+                                .foregroundStyle(.purple)
+                                .frame(width: 14)
+                            Text(action)
+                                .font(.system(size: 11))
+                                .foregroundStyle(.primary)
+                                .lineLimit(1)
+                            Spacer()
+                            Image(systemName: "arrow.up.right")
+                                .font(.system(size: 9))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color(nsColor: .controlBackgroundColor))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.purple.opacity(0.15), lineWidth: 1)
+                        )
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 4)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 12)
+    }
+
+    private var quickActions: [String] {
+        [
+            String(localized: "chat.quick.today"),
+            String(localized: "chat.quick.add.meeting"),
+            String(localized: "chat.quick.free.time"),
+            String(localized: "chat.quick.tomorrow.plan"),
+        ]
+    }
+
+    private func quickActionIcon(_ action: String) -> String {
+        let today = String(localized: "chat.quick.today")
+        let meeting = String(localized: "chat.quick.add.meeting")
+        let free = String(localized: "chat.quick.free.time")
+        switch action {
+        case today:   return "calendar"
+        case meeting: return "plus.circle"
+        case free:    return "clock"
+        default:      return "wand.and.stars"
+        }
     }
 
     // MARK: - Attachment Preview Strip
@@ -366,24 +437,39 @@ struct ChatView: View {
     // MARK: - Action Approval Card
 
     private var actionApprovalCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 4) {
-                Image(systemName: "exclamationmark.shield.fill")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.orange)
+        let hasDelete = aiService.pendingActions.contains { $0.action == "delete" }
+        let accentColor: Color = hasDelete ? .red : .orange
+
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: hasDelete ? "trash.fill" : "pencil.circle.fill")
+                    .font(.system(size: 12))
+                    .foregroundStyle(accentColor)
                 Text(String(localized: "chat.action.confirm.title"))
                     .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(accentColor)
+                Spacer()
+                Text("\(aiService.pendingActions.count)")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(accentColor)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Capsule().fill(accentColor.opacity(0.12)))
             }
 
             ForEach(Array(aiService.pendingActions.enumerated()), id: \.offset) { _, action in
-                HStack(spacing: 6) {
-                    Image(systemName: action.action == "create" ? "plus.circle.fill" :
-                            action.action == "update" ? "pencil.circle.fill" : "trash.circle.fill")
-                        .font(.system(size: 10))
-                        .foregroundStyle(action.action == "delete" ? .red : .blue)
-                    Text("\(actionLabel(action.action)): \(action.title ?? "?")")
-                        .font(.system(size: 10))
-                        .lineLimit(1)
+                HStack(spacing: 8) {
+                    Image(systemName: action.action == "update" ? "pencil.circle.fill" : "trash.circle.fill")
+                        .font(.system(size: 13))
+                        .foregroundStyle(action.action == "delete" ? .red : .orange)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(action.title ?? "?")
+                            .font(.system(size: 11, weight: .medium))
+                            .lineLimit(1)
+                        Text(actionLabel(action.action))
+                            .font(.system(size: 9))
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
 
@@ -395,7 +481,7 @@ struct ChatView: View {
                         viewModel.refreshEvents()
                     }
                 } label: {
-                    HStack(spacing: 3) {
+                    HStack(spacing: 4) {
                         Image(systemName: "checkmark")
                             .font(.system(size: 9, weight: .bold))
                         Text(String(localized: "common.execute"))
@@ -404,7 +490,7 @@ struct ChatView: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 5)
-                    .background(RoundedRectangle(cornerRadius: 5).fill(.purple))
+                    .background(RoundedRectangle(cornerRadius: 6).fill(accentColor))
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -418,7 +504,7 @@ struct ChatView: View {
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
-                        .background(RoundedRectangle(cornerRadius: 5).stroke(Color.secondary.opacity(0.3)))
+                        .background(RoundedRectangle(cornerRadius: 6).stroke(Color.secondary.opacity(0.3)))
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)

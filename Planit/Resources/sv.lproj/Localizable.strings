@@ -362,3 +362,10 @@
 "rollover.notification.body" = "Kolla dina uppgifter för idag";
 "rollover.moved.title" = "Uppgifter flyttade";
 "rollover.moved.body" = "%d ofullständig(a) uppgift(er) flyttad(e) till idag";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "Tryck på ett exempel nedan för att börja";
+"chat.quick.today" = "Vad har jag idag?";
+"chat.quick.add.meeting" = "Lägg till möte imorgon kl 15";
+"chat.quick.free.time" = "Hitta ledig tid den här veckan";
+"chat.quick.tomorrow.plan" = "Planera min dag imorgon";

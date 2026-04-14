@@ -362,3 +362,10 @@
 "rollover.notification.body" = "Tjek dine opgaver for i dag";
 "rollover.moved.title" = "Opgaver flyttet";
 "rollover.moved.body" = "%d ufuldstændig(e) opgave(r) flyttet til i dag";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "Tryk på et eksempel nedenfor for at starte";
+"chat.quick.today" = "Hvad har jeg i dag?";
+"chat.quick.add.meeting" = "Tilføj møde i morgen kl. 15";
+"chat.quick.free.time" = "Find ledig tid denne uge";
+"chat.quick.tomorrow.plan" = "Planlæg min dag i morgen";

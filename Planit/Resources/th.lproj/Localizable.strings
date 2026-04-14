@@ -362,3 +362,10 @@
 "rollover.notification.body" = "ตรวจสอบงานของวันนี้";
 "rollover.moved.title" = "ย้ายงานแล้ว";
 "rollover.moved.body" = "ย้าย %d งานที่ยังไม่เสร็จมาเป็นวันนี้";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "แตะตัวอย่างด้านล่างเพื่อเริ่ม";
+"chat.quick.today" = "วันนี้มีอะไรในตาราง?";
+"chat.quick.add.meeting" = "เพิ่มการประชุมพรุ่งนี้บ่าย 3 โมง";
+"chat.quick.free.time" = "หาเวลาว่างในสัปดาห์นี้";
+"chat.quick.tomorrow.plan" = "วางแผนวันพรุ่งนี้";

@@ -362,3 +362,10 @@
 "rollover.notification.body" = "Verifique suas tarefas de hoje";
 "rollover.moved.title" = "Tarefas movidas";
 "rollover.moved.body" = "%d tarefa(s) incompleta(s) movida(s) para hoje";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "Toque em um exemplo abaixo";
+"chat.quick.today" = "O que tenho hoje?";
+"chat.quick.add.meeting" = "Adicionar reunião amanhã às 15h";
+"chat.quick.free.time" = "Encontrar tempo livre esta semana";
+"chat.quick.tomorrow.plan" = "Planejar meu dia de amanhã";

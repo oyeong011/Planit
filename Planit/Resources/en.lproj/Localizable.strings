@@ -364,3 +364,10 @@
 "rollover.notification.body" = "Tap to check your upcoming tasks";
 "rollover.moved.title" = "Tasks Moved";
 "rollover.moved.body" = "%d incomplete task(s) moved to today";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "Try one of the examples below";
+"chat.quick.today" = "What's on my schedule today?";
+"chat.quick.add.meeting" = "Add a meeting tomorrow at 3pm";
+"chat.quick.free.time" = "Find free time this week";
+"chat.quick.tomorrow.plan" = "Plan my day for tomorrow";
