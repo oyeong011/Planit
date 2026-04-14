@@ -44,7 +44,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         popover = NSPopover()
-        popover.contentSize = NSSize(width: 1150, height: 780)
+        popover.contentSize = NSSize(width: 1320, height: 860)
         popover.behavior = .transient
         popover.contentViewController = NSHostingController(rootView: MainView())
         popover.delegate = self
@@ -67,6 +67,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             setupPasteMonitor()
         }
     }
+
 
     // MARK: - 로컬 Cmd+V 인터셉트
     // performKeyEquivalent 방식은 Edit 메뉴가 먼저 가로채기 때문에 동작 안 함.
