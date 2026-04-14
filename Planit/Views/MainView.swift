@@ -37,6 +37,8 @@ struct MainCalendarView: View {
     @State private var showLeftPanel: Bool = true
     @State private var leftPanelMode: LeftPanelMode = .chat
     @State private var showSettings: Bool = false
+    @State private var pendingPasteImage: NSImage? = nil
+    @State private var pendingPasteURLs: [URL] = []
 
     init(authManager: GoogleAuthManager, newTodoTitle: Binding<String>) {
         self.authManager = authManager
@@ -81,6 +83,18 @@ struct MainCalendarView: View {
         }
         .onChange(of: viewModel.calendarEvents) { _ in
             updateEventReminders()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: CalenNotification.pasteImage)) { notif in
+            if let image = notif.userInfo?["image"] as? NSImage {
+                leftPanelMode = .chat
+                pendingPasteImage = image
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: CalenNotification.pasteFiles)) { notif in
+            if let urls = notif.userInfo?["urls"] as? [URL] {
+                leftPanelMode = .chat
+                pendingPasteURLs = urls
+            }
         }
         .sheet(isPresented: $showSettings) {
             SettingsView(
@@ -135,7 +149,9 @@ struct MainCalendarView: View {
                 )
 
             case .chat:
-                ChatView(aiService: aiService, viewModel: viewModel)
+                ChatView(aiService: aiService, viewModel: viewModel,
+                         pendingPasteImage: $pendingPasteImage,
+                         pendingPasteURLs: $pendingPasteURLs)
             }
         }
     }
@@ -355,20 +371,23 @@ struct DayCellView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 ForEach(Array(events.prefix(3).enumerated()), id: \.offset) { _, event in
-                    Text(event.title.count > 10 ? String(event.title.prefix(10)) : event.title)
+                    let label = String(event.title.prefix(10))
+                    let fg: Color = isCurrentMonth ? event.color.opacity(0.85) : .secondary.opacity(0.3)
+                    Text(label)
                         .font(.system(size: 9))
                         .lineLimit(1)
                         .padding(.horizontal, 3)
                         .padding(.vertical, 1)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(RoundedRectangle(cornerRadius: 3).fill(event.color.opacity(0.15)))
-                        .foregroundStyle(isCurrentMonth ? event.color.opacity(0.85) : .secondary.opacity(0.3))
+                        .foregroundStyle(fg)
                 }
                 ForEach(Array(todos.prefix(max(0, 3 - events.count)).enumerated()), id: \.offset) { _, todo in
                     let cat = categoryFor(todo.categoryID)
+                    let fg: Color = isCurrentMonth ? cat.color.opacity(0.85) : .secondary.opacity(0.3)
                     HStack(spacing: 2) {
                         Circle().fill(cat.color.opacity(0.7)).frame(width: 4, height: 4)
-                        Text(todo.title.count > 10 ? String(todo.title.prefix(10)) : todo.title)
+                        Text(String(todo.title.prefix(10)))
                             .font(.system(size: 9))
                             .lineLimit(1)
                     }
@@ -376,7 +395,7 @@ struct DayCellView: View {
                     .padding(.vertical, 1)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(RoundedRectangle(cornerRadius: 3).fill(cat.color.opacity(0.1)))
-                    .foregroundStyle(isCurrentMonth ? cat.color.opacity(0.85) : .secondary.opacity(0.3))
+                    .foregroundStyle(fg)
                 }
             }
 
