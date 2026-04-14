@@ -96,6 +96,7 @@ struct ChatView: View {
                     Text(String(localized: "chat.redetect"))
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.blue)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
 
@@ -182,6 +183,7 @@ struct ChatView: View {
                     Image(systemName: "paperclip")
                         .font(.system(size: 14))
                         .foregroundStyle(.secondary)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .help(String(localized: "chat.attach.hint"))
@@ -197,6 +199,7 @@ struct ChatView: View {
                     Image(systemName: "arrow.up.circle.fill")
                         .font(.system(size: 20))
                         .foregroundStyle(canSend ? Color.purple : Color.secondary)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .disabled(!canSend)
@@ -264,6 +267,7 @@ struct ChatView: View {
                             Image(systemName: "xmark.circle.fill")
                                 .font(.system(size: 12))
                                 .foregroundStyle(.white)
+                                .contentShape(Rectangle())
                                 .background(Circle().fill(.gray))
                         }
                         .buttonStyle(.plain)
@@ -387,6 +391,7 @@ struct ChatView: View {
                         Text(String(localized: "common.execute"))
                             .font(.system(size: 10, weight: .semibold))
                     }
+                    .contentShape(Rectangle())
                     .foregroundStyle(.white)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 5)
@@ -401,6 +406,7 @@ struct ChatView: View {
                     Text(String(localized: "common.cancel"))
                         .font(.system(size: 10))
                         .foregroundStyle(.secondary)
+                        .contentShape(Rectangle())
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
                         .background(RoundedRectangle(cornerRadius: 5).stroke(Color.secondary.opacity(0.3)))
@@ -552,6 +558,7 @@ struct AISettingsPopover: View {
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
                     .padding(.vertical, 6)
                     .background(RoundedRectangle(cornerRadius: 6).fill(Color.purple))
             }

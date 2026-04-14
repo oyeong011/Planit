@@ -53,6 +53,7 @@ struct ReviewView: View {
                 Image(systemName: "xmark")
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(.secondary)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
         }
@@ -105,6 +106,7 @@ struct ReviewView: View {
                         Text("모두 내일로")
                             .font(.system(size: 11))
                             .foregroundStyle(.orange)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
@@ -177,6 +179,7 @@ struct ReviewView: View {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 20))
                         .foregroundStyle(.green)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .help("완료")
@@ -185,6 +188,7 @@ struct ReviewView: View {
                     Image(systemName: "arrow.right.circle.fill")
                         .font(.system(size: 20))
                         .foregroundStyle(.orange)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .help("내일로")
@@ -193,6 +197,7 @@ struct ReviewView: View {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 20))
                         .foregroundStyle(Color.secondary)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .help("건너뜀")
@@ -245,6 +250,7 @@ struct ReviewView: View {
                     Text("확인")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.purple)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
@@ -275,12 +281,15 @@ struct ReviewView: View {
             if suggestion.status != .accepted {
                 HStack(spacing: 6) {
                     Button { acceptSuggestion(at: index) } label: {
-                        Text("추가")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 4)
-                            .background(RoundedRectangle(cornerRadius: 5).fill(.purple))
+                        HStack {
+                            Text("추가")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(.white)
+                        }
+                        .contentShape(Rectangle())
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 4)
+                        .background(RoundedRectangle(cornerRadius: 5).fill(.purple))
                     }
                     .buttonStyle(.plain)
 
@@ -288,6 +297,7 @@ struct ReviewView: View {
                         Text("건너뜀")
                             .font(.system(size: 11))
                             .foregroundStyle(.secondary)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
@@ -345,6 +355,7 @@ struct ReviewView: View {
                             .font(.system(size: 10, weight: selectedPeriod == period ? .semibold : .regular))
                             .foregroundStyle(selectedPeriod == period ? .white : .secondary)
                             .frame(maxWidth: .infinity)
+                            .contentShape(Rectangle())
                             .padding(.vertical, 3)
                             .background(
                                 RoundedRectangle(cornerRadius: 4)
@@ -465,6 +476,7 @@ struct ReviewView: View {
                     Text("닫기")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.indigo)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
