@@ -21,6 +21,7 @@ final class ReviewService: ObservableObject {
     private let goalService: GoalService
     private let calendarService: GoogleCalendarService?
     private var tomorrowPlanner: TomorrowPlannerService?
+    private var reviewAI: ReviewAIService?
 
     /// Persisted date key to prevent re-running daily adjustment on same day
     private var lastDailyKey: String {
@@ -32,6 +33,7 @@ final class ReviewService: ObservableObject {
         self.goalService = goalService
         self.calendarService = calendarService
         self.tomorrowPlanner = TomorrowPlannerService(goalService: goalService, calendarService: calendarService)
+        self.reviewAI = ReviewAIService(goalService: goalService, calendarService: calendarService)
 
         // Check if daily adjustment was already done today (persists across app restarts)
         let todayKey = Self.dateKey(for: Date())
@@ -104,7 +106,20 @@ final class ReviewService: ObservableObject {
         suggestions = []
     }
 
-    // MARK: - Tomorrow Planning
+    // MARK: - AI Tomorrow Planning
+
+    /// Claude AI가 오늘 리뷰를 분석해 내일 계획을 생성합니다.
+    /// Google Calendar 없이도 동작하며, AI 실패 시 규칙 기반 폴백.
+    func generateAITomorrowPlan(
+        reviewed: [(title: String, status: CompletionStatus, start: Date, end: Date)]
+    ) async -> ReviewAIPlan {
+        guard let ai = reviewAI else {
+            return ReviewAIPlan(events: [], summary: "", error: "ReviewAIService 초기화 실패")
+        }
+        return await ai.generateTomorrowPlan(reviewed: reviewed)
+    }
+
+    // MARK: - Tomorrow Planning (rule-based, kept as fallback)
 
     func generateTomorrowPlan() async {
         guard let planner = tomorrowPlanner else { return }

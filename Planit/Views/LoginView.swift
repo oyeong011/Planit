@@ -3,7 +3,6 @@ import SwiftUI
 struct LoginView: View {
     @ObservedObject var authManager: GoogleAuthManager
     @State private var isLoading = false
-    @State private var showSetup = false
     @State private var inputClientID = ""
     @State private var inputClientSecret = ""
 
@@ -19,7 +18,7 @@ struct LoginView: View {
                 Text("Calen")
                     .font(.system(size: 28, weight: .bold))
 
-                Text("Google 캘린더와 연동하여\n일정을 관리하세요")
+                Text(String(localized: "login.subtitle"))
                     .font(.system(size: 14))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -27,13 +26,13 @@ struct LoginView: View {
 
             Spacer().frame(height: 48)
 
-            if !authManager.hasCredentials || showSetup {
+            if !authManager.hasCredentials {
                 // First-time setup: need credentials
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Google API 설정")
+                    Text(String(localized: "login.google.api.setup"))
                         .font(.system(size: 14, weight: .bold))
 
-                    Text("Google Cloud Console에서 OAuth 클라이언트를 생성하고 입력하세요.")
+                    Text(String(localized: "login.google.api.description"))
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
 
@@ -62,9 +61,8 @@ struct LoginView: View {
                             clientID: inputClientID.trimmingCharacters(in: .whitespaces),
                             clientSecret: inputClientSecret.trimmingCharacters(in: .whitespaces)
                         )
-                        showSetup = false
                     } label: {
-                        Text("저장")
+                        Text(String(localized: "common.save"))
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
@@ -96,7 +94,7 @@ struct LoginView: View {
                                 Image(systemName: "person.crop.circle.badge.checkmark")
                                     .font(.system(size: 18))
                             }
-                            Text("Google 계정으로 로그인")
+                            Text(String(localized: "login.google.signin"))
                                 .font(.system(size: 15, weight: .semibold))
                         }
                         .foregroundStyle(.white)
@@ -114,12 +112,6 @@ struct LoginView: View {
                             .padding(.horizontal, 40)
                     }
 
-                    Button { showSetup = true } label: {
-                        Text("자격증명 변경")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                    }
-                    .buttonStyle(.plain)
                 }
             }
 
@@ -129,7 +121,7 @@ struct LoginView: View {
                 UserDefaults.standard.set(true, forKey: "planit.skipGoogleAuth")
                 authManager.objectWillChange.send()
             } label: {
-                Text("Google 없이 시작 (로컬 캘린더 사용)")
+                Text(String(localized: "login.skip.google"))
                     .font(.system(size: 11))
                     .foregroundStyle(.tertiary)
             }

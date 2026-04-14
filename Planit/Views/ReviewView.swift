@@ -5,21 +5,25 @@ struct ReviewView: View {
     @ObservedObject var goalService: GoalService
     let onCreateEvent: (String, Date, Date) -> Void
     let onDismiss: () -> Void
-    @State private var isFinalizingEvening = false
+
+    @State private var isGenerating = false
+    @State private var showPlanResult = false
+    @State private var aiPlan: ReviewAIPlan?
+    // 저녁 리뷰 중 사용자가 마킹한 이벤트 추적
+    @State private var reviewedItems: [(title: String, status: CompletionStatus, start: Date, end: Date)] = []
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header
             header
             Divider()
 
-            if reviewService.suggestions.isEmpty {
-                emptyState
+            if showPlanResult, let plan = aiPlan {
+                aiPlanResultView(plan)
+            } else if reviewService.currentMode == .evening {
+                eveningReviewContent
             } else {
-                suggestionList
+                dailyModeContent
             }
-
-            footer
         }
         .background(Color(nsColor: .windowBackgroundColor))
     }
@@ -27,15 +31,16 @@ struct ReviewView: View {
     // MARK: - Header
 
     private var header: some View {
-        HStack {
-            Image(systemName: reviewService.currentMode == .daily ? "calendar.badge.clock" : "moon.fill")
-                .font(.system(size: 14))
-                .foregroundStyle(reviewService.currentMode == .daily ? .purple : .indigo)
-            Text(reviewService.currentMode == .daily ? "오늘의 조정" : "저녁 리뷰")
+        HStack(spacing: 6) {
+            Image(systemName: headerIcon)
+                .font(.system(size: 13))
+                .foregroundStyle(headerColor)
+
+            Text(headerTitle)
                 .font(.system(size: 14, weight: .bold))
 
-            if !reviewService.suggestions.isEmpty {
-                Text("· \(reviewService.suggestions.count) 제안")
+            if reviewService.currentMode == .evening && !showPlanResult {
+                Text("· \(todayDateString)")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
@@ -53,101 +58,102 @@ struct ReviewView: View {
         .padding(.vertical, 10)
     }
 
-    // MARK: - Empty State
+    private var headerIcon: String {
+        if showPlanResult { return "calendar.badge.checkmark" }
+        return reviewService.currentMode == .evening ? "moon.fill" : "calendar.badge.clock"
+    }
 
-    private var emptyState: some View {
-        VStack(spacing: 8) {
+    private var headerColor: Color {
+        if showPlanResult { return .green }
+        return reviewService.currentMode == .evening ? .indigo : .purple
+    }
+
+    private var headerTitle: String {
+        if showPlanResult { return "내일 계획 완성" }
+        return reviewService.currentMode == .evening ? "저녁 리뷰" : "오늘의 조정"
+    }
+
+    // MARK: - Evening Review Content
+
+    private var eveningReviewContent: some View {
+        VStack(spacing: 0) {
+            if reviewService.suggestions.isEmpty {
+                emptyTodayState
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("오늘 돌아보기")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 4)
+
+                        ForEach(Array(reviewService.suggestions.enumerated()), id: \.element.id) { idx, suggestion in
+                            eveningCard(suggestion, index: idx)
+                        }
+                    }
+                    .padding(8)
+                }
+            }
+
+            Divider()
+
+            HStack {
+                if !reviewService.suggestions.isEmpty {
+                    Button { moveAllToTomorrow() } label: {
+                        Text("모두 내일로")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.orange)
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                Spacer()
+
+                Button { generatePlan() } label: {
+                    if isGenerating {
+                        HStack(spacing: 6) {
+                            ProgressView().controlSize(.small)
+                            Text("계획 생성 중...")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(.indigo)
+                        }
+                    } else {
+                        HStack(spacing: 4) {
+                            Image(systemName: "wand.and.stars")
+                                .font(.system(size: 11))
+                            Text("내일 계획 자동 생성")
+                                .font(.system(size: 12, weight: .semibold))
+                        }
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 6)
+                        .background(RoundedRectangle(cornerRadius: 8).fill(.indigo))
+                    }
+                }
+                .buttonStyle(.plain)
+                .disabled(isGenerating)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+        }
+    }
+
+    // MARK: - Empty Today State
+
+    private var emptyTodayState: some View {
+        VStack(spacing: 10) {
             Spacer()
-            Image(systemName: "checkmark.circle")
+            Image(systemName: "moon.stars")
                 .font(.system(size: 28))
-                .foregroundStyle(.green)
-            Text("좋아요!")
+                .foregroundStyle(.indigo)
+            Text("오늘 지난 일정이 없어요")
                 .font(.system(size: 13, weight: .semibold))
-            Text("오늘은 그대로 진행하면 됩니다")
+            Text("바로 내일 계획을 생성할 수 있어요")
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
             Spacer()
         }
         .frame(maxWidth: .infinity)
-    }
-
-    // MARK: - Suggestion List
-
-    private var suggestionList: some View {
-        ScrollView {
-            LazyVStack(spacing: 8) {
-                // Weekly progress bar (daily mode)
-                if reviewService.currentMode == .daily {
-                    weeklyProgressCard
-                }
-
-                ForEach(Array(reviewService.suggestions.enumerated()), id: \.element.id) { idx, suggestion in
-                    if reviewService.currentMode == .evening {
-                        eveningCard(suggestion, index: idx)
-                    } else {
-                        morningCard(suggestion, index: idx)
-                    }
-                }
-            }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 8)
-        }
-    }
-
-    // MARK: - Morning Card
-
-    private func morningCard(_ suggestion: ReviewSuggestion, index: Int) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            // Type badge
-            HStack(spacing: 4) {
-                Image(systemName: iconFor(suggestion.type))
-                    .font(.system(size: 9))
-                Text(labelFor(suggestion.type))
-                    .font(.system(size: 9, weight: .medium))
-            }
-            .foregroundStyle(colorFor(suggestion.type))
-
-            // Title
-            Text(suggestion.title)
-                .font(.system(size: 12, weight: .semibold))
-
-            // Description
-            Text(suggestion.description)
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-
-            // Action buttons (only for pending suggestions, not auto-created)
-            if suggestion.status != .accepted {
-                HStack(spacing: 6) {
-                    Button {
-                        acceptSuggestion(at: index)
-                    } label: {
-                        Text("확인")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 4)
-                            .background(RoundedRectangle(cornerRadius: 5).fill(.purple))
-                    }
-                    .buttonStyle(.plain)
-
-                    Button {
-                        declineSuggestion(at: index)
-                    } label: {
-                        Text("건너뛰기")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
-        .padding(10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 8).fill(
-            suggestion.status == .accepted
-                ? Color.green.opacity(0.06)
-                : Color(nsColor: .controlBackgroundColor)))
     }
 
     // MARK: - Evening Card
@@ -164,42 +170,133 @@ struct ReviewView: View {
 
             Spacer()
 
-            // Completion buttons
             HStack(spacing: 4) {
-                Button {
-                    markCompletion(at: index, status: .done)
-                } label: {
+                Button { markCompletion(at: index, status: .done) } label: {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 18))
+                        .font(.system(size: 20))
                         .foregroundStyle(.green)
                 }
                 .buttonStyle(.plain)
                 .help("완료")
 
-                Button {
-                    markCompletion(at: index, status: .moved)
-                } label: {
+                Button { markCompletion(at: index, status: .moved) } label: {
                     Image(systemName: "arrow.right.circle.fill")
-                        .font(.system(size: 18))
+                        .font(.system(size: 20))
                         .foregroundStyle(.orange)
                 }
                 .buttonStyle(.plain)
                 .help("내일로")
 
-                Button {
-                    markCompletion(at: index, status: .skipped)
-                } label: {
+                Button { markCompletion(at: index, status: .skipped) } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 18))
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: 20))
+                        .foregroundStyle(Color.secondary)
                 }
                 .buttonStyle(.plain)
-                .help("건너뛰기")
+                .help("건너뜀")
             }
         }
         .padding(10)
         .frame(maxWidth: .infinity)
         .background(RoundedRectangle(cornerRadius: 8).fill(Color(nsColor: .controlBackgroundColor)))
+    }
+
+    // MARK: - Daily Mode Content (simplified)
+
+    private var dailyModeContent: some View {
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(spacing: 8) {
+                    weeklyProgressCard
+
+                    if reviewService.suggestions.isEmpty {
+                        VStack(spacing: 6) {
+                            Spacer().frame(height: 12)
+                            Image(systemName: "checkmark.circle")
+                                .font(.system(size: 26))
+                                .foregroundStyle(.green)
+                            Text("순조롭게 진행 중이에요")
+                                .font(.system(size: 12, weight: .semibold))
+                            Text("저녁에 내일 계획을 자동으로 생성해 드려요")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                    } else {
+                        ForEach(Array(reviewService.suggestions.enumerated()), id: \.element.id) { idx, s in
+                            morningCard(s, index: idx)
+                        }
+                    }
+                }
+                .padding(8)
+            }
+
+            Divider()
+
+            HStack {
+                Spacer()
+                Button {
+                    reviewService.dismissReview()
+                    onDismiss()
+                } label: {
+                    Text("확인")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.purple)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+        }
+    }
+
+    // MARK: - Morning Card (daily mode suggestions)
+
+    private func morningCard(_ suggestion: ReviewSuggestion, index: Int) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            HStack(spacing: 4) {
+                Image(systemName: iconFor(suggestion.type))
+                    .font(.system(size: 9))
+                Text(labelFor(suggestion.type))
+                    .font(.system(size: 9, weight: .medium))
+            }
+            .foregroundStyle(colorFor(suggestion.type))
+
+            Text(suggestion.title)
+                .font(.system(size: 12, weight: .semibold))
+
+            Text(suggestion.description)
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+
+            if suggestion.status != .accepted {
+                HStack(spacing: 6) {
+                    Button { acceptSuggestion(at: index) } label: {
+                        Text("추가")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 4)
+                            .background(RoundedRectangle(cornerRadius: 5).fill(.purple))
+                    }
+                    .buttonStyle(.plain)
+
+                    Button { declineSuggestion(at: index) } label: {
+                        Text("건너뜀")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 8).fill(
+            suggestion.status == .accepted
+                ? Color.green.opacity(0.06)
+                : Color(nsColor: .controlBackgroundColor)))
     }
 
     // MARK: - Weekly Progress
@@ -208,13 +305,13 @@ struct ReviewView: View {
         let rate = goalService.weeklyCompletionRate()
         let percent = Int(rate * 100)
 
-        return VStack(alignment: .leading, spacing: 4) {
+        return VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text("이번주 완수율")
+                Text("이번 주 달성률")
                     .font(.system(size: 11, weight: .medium))
                 Spacer()
                 Text("\(percent)%")
-                    .font(.system(size: 11, weight: .bold))
+                    .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(rate >= 0.7 ? .green : rate >= 0.4 ? .orange : .red)
             }
             GeometryReader { geo in
@@ -223,7 +320,7 @@ struct ReviewView: View {
                         .fill(Color.secondary.opacity(0.15))
                     RoundedRectangle(cornerRadius: 3)
                         .fill(rate >= 0.7 ? Color.green : rate >= 0.4 ? Color.orange : Color.red)
-                        .frame(width: geo.size.width * CGFloat(rate))
+                        .frame(width: geo.size.width * CGFloat(max(0, min(1, rate))))
                 }
             }
             .frame(height: 6)
@@ -232,123 +329,142 @@ struct ReviewView: View {
         .background(RoundedRectangle(cornerRadius: 8).fill(Color(nsColor: .controlBackgroundColor)))
     }
 
-    // MARK: - Tomorrow Plan Summary
+    // MARK: - AI Plan Result View
 
-    private var tomorrowPlanSummary: some View {
-        Group {
-            if let result = reviewService.tomorrowPlanResult,
-               !result.created.isEmpty || !result.suggested.isEmpty {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "calendar.badge.plus")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.purple)
-                        Text("내일 계획")
-                            .font(.system(size: 11, weight: .bold))
-                    }
-
-                    if !result.created.isEmpty {
-                        HStack(spacing: 4) {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 10))
-                                .foregroundStyle(.green)
-                            Text("\(result.created.count)개 자동 생성됨")
-                                .font(.system(size: 10))
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-
-                    if !result.suggested.isEmpty {
-                        HStack(spacing: 4) {
-                            Image(systemName: "lightbulb.fill")
-                                .font(.system(size: 10))
-                                .foregroundStyle(.orange)
-                            Text("\(result.suggested.count)개 제안 (아침 브리핑에서 확인)")
-                                .font(.system(size: 10))
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-
-                    Text("\(result.totalMinutesPlanned)/\(result.capacityMinutes)분 배치")
-                        .font(.system(size: 9))
-                        .foregroundStyle(.tertiary)
-                }
-                .padding(10)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(RoundedRectangle(cornerRadius: 8).fill(Color.purple.opacity(0.06)))
-                .padding(.horizontal, 8)
-            }
-        }
-    }
-
-    // MARK: - Footer
-
-    private var footer: some View {
+    private func aiPlanResultView(_ plan: ReviewAIPlan) -> some View {
         VStack(spacing: 0) {
-            tomorrowPlanSummary
-                .padding(.bottom, 6)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 10) {
+                    // 헤더
+                    HStack(spacing: 10) {
+                        Image(systemName: plan.isEmpty ? "calendar.badge.checkmark" : "calendar.badge.plus")
+                            .font(.system(size: 18))
+                            .foregroundStyle(.indigo)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(tomorrowDateString)
+                                .font(.system(size: 13, weight: .bold))
+                            if !plan.summary.isEmpty {
+                                Text(plan.summary)
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        Spacer()
+                    }
+                    .padding(10)
+                    .background(RoundedRectangle(cornerRadius: 8).fill(Color.indigo.opacity(0.07)))
+
+                    if plan.isEmpty {
+                        VStack(spacing: 8) {
+                            Image(systemName: "calendar.badge.checkmark")
+                                .font(.system(size: 26))
+                                .foregroundStyle(.green)
+                            Text("내일 일정이 이미 충분해요")
+                                .font(.system(size: 12, weight: .semibold))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 20)
+                    } else {
+                        // 캘린더에 추가된 이벤트 목록
+                        VStack(alignment: .leading, spacing: 6) {
+                            Label("캘린더에 추가됨", systemImage: "checkmark.circle.fill")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(.green)
+
+                            ForEach(Array(plan.events.enumerated()), id: \.offset) { _, event in
+                                aiPlanEventRow(event)
+                            }
+                        }
+                    }
+
+                    if let error = plan.error {
+                        HStack(spacing: 4) {
+                            Image(systemName: "exclamationmark.triangle")
+                                .font(.system(size: 10))
+                            Text(error)
+                                .font(.system(size: 10))
+                        }
+                        .foregroundStyle(.orange)
+                        .padding(.top, 4)
+                    }
+                }
+                .padding(8)
+            }
 
             Divider()
 
             HStack {
-                if reviewService.currentMode == .evening {
-                    Button {
-                        moveAllToTomorrow()
-                    } label: {
-                        Text("미완료 모두 내일로")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.orange)
-                    }
-                    .buttonStyle(.plain)
-                }
-
                 Spacer()
-
-                if reviewService.currentMode == .evening {
-                    Button {
-                        isFinalizingEvening = true
-                        Task {
-                            await reviewService.finalizeAndPlan()
-                            isFinalizingEvening = false
-                            // Don't dismiss yet — show plan summary, user taps again to close
-                        }
-                    } label: {
-                        if isFinalizingEvening {
-                            HStack(spacing: 4) {
-                                ProgressView().controlSize(.small)
-                                Text("내일 계획 생성 중...")
-                                    .font(.system(size: 11, weight: .medium))
-                                    .foregroundStyle(.purple)
-                            }
-                        } else if reviewService.tomorrowPlanResult != nil {
-                            Text("닫기")
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundStyle(.purple)
-                        } else {
-                            Text("완료")
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundStyle(.purple)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(isFinalizingEvening)
-                } else {
-                    Button {
-                        onDismiss()
-                    } label: {
-                        Text("채팅으로")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(.purple)
-                    }
-                    .buttonStyle(.plain)
+                Button {
+                    reviewService.dismissReview()
+                    onDismiss()
+                } label: {
+                    Text("닫기")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.indigo)
                 }
+                .buttonStyle(.plain)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
         }
     }
 
+    private func aiPlanEventRow(_ event: ReviewAIPlan.PlannedEvent) -> some View {
+        HStack(spacing: 8) {
+            RoundedRectangle(cornerRadius: 2)
+                .fill(Color.green)
+                .frame(width: 3, height: 36)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(event.title)
+                    .font(.system(size: 11, weight: .medium))
+                Text("\(formatTime(event.start))~\(formatTime(event.end))")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 14))
+                .foregroundStyle(.green.opacity(0.7))
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(RoundedRectangle(cornerRadius: 7).fill(Color.green.opacity(0.05)))
+    }
+
     // MARK: - Actions
+
+    private func generatePlan() {
+        isGenerating = true
+
+        // 아직 마킹 안 된 항목 = 오늘 못 한 것 → 내일로
+        let remaining = reviewService.suggestions.map { s in
+            (title: s.title,
+             status: CompletionStatus.moved,
+             start: s.proposedStart ?? Date(),
+             end: s.proposedEnd ?? Date())
+        }
+        moveAllToTomorrow()
+
+        let allReviewed = reviewedItems + remaining
+
+        Task {
+            // AI가 내일 계획 생성
+            let plan = await reviewService.generateAITomorrowPlan(reviewed: allReviewed)
+
+            // 각 이벤트를 실제로 캘린더에 추가
+            for event in plan.events {
+                onCreateEvent(event.title, event.start, event.end)
+            }
+
+            aiPlan = plan
+            isGenerating = false
+            showPlanResult = true
+        }
+    }
 
     private func acceptSuggestion(at index: Int) {
         guard index < reviewService.suggestions.count else { return }
@@ -370,9 +486,19 @@ struct ReviewView: View {
         guard index < reviewService.suggestions.count else { return }
         let s = reviewService.suggestions[index]
         let minutes = Int((s.proposedEnd ?? Date()).timeIntervalSince(s.proposedStart ?? Date()) / 60)
-        goalService.markCompletion(eventId: s.proposedTitle ?? s.title,
-                                    goalId: s.goalId, status: status,
-                                    plannedMinutes: max(minutes, 30))
+        goalService.markCompletion(
+            eventId: s.proposedTitle ?? s.title,
+            goalId: s.goalId,
+            status: status,
+            plannedMinutes: max(minutes, 30)
+        )
+        // AI에게 넘길 리뷰 데이터 기록
+        reviewedItems.append((
+            title: s.title,
+            status: status,
+            start: s.proposedStart ?? Date(),
+            end: s.proposedEnd ?? Date()
+        ))
         reviewService.suggestions.remove(at: index)
     }
 
@@ -380,6 +506,30 @@ struct ReviewView: View {
         for i in (0..<reviewService.suggestions.count).reversed() {
             markCompletion(at: i, status: .moved)
         }
+    }
+
+    // MARK: - Helpers
+
+    private var todayDateString: String {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "M월 d일"
+        fmt.locale = Locale(identifier: "ko_KR")
+        return fmt.string(from: Date())
+    }
+
+    private var tomorrowDateString: String {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "M월 d일 (E)"
+        fmt.locale = Locale(identifier: "ko_KR")
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date())!
+        return fmt.string(from: tomorrow)
+    }
+
+    private func formatTime(_ date: Date) -> String {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "HH:mm"
+        fmt.timeZone = TimeZone(identifier: "Asia/Seoul")
+        return fmt.string(from: date)
     }
 
     // MARK: - Styling Helpers

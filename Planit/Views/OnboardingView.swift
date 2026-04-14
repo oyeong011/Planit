@@ -12,7 +12,7 @@ struct OnboardingView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text("Calen 설정")
+                Text(String(localized: "onboarding.title"))
                     .font(.system(size: 13, weight: .bold))
                 Spacer()
                 Text("\(step + 1)/4")
@@ -62,7 +62,7 @@ struct OnboardingView: View {
             HStack {
                 if step > 0 {
                     Button { step -= 1 } label: {
-                        Text("이전")
+                        Text(String(localized: "common.previous"))
                             .font(.system(size: 11))
                             .foregroundStyle(.secondary)
                     }
@@ -76,7 +76,7 @@ struct OnboardingView: View {
                         completeOnboarding()
                     }
                 } label: {
-                    Text(step == 3 ? "시작하기" : "다음")
+                    Text(step == 3 ? String(localized: "onboarding.start") : String(localized: "common.next"))
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 16)
@@ -100,10 +100,10 @@ struct OnboardingView: View {
                 .font(.system(size: 28))
                 .foregroundStyle(.purple)
 
-            Text("올해 목표를 알려주세요")
+            Text(String(localized: "onboarding.goals.title"))
                 .font(.system(size: 14, weight: .bold))
 
-            Text("1~3개의 핵심 목표를 설정하면\nAI가 매일 일정을 자동으로 잡아줍니다")
+            Text(String(localized: "onboarding.goals.subtitle"))
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -141,12 +141,12 @@ struct OnboardingView: View {
             // Input
             if goalInputs.count < 3 {
                 VStack(spacing: 6) {
-                    TextField("목표 (예: 정보처리기사 합격)", text: $newGoalTitle)
+                    TextField(String(localized: "onboarding.goals.placeholder"), text: $newGoalTitle)
                         .textFieldStyle(.roundedBorder)
                         .font(.system(size: 11))
 
                     HStack {
-                        Text("목표일")
+                        Text(String(localized: "onboarding.goals.target.date"))
                             .font(.system(size: 10))
                             .foregroundStyle(.secondary)
                         DatePicker("", selection: $newGoalDate, displayedComponents: .date)
@@ -162,7 +162,7 @@ struct OnboardingView: View {
                             HStack(spacing: 3) {
                                 Image(systemName: "plus")
                                     .font(.system(size: 9, weight: .bold))
-                                Text("추가")
+                                Text(String(localized: "common.add"))
                                     .font(.system(size: 10, weight: .semibold))
                             }
                             .foregroundStyle(.white)
@@ -180,13 +180,13 @@ struct OnboardingView: View {
             // Presets (only when empty)
             if goalInputs.isEmpty {
                 VStack(spacing: 4) {
-                    Text("빠른 선택")
+                    Text(String(localized: "onboarding.goals.quick.select"))
                         .font(.system(size: 9))
                         .foregroundStyle(.tertiary)
                     HStack(spacing: 6) {
-                        presetChip("자격증 합격")
-                        presetChip("사이드 프로젝트")
-                        presetChip("건강/운동")
+                        presetChip(String(localized: "onboarding.goals.preset.certification"))
+                        presetChip(String(localized: "onboarding.goals.preset.sideproject"))
+                        presetChip(String(localized: "onboarding.goals.preset.health"))
                     }
                 }
                 .padding(.top, 4)
@@ -217,32 +217,33 @@ struct OnboardingView: View {
                 .font(.system(size: 28))
                 .foregroundStyle(.purple)
 
-            Text("생활 패턴을 알려주세요")
+            Text(String(localized: "onboarding.schedule.title"))
                 .font(.system(size: 14, weight: .bold))
 
-            Text("일정 배치에 활용됩니다")
+            Text(String(localized: "onboarding.schedule.subtitle"))
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
                 .padding(.bottom, 4)
 
             VStack(spacing: 10) {
-                scheduleRow("출근", value: $goalService.profile.workStartHour, range: 6...12)
-                scheduleRow("퇴근", value: $goalService.profile.workEndHour, range: 15...22)
+                scheduleRow(String(localized: "onboarding.schedule.work.start"), value: $goalService.profile.workStartHour, range: 6...12)
+                scheduleRow(String(localized: "onboarding.schedule.work.end"), value: $goalService.profile.workEndHour, range: 15...22)
                 Divider()
-                scheduleRow("점심", value: $goalService.profile.lunchStartHour, range: 11...14)
-                scheduleRow("통근", value: $goalService.profile.commuteMinutes, range: 0...120, unit: "분", step: 10)
+                scheduleRow(String(localized: "onboarding.schedule.lunch"), value: $goalService.profile.lunchStartHour, range: 11...14)
+                scheduleRow(String(localized: "onboarding.schedule.commute"), value: $goalService.profile.commuteMinutes, range: 0...120, unit: String(localized: "onboarding.schedule.unit.minute"), step: 10)
             }
         }
         .padding(.horizontal, 16)
     }
 
-    private func scheduleRow(_ label: String, value: Binding<Int>, range: ClosedRange<Int>, unit: String = "시", step: Int = 1) -> some View {
-        VStack(spacing: 2) {
+    private func scheduleRow(_ label: String, value: Binding<Int>, range: ClosedRange<Int>, unit: String? = nil, step: Int = 1) -> some View {
+        let displayUnit = unit ?? String(localized: "onboarding.schedule.unit.hour")
+        return VStack(spacing: 2) {
             HStack {
                 Text(label)
                     .font(.system(size: 11))
                 Spacer()
-                Text("\(value.wrappedValue)\(unit)")
+                Text("\(value.wrappedValue)\(displayUnit)")
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(.purple)
             }
@@ -262,10 +263,10 @@ struct OnboardingView: View {
                 .font(.system(size: 28))
                 .foregroundStyle(.purple)
 
-            Text("에너지 타입은?")
+            Text(String(localized: "onboarding.energy.title"))
                 .font(.system(size: 14, weight: .bold))
 
-            Text("집중력이 높은 시간대에\n중요한 일정을 배치합니다")
+            Text(String(localized: "onboarding.energy.subtitle"))
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -294,7 +295,7 @@ struct OnboardingView: View {
                 VStack(alignment: .leading, spacing: 1) {
                     Text(type.rawValue)
                         .font(.system(size: 11, weight: .medium))
-                    Text(type == .morning ? "오전에 집중력 최고" : type == .evening ? "오후/저녁에 집중력 최고" : "시간대 상관없이 고른 편")
+                    Text(type == .morning ? String(localized: "onboarding.energy.morning.desc") : type == .evening ? String(localized: "onboarding.energy.evening.desc") : String(localized: "onboarding.energy.balanced.desc"))
                         .font(.system(size: 9))
                         .foregroundStyle(.secondary)
                 }
@@ -325,18 +326,18 @@ struct OnboardingView: View {
                 .font(.system(size: 28))
                 .foregroundStyle(.purple)
 
-            Text("하루 집중 가능 시간")
+            Text(String(localized: "onboarding.capacity.title"))
                 .font(.system(size: 14, weight: .bold))
 
-            Text("목표를 위해 하루에\n쓸 수 있는 시간을 설정하세요")
+            Text(String(localized: "onboarding.capacity.subtitle"))
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.bottom, 4)
 
             VStack(spacing: 10) {
-                capacitySlider("평일", value: $goalService.profile.weekdayCapacityMinutes)
-                capacitySlider("주말", value: $goalService.profile.weekendCapacityMinutes)
+                capacitySlider(String(localized: "onboarding.capacity.weekday"), value: $goalService.profile.weekdayCapacityMinutes)
+                capacitySlider(String(localized: "onboarding.capacity.weekend"), value: $goalService.profile.weekendCapacityMinutes)
             }
 
             Divider()
@@ -344,7 +345,7 @@ struct OnboardingView: View {
 
             // Aggressiveness
             VStack(spacing: 6) {
-                Text("AI 자동 배치 수준")
+                Text(String(localized: "onboarding.capacity.ai.level"))
                     .font(.system(size: 11, weight: .medium))
 
                 Picker("", selection: $goalService.profile.aggressiveness) {
@@ -370,7 +371,7 @@ struct OnboardingView: View {
                 Text(label)
                     .font(.system(size: 11))
                 Spacer()
-                Text("\(value.wrappedValue)분")
+                Text(String(format: String(localized: "onboarding.capacity.minutes.format"), value.wrappedValue))
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(.purple)
             }
@@ -384,10 +385,10 @@ struct OnboardingView: View {
 
     private var aggressivenessDesc: String {
         switch goalService.profile.aggressiveness {
-        case .manual: return "제안만 보여줌, 자동 추가 안함"
-        case .assist: return "30분 이하 블록만 자동 추가"
-        case .semiAuto: return "상위 1-2개 자동, 나머지 제안"
-        case .auto: return "모두 자동 추가, 충돌 시만 확인"
+        case .manual: return String(localized: "aggressiveness.manual.desc")
+        case .assist: return String(localized: "aggressiveness.assist.desc")
+        case .semiAuto: return String(localized: "aggressiveness.semiauto.desc")
+        case .auto: return String(localized: "aggressiveness.auto.desc")
         }
     }
 

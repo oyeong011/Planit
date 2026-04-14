@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "Calen",
+    defaultLocalization: "en",
     platforms: [
         .macOS(.v14)
     ],
@@ -13,11 +14,42 @@ let package = Package(
             exclude: ["Info.plist", "Planit.entitlements"],
             resources: [
                 .copy("Resources/PrivacyInfo.xcprivacy"),
-                .copy("Resources/AppIcon.icns")
+                .copy("Resources/AppIcon.icns"),
+                .process("Resources/ko.lproj"),
+                .process("Resources/en.lproj"),
+                .process("Resources/ja.lproj"),
+                .process("Resources/zh-Hans.lproj"),
+                .process("Resources/zh-Hant.lproj"),
+                .process("Resources/es.lproj"),
+                .process("Resources/fr.lproj"),
+                .process("Resources/de.lproj"),
+                .process("Resources/pt-BR.lproj"),
+                .process("Resources/it.lproj"),
+                .process("Resources/ru.lproj"),
+                .process("Resources/ar.lproj"),
+                .process("Resources/hi.lproj"),
+                .process("Resources/th.lproj"),
+                .process("Resources/vi.lproj"),
+                .process("Resources/id.lproj"),
+                .process("Resources/ms.lproj"),
+                .process("Resources/tr.lproj"),
+                .process("Resources/pl.lproj"),
+                .process("Resources/nl.lproj"),
+                .process("Resources/sv.lproj"),
+                .process("Resources/da.lproj"),
+                .process("Resources/no.lproj"),
+                .process("Resources/fi.lproj"),
+                .process("Resources/uk.lproj"),
+                .process("Resources/cs.lproj"),
+                .process("Resources/ro.lproj"),
+                .process("Resources/hu.lproj"),
+                .process("Resources/el.lproj"),
+                .process("Resources/he.lproj")
             ]
         ),
         .testTarget(
             name: "CalenTests",
+            dependencies: ["Calen"],
             path: "Tests"
         )
     ]

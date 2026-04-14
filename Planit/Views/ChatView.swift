@@ -1,4 +1,6 @@
 import SwiftUI
+import UniformTypeIdentifiers
+import PDFKit
 
 struct ChatView: View {
     @ObservedObject var aiService: AIService
@@ -6,7 +8,13 @@ struct ChatView: View {
     @State private var messages: [ChatMessage] = []
     @State private var inputText: String = ""
     @State private var showSettings: Bool = false
-    @FocusState private var isInputFocused: Bool
+    @State private var attachments: [ChatAttachment] = []
+    @State private var isDragOver: Bool = false
+
+    /// 허용하는 파일 타입
+    private static let allowedTypes: [UTType] = [.image, .png, .jpeg, .gif, .webP, .tiff, .bmp, .pdf]
+    private static let maxAttachments = 5
+    private static let maxFileSize: Int = 20_971_520  // 20MB
 
     var body: some View {
         VStack(spacing: 0) {
@@ -66,9 +74,9 @@ struct ChatView: View {
                 Image(systemName: "terminal")
                     .font(.system(size: 28))
                     .foregroundStyle(.secondary)
-                Text("Claude Code 미설치")
+                Text(String(localized: "chat.claude.not.installed"))
                     .font(.system(size: 13, weight: .medium))
-                Text("brew install claude-code\n또는 npm install -g @anthropic-ai/claude-code")
+                Text(String(localized: "chat.claude.install.hint"))
                     .font(.system(size: 10))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -78,9 +86,9 @@ struct ChatView: View {
                 Image(systemName: "terminal")
                     .font(.system(size: 28))
                     .foregroundStyle(.secondary)
-                Text("Codex CLI 미설치")
+                Text(String(localized: "chat.codex.not.installed"))
                     .font(.system(size: 13, weight: .medium))
-                Text("brew install codex\n또는 npm install -g @openai/codex")
+                Text(String(localized: "chat.codex.install.hint"))
                     .font(.system(size: 10))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -91,14 +99,14 @@ struct ChatView: View {
                 Button {
                     aiService.recheckCLI()
                 } label: {
-                    Text("다시 감지")
+                    Text(String(localized: "chat.redetect"))
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.blue)
                 }
                 .buttonStyle(.plain)
 
                 Button { showSettings = true } label: {
-                    Text("다른 AI 선택")
+                    Text(String(localized: "chat.select.other.ai"))
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.purple)
                 }
@@ -119,10 +127,10 @@ struct ChatView: View {
                     LazyVStack(alignment: .leading, spacing: 8) {
                         if messages.isEmpty {
                             VStack(spacing: 8) {
-                                Text("캘린더 AI 어시스턴트")
+                                Text(String(localized: "chat.assistant.title"))
                                     .font(.system(size: 12, weight: .semibold))
                                     .foregroundStyle(.secondary)
-                                Text("\"내일 3시에 회의 추가해줘\"\n\"이번주 일정 알려줘\"\n\"정처기 일정 삭제해줘\"")
+                                Text(String(localized: "chat.examples"))
                                     .font(.system(size: 11))
                                     .foregroundStyle(.tertiary)
                                     .multilineTextAlignment(.center)
@@ -139,7 +147,7 @@ struct ChatView: View {
                         if aiService.isLoading {
                             HStack(spacing: 4) {
                                 ProgressView().controlSize(.small)
-                                Text("생각 중...")
+                                Text(String(localized: "chat.thinking"))
                                     .font(.system(size: 11))
                                     .foregroundStyle(.secondary)
                             }
@@ -166,26 +174,184 @@ struct ChatView: View {
 
             Divider()
 
+            // 첨부파일 미리보기
+            if !attachments.isEmpty {
+                attachmentPreviewStrip
+            }
+
             // Input
             HStack(spacing: 6) {
-                TextField("메시지 입력...", text: $inputText)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 12))
-                    .focused($isInputFocused)
-                    .onSubmit { sendMessage() }
+                // 첨부 버튼
+                Button { openFilePicker() } label: {
+                    Image(systemName: "paperclip")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help(String(localized: "chat.attach.hint"))
+
+                PasteAwareTextField(
+                    text: $inputText,
+                    placeholder: String(localized: "chat.input.placeholder"),
+                    onSubmit: sendMessage
+                )
+                .frame(height: 20)
 
                 Button { sendMessage() } label: {
                     Image(systemName: "arrow.up.circle.fill")
                         .font(.system(size: 20))
-                        .foregroundStyle(inputText.isEmpty ? Color.secondary : Color.purple)
+                        .foregroundStyle(canSend ? Color.purple : Color.secondary)
                 }
                 .buttonStyle(.plain)
-                .disabled(inputText.isEmpty || aiService.isLoading)
+                .disabled(!canSend)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
         }
+        .onDrop(of: [.fileURL], isTargeted: $isDragOver) { providers in
+            handleDrop(providers)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: CalenNotification.pasteImage)) { notif in
+            if let image = notif.userInfo?["image"] as? NSImage {
+                pasteImageFromClipboard(image)
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: CalenNotification.pasteFiles)) { notif in
+            if let urls = notif.userInfo?["urls"] as? [URL] {
+                for url in urls { addAttachment(url: url) }
+            }
+        }
+        .overlay {
+            if isDragOver {
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.purple, style: StrokeStyle(lineWidth: 2, dash: [6]))
+                    .background(Color.purple.opacity(0.05))
+                    .allowsHitTesting(false)
+            }
+        }
     }
+
+    private var canSend: Bool {
+        (!inputText.isEmpty || !attachments.isEmpty) && !aiService.isLoading
+    }
+
+    // MARK: - Attachment Preview Strip
+
+    private var attachmentPreviewStrip: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                ForEach(attachments) { att in
+                    ZStack(alignment: .topTrailing) {
+                        VStack(spacing: 2) {
+                            if let thumb = att.thumbnail {
+                                Image(nsImage: thumb)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: 44, height: 44)
+                                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                            } else {
+                                Image(systemName: att.type == .pdf ? "doc.fill" : "photo")
+                                    .font(.system(size: 20))
+                                    .foregroundStyle(.secondary)
+                                    .frame(width: 44, height: 44)
+                            }
+                            Text(att.fileName)
+                                .font(.system(size: 8))
+                                .lineLimit(1)
+                                .frame(width: 44)
+                        }
+
+                        // 삭제 버튼
+                        Button {
+                            attachments.removeAll { $0.id == att.id }
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 12))
+                                .foregroundStyle(.white)
+                                .background(Circle().fill(.gray))
+                        }
+                        .buttonStyle(.plain)
+                        .offset(x: 4, y: -4)
+                    }
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+        }
+        .frame(height: 64)
+    }
+
+    // MARK: - File Picker
+
+    private func openFilePicker() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = true
+        panel.canChooseDirectories = false
+        panel.allowedContentTypes = Self.allowedTypes
+        panel.message = String(localized: "chat.attach.picker.message")
+
+        guard panel.runModal() == .OK else { return }
+
+        for url in panel.urls {
+            addAttachment(url: url)
+        }
+    }
+
+    // MARK: - Drag & Drop
+
+    private func handleDrop(_ providers: [NSItemProvider]) -> Bool {
+        for provider in providers {
+            provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { data, _ in
+                guard let data = data as? Data,
+                      let url = URL(dataRepresentation: data, relativeTo: nil) else { return }
+                DispatchQueue.main.async {
+                    addAttachment(url: url)
+                }
+            }
+        }
+        return true
+    }
+
+    private func addAttachment(url: URL) {
+        guard attachments.count < Self.maxAttachments else { return }
+
+        let ext = url.pathExtension.lowercased()
+        let imageExts = ["png", "jpg", "jpeg", "gif", "webp", "tiff", "bmp", "heic"]
+        guard imageExts.contains(ext) || ext == "pdf" else { return }
+
+        // 파일 크기 제한
+        if let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
+           let size = attrs[.size] as? Int, size > Self.maxFileSize { return }
+
+        // 중복 방지
+        guard !attachments.contains(where: { $0.url == url }) else { return }
+
+        attachments.append(ChatAttachment(url: url))
+    }
+
+    // MARK: - Clipboard Paste
+
+    private func pasteImageFromClipboard(_ image: NSImage) {
+        guard attachments.count < Self.maxAttachments else { return }
+
+        // 클립보드 이미지를 임시 파일로 저장
+        let tmpDir = FileManager.default.temporaryDirectory.appendingPathComponent("calen-paste", isDirectory: true)
+        try? FileManager.default.createDirectory(at: tmpDir, withIntermediateDirectories: true)
+        let fileName = "paste-\(UUID().uuidString.prefix(8)).png"
+        let fileURL = tmpDir.appendingPathComponent(fileName)
+
+        guard let tiff = image.tiffRepresentation,
+              let rep = NSBitmapImageRep(data: tiff),
+              let pngData = rep.representation(using: .png, properties: [:]) else { return }
+
+        guard pngData.count <= Self.maxFileSize else { return }
+
+        do {
+            try pngData.write(to: fileURL, options: .atomic)
+            attachments.append(ChatAttachment(url: fileURL))
+        } catch {}
+    }
+
 
     // MARK: - Action Approval Card
 
@@ -195,7 +361,7 @@ struct ChatView: View {
                 Image(systemName: "exclamationmark.shield.fill")
                     .font(.system(size: 11))
                     .foregroundStyle(.orange)
-                Text("일정 변경 확인")
+                Text(String(localized: "chat.action.confirm.title"))
                     .font(.system(size: 11, weight: .bold))
             }
 
@@ -222,7 +388,7 @@ struct ChatView: View {
                     HStack(spacing: 3) {
                         Image(systemName: "checkmark")
                             .font(.system(size: 9, weight: .bold))
-                        Text("실행")
+                        Text(String(localized: "common.execute"))
                             .font(.system(size: 10, weight: .semibold))
                     }
                     .foregroundStyle(.white)
@@ -236,7 +402,7 @@ struct ChatView: View {
                     let msg = aiService.declinePendingActions()
                     messages.append(msg)
                 } label: {
-                    Text("취소")
+                    Text(String(localized: "common.cancel"))
                         .font(.system(size: 10))
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 10)
@@ -255,9 +421,9 @@ struct ChatView: View {
 
     private func actionLabel(_ action: String) -> String {
         switch action {
-        case "create": return "추가"
-        case "update": return "수정"
-        case "delete": return "삭제"
+        case "create": return String(localized: "chat.action.create")
+        case "update": return String(localized: "chat.action.update")
+        case "delete": return String(localized: "chat.action.delete")
         default: return action
         }
     }
@@ -266,13 +432,19 @@ struct ChatView: View {
 
     private func sendMessage() {
         let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return }
+        guard !text.isEmpty || !attachments.isEmpty else { return }
 
-        messages.append(ChatMessage(role: .user, content: text))
+        let currentAttachments = attachments
+        let displayText = text.isEmpty
+            ? currentAttachments.map { "[\($0.fileName)]" }.joined(separator: " ")
+            : text
+
+        messages.append(ChatMessage(role: .user, content: displayText, attachments: currentAttachments))
         inputText = ""
+        attachments = []
 
         Task {
-            let response = await aiService.sendMessage(text, history: Array(messages.dropLast()))
+            let response = await aiService.sendMessage(text, attachments: currentAttachments, history: Array(messages.dropLast()))
             messages.append(contentsOf: response)
             viewModel.refreshEvents()
         }
@@ -301,17 +473,48 @@ struct ChatBubble: View {
                     .padding(.vertical, 3)
                     .background(RoundedRectangle(cornerRadius: 4).fill(Color.secondary.opacity(0.1)))
                 } else {
-                    Text(message.content)
-                        .font(.system(size: 12))
-                        .textSelection(.enabled)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 7)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(message.role == .user
-                                      ? Color.purple.opacity(0.2)
-                                      : Color(nsColor: .controlBackgroundColor))
-                        )
+                    VStack(alignment: message.role == .user ? .trailing : .leading, spacing: 4) {
+                        // 첨부파일 썸네일
+                        if !message.attachments.isEmpty {
+                            HStack(spacing: 4) {
+                                ForEach(message.attachments) { att in
+                                    if let thumb = att.thumbnail {
+                                        Image(nsImage: thumb)
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fill)
+                                            .frame(width: 60, height: 60)
+                                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                                    } else {
+                                        VStack(spacing: 2) {
+                                            Image(systemName: att.type == .pdf ? "doc.fill" : "photo")
+                                                .font(.system(size: 16))
+                                            Text(att.fileName)
+                                                .font(.system(size: 7))
+                                                .lineLimit(1)
+                                        }
+                                        .foregroundStyle(.secondary)
+                                        .frame(width: 60, height: 60)
+                                        .background(RoundedRectangle(cornerRadius: 8).fill(Color.secondary.opacity(0.1)))
+                                    }
+                                }
+                            }
+                        }
+
+                        // 텍스트
+                        if !message.content.isEmpty {
+                            Text(message.content)
+                                .font(.system(size: 12))
+                                .textSelection(.enabled)
+                        }
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 7)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(message.role == .user
+                                  ? Color.purple.opacity(0.2)
+                                  : Color(nsColor: .controlBackgroundColor))
+                    )
                 }
             }
 
@@ -328,7 +531,7 @@ struct AISettingsPopover: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("AI 설정")
+            Text(String(localized: "ai.settings.title"))
                 .font(.system(size: 13, weight: .bold))
 
             // Provider picker
@@ -340,7 +543,7 @@ struct AISettingsPopover: View {
             }
 
             // Model info
-            Text("모델: \(tempProvider.defaultModel)")
+            Text(String(format: String(localized: "ai.settings.model"), tempProvider.defaultModel))
                 .font(.system(size: 10))
                 .foregroundStyle(.secondary)
 
@@ -349,7 +552,7 @@ struct AISettingsPopover: View {
                 aiService.provider = tempProvider
                 aiService.saveSettings()
             } label: {
-                Text("저장")
+                Text(String(localized: "common.save"))
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
@@ -382,8 +585,8 @@ struct ProviderRow: View {
 
     private var statusText: String {
         switch provider {
-        case .claude: return aiService.claudeAvailable ? "설치됨 — 바로 사용 가능" : "미설치"
-        case .codex: return aiService.codexAvailable ? "설치됨 — 바로 사용 가능" : "미설치"
+        case .claude: return aiService.claudeAvailable ? String(localized: "ai.provider.installed") : String(localized: "ai.provider.not.installed")
+        case .codex: return aiService.codexAvailable ? String(localized: "ai.provider.installed") : String(localized: "ai.provider.not.installed")
         }
     }
 
@@ -422,3 +625,55 @@ struct ProviderRow: View {
         .contentShape(Rectangle())
     }
 }
+
+// MARK: - PasteAwareTextField
+// 일반 텍스트 입력용 NSTextField 래퍼 (이미지 paste는 PasteInterceptingController에서 처리)
+
+class _PasteAwareNSTextField: NSTextField {}
+
+struct PasteAwareTextField: NSViewRepresentable {
+    @Binding var text: String
+    var placeholder: String
+    var onSubmit: () -> Void
+
+    func makeNSView(context: Context) -> _PasteAwareNSTextField {
+        let field = _PasteAwareNSTextField()
+        field.placeholderString = placeholder
+        field.font = .systemFont(ofSize: 12)
+        field.isBordered = false
+        field.drawsBackground = false
+        field.focusRingType = .none
+        field.lineBreakMode = .byClipping
+        field.cell?.isScrollable = true
+        field.delegate = context.coordinator
+        return field
+    }
+
+    func updateNSView(_ field: _PasteAwareNSTextField, context: Context) {
+        if field.stringValue != text { field.stringValue = text }
+        field.placeholderString = placeholder
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    class Coordinator: NSObject, NSTextFieldDelegate {
+        var parent: PasteAwareTextField
+        init(_ parent: PasteAwareTextField) { self.parent = parent }
+
+        func controlTextDidChange(_ obj: Notification) {
+            if let field = obj.object as? NSTextField {
+                parent.text = field.stringValue
+            }
+        }
+
+        func control(_ control: NSControl, textView: NSTextView,
+                     doCommandBy commandSelector: Selector) -> Bool {
+            if commandSelector == #selector(NSResponder.insertNewline(_:)) {
+                parent.onSubmit()
+                return true
+            }
+            return false
+        }
+    }
+}
+

@@ -36,6 +36,7 @@ struct MainCalendarView: View {
     @StateObject private var notificationService = NotificationService()
     @State private var showLeftPanel: Bool = true
     @State private var leftPanelMode: LeftPanelMode = .chat
+    @State private var showSettings: Bool = false
 
     init(authManager: GoogleAuthManager, newTodoTitle: Binding<String>) {
         self.authManager = authManager
@@ -65,7 +66,7 @@ struct MainCalendarView: View {
             CalendarGridView(viewModel: viewModel, showChat: $showLeftPanel)
                 .frame(width: showLeftPanel ? 560 : 620)
 
-            DailyDetailView(viewModel: viewModel, newTodoTitle: $newTodoTitle)
+            DailyDetailView(viewModel: viewModel, newTodoTitle: $newTodoTitle, showSettings: $showSettings)
                 .frame(width: 310)
         }
         .frame(width: showLeftPanel ? 1150 : 930, height: 780)
@@ -80,6 +81,15 @@ struct MainCalendarView: View {
         .onChange(of: viewModel.calendarEvents) { _ in
             updateEventReminders()
         }
+        .sheet(isPresented: $showSettings) {
+            SettingsView(
+                goalService: goalService,
+                authManager: authManager,
+                aiService: aiService,
+                viewModel: viewModel,
+                onDismiss: { showSettings = false }
+            )
+        }
     }
 
     // MARK: - Left Panel
@@ -90,8 +100,8 @@ struct MainCalendarView: View {
             // Panel mode toggle (only if onboarding done)
             if goalService.profile.onboardingDone && leftPanelMode != .onboarding {
                 HStack(spacing: 0) {
-                    panelTab("리뷰", mode: .review, icon: "sparkles")
-                    panelTab("채팅", mode: .chat, icon: "bubble.left")
+                    panelTab(String(localized: "panel.review"), mode: .review, icon: "sparkles")
+                    panelTab(String(localized: "panel.chat"), mode: .chat, icon: "bubble.left")
                 }
                 .padding(.horizontal, 8)
                 .padding(.top, 6)
@@ -187,7 +197,15 @@ struct MainCalendarView: View {
 struct CalendarGridView: View {
     @ObservedObject var viewModel: CalendarViewModel
     @Binding var showChat: Bool
-    private let weekdays = ["일", "월", "화", "수", "목", "금", "토"]
+    private let weekdays = [
+        String(localized: "calendar.weekdays.sun"),
+        String(localized: "calendar.weekdays.mon"),
+        String(localized: "calendar.weekdays.tue"),
+        String(localized: "calendar.weekdays.wed"),
+        String(localized: "calendar.weekdays.thu"),
+        String(localized: "calendar.weekdays.fri"),
+        String(localized: "calendar.weekdays.sat")
+    ]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -199,7 +217,7 @@ struct CalendarGridView: View {
                         .foregroundStyle(showChat ? .purple : .secondary)
                 }
                 .buttonStyle(.plain)
-                .help("AI 채팅")
+                .help(String(localized: "calendar.help.chat"))
 
                 Text(viewModel.monthTitle())
                     .font(.system(size: 28, weight: .bold))
@@ -208,7 +226,7 @@ struct CalendarGridView: View {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 12))
                         .foregroundStyle(.green)
-                        .help("Google Calendar 연동됨")
+                        .help(String(localized: "calendar.help.google.connected"))
                 }
 
                 Spacer()
@@ -359,6 +377,7 @@ struct DayCellView: View {
 struct DailyDetailView: View {
     @ObservedObject var viewModel: CalendarViewModel
     @Binding var newTodoTitle: String
+    @Binding var showSettings: Bool
 
     @State private var selectedCategoryID: UUID?
     @State private var isRepeating: Bool = false
@@ -372,7 +391,7 @@ struct DailyDetailView: View {
 
     private var dDayText: String {
         let diff = viewModel.daysSinceToday(viewModel.selectedDate)
-        if diff == 0 { return "오늘" }
+        if diff == 0 { return String(localized: "detail.dday.today") }
         return diff > 0 ? "D - \(diff)" : "D + \(abs(diff))"
     }
 
@@ -400,37 +419,50 @@ struct DailyDetailView: View {
                                     .background(RoundedRectangle(cornerRadius: 4).fill(Color.green.opacity(0.15)))
                                     .foregroundStyle(.green)
                             }
+                            if viewModel.appleCalendarEnabled && viewModel.appleCalendarAccessGranted {
+                                Text("Apple")
+                                    .font(.system(size: 10, weight: .medium))
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(RoundedRectangle(cornerRadius: 4).fill(Color.orange.opacity(0.15)))
+                                    .foregroundStyle(.orange)
+                            }
+                            if viewModel.appleRemindersEnabled && viewModel.appleRemindersAccessGranted {
+                                Text(String(localized: "detail.reminders"))
+                                    .font(.system(size: 10, weight: .medium))
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(RoundedRectangle(cornerRadius: 4).fill(Color.purple.opacity(0.15)))
+                                    .foregroundStyle(.purple)
+                            }
                         }
                     }
                     Spacer()
 
                     HStack(spacing: 8) {
-                        // Settings menu
-                        Menu {
-                            Button { showCategoryManager.toggle() } label: {
-                                Label("카테고리 관리", systemImage: "tag")
-                            }
-                            if viewModel.authManager.isAuthenticated {
-                                Button {
-                                    viewModel.authManager.logout()
-                                } label: {
-                                    Label("Google 로그아웃", systemImage: "person.crop.circle.badge.minus")
-                                }
-                            } else {
-                                Button {
-                                    UserDefaults.standard.removeObject(forKey: "planit.skipGoogleAuth")
-                                    viewModel.authManager.objectWillChange.send()
-                                } label: {
-                                    Label("Google 로그인", systemImage: "person.crop.circle.badge.plus")
-                                }
-                            }
+                        Button {
+                            showCategoryManager.toggle()
+                        } label: {
+                            Image(systemName: "tag")
+                                .font(.system(size: 15))
+                                .foregroundStyle(.secondary)
+                                .frame(width: 28, height: 28)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .help("카테고리 관리")
+
+                        Button {
+                            showSettings = true
                         } label: {
                             Image(systemName: "gearshape")
                                 .font(.system(size: 16))
                                 .foregroundStyle(.secondary)
+                                .frame(width: 28, height: 28)
+                                .contentShape(Rectangle())
                         }
-                        .menuStyle(.borderlessButton)
-                        .frame(width: 24)
+                        .buttonStyle(.plain)
+                        .help("설정")
                     }
                 }
                 .padding(.horizontal, 20)
@@ -468,7 +500,7 @@ struct DailyDetailView: View {
                         }
 
                         if events.isEmpty && todos.isEmpty && !showAddForm {
-                            Text("일정이 없습니다")
+                            Text(String(localized: "detail.no.events"))
                                 .font(.system(size: 13))
                                 .foregroundStyle(.tertiary)
                                 .frame(maxWidth: .infinity)
@@ -499,7 +531,7 @@ struct DailyDetailView: View {
                     } label: {
                         HStack(spacing: 8) {
                             Image(systemName: "plus.circle.fill").font(.system(size: 16))
-                            Text("할 일 추가").font(.system(size: 13, weight: .medium))
+                            Text(String(localized: "detail.add.todo")).font(.system(size: 13, weight: .medium))
                             Spacer()
                         }
                         .foregroundStyle(Color.blue)
@@ -562,7 +594,7 @@ struct CategoryManagerView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("카테고리 관리")
+            Text(String(localized: "category.manage.title"))
                 .font(.system(size: 14, weight: .bold))
 
             ForEach(viewModel.categories) { cat in
@@ -585,7 +617,7 @@ struct CategoryManagerView: View {
 
             Divider()
 
-            Text("새 카테고리")
+            Text(String(localized: "category.new"))
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(.secondary)
 
@@ -602,7 +634,7 @@ struct CategoryManagerView: View {
             }
 
             HStack(spacing: 8) {
-                TextField("이름", text: $newName)
+                TextField(String(localized: "category.name.placeholder"), text: $newName)
                     .textFieldStyle(.roundedBorder)
                     .font(.system(size: 12))
 
@@ -613,7 +645,7 @@ struct CategoryManagerView: View {
                         newName = ""
                     }
                 } label: {
-                    Text("추가")
+                    Text(String(localized: "common.add"))
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 10)
@@ -642,24 +674,24 @@ struct ModalEventDetail: View {
     @State private var editEndDate = Date()
 
     private var timeText: String {
-        if event.isAllDay { return "종일" }
+        if event.isAllDay { return String(localized: "event.detail.allday") }
         let fmt = DateFormatter()
-        fmt.locale = Locale(identifier: "ko_KR")
+        fmt.locale = Locale.current
         fmt.dateFormat = "HH:mm"
         return "\(fmt.string(from: event.startDate)) – \(fmt.string(from: event.endDate))"
     }
 
     private var dateText: String {
         let fmt = DateFormatter()
-        fmt.locale = Locale(identifier: "ko_KR")
-        fmt.dateFormat = "M월 d일 (E)"
+        fmt.locale = Locale.current
+        fmt.dateStyle = .medium
         return fmt.string(from: event.startDate)
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text("일정 상세").font(.system(size: 15, weight: .bold))
+                Text(String(localized: "event.detail.title")).font(.system(size: 15, weight: .bold))
                 Spacer()
                 Button { onClose() } label: {
                     Image(systemName: "xmark.circle.fill").font(.system(size: 18)).foregroundStyle(.secondary)
@@ -671,17 +703,17 @@ struct ModalEventDetail: View {
 
             VStack(alignment: .leading, spacing: 12) {
                 if isEditing {
-                    TextField("제목", text: $editTitle)
+                    TextField(String(localized: "event.field.title"), text: $editTitle)
                         .textFieldStyle(.plain)
                         .font(.system(size: 15, weight: .medium))
                         .padding(10)
                         .background(RoundedRectangle(cornerRadius: 8).fill(Color(nsColor: .textBackgroundColor).opacity(0.5)))
 
-                    Toggle("종일", isOn: $editIsAllDay).font(.system(size: 13))
+                    Toggle(String(localized: "event.toggle.allday"), isOn: $editIsAllDay).font(.system(size: 13))
 
                     if !editIsAllDay {
-                        DatePicker("시작", selection: $editStartDate, displayedComponents: [.date, .hourAndMinute]).font(.system(size: 12))
-                        DatePicker("종료", selection: $editEndDate, displayedComponents: [.date, .hourAndMinute]).font(.system(size: 12))
+                        DatePicker(String(localized: "event.detail.start"), selection: $editStartDate, displayedComponents: [.date, .hourAndMinute]).font(.system(size: 12))
+                        DatePicker(String(localized: "event.detail.end"), selection: $editEndDate, displayedComponents: [.date, .hourAndMinute]).font(.system(size: 12))
                     }
                 } else {
                     HStack(spacing: 10) {
@@ -707,7 +739,7 @@ struct ModalEventDetail: View {
                         Image(systemName: viewModel.isEventCompleted(event.id) ? "checkmark.circle.fill" : "circle")
                             .font(.system(size: 13))
                             .foregroundStyle(viewModel.isEventCompleted(event.id) ? .green : .secondary)
-                        Text(viewModel.isEventCompleted(event.id) ? "완료됨" : "미완료").font(.system(size: 13)).foregroundStyle(.secondary)
+                        Text(viewModel.isEventCompleted(event.id) ? String(localized: "common.completed") : String(localized: "common.incomplete")).font(.system(size: 13)).foregroundStyle(.secondary)
                     }
                 }
             }
@@ -719,7 +751,7 @@ struct ModalEventDetail: View {
             if isEditing {
                 HStack(spacing: 12) {
                     Button { isEditing = false } label: {
-                        Text("취소").font(.system(size: 13)).foregroundStyle(.secondary).frame(maxWidth: .infinity).padding(.vertical, 10)
+                        Text(String(localized: "common.cancel")).font(.system(size: 13)).foregroundStyle(.secondary).frame(maxWidth: .infinity).padding(.vertical, 10)
                     }.buttonStyle(.plain)
                     Button {
                         let t = editTitle.trimmingCharacters(in: .whitespaces)
@@ -729,7 +761,7 @@ struct ModalEventDetail: View {
                         }
                         onClose()
                     } label: {
-                        Text("저장").font(.system(size: 13, weight: .semibold)).foregroundStyle(.white).frame(maxWidth: .infinity).padding(.vertical, 10)
+                        Text(String(localized: "common.save")).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white).frame(maxWidth: .infinity).padding(.vertical, 10)
                             .background(RoundedRectangle(cornerRadius: 8).fill(Color.blue))
                     }.buttonStyle(.plain)
                 }.padding(.horizontal, 20).padding(.vertical, 12)
@@ -738,7 +770,7 @@ struct ModalEventDetail: View {
                     Button { viewModel.toggleEventCompleted(event.id); onClose() } label: {
                         HStack(spacing: 4) {
                             Image(systemName: viewModel.isEventCompleted(event.id) ? "arrow.uturn.backward" : "checkmark").font(.system(size: 12))
-                            Text(viewModel.isEventCompleted(event.id) ? "미완료" : "완료").font(.system(size: 13))
+                            Text(viewModel.isEventCompleted(event.id) ? String(localized: "common.incomplete") : String(localized: "common.done")).font(.system(size: 13))
                         }.foregroundStyle(.green).frame(maxWidth: .infinity).padding(.vertical, 10)
                             .background(RoundedRectangle(cornerRadius: 8).fill(Color.green.opacity(0.1)))
                     }.buttonStyle(.plain)
@@ -749,7 +781,7 @@ struct ModalEventDetail: View {
                     } label: {
                         HStack(spacing: 4) {
                             Image(systemName: "pencil").font(.system(size: 12))
-                            Text("수정").font(.system(size: 13))
+                            Text(String(localized: "common.edit")).font(.system(size: 13))
                         }.foregroundStyle(.blue).frame(maxWidth: .infinity).padding(.vertical, 10)
                             .background(RoundedRectangle(cornerRadius: 8).fill(Color.blue.opacity(0.1)))
                     }.buttonStyle(.plain)
@@ -760,7 +792,7 @@ struct ModalEventDetail: View {
                     } label: {
                         HStack(spacing: 4) {
                             Image(systemName: "trash").font(.system(size: 12))
-                            Text("삭제").font(.system(size: 13))
+                            Text(String(localized: "common.delete")).font(.system(size: 13))
                         }.foregroundStyle(.red).frame(maxWidth: .infinity).padding(.vertical, 10)
                             .background(RoundedRectangle(cornerRadius: 8).fill(Color.red.opacity(0.1)))
                     }.buttonStyle(.plain)
@@ -790,15 +822,15 @@ struct ModalTodoDetail: View {
 
     private var dateText: String {
         let fmt = DateFormatter()
-        fmt.locale = Locale(identifier: "ko_KR")
-        fmt.dateFormat = "M월 d일 (E)"
+        fmt.locale = Locale.current
+        fmt.dateStyle = .medium
         return fmt.string(from: todo.date)
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text("할 일 상세").font(.system(size: 15, weight: .bold))
+                Text(String(localized: "todo.detail.title")).font(.system(size: 15, weight: .bold))
                 Spacer()
                 Button { onClose() } label: {
                     Image(systemName: "xmark.circle.fill").font(.system(size: 18)).foregroundStyle(.secondary)
@@ -812,7 +844,7 @@ struct ModalTodoDetail: View {
                 if isEditing {
                     HStack(spacing: 10) {
                         Circle().fill(category.color).frame(width: 10, height: 10)
-                        TextField("제목", text: $editTitle)
+                        TextField(String(localized: "event.field.title"), text: $editTitle)
                             .textFieldStyle(.plain).font(.system(size: 15, weight: .medium))
                     }
                     .padding(10)
@@ -856,7 +888,7 @@ struct ModalTodoDetail: View {
                     HStack(spacing: 8) {
                         Image(systemName: todo.isCompleted ? "checkmark.circle.fill" : "circle").font(.system(size: 13))
                             .foregroundStyle(todo.isCompleted ? .green : .secondary)
-                        Text(todo.isCompleted ? "완료됨" : "미완료").font(.system(size: 13)).foregroundStyle(.secondary)
+                        Text(todo.isCompleted ? String(localized: "common.completed") : String(localized: "common.incomplete")).font(.system(size: 13)).foregroundStyle(.secondary)
                     }
                 }
             }
@@ -868,14 +900,14 @@ struct ModalTodoDetail: View {
             if isEditing {
                 HStack(spacing: 12) {
                     Button { isEditing = false } label: {
-                        Text("취소").font(.system(size: 13)).foregroundStyle(.secondary).frame(maxWidth: .infinity).padding(.vertical, 10)
+                        Text(String(localized: "common.cancel")).font(.system(size: 13)).foregroundStyle(.secondary).frame(maxWidth: .infinity).padding(.vertical, 10)
                     }.buttonStyle(.plain)
                     Button {
                         let t = editTitle.trimmingCharacters(in: .whitespaces)
                         if !t.isEmpty { viewModel.updateTodo(id: todo.id, title: t, categoryID: editCategoryID) }
                         onClose()
                     } label: {
-                        Text("저장").font(.system(size: 13, weight: .semibold)).foregroundStyle(.white).frame(maxWidth: .infinity).padding(.vertical, 10)
+                        Text(String(localized: "common.save")).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white).frame(maxWidth: .infinity).padding(.vertical, 10)
                             .background(RoundedRectangle(cornerRadius: 8).fill(Color.blue))
                     }.buttonStyle(.plain)
                 }.padding(.horizontal, 20).padding(.vertical, 12)
@@ -884,7 +916,7 @@ struct ModalTodoDetail: View {
                     Button { viewModel.toggleTodo(id: todo.id); onClose() } label: {
                         HStack(spacing: 4) {
                             Image(systemName: todo.isCompleted ? "arrow.uturn.backward" : "checkmark").font(.system(size: 12))
-                            Text(todo.isCompleted ? "미완료" : "완료").font(.system(size: 13))
+                            Text(todo.isCompleted ? String(localized: "common.incomplete") : String(localized: "common.done")).font(.system(size: 13))
                         }.foregroundStyle(.green).frame(maxWidth: .infinity).padding(.vertical, 10)
                             .background(RoundedRectangle(cornerRadius: 8).fill(Color.green.opacity(0.1)))
                     }.buttonStyle(.plain)
@@ -894,7 +926,7 @@ struct ModalTodoDetail: View {
                     } label: {
                         HStack(spacing: 4) {
                             Image(systemName: "pencil").font(.system(size: 12))
-                            Text("수정").font(.system(size: 13))
+                            Text(String(localized: "common.edit")).font(.system(size: 13))
                         }.foregroundStyle(.blue).frame(maxWidth: .infinity).padding(.vertical, 10)
                             .background(RoundedRectangle(cornerRadius: 8).fill(Color.blue.opacity(0.1)))
                     }.buttonStyle(.plain)
@@ -902,7 +934,7 @@ struct ModalTodoDetail: View {
                     Button { viewModel.deleteTodo(id: todo.id); onClose() } label: {
                         HStack(spacing: 4) {
                             Image(systemName: "trash").font(.system(size: 12))
-                            Text("삭제").font(.system(size: 13))
+                            Text(String(localized: "common.delete")).font(.system(size: 13))
                         }.foregroundStyle(.red).frame(maxWidth: .infinity).padding(.vertical, 10)
                             .background(RoundedRectangle(cornerRadius: 8).fill(Color.red.opacity(0.1)))
                     }.buttonStyle(.plain)
@@ -940,7 +972,7 @@ struct InlineAddTodoForm: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 Circle().fill(viewModel.category(for: effectiveCategoryID).color).frame(width: 8, height: 8)
-                TextField("할 일을 입력하세요", text: $title)
+                TextField(String(localized: "todo.input.placeholder"), text: $title)
                     .textFieldStyle(.plain)
                     .font(.system(size: 13, weight: .medium))
                     .onSubmit { submit() }
@@ -965,7 +997,7 @@ struct InlineAddTodoForm: View {
                 Button { todoType = todoType == .normal ? .repeating : .normal } label: {
                     HStack(spacing: 3) {
                         Image(systemName: "arrow.triangle.2.circlepath").font(.system(size: 10))
-                        Text("반복").font(.system(size: 10))
+                        Text(String(localized: "common.repeat")).font(.system(size: 10))
                     }
                     .foregroundStyle(todoType == .repeating ? .blue : .secondary.opacity(0.6))
                     .padding(.horizontal, 8).padding(.vertical, 4)
@@ -978,11 +1010,11 @@ struct InlineAddTodoForm: View {
             HStack(spacing: 8) {
                 Spacer()
                 Button { onCancel() } label: {
-                    Text("취소").font(.system(size: 11)).foregroundStyle(.secondary)
+                    Text(String(localized: "common.cancel")).font(.system(size: 11)).foregroundStyle(.secondary)
                 }.buttonStyle(.plain)
 
                 Button { submit() } label: {
-                    Text("추가").font(.system(size: 11, weight: .semibold))
+                    Text(String(localized: "common.add")).font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 14).padding(.vertical, 5)
                         .background(RoundedRectangle(cornerRadius: 6).fill(Color.blue))
@@ -1015,9 +1047,9 @@ struct EventRowView: View {
     var onToggle: (() -> Void)? = nil
 
     private var timeText: String {
-        if event.isAllDay { return "종일" }
+        if event.isAllDay { return String(localized: "event.detail.allday") }
         let fmt = DateFormatter()
-        fmt.locale = Locale(identifier: "ko_KR")
+        fmt.locale = Locale.current
         fmt.dateFormat = "HH:mm"
         return "\(fmt.string(from: event.startDate)) – \(fmt.string(from: event.endDate))"
     }
@@ -1074,7 +1106,9 @@ struct TodoRowView: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            RoundedRectangle(cornerRadius: 2).fill(category.color).frame(width: 4)
+            RoundedRectangle(cornerRadius: 2)
+                .fill(todo.source == .appleReminder ? Color.orange : category.color)
+                .frame(width: 4)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(todo.title)
@@ -1082,7 +1116,13 @@ struct TodoRowView: View {
                     .strikethrough(todo.isCompleted)
                     .foregroundStyle(todo.isCompleted ? .secondary : .primary)
                 HStack(spacing: 4) {
-                    Text(category.name).font(.system(size: 11)).foregroundStyle(.secondary)
+                    if todo.source == .appleReminder {
+                        Image(systemName: "bell.fill")
+                            .font(.system(size: 9)).foregroundStyle(.orange)
+                        Text(String(localized: "detail.reminders")).font(.system(size: 11)).foregroundStyle(.orange)
+                    } else {
+                        Text(category.name).font(.system(size: 11)).foregroundStyle(.secondary)
+                    }
                     if todo.isRepeating {
                         Image(systemName: "arrow.triangle.2.circlepath")
                             .font(.system(size: 9)).foregroundStyle(.secondary)
@@ -1093,13 +1133,14 @@ struct TodoRowView: View {
             Spacer()
 
             Button { onToggle() } label: {
+                let accentColor = todo.source == .appleReminder ? Color.orange : category.color
                 ZStack {
                     Circle()
-                        .stroke(todo.isCompleted ? category.color : Color.secondary.opacity(0.4), lineWidth: 2)
+                        .stroke(todo.isCompleted ? accentColor : Color.secondary.opacity(0.4), lineWidth: 2)
                         .frame(width: 22, height: 22)
                     if todo.isCompleted {
-                        Circle().fill(category.color.opacity(0.15)).frame(width: 22, height: 22)
-                        Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundStyle(category.color)
+                        Circle().fill(accentColor.opacity(0.15)).frame(width: 22, height: 22)
+                        Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundStyle(accentColor)
                     }
                 }
                 .frame(width: 32, height: 32)
