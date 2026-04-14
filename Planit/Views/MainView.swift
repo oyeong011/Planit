@@ -84,6 +84,9 @@ struct MainCalendarView: View {
         .onChange(of: viewModel.calendarEvents) { _ in
             updateEventReminders()
         }
+        .onReceive(NotificationCenter.default.publisher(for: CalenNotification.popoverOpened)) { _ in
+            viewModel.refreshEvents()
+        }
         .onReceive(NotificationCenter.default.publisher(for: CalenNotification.pasteImage)) { notif in
             if let image = notif.userInfo?["image"] as? NSImage {
                 leftPanelMode = .chat

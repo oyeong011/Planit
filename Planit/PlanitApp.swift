@@ -65,6 +65,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
             NSApp.activate(ignoringOtherApps: true)
             setupPasteMonitor()
+            NotificationCenter.default.post(name: CalenNotification.popoverOpened, object: nil)
         }
     }
 
@@ -131,6 +132,7 @@ extension AppDelegate {
 enum CalenNotification {
     static let pasteImage = Notification.Name("CalenPasteImage")
     static let pasteFiles = Notification.Name("CalenPasteFiles")
+    static let popoverOpened = Notification.Name("CalenPopoverOpened")
 }
 
 enum ChatPastePayload {
