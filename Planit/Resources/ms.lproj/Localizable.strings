@@ -356,3 +356,9 @@
 /* ===== MainView ===== */
 "event.category.label" = "Kategori";
 "event.category.none" = "Tiada";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "Hari baru";
+"rollover.notification.body" = "Semak tugasan anda hari ini";
+"rollover.moved.title" = "Tugasan dipindahkan";
+"rollover.moved.body" = "%d tugasan yang belum selesai dipindahkan ke hari ini";

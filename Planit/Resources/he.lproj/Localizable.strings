@@ -356,3 +356,9 @@
 /* ===== MainView ===== */
 "event.category.label" = "קטגוריה";
 "event.category.none" = "ללא";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "יום חדש";
+"rollover.notification.body" = "בדוק את המשימות שלך להיום";
+"rollover.moved.title" = "משימות הועברו";
+"rollover.moved.body" = "%d משימה/ות שלא הושלמה/ו הועבר/ו להיום";

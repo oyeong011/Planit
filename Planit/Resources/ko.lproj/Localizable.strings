@@ -358,3 +358,9 @@
 /* ===== MainView ===== */
 "event.category.label" = "카테고리";
 "event.category.none" = "없음";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "새로운 날";
+"rollover.notification.body" = "오늘의 할 일을 확인하세요";
+"rollover.moved.title" = "할 일 이동됨";
+"rollover.moved.body" = "%d개의 미완료 할 일을 오늘로 이동했습니다";

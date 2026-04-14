@@ -356,3 +356,9 @@
 /* ===== MainView ===== */
 "event.category.label" = "الفئة";
 "event.category.none" = "بلا فئة";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "يوم جديد";
+"rollover.notification.body" = "تحقق من مهامك اليوم";
+"rollover.moved.title" = "تم نقل المهام";
+"rollover.moved.body" = "تم نقل %d مهمة غير مكتملة إلى اليوم";

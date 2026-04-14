@@ -356,3 +356,9 @@
 /* ===== MainView ===== */
 "event.category.label" = "Categorie";
 "event.category.none" = "Niciunul";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "Zi nouă";
+"rollover.notification.body" = "Verificați sarcinile dvs. de astăzi";
+"rollover.moved.title" = "Sarcini mutate";
+"rollover.moved.body" = "%d sarcină/sarcini nefinalizată(e) mutată(e) pentru astăzi";

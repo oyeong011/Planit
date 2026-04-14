@@ -356,3 +356,9 @@
 /* ===== MainView ===== */
 "event.category.label" = "Κατηγορία";
 "event.category.none" = "Κανένα";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "Νέα μέρα";
+"rollover.notification.body" = "Ελέγξτε τις σημερινές σας εργασίες";
+"rollover.moved.title" = "Οι εργασίες μεταφέρθηκαν";
+"rollover.moved.body" = "%d ημιτελής/-είς εργασία/-ες μεταφέρθηκε/-αν στη σημερινή ημέρα";

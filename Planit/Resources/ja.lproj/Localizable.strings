@@ -356,3 +356,9 @@
 /* ===== MainView ===== */
 "event.category.label" = "カテゴリ";
 "event.category.none" = "なし";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "新しい日";
+"rollover.notification.body" = "今日のタスクを確認しましょう";
+"rollover.moved.title" = "タスクを移動しました";
+"rollover.moved.body" = "%d件の未完了タスクを今日に移動しました";

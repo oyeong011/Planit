@@ -356,3 +356,9 @@
 /* ===== MainView ===== */
 "event.category.label" = "Категорія";
 "event.category.none" = "Немає";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "Новий день";
+"rollover.notification.body" = "Перевірте завдання на сьогодні";
+"rollover.moved.title" = "Завдання перенесено";
+"rollover.moved.body" = "%d незавершене(-их) завдання(-ь) перенесено на сьогодні";

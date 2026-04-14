@@ -356,3 +356,9 @@
 /* ===== MainView ===== */
 "event.category.label" = "Kategorie";
 "event.category.none" = "Žádná";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "Nový den";
+"rollover.notification.body" = "Zkontrolujte své úkoly na dnes";
+"rollover.moved.title" = "Úkoly přesunuty";
+"rollover.moved.body" = "%d nedokončený(-ch) úkol(-ů) přesunut(-o) na dnes";

@@ -464,22 +464,6 @@ struct DailyDetailView: View {
                             Text(dDayText)
                                 .font(.system(size: 13))
                                 .foregroundStyle(.secondary)
-                            if viewModel.authManager.isAuthenticated {
-                                Text("Google")
-                                    .font(.system(size: 10, weight: .medium))
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(RoundedRectangle(cornerRadius: 4).fill(Color.green.opacity(0.15)))
-                                    .foregroundStyle(.green)
-                            }
-                            if viewModel.appleCalendarEnabled && viewModel.appleCalendarAccessGranted {
-                                Text("Apple")
-                                    .font(.system(size: 10, weight: .medium))
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(RoundedRectangle(cornerRadius: 4).fill(Color.orange.opacity(0.15)))
-                                    .foregroundStyle(.orange)
-                            }
                             if viewModel.appleRemindersEnabled && viewModel.appleRemindersAccessGranted {
                                 Text(String(localized: "detail.reminders"))
                                     .font(.system(size: 10, weight: .medium))

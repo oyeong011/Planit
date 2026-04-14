@@ -356,3 +356,9 @@
 /* ===== MainView ===== */
 "event.category.label" = "Categorie";
 "event.category.none" = "Geen";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "Nieuwe dag";
+"rollover.notification.body" = "Bekijk uw taken van vandaag";
+"rollover.moved.title" = "Taken verplaatst";
+"rollover.moved.body" = "%d onvoltooide taak/taken verplaatst naar vandaag";

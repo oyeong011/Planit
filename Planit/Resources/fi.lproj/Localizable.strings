@@ -356,3 +356,9 @@
 /* ===== MainView ===== */
 "event.category.label" = "Luokka";
 "event.category.none" = "Ei mitään";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "Uusi päivä";
+"rollover.notification.body" = "Tarkista tämän päivän tehtäväsi";
+"rollover.moved.title" = "Tehtävät siirretty";
+"rollover.moved.body" = "%d keskeneräinen tehtävä siirretty tähän päivään";

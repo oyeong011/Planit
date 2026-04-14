@@ -356,3 +356,9 @@
 /* ===== MainView ===== */
 "event.category.label" = "Kategória";
 "event.category.none" = "Nincs";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "Új nap";
+"rollover.notification.body" = "Ellenőrizze mai feladatait";
+"rollover.moved.title" = "Feladatok áthelyezve";
+"rollover.moved.body" = "%d befejezetlen feladat áthelyezve a mai napra";

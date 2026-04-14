@@ -356,3 +356,9 @@
 /* ===== MainView ===== */
 "event.category.label" = "Kategori";
 "event.category.none" = "Ingen";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "Ny dag";
+"rollover.notification.body" = "Sjekk oppgavene dine for i dag";
+"rollover.moved.title" = "Oppgaver flyttet";
+"rollover.moved.body" = "%d ufullstendig(e) oppgave(r) flyttet til i dag";

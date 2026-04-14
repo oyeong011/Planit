@@ -356,3 +356,9 @@
 /* ===== MainView ===== */
 "event.category.label" = "Catégorie";
 "event.category.none" = "Aucune";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "Nouveau jour";
+"rollover.notification.body" = "Consultez vos tâches du jour";
+"rollover.moved.title" = "Tâches déplacées";
+"rollover.moved.body" = "%d tâche(s) incomplète(s) déplacée(s) à aujourd'hui";

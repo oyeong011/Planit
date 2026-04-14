@@ -356,3 +356,9 @@
 /* ===== MainView ===== */
 "event.category.label" = "श्रेणी";
 "event.category.none" = "कोई नहीं";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "नया दिन";
+"rollover.notification.body" = "आज के अपने कार्य जाँचें";
+"rollover.moved.title" = "कार्य स्थानांतरित";
+"rollover.moved.body" = "%d अपूर्ण कार्य आज के लिए स्थानांतरित किए गए";

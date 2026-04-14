@@ -356,3 +356,9 @@
 /* ===== MainView ===== */
 "event.category.label" = "Categoría";
 "event.category.none" = "Ninguna";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "Nuevo día";
+"rollover.notification.body" = "Revisa tus tareas de hoy";
+"rollover.moved.title" = "Tareas movidas";
+"rollover.moved.body" = "%d tarea(s) incompleta(s) movida(s) a hoy";

@@ -356,3 +356,9 @@
 /* ===== MainView ===== */
 "event.category.label" = "Kategori";
 "event.category.none" = "Ingen";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "Ny dag";
+"rollover.notification.body" = "Kolla dina uppgifter för idag";
+"rollover.moved.title" = "Uppgifter flyttade";
+"rollover.moved.body" = "%d ofullständig(a) uppgift(er) flyttad(e) till idag";

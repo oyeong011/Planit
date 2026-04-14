@@ -356,3 +356,9 @@
 /* ===== MainView ===== */
 "event.category.label" = "Categoria";
 "event.category.none" = "Nessuna";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "Nuovo giorno";
+"rollover.notification.body" = "Controlla le tue attività di oggi";
+"rollover.moved.title" = "Attività spostate";
+"rollover.moved.body" = "%d attività incompleta/e spostata/e a oggi";

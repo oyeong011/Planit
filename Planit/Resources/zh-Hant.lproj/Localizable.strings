@@ -356,3 +356,9 @@
 /* ===== MainView ===== */
 "event.category.label" = "分類";
 "event.category.none" = "無";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "新的一天";
+"rollover.notification.body" = "查看今天的任務";
+"rollover.moved.title" = "任務已移動";
+"rollover.moved.body" = "已將 %d 個未完成任務移至今天";

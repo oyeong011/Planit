@@ -356,3 +356,9 @@
 /* ===== MainView ===== */
 "event.category.label" = "หมวดหมู่";
 "event.category.none" = "ไม่มี";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "วันใหม่";
+"rollover.notification.body" = "ตรวจสอบงานของวันนี้";
+"rollover.moved.title" = "ย้ายงานแล้ว";
+"rollover.moved.body" = "ย้าย %d งานที่ยังไม่เสร็จมาเป็นวันนี้";

@@ -80,6 +80,7 @@ final class CalendarViewModel: ObservableObject {
     // MARK: - Init
 
     private var refreshTimer: Timer?
+    private var dateChangeTimer: Timer?
 
     private var notificationObserver: Any?
 
@@ -91,6 +92,15 @@ final class CalendarViewModel: ObservableObject {
         loadPendingEdits()
         loadEventCategoryMappings()
         startPeriodicRefresh()
+
+        // 자정 롤오버: 미완료 Todo를 오늘로 자동 이동
+        Task { @MainActor in
+            MidnightRolloverService.shared.performIfNeeded(viewModel: self)
+            MidnightRolloverService.shared.scheduleMidnightTrigger()
+        }
+
+        // 날짜 변경 감지 (앱이 켜진 상태로 자정 넘길 때)
+        observeDateChange()
 
         // Load cached events first (instant display), then try network
         loadCachedEvents()
@@ -115,6 +125,8 @@ final class CalendarViewModel: ObservableObject {
     deinit {
         refreshTimer?.invalidate()
         refreshTimer = nil
+        dateChangeTimer?.invalidate()
+        dateChangeTimer = nil
         if let observer = notificationObserver {
             NotificationCenter.default.removeObserver(observer)
         }
@@ -128,6 +140,24 @@ final class CalendarViewModel: ObservableObject {
         refreshTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.refreshEvents()
+            }
+        }
+    }
+
+    /// 자정 넘어갈 때 감지해서 롤오버 실행
+    private func observeDateChange() {
+        var lastDay = Calendar.current.startOfDay(for: Date())
+        dateChangeTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            let today = Calendar.current.startOfDay(for: Date())
+            if today > lastDay {
+                lastDay = today
+                Task { @MainActor in
+                    MidnightRolloverService.shared.performIfNeeded(viewModel: self)
+                    self.currentMonth = today
+                    self.selectedDate = today
+                    self.refreshEvents()
+                }
             }
         }
     }

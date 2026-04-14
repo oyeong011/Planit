@@ -356,3 +356,9 @@
 /* ===== MainView ===== */
 "event.category.label" = "Danh mục";
 "event.category.none" = "Không có";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "Ngày mới";
+"rollover.notification.body" = "Kiểm tra các nhiệm vụ hôm nay của bạn";
+"rollover.moved.title" = "Đã chuyển nhiệm vụ";
+"rollover.moved.body" = "Đã chuyển %d nhiệm vụ chưa hoàn thành sang hôm nay";

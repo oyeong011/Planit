@@ -356,3 +356,9 @@
 /* ===== MainView ===== */
 "event.category.label" = "Kategoria";
 "event.category.none" = "Brak";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "Nowy dzień";
+"rollover.notification.body" = "Sprawdź swoje zadania na dziś";
+"rollover.moved.title" = "Zadania przeniesione";
+"rollover.moved.body" = "%d niezakończone zadanie(-a/-ań) przeniesione na dziś";

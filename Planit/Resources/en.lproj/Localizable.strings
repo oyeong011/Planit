@@ -358,3 +358,9 @@
 /* ===== MainView ===== */
 "event.category.label" = "Category";
 "event.category.none" = "None";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "New Day";
+"rollover.notification.body" = "Tap to check your upcoming tasks";
+"rollover.moved.title" = "Tasks Moved";
+"rollover.moved.body" = "%d incomplete task(s) moved to today";

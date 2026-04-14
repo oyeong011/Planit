@@ -356,3 +356,9 @@
 /* ===== MainView ===== */
 "event.category.label" = "Kategori";
 "event.category.none" = "Yok";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "Yeni gün";
+"rollover.notification.body" = "Bugünkü görevlerinizi kontrol edin";
+"rollover.moved.title" = "Görevler taşındı";
+"rollover.moved.body" = "%d tamamlanmamış görev bugüne taşındı";
