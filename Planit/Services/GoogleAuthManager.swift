@@ -147,7 +147,7 @@ final class GoogleAuthManager: ObservableObject {
     private static func generateCodeChallenge(from verifier: String) -> String {
         let data = Data(verifier.utf8)
         var hash = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
-        data.withUnsafeBytes { CC_SHA256($0.baseAddress, CC_LONG(data.count), &hash) }
+        _ = data.withUnsafeBytes { CC_SHA256($0.baseAddress, CC_LONG(data.count), &hash) }
         return Data(hash).base64EncodedString()
             .replacingOccurrences(of: "+", with: "-")
             .replacingOccurrences(of: "/", with: "_")
@@ -314,7 +314,7 @@ final class GoogleAuthManager: ObservableObject {
         }
     }
 
-    private static func sendHTTPResponse(fd: Int32, body: String) {
+    nonisolated private static func sendHTTPResponse(fd: Int32, body: String) {
         let html = "<html><body style='font-family:system-ui;text-align:center;padding:60px'>\(body)</body></html>"
         let response = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: \(html.utf8.count)\r\nConnection: close\r\nCache-Control: no-store\r\nX-Content-Type-Options: nosniff\r\nX-Frame-Options: DENY\r\n\r\n\(html)"
         let bytes = Array(response.utf8)

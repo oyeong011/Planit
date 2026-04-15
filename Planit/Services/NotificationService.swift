@@ -145,12 +145,13 @@ final class NotificationService: NSObject, ObservableObject, UNUserNotificationC
 
     func scheduleRemindersForEvents(_ events: [(id: String, title: String, startDate: Date)]) {
         // Cancel all existing event reminders first
-        center.getPendingNotificationRequests { [weak self] requests in
+        let center = self.center
+        center.getPendingNotificationRequests { [weak self, center] requests in
             let eventIds = requests
                 .filter { $0.identifier.hasPrefix("calen.event.") }
                 .map(\.identifier)
 
-            self?.center.removePendingNotificationRequests(withIdentifiers: eventIds)
+            center.removePendingNotificationRequests(withIdentifiers: eventIds)
 
             // Schedule new reminders on MainActor
             Task { @MainActor in
