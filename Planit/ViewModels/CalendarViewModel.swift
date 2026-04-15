@@ -83,6 +83,7 @@ final class CalendarViewModel: ObservableObject {
     private var dateChangeTimer: Timer?
 
     private var notificationObserver: Any?
+    private var authCancellable: AnyCancellable?
     /// syncPendingEdits 재진입 방지 플래그
     private var isSyncingPendingEdits = false
 
@@ -103,6 +104,15 @@ final class CalendarViewModel: ObservableObject {
 
         // 날짜 변경 감지 (앱이 켜진 상태로 자정 넘길 때)
         observeDateChange()
+
+        // 로그인/로그아웃 시 캘린더 목록 캐시 초기화
+        authCancellable = authManager.$isAuthenticated.dropFirst().sink { [weak self] authenticated in
+            guard let self else { return }
+            if !authenticated {
+                // 로그아웃: 캐시 클리어
+                self.googleService.clearCache()
+            }
+        }
 
         // Load cached events first (instant display), then try network
         loadCachedEvents()

@@ -7,8 +7,15 @@ final class GoogleCalendarService {
     private let auth: GoogleAuthManager
     private let baseURL = "https://www.googleapis.com/calendar/v3"
 
+    /// 세션 캐시: 한 번 불러온 캘린더 목록 재사용 (로그아웃 시 clearCache() 호출)
+    private var cachedCalendars: [GoogleCalendarInfo]? = nil
+
     init(auth: GoogleAuthManager) {
         self.auth = auth
+    }
+
+    func clearCache() {
+        cachedCalendars = nil
     }
 
     // MARK: - Color mapping (Google Calendar colorId → Color)
@@ -29,21 +36,99 @@ final class GoogleCalendarService {
 
     private static let defaultColor = Color(red: 0.26, green: 0.52, blue: 0.96)
 
-    // MARK: - List Events
+    // MARK: - Calendar List
+
+    struct GoogleCalendarInfo {
+        let id: String
+        let name: String
+        let color: Color     // backgroundColor hex에서 변환
+        let accessRole: String
+    }
+
+    /// 사용자가 구독 중인 모든 캘린더 목록을 가져옴 (세션 캐시)
+    func fetchCalendarList() async throws -> [GoogleCalendarInfo] {
+        if let cached = cachedCalendars { return cached }
+
+        let token = try await auth.getValidToken()
+        var comps = URLComponents(string: "\(baseURL)/users/me/calendarList")!
+        comps.queryItems = [
+            URLQueryItem(name: "maxResults", value: "250"),
+            URLQueryItem(name: "showHidden", value: "false"),
+        ]
+        var request = URLRequest(url: comps.url!)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+            throw URLError(.badServerResponse)
+        }
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let items = json["items"] as? [[String: Any]] else { return [] }
+
+        let calendars: [GoogleCalendarInfo] = items.compactMap { item in
+            guard let id = item["id"] as? String,
+                  let name = item["summary"] as? String,
+                  let role = item["accessRole"] as? String else { return nil }
+            // freeBusyReader도 이벤트 목록 조회 가능
+            let hex = item["backgroundColor"] as? String ?? ""
+            let color = Color(hex: hex) ?? Self.defaultColor
+            return GoogleCalendarInfo(id: id, name: name, color: color, accessRole: role)
+        }
+
+        cachedCalendars = calendars
+        return calendars
+    }
+
+    // MARK: - List Events (모든 캘린더)
 
     func fetchEvents(for month: Date) async throws -> [CalendarEvent] {
-        let token = try await auth.getValidToken()
-        let cal = Calendar.current
+        let calendars = try await fetchCalendarList()
+        guard !calendars.isEmpty else { return [] }
 
+        let cal = Calendar.current
         guard let interval = cal.dateInterval(of: .month, for: month) else { return [] }
 
         let fmt = ISO8601DateFormatter()
         fmt.formatOptions = [.withInternetDateTime]
+        let timeMin = fmt.string(from: interval.start)
+        let timeMax = fmt.string(from: interval.end)
+        let token = try await auth.getValidToken()
 
-        var comps = URLComponents(string: "\(baseURL)/calendars/primary/events")!
+        // 모든 캘린더를 병렬로 fetch, partial-succeed
+        var allEvents: [CalendarEvent] = []
+        await withTaskGroup(of: [CalendarEvent].self) { group in
+            for calInfo in calendars {
+                group.addTask {
+                    do {
+                        return try await self.fetchEventsForCalendar(
+                            calInfo: calInfo,
+                            token: token,
+                            timeMin: timeMin,
+                            timeMax: timeMax
+                        )
+                    } catch {
+                        print("[Calen] 캘린더 fetch 실패 (\(calInfo.name)): \(error)")
+                        return []
+                    }
+                }
+            }
+            for await events in group {
+                allEvents.append(contentsOf: events)
+            }
+        }
+
+        // 중복 제거 (같은 이벤트 ID가 여러 캘린더에서 오는 경우 대비)
+        var seen = Set<String>()
+        return allEvents.filter { seen.insert($0.id).inserted }
+    }
+
+    private func fetchEventsForCalendar(calInfo: GoogleCalendarInfo, token: String, timeMin: String, timeMax: String) async throws -> [CalendarEvent] {
+        guard let encoded = calInfo.id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
+              var comps = URLComponents(string: "\(baseURL)/calendars/\(encoded)/events") else { return [] }
+
         comps.queryItems = [
-            URLQueryItem(name: "timeMin", value: fmt.string(from: interval.start)),
-            URLQueryItem(name: "timeMax", value: fmt.string(from: interval.end)),
+            URLQueryItem(name: "timeMin", value: timeMin),
+            URLQueryItem(name: "timeMax", value: timeMax),
             URLQueryItem(name: "singleEvents", value: "true"),
             URLQueryItem(name: "orderBy", value: "startTime"),
             URLQueryItem(name: "maxResults", value: "250"),
@@ -60,7 +145,7 @@ final class GoogleCalendarService {
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
               let items = json["items"] as? [[String: Any]] else { return [] }
 
-        return items.compactMap { parseEvent($0) }
+        return items.compactMap { parseEvent($0, calInfo: calInfo) }
     }
 
     // MARK: - Create Event
@@ -93,7 +178,7 @@ final class GoogleCalendarService {
             throw URLError(.badServerResponse)
         }
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let event = parseEvent(json) else { throw URLError(.cannotParseResponse) }
+              let event = parseEvent(json, calInfo: nil) else { throw URLError(.cannotParseResponse) }
         return event
     }
 
@@ -160,7 +245,7 @@ final class GoogleCalendarService {
 
     // MARK: - Parse
 
-    private func parseEvent(_ json: [String: Any]) -> CalendarEvent? {
+    private func parseEvent(_ json: [String: Any], calInfo: GoogleCalendarInfo?) -> CalendarEvent? {
         guard let id = json["id"] as? String,
               let title = json["summary"] as? String else { return nil }
 
@@ -189,8 +274,12 @@ final class GoogleCalendarService {
             endDate = fmt.date(from: endStr) ?? fmtBasic.date(from: endStr) ?? Date()
         }
 
+        // 이벤트 자체의 colorId 우선, 없으면 캘린더 색상, 없으면 기본
         let colorId = json["colorId"] as? String ?? ""
-        let color = Self.eventColors[colorId] ?? Self.defaultColor
+        let color = Self.eventColors[colorId] ?? calInfo?.color ?? Self.defaultColor
+
+        let calName = calInfo?.name ?? "Google"
+        let calID = calInfo.map { "google:\($0.id)" } ?? "google:primary"
 
         return CalendarEvent(
             id: id,
@@ -199,8 +288,8 @@ final class GoogleCalendarService {
             endDate: endDate,
             color: color,
             isAllDay: isAllDay,
-            calendarName: "Google",
-            calendarID: "google:primary"
+            calendarName: calName,
+            calendarID: calID
         )
     }
 }
