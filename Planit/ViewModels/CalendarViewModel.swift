@@ -798,10 +798,11 @@ final class CalendarViewModel: ObservableObject {
         saveTodos()
     }
 
-    func updateTodo(id: UUID, title: String, categoryID: UUID) {
+    func updateTodo(id: UUID, title: String, categoryID: UUID, date: Date? = nil) {
         guard let index = todos.firstIndex(where: { $0.id == id }) else { return }
         todos[index].title = title
         todos[index].categoryID = categoryID
+        if let newDate = date { todos[index].date = newDate }
         saveTodos()
 
         if authManager.isAuthenticated, let eventId = todos[index].googleEventId {

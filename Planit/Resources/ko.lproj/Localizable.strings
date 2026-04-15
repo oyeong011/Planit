@@ -65,6 +65,7 @@
 
 /* ===== Todo Detail Modal ===== */
 "todo.detail.title" = "할 일 상세";
+"todo.source.local" = "앱 (로컬)";
 
 /* ===== Inline Add Todo ===== */
 "todo.input.placeholder" = "할 일을 입력하세요";
