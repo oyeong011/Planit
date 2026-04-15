@@ -763,8 +763,14 @@ final class AIService: ObservableObject {
                                          system: "", userMessage: augmentedMessage, history: history)
         case .codex:
             guard let path = codexPath else { return [ChatMessage(role: .assistant, content: "Codex CLI가 설치되지 않았습니다. /opt/homebrew/bin 또는 ~/.local/bin에 codex가 있는지 확인하세요.")] }
-            // codex는 -i/--image 플래그로 이미지 첨부 지원, --ephemeral로 세션 저장 방지
-            var codexArgs = ["exec", "--sandbox", "read-only", "--skip-git-repo-check", "--ephemeral"]
+            // gpt-4.1-mini + reasoning low → 응답 속도 우선
+            // config.toml의 xhigh reasoning을 앱 내에서 low로 오버라이드
+            var codexArgs = ["exec",
+                             "--sandbox", "read-only",
+                             "--skip-git-repo-check",
+                             "--ephemeral",
+                             "-c", "model=gpt-4.1-mini",
+                             "-c", "model_reasoning_effort=low"]
             for img in imageAttachments {
                 codexArgs += ["--image", img.url.path]
             }
@@ -1006,21 +1012,25 @@ final class AIService: ObservableObject {
         var started = false
         var resultLines: [String] = []
 
+        // Codex 헤더/메타 줄 패턴
+        let headerPrefixes = ["Reading prompt", "OpenAI Codex", "--------",
+                              "workdir:", "model:", "provider:", "approval:",
+                              "sandbox:", "reasoning", "session id:"]
+
         for line in lines {
-            if line.starts(with: "Reading prompt") || line.starts(with: "OpenAI Codex") ||
-               line.starts(with: "--------") || line.starts(with: "workdir:") ||
-               line.starts(with: "model:") || line.starts(with: "provider:") ||
-               line.starts(with: "approval:") || line.starts(with: "sandbox:") ||
-               line.starts(with: "reasoning") || line.starts(with: "session id:") ||
-               line.starts(with: "user") || line.starts(with: "tokens used") {
-                if line.starts(with: "tokens used") { break }
-                continue
-            }
-            if line.trimmingCharacters(in: .whitespaces) == "codex" {
-                started = true
-                continue
-            }
-            if started || !line.trimmingCharacters(in: .whitespaces).isEmpty {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+
+            // 토큰 사용량 줄 → 응답 종료
+            if trimmed.starts(with: "tokens used") { break }
+
+            // 헤더 줄 스킵
+            if headerPrefixes.contains(where: { line.starts(with: $0) }) { continue }
+
+            // "codex" 또는 "user" 단독 줄 → 역할 마커, 스킵하되 codex 마커 이후를 본문으로 인식
+            if trimmed == "codex" { started = true; continue }
+            if trimmed == "user"  { continue }
+
+            if started || !trimmed.isEmpty {
                 started = true
                 resultLines.append(line)
             }
