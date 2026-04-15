@@ -921,7 +921,7 @@ struct ProviderRow: View {
 }
 
 // MARK: - PasteAwareTextField
-// 일반 텍스트 입력용 NSTextField 래퍼 (이미지 paste는 PasteInterceptingController에서 처리)
+// 일반 텍스트 입력용 NSTextField 래퍼. 이미지/파일 paste는 Coordinator에서 인터셉트.
 
 class _PasteAwareNSTextField: NSTextField {}
 
@@ -965,6 +965,27 @@ struct PasteAwareTextField: NSViewRepresentable {
             if commandSelector == #selector(NSResponder.insertNewline(_:)) {
                 parent.onSubmit()
                 return true
+            }
+            // Cmd+V 인터셉트: 이미지/파일이면 첨부로 처리, 텍스트면 기본 동작
+            if commandSelector == #selector(NSText.paste(_:)) {
+                switch ChatPasteboardReader.payload(from: .general) {
+                case .image(let image):
+                    NotificationCenter.default.post(
+                        name: CalenNotification.pasteImage,
+                        object: nil,
+                        userInfo: ["image": image]
+                    )
+                    return true
+                case .files(let urls):
+                    NotificationCenter.default.post(
+                        name: CalenNotification.pasteFiles,
+                        object: nil,
+                        userInfo: ["urls": urls]
+                    )
+                    return true
+                case nil:
+                    return false  // 텍스트 붙여넣기는 기본 동작
+                }
             }
             return false
         }
