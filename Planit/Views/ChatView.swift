@@ -975,37 +975,35 @@ struct PasteAwareTextField: NSViewRepresentable {
     var placeholder: String
     var onSubmit: () -> Void
 
-    func makeNSView(context: Context) -> NSScrollView {
-        let textView = _PasteAwareTextView()
-        textView.font = .systemFont(ofSize: 12)
-        textView.isRichText = false
-        textView.drawsBackground = false
-        textView.isVerticallyResizable = false
-        textView.isHorizontallyResizable = false
-        textView.textContainerInset = NSSize(width: 0, height: 0)
-        textView.textContainer?.widthTracksTextView = true
-        textView.textContainer?.lineFragmentPadding = 5
-        textView.focusRingType = .none
-        textView.placeholderString = placeholder
-        textView.delegate = context.coordinator
-        textView.onTextChange = { context.coordinator.parent.text = $0 }
-        textView.onSubmit = onSubmit
-
-        // 스크롤 없는 단순 컨테이너
-        let scrollView = NSScrollView()
-        scrollView.hasVerticalScroller = false
-        scrollView.hasHorizontalScroller = false
-        scrollView.drawsBackground = false
-        scrollView.documentView = textView
-        scrollView.contentView.postsBoundsChangedNotifications = false
-        return scrollView
+    func makeNSView(context: Context) -> _PasteAwareTextView {
+        let tv = _PasteAwareTextView()
+        tv.font = .systemFont(ofSize: 12)
+        tv.isRichText = false
+        tv.drawsBackground = false
+        tv.isVerticallyResizable = false
+        tv.isHorizontallyResizable = true
+        tv.autoresizingMask = [.width]
+        tv.textContainer?.widthTracksTextView = true
+        tv.textContainer?.lineFragmentPadding = 0
+        tv.textContainerInset = .zero
+        tv.focusRingType = .none
+        tv.isAutomaticQuoteSubstitutionEnabled = false
+        tv.isAutomaticDashSubstitutionEnabled = false
+        tv.isAutomaticSpellingCorrectionEnabled = false
+        tv.placeholderString = placeholder
+        tv.delegate = context.coordinator
+        tv.onSubmit = onSubmit
+        return tv
     }
 
-    func updateNSView(_ scrollView: NSScrollView, context: Context) {
-        guard let textView = scrollView.documentView as? _PasteAwareTextView else { return }
-        if textView.string != text { textView.string = text }
-        textView.placeholderString = placeholder
-        textView.onSubmit = onSubmit
+    func updateNSView(_ tv: _PasteAwareTextView, context: Context) {
+        // 타이핑 중 바인딩 업데이트로 인한 커서 위치 초기화 방지
+        if tv.string != text {
+            tv.string = text
+            tv.needsDisplay = true
+        }
+        tv.placeholderString = placeholder
+        tv.onSubmit = onSubmit
     }
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
@@ -1017,7 +1015,7 @@ struct PasteAwareTextField: NSViewRepresentable {
         func textDidChange(_ notification: Notification) {
             guard let tv = notification.object as? NSTextView else { return }
             parent.text = tv.string
-            tv.needsDisplay = true  // 플레이스홀더 갱신
+            tv.needsDisplay = true
         }
     }
 }
