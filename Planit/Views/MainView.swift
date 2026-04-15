@@ -253,6 +253,27 @@ struct CalendarGridView: View {
 
                 Spacer()
                 HStack(spacing: 12) {
+                    // 미완료 할 일 즉시 재배치 버튼
+                    let overdueCount = viewModel.todos.filter {
+                        !$0.isCompleted && $0.source == .local &&
+                        $0.date < Calendar.current.startOfDay(for: Date())
+                    }.count
+                    if overdueCount > 0 {
+                        Button {
+                            viewModel.rescheduleNow()
+                        } label: {
+                            HStack(spacing: 3) {
+                                Image(systemName: "arrow.uturn.right.circle.fill")
+                                    .font(.system(size: 12))
+                                Text("\(overdueCount)")
+                                    .font(.system(size: 11, weight: .semibold))
+                            }
+                            .foregroundStyle(.purple)
+                        }
+                        .buttonStyle(.plain)
+                        .help("밀린 할 일 \(overdueCount)개를 지금 재배치")
+                    }
+
                     Button(action: viewModel.previousMonth) {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 14, weight: .semibold))
@@ -267,6 +288,11 @@ struct CalendarGridView: View {
             }
             .padding(.horizontal, 20)
             .padding(.top, 16)
+
+            // 주간 일정 밀도 바
+            WeekDensityBar(events: viewModel.calendarEvents)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 4)
 
             HStack(spacing: 0) {
                 ForEach(Array(weekdays.enumerated()), id: \.offset) { index, day in
@@ -546,6 +572,7 @@ struct DailyDetailView: View {
                             TodoRowView(
                                 todo: todo,
                                 category: cat,
+                                isRescheduled: viewModel.rescheduledTodoIDs.contains(todo.id),
                                 onTap: {
                                     tappedTodo = todo
                                     tappedEvent = nil
@@ -1297,6 +1324,7 @@ struct TodoRowView: View {
     let todo: TodoItem
     let category: TodoCategory
     var isSelected: Bool = false
+    var isRescheduled: Bool = false   // Calen이 자동 재배치한 항목
     var onTap: () -> Void = {}
     let onToggle: () -> Void
 
@@ -1324,6 +1352,13 @@ struct TodoRowView: View {
                             .padding(.horizontal, 5).padding(.vertical, 2)
                             .background(RoundedRectangle(cornerRadius: 4).fill(category.color.opacity(0.15)))
                             .foregroundStyle(category.color)
+                    }
+                    // Calen 자동 재배치 인디케이터
+                    if isRescheduled && !todo.isCompleted {
+                        Image(systemName: "arrow.uturn.right")
+                            .font(.system(size: 9, weight: .semibold))
+                            .foregroundStyle(.purple.opacity(0.7))
+                            .help("Calen이 자동으로 재배치한 할 일입니다")
                     }
                 }
                 if todo.isRepeating {
@@ -1365,6 +1400,66 @@ struct TodoRowView: View {
                 color: todo.source == .appleReminder ? Color.orange : category.color,
                 subtitle: todo.source == .appleReminder ? String(localized: "detail.reminders") : category.name
             )
+        }
+    }
+}
+
+// MARK: - Week Density Bar
+
+/// 이번 주 7일의 일정 밀도를 미니 히트맵으로 표시.
+/// 바쁜 날: 빨강, 보통: 노랑, 여유: 초록, 오늘: 테두리 강조
+struct WeekDensityBar: View {
+    let events: [CalendarEvent]
+
+    private let scheduler = SmartSchedulerService()
+    private let calendar = Calendar.current
+
+    private var thisWeekDays: [Date] {
+        let today = calendar.startOfDay(for: Date())
+        let weekday = calendar.component(.weekday, from: today) - 1  // 0=일
+        let monday = calendar.date(byAdding: .day, value: -weekday, to: today)!
+        return (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: monday) }
+    }
+
+    var body: some View {
+        let days = thisWeekDays
+        let analyses = scheduler.analyzeDays(events: events, for: days)
+        let dayFmt: DateFormatter = {
+            let f = DateFormatter(); f.dateFormat = "E"
+            f.locale = Locale(identifier: "ko_KR"); return f
+        }()
+
+        HStack(spacing: 3) {
+            ForEach(Array(zip(days, analyses).enumerated()), id: \.offset) { _, pair in
+                let (date, analysis) = pair
+                let isToday = calendar.isDateInToday(date)
+                let barColor = densityColor(analysis.loadPercent)
+
+                VStack(spacing: 2) {
+                    // 밀도 바
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(barColor.opacity(0.75))
+                        .frame(height: 4)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 2)
+                                .stroke(isToday ? Color.primary.opacity(0.5) : Color.clear, lineWidth: 1)
+                        )
+                    // 요일 레이블 (오늘만 강조)
+                    Text(dayFmt.string(from: date))
+                        .font(.system(size: 8))
+                        .foregroundStyle(isToday ? .primary : .tertiary)
+                }
+                .frame(maxWidth: .infinity)
+                .help("\(dayFmt.string(from: date)): 일정 \(analysis.timedEvents.count)개, 여유 \(analysis.totalFreeMinutes / 60)h [\(analysis.loadLabel)]")
+            }
+        }
+    }
+
+    private func densityColor(_ percent: Int) -> Color {
+        switch percent {
+        case 0..<30:  return .green
+        case 30..<60: return .yellow
+        default:      return .red
         }
     }
 }

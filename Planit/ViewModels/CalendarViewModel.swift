@@ -50,6 +50,8 @@ final class CalendarViewModel: ObservableObject {
     @Published var appleReminders: [TodoItem] = []
     /// calendarList 스코프 없을 때 true → UI에서 재로그인 배너 표시
     @Published var needsReauth: Bool = false
+    /// Calen이 자동 재배치한 Todo ID 집합 (UI 인디케이터용)
+    @Published var rescheduledTodoIDs: Set<UUID> = []
 
     // MARK: - Services
 
@@ -865,6 +867,19 @@ final class CalendarViewModel: ObservableObject {
                 self.refreshEvents()
             }
         }
+    }
+
+    /// Calen 자동 재배치 전용 — rescheduledTodoIDs에 기록
+    func moveTodoBySystem(id: UUID, toDate: Date) {
+        moveTodo(id: id, toDate: toDate)
+        rescheduledTodoIDs.insert(id)
+    }
+
+    /// 지금 즉시 재배치 실행 (자정 안 기다리고 수동 트리거)
+    func rescheduleNow() {
+        // rolloverKey 리셋 → performIfNeeded가 다시 실행되도록
+        UserDefaults.standard.removeObject(forKey: "planit.lastRolloverDate")
+        MidnightRolloverService.shared.performIfNeeded(viewModel: self)
     }
 
     func moveCalendarEvent(id: String, toDate: Date) {

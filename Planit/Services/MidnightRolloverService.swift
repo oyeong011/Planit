@@ -86,9 +86,9 @@ final class MidnightRolloverService {
             startDate: tomorrow
         )
 
-        // 적용
+        // 적용 — 시스템 재배치로 기록 (UI 인디케이터용)
         for (id, newDate) in plan {
-            viewModel.moveTodo(id: id, toDate: newDate)
+            viewModel.moveTodoBySystem(id: id, toDate: newDate)
         }
 
         // 완료 기록
