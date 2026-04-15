@@ -427,10 +427,10 @@ final class CalendarViewModel: ObservableObject {
         }
     }
 
-    func updateGoogleEvent(eventID: String, title: String, startDate: Date, endDate: Date, isAllDay: Bool) {
+    func updateGoogleEvent(eventID: String, calendarID: String = "google:primary", title: String, startDate: Date, endDate: Date, isAllDay: Bool) {
         Task {
             do {
-                _ = try await googleService.updateEvent(eventID: eventID, title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
+                _ = try await googleService.updateEvent(eventID: eventID, calendarID: calendarID, title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
                 fetchEventsFromGoogle(for: currentMonth)
             } catch {
                 print("[Calen] Offline — queuing update event")
@@ -449,10 +449,10 @@ final class CalendarViewModel: ObservableObject {
         }
     }
 
-    func deleteGoogleEvent(eventID: String) {
+    func deleteGoogleEvent(eventID: String, calendarID: String = "google:primary") {
         Task {
             do {
-                _ = try await googleService.deleteEvent(eventID: eventID)
+                _ = try await googleService.deleteEvent(eventID: eventID, calendarID: calendarID)
                 completedEventIDs.remove(eventID)
                 goalService?.removeCompletion(eventId: eventID)
                 saveCompletedEvents()
@@ -562,9 +562,9 @@ final class CalendarViewModel: ObservableObject {
         }
     }
 
-    func updateCalendarEvent(eventID: String, title: String, startDate: Date, endDate: Date, isAllDay: Bool) -> Bool {
+    func updateCalendarEvent(eventID: String, calendarID: String = "google:primary", title: String, startDate: Date, endDate: Date, isAllDay: Bool) -> Bool {
         if authManager.isAuthenticated {
-            updateGoogleEvent(eventID: eventID, title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
+            updateGoogleEvent(eventID: eventID, calendarID: calendarID, title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
             return true
         }
         guard let ekEvent = eventStore.event(withIdentifier: eventID) else { return false }
@@ -579,9 +579,9 @@ final class CalendarViewModel: ObservableObject {
         } catch { return false }
     }
 
-    func deleteCalendarEvent(eventID: String) -> Bool {
+    func deleteCalendarEvent(eventID: String, calendarID: String = "google:primary") -> Bool {
         if authManager.isAuthenticated {
-            deleteGoogleEvent(eventID: eventID)
+            deleteGoogleEvent(eventID: eventID, calendarID: calendarID)
             return true
         }
         guard let ekEvent = eventStore.event(withIdentifier: eventID) else { return false }
@@ -859,7 +859,7 @@ final class CalendarViewModel: ObservableObject {
 
         switch event.source {
         case .google:
-            updateGoogleEvent(eventID: id, title: event.title, startDate: newStart, endDate: newEnd, isAllDay: event.isAllDay)
+            updateGoogleEvent(eventID: id, calendarID: event.calendarID, title: event.title, startDate: newStart, endDate: newEnd, isAllDay: event.isAllDay)
         case .apple, .local:
             _ = updateCalendarEvent(eventID: id, title: event.title, startDate: newStart, endDate: newEnd, isAllDay: event.isAllDay)
         }

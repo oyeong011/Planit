@@ -836,7 +836,7 @@ struct ModalEventDetail: View {
                         let t = editTitle.trimmingCharacters(in: .whitespaces)
                         if !t.isEmpty {
                             let end = editIsAllDay ? Calendar.current.date(byAdding: .day, value: 1, to: editStartDate)! : editEndDate
-                            _ = viewModel.updateCalendarEvent(eventID: event.id, title: t, startDate: editStartDate, endDate: end, isAllDay: editIsAllDay)
+                            _ = viewModel.updateCalendarEvent(eventID: event.id, calendarID: event.calendarID, title: t, startDate: editStartDate, endDate: end, isAllDay: editIsAllDay)
                         }
                         onClose()
                     } label: {
@@ -866,7 +866,7 @@ struct ModalEventDetail: View {
                     }.buttonStyle(.plain)
 
                     Button {
-                        _ = viewModel.deleteCalendarEvent(eventID: event.id)
+                        _ = viewModel.deleteCalendarEvent(eventID: event.id, calendarID: event.calendarID)
                         onClose()
                     } label: {
                         HStack(spacing: 4) {
