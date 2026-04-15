@@ -756,8 +756,12 @@ struct ModalEventDetail: View {
                         DatePicker(String(localized: "event.detail.end"), selection: $editEndDate, displayedComponents: [.date, .hourAndMinute]).font(.system(size: 12))
                     }
                 } else {
+                    // 카테고리 매핑이 있으면 카테고리 색상, 없으면 Google 캘린더 색상
+                    let mappedCatID = viewModel.eventCategoryMappings[event.id]?.categoryID
+                    let barColor: Color = mappedCatID.flatMap { id in viewModel.categories.first(where: { $0.id == id })?.color } ?? event.color
+
                     HStack(spacing: 10) {
-                        RoundedRectangle(cornerRadius: 3).fill(event.color).frame(width: 5)
+                        RoundedRectangle(cornerRadius: 3).fill(barColor).frame(width: 5)
                         Text(event.title).font(.system(size: 16, weight: .semibold))
                     }.frame(height: 24)
 
@@ -783,7 +787,6 @@ struct ModalEventDetail: View {
                     }
 
                     // 이벤트 카테고리 매핑 (이 이벤트 독립적으로 적용)
-                    let mappedCatID = viewModel.eventCategoryMappings[event.id]?.categoryID
                     Divider()
                     VStack(alignment: .leading, spacing: 6) {
                         Text(String(localized: "event.category.label"))
