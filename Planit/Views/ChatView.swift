@@ -8,10 +8,9 @@ struct ChatView: View {
     @State private var messages: [ChatMessage] = []
     @State private var inputText: String = ""
     @State private var attachments: [ChatAttachment] = []
-    @State private var isDragOver: Bool = false
 
     /// 허용하는 파일 타입
-    private static let allowedTypes: [UTType] = [.image, .png, .jpeg, .gif, .webP, .tiff, .bmp, .pdf]
+    private static let allowedTypes: [UTType] = [.pdf]
     private static let maxAttachments = 5
     private static let maxFileSize: Int = 20_971_520  // 20MB
 
@@ -349,16 +348,16 @@ struct ChatView: View {
 
             // Input
             HStack(spacing: 6) {
-                // 첨부 버튼
+                // PDF 첨부 버튼
                 Button { openFilePicker() } label: {
-                    Image(systemName: "paperclip")
+                    Image(systemName: "doc.fill")
                         .font(.system(size: 14))
                         .foregroundStyle(.secondary)
                         .frame(width: 28, height: 28)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .help(String(localized: "chat.attach.hint"))
+                .help(String(localized: "chat.attach.pdf.hint"))
 
                 PasteAwareTextField(
                     text: $inputText,
@@ -379,32 +378,6 @@ struct ChatView: View {
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
-        }
-        .onAppear {
-            // 앱 시작 시 이전 세션의 paste 임시 파일 정리
-            let tmpPasteDir = FileManager.default.temporaryDirectory.appendingPathComponent("calen-paste")
-            try? FileManager.default.removeItem(at: tmpPasteDir)
-        }
-        .onDrop(of: [.fileURL], isTargeted: $isDragOver) { providers in
-            handleDrop(providers)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: CalenNotification.pasteImage)) { notif in
-            if let image = notif.userInfo?["image"] as? NSImage {
-                pasteImageFromClipboard(image)
-            }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: CalenNotification.pasteFiles)) { notif in
-            if let urls = notif.userInfo?["urls"] as? [URL] {
-                for url in urls { addAttachment(url: url) }
-            }
-        }
-        .overlay {
-            if isDragOver {
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.purple, style: StrokeStyle(lineWidth: 2, dash: [6]))
-                    .background(Color.purple.opacity(0.05))
-                    .allowsHitTesting(false)
-            }
         }
     }
 
@@ -557,21 +530,6 @@ struct ChatView: View {
         }
     }
 
-    // MARK: - Drag & Drop
-
-    private func handleDrop(_ providers: [NSItemProvider]) -> Bool {
-        for provider in providers {
-            provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { data, _ in
-                guard let data = data as? Data,
-                      let url = URL(dataRepresentation: data, relativeTo: nil) else { return }
-                DispatchQueue.main.async {
-                    addAttachment(url: url)
-                }
-            }
-        }
-        return true
-    }
-
     private func addAttachment(url: URL) {
         guard attachments.count < Self.maxAttachments else { return }
 
@@ -588,30 +546,6 @@ struct ChatView: View {
 
         attachments.append(ChatAttachment(url: url))
     }
-
-    // MARK: - Clipboard Paste
-
-    private func pasteImageFromClipboard(_ image: NSImage) {
-        guard attachments.count < Self.maxAttachments else { return }
-
-        // 클립보드 이미지를 임시 파일로 저장
-        let tmpDir = FileManager.default.temporaryDirectory.appendingPathComponent("calen-paste", isDirectory: true)
-        try? FileManager.default.createDirectory(at: tmpDir, withIntermediateDirectories: true)
-        let fileName = "paste-\(UUID().uuidString.prefix(8)).png"
-        let fileURL = tmpDir.appendingPathComponent(fileName)
-
-        guard let tiff = image.tiffRepresentation,
-              let rep = NSBitmapImageRep(data: tiff),
-              let pngData = rep.representation(using: .png, properties: [:]) else { return }
-
-        guard pngData.count <= Self.maxFileSize else { return }
-
-        do {
-            try pngData.write(to: fileURL, options: .atomic)
-            attachments.append(ChatAttachment(url: fileURL))
-        } catch {}
-    }
-
 
     // MARK: - Action Approval Card
 
@@ -727,13 +661,6 @@ struct ChatView: View {
             let response = await aiService.sendMessage(text, attachments: currentAttachments, history: Array(messages.dropLast()))
             messages.append(contentsOf: response)
             viewModel.refreshEvents()
-            // 전송 완료 후 임시 paste 파일 정리 — send가 파일을 읽은 뒤에 삭제
-            let tmpPasteDir = FileManager.default.temporaryDirectory.appendingPathComponent("calen-paste")
-            for att in currentAttachments {
-                if att.url.path.hasPrefix(tmpPasteDir.path) {
-                    try? FileManager.default.removeItem(at: att.url)
-                }
-            }
         }
     }
 }
@@ -742,6 +669,11 @@ struct ChatView: View {
 
 struct ChatBubble: View {
     let message: ChatMessage
+
+    /// Markdown 문자열을 AttributedString으로 변환 (실패 시 plain text fallback)
+    static func markdownText(_ raw: String) -> AttributedString {
+        (try? AttributedString(markdown: raw, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))) ?? AttributedString(raw)
+    }
 
     var body: some View {
         HStack {
@@ -787,9 +719,9 @@ struct ChatBubble: View {
                             }
                         }
 
-                        // 텍스트
+                        // 텍스트 (Markdown 렌더링)
                         if !message.content.isEmpty {
-                            Text(message.content)
+                            Text(message.role == .assistant ? Self.markdownText(message.content) : AttributedString(message.content))
                                 .font(.system(size: 12))
                                 .textSelection(.enabled)
                         }
@@ -915,17 +847,14 @@ struct ProviderRow: View {
 }
 
 // MARK: - PasteAwareTextField
-// 일반 텍스트 입력용 NSTextField 래퍼 (이미지 paste는 PasteInterceptingController에서 처리)
-
-class _PasteAwareNSTextField: NSTextField {}
 
 struct PasteAwareTextField: NSViewRepresentable {
     @Binding var text: String
     var placeholder: String
     var onSubmit: () -> Void
 
-    func makeNSView(context: Context) -> _PasteAwareNSTextField {
-        let field = _PasteAwareNSTextField()
+    func makeNSView(context: Context) -> NSTextField {
+        let field = NSTextField()
         field.placeholderString = placeholder
         field.font = .systemFont(ofSize: 12)
         field.isBordered = false
@@ -937,7 +866,7 @@ struct PasteAwareTextField: NSViewRepresentable {
         return field
     }
 
-    func updateNSView(_ field: _PasteAwareNSTextField, context: Context) {
+    func updateNSView(_ field: NSTextField, context: Context) {
         if field.stringValue != text { field.stringValue = text }
         field.placeholderString = placeholder
     }

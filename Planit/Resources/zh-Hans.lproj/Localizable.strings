@@ -65,6 +65,7 @@
 
 /* ===== Todo Detail Modal ===== */
 "todo.detail.title" = "待办详情";
+"todo.source.local" = "App (Local)";
 
 /* ===== Inline Add Todo ===== */
 "todo.input.placeholder" = "输入待办事项";
@@ -369,6 +370,7 @@
 "chat.quick.add.meeting" = "明天下午3点添加会议";
 "chat.quick.free.time" = "找出本周的空闲时间";
 "chat.quick.tomorrow.plan" = "帮我规划明天的日程";
+"chat.attach.pdf.hint" = "Attach PDF | Paste images with Cmd+V";
 "chat.attach.hint" = "附加图片或 PDF（最多 5 个，20 MB）";
 "chat.attach.picker.message" = "选择要附加的图片或 PDF";
 

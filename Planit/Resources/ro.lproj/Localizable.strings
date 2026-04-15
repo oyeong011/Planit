@@ -65,6 +65,7 @@
 
 /* ===== Todo Detail Modal ===== */
 "todo.detail.title" = "Detalii sarcină";
+"todo.source.local" = "App (Local)";
 
 /* ===== Inline Add Todo ===== */
 "todo.input.placeholder" = "Introduceți o sarcină";
@@ -369,6 +370,7 @@
 "chat.quick.add.meeting" = "Adaugă o întâlnire mâine la ora 15";
 "chat.quick.free.time" = "Găsește timp liber săptămâna aceasta";
 "chat.quick.tomorrow.plan" = "Planifică-mi ziua de mâine";
+"chat.attach.pdf.hint" = "Attach PDF | Paste images with Cmd+V";
 "chat.attach.hint" = "Atașați o imagine sau un PDF (max. 5, 20 MB)";
 "chat.attach.picker.message" = "Selectați imagini sau PDF-uri pentru atașare";
 

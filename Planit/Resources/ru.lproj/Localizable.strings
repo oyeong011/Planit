@@ -65,6 +65,7 @@
 
 /* ===== Todo Detail Modal ===== */
 "todo.detail.title" = "Детали задачи";
+"todo.source.local" = "App (Local)";
 
 /* ===== Inline Add Todo ===== */
 "todo.input.placeholder" = "Введите задачу";
@@ -369,6 +370,7 @@
 "chat.quick.add.meeting" = "Добавить встречу завтра в 15:00";
 "chat.quick.free.time" = "Найти свободное время на этой неделе";
 "chat.quick.tomorrow.plan" = "Спланировать завтрашний день";
+"chat.attach.pdf.hint" = "Attach PDF | Paste images with Cmd+V";
 "chat.attach.hint" = "Прикрепить изображение или PDF (макс. 5, 20 МБ)";
 "chat.attach.picker.message" = "Выберите изображения или PDF-файлы для прикрепления";
 

@@ -65,6 +65,7 @@
 
 /* ===== Todo Detail Modal ===== */
 "todo.detail.title" = "Teendő részletei";
+"todo.source.local" = "App (Local)";
 
 /* ===== Inline Add Todo ===== */
 "todo.input.placeholder" = "Írd be a teendőt";
@@ -369,6 +370,7 @@
 "chat.quick.add.meeting" = "Értekezlet hozzáadása holnap 15:00-kor";
 "chat.quick.free.time" = "Szabad idő keresése ezen a héten";
 "chat.quick.tomorrow.plan" = "Holnapi napom megtervezése";
+"chat.attach.pdf.hint" = "Attach PDF | Paste images with Cmd+V";
 "chat.attach.hint" = "Kép vagy PDF csatolása (max. 5, 20 MB)";
 "chat.attach.picker.message" = "Válassza ki a csatolandó képeket vagy PDF-eket";
 

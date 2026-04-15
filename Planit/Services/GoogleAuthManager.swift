@@ -178,7 +178,7 @@ final class GoogleAuthManager: ObservableObject {
                 URLQueryItem(name: "client_id", value: clientID),
                 URLQueryItem(name: "redirect_uri", value: redirectURI),
                 URLQueryItem(name: "response_type", value: "code"),
-                URLQueryItem(name: "scope", value: "https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/userinfo.email"),
+                URLQueryItem(name: "scope", value: "https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.calendarlist.readonly https://www.googleapis.com/auth/userinfo.email"),
                 URLQueryItem(name: "access_type", value: "offline"),
                 URLQueryItem(name: "prompt", value: "consent"),
                 URLQueryItem(name: "state", value: state),
@@ -397,13 +397,19 @@ final class GoogleAuthManager: ObservableObject {
         try Task.checkCancellation()
 
         if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
-            throw AuthError.tokenExchangeFailed("Refresh HTTP \((response as? HTTPURLResponse)?.statusCode ?? 0)")
+            // 401/403은 refresh token이 폐기/만료됨 → 자동 로그아웃
+            if httpResponse.statusCode == 401 || httpResponse.statusCode == 403 {
+                logout()
+            }
+            throw AuthError.tokenExchangeFailed("Refresh HTTP \(httpResponse.statusCode)")
         }
 
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw AuthError.tokenExchangeFailed("Refresh failed")
         }
         if let error = json["error"] as? String {
+            // invalid_grant도 refresh token 폐기를 의미
+            if error == "invalid_grant" { logout() }
             let desc = json["error_description"] as? String ?? error
             throw AuthError.tokenExchangeFailed("Refresh: \(desc)")
         }

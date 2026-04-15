@@ -386,6 +386,11 @@ final class AIService: ObservableObject {
 
         캘린더 작업이 없는 일반 대화면 그냥 텍스트로 응답해. JSON 없이.
         일정 요약/브리핑 요청 시 → 일정 목록을 날짜별로 보기 좋게 정리해서 텍스트로 응답.
+
+        ## 텍스트 포맷 규칙
+        - 표(table, | 기호)는 절대 사용하지 마. 앱이 렌더링하지 못함.
+        - 목록은 - 또는 숫자 리스트만 사용.
+        - 굵게(**텍스트**)는 허용. 코드블록(```)은 JSON 외엔 사용 금지.
         """
     }
 
@@ -462,7 +467,8 @@ final class AIService: ObservableObject {
                     _ = try await service.createEvent(title: rawTitle, startDate: start, endDate: end, isAllDay: action.isAllDay ?? false)
                     results.append(ChatMessage(role: .toolCall, content: "생성: \(rawTitle)"))
                 } catch {
-                    results.append(ChatMessage(role: .toolCall, content: "생성 실패: \(error.localizedDescription)"))
+                    let msg = Self.calendarErrorMessage(error)
+                    results.append(ChatMessage(role: .toolCall, content: "생성 실패: \(msg)"))
                 }
 
             case "delete":
@@ -474,7 +480,8 @@ final class AIService: ObservableObject {
                     let ok = try await service.deleteEvent(eventID: eventId)
                     results.append(ChatMessage(role: .toolCall, content: ok ? "삭제 완료" : "삭제 실패"))
                 } catch {
-                    results.append(ChatMessage(role: .toolCall, content: "삭제 실패: \(error.localizedDescription)"))
+                    let msg = Self.calendarErrorMessage(error)
+                    results.append(ChatMessage(role: .toolCall, content: "삭제 실패: \(msg)"))
                 }
 
             case "update":
@@ -490,7 +497,8 @@ final class AIService: ObservableObject {
                         let ok = try await service.patchEventTitle(eventID: eventId, title: newTitle)
                         results.append(ChatMessage(role: .toolCall, content: ok ? "수정 완료" : "수정 실패"))
                     } catch {
-                        results.append(ChatMessage(role: .toolCall, content: "수정 실패: \(error.localizedDescription)"))
+                        let msg = Self.calendarErrorMessage(error)
+                        results.append(ChatMessage(role: .toolCall, content: "수정 실패: \(msg)"))
                     }
                     continue
                 }
@@ -511,7 +519,8 @@ final class AIService: ObservableObject {
                     let ok = try await service.updateEvent(eventID: eventId, title: updateTitle, startDate: startDate, endDate: endDate, isAllDay: action.isAllDay ?? false)
                     results.append(ChatMessage(role: .toolCall, content: ok ? "수정 완료" : "수정 실패"))
                 } catch {
-                    results.append(ChatMessage(role: .toolCall, content: "수정 실패: \(error.localizedDescription)"))
+                    let msg = Self.calendarErrorMessage(error)
+                    results.append(ChatMessage(role: .toolCall, content: "수정 실패: \(msg)"))
                 }
 
             default:
@@ -519,6 +528,17 @@ final class AIService: ObservableObject {
             }
         }
         return results
+    }
+
+    // MARK: - Error Message
+
+    /// Google Calendar 오류를 사용자 친화적 메시지로 변환
+    private static func calendarErrorMessage(_ error: Error) -> String {
+        let desc = error.localizedDescription
+        if desc.contains("401") || desc.contains("403") || desc.contains("invalid_grant") || desc.contains("Refresh") {
+            return "Google 캘린더 인증이 만료되었습니다. 설정에서 다시 연결해주세요."
+        }
+        return desc
     }
 
     // MARK: - Parse AI Response

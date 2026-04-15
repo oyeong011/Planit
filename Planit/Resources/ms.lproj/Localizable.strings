@@ -65,6 +65,7 @@
 
 /* ===== Todo Detail Modal ===== */
 "todo.detail.title" = "Butiran Tugasan";
+"todo.source.local" = "App (Local)";
 
 /* ===== Inline Add Todo ===== */
 "todo.input.placeholder" = "Masukkan tugasan";
@@ -369,6 +370,7 @@
 "chat.quick.add.meeting" = "Tambah mesyuarat esok jam 3 petang";
 "chat.quick.free.time" = "Cari masa lapang minggu ini";
 "chat.quick.tomorrow.plan" = "Rancang hari saya esok";
+"chat.attach.pdf.hint" = "Attach PDF | Paste images with Cmd+V";
 "chat.attach.hint" = "Lampirkan gambar atau PDF (maks. 5, 20 MB)";
 "chat.attach.picker.message" = "Pilih gambar atau PDF untuk dilampirkan";
 

@@ -65,6 +65,7 @@
 
 /* ===== Todo Detail Modal ===== */
 "todo.detail.title" = "Yapılacak Detayları";
+"todo.source.local" = "App (Local)";
 
 /* ===== Inline Add Todo ===== */
 "todo.input.placeholder" = "Yapılacak girin";
@@ -369,6 +370,7 @@
 "chat.quick.add.meeting" = "Yarın saat 15'e toplantı ekle";
 "chat.quick.free.time" = "Bu hafta boş zaman bul";
 "chat.quick.tomorrow.plan" = "Yarın için plan yap";
+"chat.attach.pdf.hint" = "Attach PDF | Paste images with Cmd+V";
 "chat.attach.hint" = "Resim veya PDF ekle (maks. 5, 20 MB)";
 "chat.attach.picker.message" = "Eklemek için resim veya PDF seçin";
 

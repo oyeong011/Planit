@@ -65,6 +65,7 @@
 
 /* ===== Todo Detail Modal ===== */
 "todo.detail.title" = "ToDoの詳細";
+"todo.source.local" = "App (Local)";
 
 /* ===== Inline Add Todo ===== */
 "todo.input.placeholder" = "ToDoを入力";
@@ -369,6 +370,7 @@
 "chat.quick.add.meeting" = "明日の午後3時に会議を追加";
 "chat.quick.free.time" = "今週の空き時間を探して";
 "chat.quick.tomorrow.plan" = "明日の予定を計画して";
+"chat.attach.pdf.hint" = "Attach PDF | Paste images with Cmd+V";
 "chat.attach.hint" = "画像またはPDFを添付 (最大5件、20MB)";
 "chat.attach.picker.message" = "添付する画像またはPDFを選択";
 

@@ -65,6 +65,7 @@
 
 /* ===== Todo Detail Modal ===== */
 "todo.detail.title" = "Uppgiftsdetaljer";
+"todo.source.local" = "App (Local)";
 
 /* ===== Inline Add Todo ===== */
 "todo.input.placeholder" = "Ange en uppgift";
@@ -369,6 +370,7 @@
 "chat.quick.add.meeting" = "Lägg till möte imorgon kl 15";
 "chat.quick.free.time" = "Hitta ledig tid den här veckan";
 "chat.quick.tomorrow.plan" = "Planera min dag imorgon";
+"chat.attach.pdf.hint" = "Attach PDF | Paste images with Cmd+V";
 "chat.attach.hint" = "Bifoga bild eller PDF (max 5, 20 MB)";
 "chat.attach.picker.message" = "Välj bilder eller PDF-filer att bifoga";
 

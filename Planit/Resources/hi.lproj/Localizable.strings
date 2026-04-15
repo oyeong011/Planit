@@ -65,6 +65,7 @@
 
 /* ===== Todo Detail Modal ===== */
 "todo.detail.title" = "टू-डू विवरण";
+"todo.source.local" = "App (Local)";
 
 /* ===== Inline Add Todo ===== */
 "todo.input.placeholder" = "टू-डू दर्ज करें";
@@ -369,6 +370,7 @@
 "chat.quick.add.meeting" = "कल दोपहर 3 बजे मीटिंग जोड़ें";
 "chat.quick.free.time" = "इस हफ्ते खाली समय खोजें";
 "chat.quick.tomorrow.plan" = "कल का दिन प्लान करें";
+"chat.attach.pdf.hint" = "Attach PDF | Paste images with Cmd+V";
 "chat.attach.hint" = "छवि या PDF संलग्न करें (अधिकतम 5, 20 MB)";
 "chat.attach.picker.message" = "संलग्न करने के लिए छवियाँ या PDF चुनें";
 

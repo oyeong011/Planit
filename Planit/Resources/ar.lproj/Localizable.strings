@@ -65,6 +65,7 @@
 
 /* ===== Todo Detail Modal ===== */
 "todo.detail.title" = "تفاصيل المهمة";
+"todo.source.local" = "App (Local)";
 
 /* ===== Inline Add Todo ===== */
 "todo.input.placeholder" = "أدخل مهمة";
@@ -369,6 +370,7 @@
 "chat.quick.add.meeting" = "إضافة اجتماع غداً الساعة 3 مساءً";
 "chat.quick.free.time" = "إيجاد وقت فراغ هذا الأسبوع";
 "chat.quick.tomorrow.plan" = "تخطيط يومي لغد";
+"chat.attach.pdf.hint" = "Attach PDF | Paste images with Cmd+V";
 "chat.attach.hint" = "إرفاق صورة أو PDF (بحد أقصى 5، 20 ميغابايت)";
 "chat.attach.picker.message" = "اختر الصور أو ملفات PDF للإرفاق";
 
