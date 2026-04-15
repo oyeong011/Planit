@@ -74,14 +74,14 @@ struct MainCalendarView: View {
         }
         .frame(width: showLeftPanel ? 1320 : 1040, height: 860)
         .background(Color.platformControlBackground)
-        .onChange(of: authManager.isAuthenticated) { _ in
+        .onChange(of: authManager.isAuthenticated) {
             viewModel.refreshEvents()
         }
         .onAppear {
             checkLeftPanelMode()
             scheduleNotifications()
         }
-        .onChange(of: viewModel.calendarEvents) { _ in
+        .onChange(of: viewModel.calendarEvents) {
             updateEventReminders()
         }
         .sheet(isPresented: $showSettings) {

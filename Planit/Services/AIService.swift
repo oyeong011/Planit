@@ -165,8 +165,8 @@ final class AIService: ObservableObject {
     /// 스마트 스케줄러 (여유 슬롯 탐색, 충돌 감지)
     let scheduler = SmartSchedulerService()
 
-    nonisolated(unsafe) private static let cliTimeout: TimeInterval = 90
-    nonisolated(unsafe) private static let maxOutputBytes = 1_048_576  // 1 MB
+    nonisolated private static let cliTimeout: TimeInterval = 90
+    nonisolated private static let maxOutputBytes = 1_048_576  // 1 MB
 
     var isConfigured: Bool {
         switch provider {
@@ -193,11 +193,12 @@ final class AIService: ObservableObject {
         Task.detached { [weak self] in
             let claudeResolved = Self.resolvePath("claude")
             let codexResolved = Self.resolvePath("codex")
-            await MainActor.run {
-                self?.claudePath = claudeResolved
-                self?.claudeAvailable = claudeResolved != nil
-                self?.codexPath = codexResolved
-                self?.codexAvailable = codexResolved != nil
+            guard let self else { return }
+            await MainActor.run { [self] in
+                self.claudePath = claudeResolved
+                self.claudeAvailable = claudeResolved != nil
+                self.codexPath = codexResolved
+                self.codexAvailable = codexResolved != nil
             }
         }
     }
@@ -878,11 +879,12 @@ final class AIService: ObservableObject {
                 Task.detached { [weak self] in
                     let claudeResolved = Self.resolvePath("claude")
                     let codexResolved = Self.resolvePath("codex")
-                    await MainActor.run {
-                        self?.claudePath = claudeResolved
-                        self?.claudeAvailable = claudeResolved != nil
-                        self?.codexPath = codexResolved
-                        self?.codexAvailable = codexResolved != nil
+                    guard let self else { cont.resume(); return }
+                    await MainActor.run { [self] in
+                        self.claudePath = claudeResolved
+                        self.claudeAvailable = claudeResolved != nil
+                        self.codexPath = codexResolved
+                        self.codexAvailable = codexResolved != nil
                         cont.resume()
                     }
                 }
@@ -1054,12 +1056,14 @@ final class AIService: ObservableObject {
             return "CLI 실행 실패: \(error.localizedDescription)"
         }
 
-        // Streamed output collection with cap
-        // NSLock으로 비동기 readabilityHandler 간 데이터 레이스 방지
-        var outBuffer = Data()
-        var errBuffer = Data()
-        var capHit = false
-        let bufferLock = NSLock()
+        // Streamed output collection — 클래스로 공유 상태 캡슐화 (@unchecked Sendable)
+        final class CLIState: @unchecked Sendable {
+            var out = Data()
+            var err = Data()
+            var capHit = false
+            let lock = NSLock()
+        }
+        let state = CLIState()
 
         // Timeout: stdin 쓰기 전에 타임아웃 설치 — 프로세스가 일찍 종료해도 write가 블록되지 않도록
         let killQueue = DispatchQueue(label: "planit.cli.timeout")
@@ -1091,16 +1095,15 @@ final class AIService: ObservableObject {
                 handle.readabilityHandler = nil
                 return
             }
-            bufferLock.lock()
-            defer { bufferLock.unlock() }
-            if outBuffer.count + chunk.count > maxOutputBytes {
-                outBuffer.append(chunk.prefix(maxOutputBytes - outBuffer.count))
-                capHit = true
+            state.lock.lock()
+            defer { state.lock.unlock() }
+            if state.out.count + chunk.count > maxOutputBytes {
+                state.out.append(chunk.prefix(maxOutputBytes - state.out.count))
+                state.capHit = true
                 handle.readabilityHandler = nil
-                // Terminate process to avoid pipe backpressure blocking
                 if proc.isRunning { proc.terminate() }
             } else {
-                outBuffer.append(chunk)
+                state.out.append(chunk)
             }
         }
 
@@ -1110,11 +1113,10 @@ final class AIService: ObservableObject {
                 handle.readabilityHandler = nil
                 return
             }
-            // Cap stderr at 64KB
-            bufferLock.lock()
-            defer { bufferLock.unlock() }
-            if errBuffer.count < 65536 {
-                errBuffer.append(chunk.prefix(65536 - errBuffer.count))
+            state.lock.lock()
+            defer { state.lock.unlock() }
+            if state.err.count < 65536 {
+                state.err.append(chunk.prefix(65536 - state.err.count))
             }
         }
 
@@ -1126,18 +1128,18 @@ final class AIService: ObservableObject {
         outPipe.fileHandleForReading.readabilityHandler = nil
         errPipe.fileHandleForReading.readabilityHandler = nil
 
-        bufferLock.lock()
-        var output = String(data: outBuffer, encoding: .utf8) ?? ""
-        let didCapHit = capHit
-        let finalErrBuffer = errBuffer
-        bufferLock.unlock()
+        state.lock.lock()
+        var output = String(data: state.out, encoding: .utf8) ?? ""
+        let didCapHit = state.capHit
+        let finalErr = state.err
+        state.lock.unlock()
 
         if didCapHit {
             output += "\n... (출력이 잘렸습니다)"
         }
 
         if proc.terminationStatus != 0 {
-            let errStr = String(data: finalErrBuffer, encoding: .utf8) ?? ""
+            let errStr = String(data: finalErr, encoding: .utf8) ?? ""
             return output.isEmpty ? "오류: \(errStr)" : output
         }
 

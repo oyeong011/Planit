@@ -313,9 +313,6 @@ final class CalendarViewModel: ObservableObject {
         }
         ensureRemindersCategory()
 
-        let startOfDay = calendar.startOfDay(for: date)
-        guard let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else { return }
-
         // 미완료 + 완료된 미리알림 모두 가져오기 (해당 날짜)
         let predicate = eventStore.predicateForReminders(in: nil)
 
@@ -753,7 +750,7 @@ final class CalendarViewModel: ObservableObject {
     // MARK: - Todo CRUD
 
     func addTodo(title: String, categoryID: UUID? = nil, date: Date? = nil, isRepeating: Bool = false) {
-        var todo = TodoItem(
+        let todo = TodoItem(
             title: title,
             categoryID: categoryID ?? defaultCategoryID,
             date: date ?? selectedDate,
