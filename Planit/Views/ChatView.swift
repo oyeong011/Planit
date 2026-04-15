@@ -17,33 +17,56 @@ struct ChatView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Header
-            HStack {
+            HStack(spacing: 8) {
                 Image(systemName: "sparkles")
-                    .font(.system(size: 14))
+                    .font(.system(size: 13))
                     .foregroundStyle(.purple)
                 Text("AI")
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 13, weight: .bold))
 
-                // Provider picker
-                Picker("", selection: $aiService.provider) {
+                // Provider 세그먼트 칩
+                HStack(spacing: 2) {
                     ForEach(AIProvider.allCases, id: \.self) { p in
-                        HStack(spacing: 4) {
-                            Image(systemName: p.icon)
-                            Text(p.rawValue)
+                        let isSelected = aiService.provider == p
+                        Button {
+                            aiService.provider = p
+                            aiService.saveSettings()
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: p.icon).font(.system(size: 10))
+                                Text(p.rawValue.components(separatedBy: " ").first ?? p.rawValue)
+                                    .font(.system(size: 11, weight: isSelected ? .semibold : .regular))
+                            }
+                            .padding(.horizontal, 8).padding(.vertical, 4)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(isSelected ? Color.purple.opacity(0.18) : Color.clear)
+                            )
+                            .foregroundStyle(isSelected ? Color.purple : Color.secondary)
                         }
-                        .tag(p)
+                        .buttonStyle(.plain)
                     }
                 }
-                .pickerStyle(.menu)
-                .labelsHidden()
-                .frame(width: 100)
-                .font(.system(size: 11))
-                .onChange(of: aiService.provider) { _ in aiService.saveSettings() }
+                .padding(2)
+                .background(RoundedRectangle(cornerRadius: 8).fill(Color(nsColor: .controlBackgroundColor)))
 
                 Spacer()
+
+                // 채팅 지우기 버튼
+                if !messages.isEmpty {
+                    Button {
+                        messages = []
+                    } label: {
+                        Image(systemName: "trash")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .help("채팅 기록 지우기")
+                }
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 10)
+            .padding(.vertical, 8)
 
             Divider()
 
