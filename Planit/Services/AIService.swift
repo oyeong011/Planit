@@ -132,6 +132,11 @@ final class AIService: ObservableObject {
     /// ViewModel이 이미 로드한 캐시 이벤트 (API 재호출 없이 사용)
     var cachedCalendarEvents: [CalendarEvent] = []
 
+    /// 캘린더 컨텍스트 캐시 (60초간 재사용 — 매 메시지마다 재빌드 방지)
+    private var cachedContext: String = ""
+    private var cachedContextDate: Date = .distantPast
+    private static let contextCacheTTL: TimeInterval = 60
+
     /// ViewModel 카테고리 목록 (카테고리 이름→UUID 매핑용)
     var cachedCategories: [TodoCategory] = []
 
@@ -690,11 +695,26 @@ final class AIService: ObservableObject {
 
     // MARK: - Send Message
 
+    /// 캘린더 컨텍스트 캐시 무효화 (이벤트 생성/삭제 후 호출)
+    func invalidateContextCache() {
+        cachedContextDate = .distantPast
+    }
+
     func sendMessage(_ userMessage: String, attachments: [ChatAttachment] = [], history: [ChatMessage]) async -> [ChatMessage] {
         isLoading = true
         defer { isLoading = false }
 
-        let (calContext, eventIds) = await buildCalendarContext()
+        // 캐시 TTL 내에 있으면 재사용, 아니면 재빌드
+        let now = Date()
+        let (calContext, eventIds): (String, Set<String>)
+        if !cachedContext.isEmpty && now.timeIntervalSince(cachedContextDate) < Self.contextCacheTTL {
+            calContext = cachedContext
+            eventIds = knownEventIds
+        } else {
+            (calContext, eventIds) = await buildCalendarContext()
+            cachedContext = calContext
+            cachedContextDate = now
+        }
         knownEventIds = eventIds
         let systemPrompt = buildSystemPrompt(calendarContext: calContext)
 
@@ -730,8 +750,10 @@ final class AIService: ObservableObject {
             guard let path = claudePath else { return [ChatMessage(role: .assistant, content: "Claude Code가 설치되지 않았습니다. /opt/homebrew/bin 또는 ~/.local/bin에 claude가 있는지 확인하세요.")] }
             // --system-prompt: 시스템 프롬프트 분리, --no-session-persistence: 세션 파일 충돌 방지
             // --image: 이미지 파일 직접 전달 (비전 분석)
+            // claude-haiku-4-5 는 응답이 훨씬 빠름 (단순 질의에 적합)
             var claudeArgs = ["-p", "--output-format", "text",
                               "--no-session-persistence",
+                              "--model", "claude-haiku-4-5-20251001",
                               "--system-prompt", systemPrompt]
             for img in imageAttachments {
                 claudeArgs += ["--image", img.url.path]
@@ -755,19 +777,19 @@ final class AIService: ObservableObject {
         var results: [ChatMessage] = []
 
         if let actions = actions, !actions.isEmpty {
-            // create는 즉시 실행, delete/update만 승인 요청
-            let createActions = actions.filter { $0.action == "create" }
-            let riskyActions  = actions.filter { $0.action != "create" }
+            // create / createTodo는 즉시 실행, delete/update만 승인 요청
+            let safeActions  = actions.filter { $0.action == "create" || $0.action == "createTodo" }
+            let riskyActions = actions.filter { $0.action == "delete" || $0.action == "update" }
 
             if !message.isEmpty {
                 results.append(ChatMessage(role: .assistant, content: message))
             }
 
-            // create 즉시 실행
-            if !createActions.isEmpty {
-                let (_, freshIds) = await buildCalendarContext()
-                knownEventIds = freshIds
-                let createResults = await executeActions(createActions)
+            // 즉시 실행 (create / createTodo)
+            if !safeActions.isEmpty {
+                // 컨텍스트 캐시 무효화 — 이벤트/할일 생성 후 다음 메시지에서 최신 반영
+                invalidateContextCache()
+                let createResults = await executeActions(safeActions)
                 results.append(contentsOf: createResults)
             }
 
@@ -796,7 +818,7 @@ final class AIService: ObservableObject {
         // system이 비어있으면(claude의 경우 --system-prompt 플래그로 이미 전달) 개행 없이 시작
         var fullPrompt = system.isEmpty ? "" : system + "\n\n"
 
-        let recentHistory = history.suffix(10)
+        let recentHistory = history.suffix(6)
         for msg in recentHistory {
             switch msg.role {
             case .user:
