@@ -370,6 +370,7 @@
 "chat.quick.add.meeting" = "Agregar reunión mañana a las 3pm";
 "chat.quick.free.time" = "Buscar tiempo libre esta semana";
 "chat.quick.tomorrow.plan" = "Planificar mi día de mañana";
+"chat.attach.pdf.hint" = "Attach PDF | Paste images with Cmd+V";
 "chat.attach.hint" = "Adjuntar imagen o PDF (máx. 5, 20 MB)";
 "chat.attach.picker.message" = "Selecciona imágenes o PDFs para adjuntar";
 

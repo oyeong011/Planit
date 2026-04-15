@@ -370,6 +370,7 @@
 "chat.quick.add.meeting" = "Vergadering toevoegen morgen om 15:00";
 "chat.quick.free.time" = "Vrije tijd zoeken deze week";
 "chat.quick.tomorrow.plan" = "Mijn dag van morgen plannen";
+"chat.attach.pdf.hint" = "Attach PDF | Paste images with Cmd+V";
 "chat.attach.hint" = "Afbeelding of PDF bijvoegen (max. 5, 20 MB)";
 "chat.attach.picker.message" = "Selecteer afbeeldingen of PDF's om toe te voegen";
 

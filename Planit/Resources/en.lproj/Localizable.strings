@@ -100,7 +100,8 @@
 "chat.action.create" = "Create";
 "chat.action.update" = "Update";
 "chat.action.delete" = "Delete";
-"chat.attach.hint" = "Attach image or PDF (max 5, 20MB)";
+"chat.attach.pdf.hint" = "Attach PDF | Paste images with Cmd+V";
+"chat.attach.hint" ="Attach image or PDF (max 5, 20MB)";
 "chat.attach.picker.message" = "Select images or PDFs to attach";
 
 /* ===== AI Settings ===== */

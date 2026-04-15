@@ -370,6 +370,7 @@
 "chat.quick.add.meeting" = "הוסף פגישה מחר בשעה 15:00";
 "chat.quick.free.time" = "מצא זמן פנוי השבוע";
 "chat.quick.tomorrow.plan" = "תכנן את מחר שלי";
+"chat.attach.pdf.hint" = "Attach PDF | Paste images with Cmd+V";
 "chat.attach.hint" = "צרף תמונה או PDF (עד 5, 20 MB)";
 "chat.attach.picker.message" = "בחר תמונות או קבצי PDF לצירוף";
 

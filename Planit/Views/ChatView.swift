@@ -11,7 +11,8 @@ struct ChatView: View {
     @State private var isDragOver: Bool = false
 
     /// 허용하는 파일 타입
-    private static let allowedTypes: [UTType] = [.image, .png, .jpeg, .gif, .webP, .tiff, .bmp, .pdf]
+    // 파일 피커는 PDF만 — 이미지는 Cmd+V 붙여넣기 또는 드래그&드롭으로만 첨부
+    private static let allowedTypes: [UTType] = [.pdf]
     private static let maxAttachments = 5
     private static let maxFileSize: Int = 20_971_520  // 20MB
 
@@ -349,16 +350,16 @@ struct ChatView: View {
 
             // Input
             HStack(spacing: 6) {
-                // 첨부 버튼
+                // PDF 첨부 버튼 (이미지는 Cmd+V 붙여넣기 또는 드래그&드롭)
                 Button { openFilePicker() } label: {
-                    Image(systemName: "paperclip")
+                    Image(systemName: "doc.fill")
                         .font(.system(size: 14))
                         .foregroundStyle(.secondary)
                         .frame(width: 28, height: 28)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .help(String(localized: "chat.attach.hint"))
+                .help(String(localized: "chat.attach.pdf.hint"))
 
                 PasteAwareTextField(
                     text: $inputText,

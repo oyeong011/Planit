@@ -370,6 +370,7 @@
 "chat.quick.add.meeting" = "Tilføj møde i morgen kl. 15";
 "chat.quick.free.time" = "Find ledig tid denne uge";
 "chat.quick.tomorrow.plan" = "Planlæg min dag i morgen";
+"chat.attach.pdf.hint" = "Attach PDF | Paste images with Cmd+V";
 "chat.attach.hint" = "Vedhæft billede eller PDF (maks 5, 20 MB)";
 "chat.attach.picker.message" = "Vælg billeder eller PDF-filer til vedhæftning";
 

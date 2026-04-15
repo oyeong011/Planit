@@ -370,6 +370,7 @@
 "chat.quick.add.meeting" = "Tambahkan rapat besok jam 3 sore";
 "chat.quick.free.time" = "Cari waktu luang minggu ini";
 "chat.quick.tomorrow.plan" = "Rencanakan hari saya besok";
+"chat.attach.pdf.hint" = "Attach PDF | Paste images with Cmd+V";
 "chat.attach.hint" = "Lampirkan gambar atau PDF (maks. 5, 20 MB)";
 "chat.attach.picker.message" = "Pilih gambar atau PDF untuk dilampirkan";
 

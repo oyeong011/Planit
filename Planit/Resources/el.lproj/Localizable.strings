@@ -370,6 +370,7 @@
 "chat.quick.add.meeting" = "Προσθήκη συνάντησης αύριο στις 15:00";
 "chat.quick.free.time" = "Εύρεση ελεύθερου χρόνου αυτή την εβδομάδα";
 "chat.quick.tomorrow.plan" = "Προγραμματισμός της αυριανής ημέρας";
+"chat.attach.pdf.hint" = "Attach PDF | Paste images with Cmd+V";
 "chat.attach.hint" = "Επισύναψη εικόνας ή PDF (μέγ. 5, 20 MB)";
 "chat.attach.picker.message" = "Επιλέξτε εικόνες ή PDF για επισύναψη";
 
