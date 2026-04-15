@@ -98,10 +98,10 @@ final class CalendarViewModel: ObservableObject {
         loadEventCategoryMappings()
         startPeriodicRefresh()
 
-        // 자정 롤오버: 미완료 Todo를 오늘로 자동 이동
+        // 자정 롤오버 + 정오 리뷰 트리거 등록
         Task { @MainActor in
             MidnightRolloverService.shared.performIfNeeded(viewModel: self)
-            MidnightRolloverService.shared.scheduleMidnightTrigger()
+            MidnightRolloverService.shared.scheduleAllTriggers()
         }
 
         // 날짜 변경 감지 (앱이 켜진 상태로 자정 넘길 때)
@@ -158,12 +158,15 @@ final class CalendarViewModel: ObservableObject {
         }
     }
 
-    /// 자정 넘어갈 때 감지해서 롤오버 실행
+    /// 자정/정오 감지해서 롤오버 및 리뷰 실행
     private func observeDateChange() {
         var lastDay = Calendar.current.startOfDay(for: Date())
         dateChangeTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
             guard let self else { return }
-            let today = Calendar.current.startOfDay(for: Date())
+            let now = Date()
+            let today = Calendar.current.startOfDay(for: now)
+
+            // 날짜 변경 (자정 롤오버)
             if today > lastDay {
                 lastDay = today
                 Task { @MainActor in
@@ -171,6 +174,11 @@ final class CalendarViewModel: ObservableObject {
                     self.currentMonth = today
                     self.selectedDate = today
                     self.refreshEvents()
+                }
+            } else {
+                // 정오 리뷰 (시간 기반 — 날짜 변경 없어도 체크)
+                Task { @MainActor in
+                    MidnightRolloverService.shared.performIfNeeded(viewModel: self)
                 }
             }
         }
