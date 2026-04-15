@@ -57,27 +57,43 @@ final class MidnightRolloverService {
 
     private func performMidnightRollover(viewModel: CalendarViewModel, today: Date) {
         let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: today)!
+        let tomorrow  = Calendar.current.date(byAdding: .day, value:  1, to: today)!
 
-        // 1. 어제 완료된 Todo 통계 (피드백용)
+        // 1. 어제 통계 (피드백용)
         let yesterdayStats = collectDayStats(todos: viewModel.todos, events: viewModel.calendarEvents, date: yesterday)
 
-        // 2. 미완료 + 지난 날짜 Todo → 오늘로 이동
-        let pastTodos = incompletePastTodos(in: viewModel.todos, before: today)
-        for id in pastTodos {
-            viewModel.moveTodo(id: id, toDate: today)
+        // 2. 미완료 + 기한 지난 Todo 목록
+        let pastTodoIDs = incompletePastTodos(in: viewModel.todos, before: today)
+        let pastTodos   = viewModel.todos.filter { pastTodoIDs.contains($0.id) }
+
+        // 3. 스마트 분산 배치 — 향후 7일 일정 밀도 분석 후 여유 날짜에 배정
+        let scheduler = SmartSchedulerService()
+        let plan = scheduler.distributeBacklog(
+            todos: pastTodos,
+            events: viewModel.calendarEvents,
+            startDate: tomorrow   // 내일부터 탐색
+        )
+
+        // 4. 계획 적용
+        for (id, newDate) in plan {
+            viewModel.moveTodo(id: id, toDate: newDate)
         }
 
         markDone(today, key: rolloverKey)
 
-        // 3. 지나간 구글 캘린더 이벤트 감지 (앱이 직접 생성한 것만)
-        let overdueEvents = overdueGoogleEvents(in: viewModel.calendarEvents, before: today,
-                                                 completedIDs: viewModel.completedEventIDs)
+        // 5. 지나간 구글 캘린더 이벤트 감지
+        let overdueEvents = overdueGoogleEvents(
+            in: viewModel.calendarEvents, before: today,
+            completedIDs: viewModel.completedEventIDs
+        )
 
-        // 4. 롤오버 피드백 알림
+        // 6. 결과 알림 (어디에 얼마나 배치됐는지 구체적으로)
+        let summary = scheduler.backlogSummary(plan: plan, todos: pastTodos)
         scheduleMidnightFeedbackNotification(
-            movedCount: pastTodos.count,
+            movedCount: plan.count,
             stats: yesterdayStats,
-            overdueEventCount: overdueEvents.count
+            overdueEventCount: overdueEvents.count,
+            rescheduleSummary: summary
         )
     }
 
@@ -151,26 +167,42 @@ final class MidnightRolloverService {
 
     // MARK: - Notifications
 
-    private func scheduleMidnightFeedbackNotification(movedCount: Int, stats: DayStats, overdueEventCount: Int) {
+    private func scheduleMidnightFeedbackNotification(
+        movedCount: Int,
+        stats: DayStats,
+        overdueEventCount: Int,
+        rescheduleSummary: String = ""
+    ) {
         let content = UNMutableNotificationContent()
         content.sound = .default
+        content.userInfo = ["action": "midnight_rollover"]
 
-        // 제목: 달성률
-        if stats.totalTodos == 0 {
-            content.title = "새 하루 시작 ☀️"
-            content.body  = movedCount > 0
-                ? "\(movedCount)개 미완료 할 일을 오늘로 이동했습니다."
+        if stats.totalTodos == 0 && movedCount == 0 {
+            content.title = "새 하루 시작"
+            content.body  = overdueEventCount > 0
+                ? "지난 일정 \(overdueEventCount)개를 확인해보세요."
                 : "오늘도 파이팅!"
         } else {
-            content.title = "어제 달성률: \(stats.achievementPercent)%"
-            var parts: [String] = []
-            if stats.completedTodos > 0 { parts.append("완료 \(stats.completedTodos)개") }
-            if movedCount > 0           { parts.append("미완료 \(movedCount)개 → 오늘로 이동") }
-            if overdueEventCount > 0    { parts.append("지난 일정 \(overdueEventCount)개 확인 필요") }
-            content.body = parts.isEmpty ? "오늘도 파이팅!" : parts.joined(separator: " · ")
-        }
+            // 달성률이 있으면 제목에 표시
+            if stats.totalTodos > 0 {
+                content.title = "어제 달성률 \(stats.achievementPercent)% · Calen이 일정 조정 완료"
+            } else {
+                content.title = "Calen이 밀린 할 일 \(movedCount)개를 재배치했습니다"
+            }
 
-        content.userInfo = ["action": "midnight_rollover"]
+            var body = ""
+            if !rescheduleSummary.isEmpty {
+                // 구체적인 배치 내용 ("4/16(수): 보고서 · 4/17(목): 2개 할 일")
+                body = rescheduleSummary
+            } else if movedCount > 0 {
+                body = "미완료 \(movedCount)개를 일정에 맞게 재배치했습니다."
+            }
+            if overdueEventCount > 0 {
+                body += body.isEmpty ? "" : " · "
+                body += "지난 일정 \(overdueEventCount)개 확인 필요"
+            }
+            content.body = body.isEmpty ? "오늘도 파이팅!" : body
+        }
 
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
         let request = UNNotificationRequest(
@@ -185,20 +217,32 @@ final class MidnightRolloverService {
         content.sound = .default
         content.userInfo = ["action": "noon_review"]
 
-        // 오전 결산 제목
         if stats.totalTodos == 0 && stats.todayEventCount == 0 {
-            content.title = "오늘 오후 일정 확인"
-            content.body  = "Calen에서 오늘 남은 일정을 확인해보세요."
+            content.title = "정오 체크인"
+            content.body  = stats.upcomingTodayEvents > 0
+                ? "오후 일정 \(stats.upcomingTodayEvents)개가 남아있어요."
+                : "Calen에서 오늘 계획을 세워보세요."
         } else {
-            content.title = "오전 결산 · 정오 리마인더"
-            var parts: [String] = []
-            if stats.completedTodos > 0 { parts.append("완료 \(stats.completedTodos)개") }
-            if stats.remainingTodos > 0 { parts.append("할 일 \(stats.remainingTodos)개 남음") }
-            if stats.upcomingTodayEvents > 0 { parts.append("남은 일정 \(stats.upcomingTodayEvents)개") }
-            content.body = parts.isEmpty ? "오후도 파이팅!" : parts.joined(separator: " · ")
+            // 달성률 기반 제목
+            let pct = stats.achievementPercent
+            switch pct {
+            case 0:
+                content.title = "아직 시작 전이에요"
+                content.body  = "오늘 할 일 \(stats.totalTodos)개 중 완료한 것이 없어요. 지금 시작해볼까요?"
+            case 1..<50:
+                content.title = "오전 달성률 \(pct)%"
+                content.body  = "완료 \(stats.completedTodos)개 · 남은 할 일 \(stats.remainingTodos)개 · 오후 일정 \(stats.upcomingTodayEvents)개"
+            case 50..<100:
+                content.title = "반 이상 완료!"
+                content.body  = "남은 할 일 \(stats.remainingTodos)개 · 오후 일정 \(stats.upcomingTodayEvents)개"
+            default:
+                content.title = "오늘 할 일 모두 완료!"
+                content.body  = stats.upcomingTodayEvents > 0
+                    ? "오후 일정 \(stats.upcomingTodayEvents)개가 남아있어요."
+                    : "오늘도 수고했어요!"
+            }
         }
 
-        // 즉시 또는 약간 딜레이 (2초)
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 2, repeats: false)
         let request = UNNotificationRequest(
             identifier: "planit.noon.feedback.\(Int(Date().timeIntervalSince1970))",

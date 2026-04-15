@@ -174,6 +174,90 @@ final class SmartSchedulerService {
         return (preferred.isEmpty ? eligible : preferred).first
     }
 
+    // MARK: - Backlog Distribution (스마트 재배치)
+
+    /// 미완료 todo를 향후 일정 여유에 따라 자동 분산 배치.
+    ///
+    /// - Parameters:
+    ///   - todos: 미완료 + 기한 지난 todo 목록
+    ///   - events: 향후 캘린더 이벤트 (밀도 계산용)
+    ///   - startDate: 배치 시작일 (보통 내일)
+    ///   - maxDays: 탐색 범위 (기본 7일)
+    ///   - maxPerDay: 하루 최대 배정 개수 (기본 3개)
+    /// - Returns: todo.id → 새 배정 날짜 매핑
+    func distributeBacklog(
+        todos: [TodoItem],
+        events: [CalendarEvent],
+        startDate: Date,
+        maxDays: Int = 7,
+        maxPerDay: Int = 3
+    ) -> [UUID: Date] {
+        guard !todos.isEmpty else { return [:] }
+
+        let dates = (0..<maxDays).compactMap {
+            calendar.date(byAdding: .day, value: $0, to: calendar.startOfDay(for: startDate))
+        }
+
+        // 날짜별 일정 밀도 분석 (loadPercent 낮을수록 여유)
+        let analyses = analyzeDays(events: events, for: dates)
+
+        // 긴급도 기준 todo 정렬: 오래 밀린 것 먼저 (date가 과거일수록 긴급)
+        let sorted = todos.sorted { $0.date < $1.date }
+
+        var result: [UUID: Date] = [:]
+        var dailyCount: [Date: Int] = [:]
+
+        for todo in sorted {
+            // 밀도 낮은 날부터 탐색 → 할당 여유 있으면 배정
+            let sortedDays = analyses.sorted { $0.loadPercent < $1.loadPercent }
+            for analysis in sortedDays {
+                let dayKey = calendar.startOfDay(for: analysis.date)
+                let count = dailyCount[dayKey] ?? 0
+                guard count < maxPerDay else { continue }
+
+                result[todo.id] = analysis.date
+                dailyCount[dayKey] = count + 1
+                break
+            }
+        }
+
+        // 7일 내 배치 못 한 todo → 마지막 날에 몰아넣기 (최악의 경우)
+        if let lastDate = dates.last {
+            for todo in sorted where result[todo.id] == nil {
+                result[todo.id] = lastDate
+            }
+        }
+
+        return result
+    }
+
+    /// distributeBacklog 결과를 사람이 읽기 좋은 요약 문자열로 변환
+    func backlogSummary(plan: [UUID: Date], todos: [TodoItem]) -> String {
+        let dayFmt = DateFormatter()
+        dayFmt.dateFormat = "M/d(E)"
+        dayFmt.locale = Locale(identifier: "ko_KR")
+        dayFmt.timeZone = TimeZone(identifier: "Asia/Seoul")
+
+        // 날짜별로 그룹
+        var byDate: [Date: [String]] = [:]
+        for (id, date) in plan {
+            guard let todo = todos.first(where: { $0.id == id }) else { continue }
+            let dayKey = calendar.startOfDay(for: date)
+            byDate[dayKey, default: []].append(todo.title)
+        }
+
+        let lines = byDate.keys.sorted().map { dayKey -> String in
+            let titles = byDate[dayKey]!
+            let label = dayFmt.string(from: dayKey)
+            if titles.count == 1 {
+                return "\(label): \(titles[0])"
+            } else {
+                return "\(label): \(titles.count)개 할 일"
+            }
+        }
+        return lines.joined(separator: " · ")
+    }
+
     // MARK: - AI Context String
 
     /// AI 시스템 프롬프트에 삽입할 일정 밀도 + 여유 슬롯 텍스트 생성
