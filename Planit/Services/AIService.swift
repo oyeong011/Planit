@@ -8,13 +8,11 @@ import CoreGraphics
 enum AIProvider: String, CaseIterable, Codable {
     case claude = "Claude Code"
     case codex = "Codex"
-    case hermes = "Hermes (Ollama)"
 
     var icon: String {
         switch self {
         case .claude: return "c.circle.fill"
         case .codex: return "o.circle.fill"
-        case .hermes: return "h.circle.fill"
         }
     }
 
@@ -22,7 +20,6 @@ enum AIProvider: String, CaseIterable, Codable {
         switch self {
         case .claude: return "claude-sonnet-4-20250514"
         case .codex: return "gpt-5.4"
-        case .hermes: return "hermes3"
         }
     }
 }
@@ -134,9 +131,6 @@ final class AIService: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var claudeAvailable: Bool = false
     @Published var codexAvailable: Bool = false
-    @Published var ollamaAvailable: Bool = false
-    @Published var ollamaModels: [String] = []
-    @Published var ollamaModel: String = "hermes3"
     /// Pending actions awaiting user approval before execution
     @Published var pendingActions: [CalendarAction] = []
     @Published var pendingMessage: String?
@@ -181,7 +175,6 @@ final class AIService: ObservableObject {
         switch provider {
         case .claude: return claudeAvailable
         case .codex: return codexAvailable
-        case .hermes: return ollamaAvailable
         }
     }
 
@@ -210,26 +203,6 @@ final class AIService: ObservableObject {
                 self.codexPath = codexResolved
                 self.codexAvailable = codexResolved != nil
             }
-        }
-        // Ollama는 HTTP로 체크
-        Task { await checkOllamaAvailability() }
-    }
-
-    func checkOllamaAvailability() async {
-        guard let url = URL(string: "http://localhost:11434/api/tags") else { return }
-        do {
-            let (data, resp) = try await URLSession.shared.data(from: url)
-            guard (resp as? HTTPURLResponse)?.statusCode == 200 else {
-                ollamaAvailable = false; return
-            }
-            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let models = json["models"] as? [[String: Any]] {
-                ollamaModels = models.compactMap { $0["name"] as? String }
-                    .map { $0.components(separatedBy: ":").first ?? $0 }  // "hermes3:latest" → "hermes3"
-                ollamaAvailable = true
-            }
-        } catch {
-            ollamaAvailable = false
         }
     }
 
@@ -280,10 +253,6 @@ final class AIService: ObservableObject {
            let p = AIProvider(rawValue: raw) {
             provider = p
         }
-        if let data = try? Data(contentsOf: dir.appendingPathComponent("ollama_model")),
-           let raw = String(data: data, encoding: .utf8), !raw.isEmpty {
-            ollamaModel = raw
-        }
     }
 
     func saveSettings() {
@@ -291,7 +260,6 @@ final class AIService: ObservableObject {
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true,
                                                   attributes: [.posixPermissions: 0o700])
         try? provider.rawValue.data(using: .utf8)?.write(to: dir.appendingPathComponent("provider"), options: .atomic)
-        try? ollamaModel.data(using: .utf8)?.write(to: dir.appendingPathComponent("ollama_model"), options: .atomic)
     }
 
     // MARK: - Calendar Context
@@ -971,17 +939,6 @@ final class AIService: ObservableObject {
             rawResponse = await sendCLI(executablePath: path, args: codexArgs,
                                          system: systemPrompt, userMessage: augmentedMessage, history: history,
                                          isCodex: true)
-        case .hermes:
-            guard ollamaAvailable else {
-                return [ChatMessage(role: .assistant, content: """
-                    Ollama가 실행되고 있지 않습니다.
-                    1. `brew install ollama` 로 설치
-                    2. `ollama pull \(ollamaModel)` 로 Hermes 모델 다운로드
-                    3. Ollama는 자동으로 백그라운드 실행됩니다
-                    """
-                )]
-            }
-            rawResponse = await sendOllama(system: systemPrompt, userMessage: augmentedMessage, history: history)
         }
 
         let (message, actions) = parseAIResponse(rawResponse)
@@ -1053,58 +1010,6 @@ final class AIService: ObservableObject {
         let shouldExtract = history.count % 4 == 0
         if shouldExtract {
             Task { await ctx.extractAndUpdate(from: messages, claudePath: path) }
-        }
-    }
-
-    // MARK: - Ollama (Hermes) 전송
-
-    private func sendOllama(system: String, userMessage: String, history: [ChatMessage]) async -> String {
-        guard let url = URL(string: "http://localhost:11434/v1/chat/completions") else { return "Ollama URL 오류" }
-
-        // OpenAI 호환 포맷으로 메시지 구성
-        var messages: [[String: String]] = []
-        if !system.isEmpty {
-            messages.append(["role": "system", "content": system])
-        }
-        for msg in history where msg.role == .user || msg.role == .assistant {
-            messages.append(["role": msg.role == .user ? "user" : "assistant", "content": msg.content])
-        }
-        messages.append(["role": "user", "content": userMessage])
-
-        let body: [String: Any] = [
-            "model": ollamaModel,
-            "messages": messages,
-            "stream": false,
-            "options": [
-                "temperature": 0.7,
-                "num_predict": 2048
-            ]
-        ]
-
-        guard let bodyData = try? JSONSerialization.data(withJSONObject: body) else { return "JSON 인코딩 오류" }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = bodyData
-        request.timeoutInterval = 120
-
-        do {
-            let (data, resp) = try await URLSession.shared.data(for: request)
-            guard (resp as? HTTPURLResponse)?.statusCode == 200 else {
-                let errMsg = String(data: data, encoding: .utf8) ?? "알 수 없는 오류"
-                return "Ollama 오류: \(errMsg)"
-            }
-            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let choices = json["choices"] as? [[String: Any]],
-                  let first = choices.first,
-                  let message = first["message"] as? [String: Any],
-                  let content = message["content"] as? String else {
-                return "Ollama 응답 파싱 실패"
-            }
-            return content.trimmingCharacters(in: .whitespacesAndNewlines)
-        } catch {
-            return "Ollama 연결 오류: \(error.localizedDescription)"
         }
     }
 

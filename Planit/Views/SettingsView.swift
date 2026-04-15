@@ -354,87 +354,6 @@ struct SettingsView: View {
                     Divider()
                     aiStatusRow("Codex CLI", available: aiService.codexAvailable,
                                 detail: aiService.codexAvailable ? String(localized: "settings.ai.codex.installed.detail") : String(localized: "settings.ai.codex.install.hint"))
-                    Divider()
-                    aiStatusRow("Hermes (Ollama)", available: aiService.ollamaAvailable,
-                                detail: aiService.ollamaAvailable
-                                    ? "실행 중 · 모델: \(aiService.ollamaModels.joined(separator: ", "))"
-                                    : "brew install ollama → ollama pull hermes3")
-                }
-            }
-
-            // Ollama 선택 시 모델 설정
-            if aiService.provider == .hermes {
-                settingsCard("Hermes 모델 설정") {
-                    VStack(alignment: .leading, spacing: 12) {
-                        if !aiService.ollamaModels.isEmpty {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text("설치된 모델")
-                                    .font(.system(size: 11, weight: .semibold))
-                                    .foregroundStyle(.secondary)
-                                ForEach(aiService.ollamaModels, id: \.self) { model in
-                                    Button {
-                                        aiService.ollamaModel = model
-                                    } label: {
-                                        HStack {
-                                            Image(systemName: aiService.ollamaModel == model ? "checkmark.circle.fill" : "circle")
-                                                .foregroundStyle(aiService.ollamaModel == model ? .purple : .secondary)
-                                            Text(model)
-                                                .font(.system(size: 13, design: .monospaced))
-                                            Spacer()
-                                            if model.contains("hermes") || model.contains("nous") {
-                                                Text("추천")
-                                                    .font(.system(size: 10))
-                                                    .foregroundStyle(.purple)
-                                                    .padding(.horizontal, 6)
-                                                    .padding(.vertical, 2)
-                                                    .background(Capsule().fill(Color.purple.opacity(0.1)))
-                                            }
-                                        }
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                            }
-                        } else {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Hermes 모델이 없습니다. 아래 명령어로 설치하세요:")
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(.secondary)
-                                HStack(spacing: 8) {
-                                    Text("ollama pull hermes3")
-                                        .font(.system(size: 12, design: .monospaced))
-                                        .padding(.horizontal, 10)
-                                        .padding(.vertical, 6)
-                                        .background(RoundedRectangle(cornerRadius: 6).fill(Color.secondary.opacity(0.1)))
-                                    Button {
-                                        #if os(macOS)
-                                        NSPasteboard.general.clearContents()
-                                        NSPasteboard.general.setString("ollama pull hermes3", forType: .string)
-                                        #endif
-                                    } label: {
-                                        Image(systemName: "doc.on.doc")
-                                            .font(.system(size: 12))
-                                            .foregroundStyle(.secondary)
-                                    }
-                                    .buttonStyle(.plain)
-                                    .help("복사")
-                                }
-                                Text("권장: hermes3 (8B), nous-hermes-2-mixtral (더 강력, 48GB RAM 필요)")
-                                    .font(.system(size: 11))
-                                    .foregroundStyle(.tertiary)
-                            }
-                        }
-
-                        Divider()
-
-                        Button {
-                            Task { await aiService.checkOllamaAvailability() }
-                        } label: {
-                            Label("Ollama 상태 새로고침", systemImage: "arrow.clockwise")
-                                .font(.system(size: 12))
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
-                    }
                 }
             }
 
@@ -457,12 +376,7 @@ struct SettingsView: View {
 
     private func aiProviderRow(_ provider: AIProvider) -> some View {
         let isSelected = aiService.provider == provider
-        let isAvailable: Bool
-        switch provider {
-        case .claude: isAvailable = aiService.claudeAvailable
-        case .codex:  isAvailable = aiService.codexAvailable
-        case .hermes: isAvailable = aiService.ollamaAvailable
-        }
+        let isAvailable: Bool = provider == .claude ? aiService.claudeAvailable : aiService.codexAvailable
 
         return Button {
             aiService.provider = provider
@@ -519,7 +433,6 @@ struct SettingsView: View {
         switch provider {
         case .claude: return String(localized: "settings.ai.claude.desc")
         case .codex:  return String(localized: "settings.ai.codex.desc")
-        case .hermes: return "Ollama로 로컬 실행되는 오픈소스 LLM. 완전 프라이빗, 무료."
         }
     }
 
