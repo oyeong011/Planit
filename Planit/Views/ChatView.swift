@@ -921,73 +921,103 @@ struct ProviderRow: View {
 }
 
 // MARK: - PasteAwareTextField
-// 일반 텍스트 입력용 NSTextField 래퍼. 이미지/파일 paste는 Coordinator에서 인터셉트.
+// NSTextView 기반 단일행 입력창. paste(_:)를 직접 오버라이드하여 이미지 인터셉트.
 
-class _PasteAwareNSTextField: NSTextField {}
+final class _PasteAwareTextView: NSTextView {
+    var onTextChange: ((String) -> Void)?
+    var onSubmit: (() -> Void)?
+    var placeholderString: String = "" {
+        didSet { needsDisplay = true }
+    }
+
+    // MARK: paste 인터셉트 — NSTextView가 first responder이므로 항상 호출됨
+    override func paste(_ sender: Any?) {
+        switch ChatPasteboardReader.payload(from: .general) {
+        case .image(let image):
+            NotificationCenter.default.post(
+                name: CalenNotification.pasteImage,
+                object: nil,
+                userInfo: ["image": image]
+            )
+        case .files(let urls):
+            NotificationCenter.default.post(
+                name: CalenNotification.pasteFiles,
+                object: nil,
+                userInfo: ["urls": urls]
+            )
+        case nil:
+            super.paste(sender)  // 텍스트 붙여넣기
+        }
+    }
+
+    // Enter 키로 전송
+    override func insertNewline(_ sender: Any?) {
+        onSubmit?()
+    }
+
+    // 플레이스홀더 렌더링
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+        if string.isEmpty {
+            let attrs: [NSAttributedString.Key: Any] = [
+                .font: font ?? NSFont.systemFont(ofSize: 12),
+                .foregroundColor: NSColor.placeholderTextColor,
+            ]
+            let rect = NSRect(x: textContainerOrigin.x + 5, y: textContainerOrigin.y + 1,
+                              width: bounds.width, height: bounds.height)
+            placeholderString.draw(in: rect, withAttributes: attrs)
+        }
+    }
+}
 
 struct PasteAwareTextField: NSViewRepresentable {
     @Binding var text: String
     var placeholder: String
     var onSubmit: () -> Void
 
-    func makeNSView(context: Context) -> _PasteAwareNSTextField {
-        let field = _PasteAwareNSTextField()
-        field.placeholderString = placeholder
-        field.font = .systemFont(ofSize: 12)
-        field.isBordered = false
-        field.drawsBackground = false
-        field.focusRingType = .none
-        field.lineBreakMode = .byClipping
-        field.cell?.isScrollable = true
-        field.delegate = context.coordinator
-        return field
+    func makeNSView(context: Context) -> NSScrollView {
+        let textView = _PasteAwareTextView()
+        textView.font = .systemFont(ofSize: 12)
+        textView.isRichText = false
+        textView.drawsBackground = false
+        textView.isVerticallyResizable = false
+        textView.isHorizontallyResizable = false
+        textView.textContainerInset = NSSize(width: 0, height: 0)
+        textView.textContainer?.widthTracksTextView = true
+        textView.textContainer?.lineFragmentPadding = 5
+        textView.focusRingType = .none
+        textView.placeholderString = placeholder
+        textView.delegate = context.coordinator
+        textView.onTextChange = { context.coordinator.parent.text = $0 }
+        textView.onSubmit = onSubmit
+
+        // 스크롤 없는 단순 컨테이너
+        let scrollView = NSScrollView()
+        scrollView.hasVerticalScroller = false
+        scrollView.hasHorizontalScroller = false
+        scrollView.drawsBackground = false
+        scrollView.documentView = textView
+        scrollView.contentView.postsBoundsChangedNotifications = false
+        return scrollView
     }
 
-    func updateNSView(_ field: _PasteAwareNSTextField, context: Context) {
-        if field.stringValue != text { field.stringValue = text }
-        field.placeholderString = placeholder
+    func updateNSView(_ scrollView: NSScrollView, context: Context) {
+        guard let textView = scrollView.documentView as? _PasteAwareTextView else { return }
+        if textView.string != text { textView.string = text }
+        textView.placeholderString = placeholder
+        textView.onSubmit = onSubmit
     }
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
-    class Coordinator: NSObject, NSTextFieldDelegate {
+    class Coordinator: NSObject, NSTextViewDelegate {
         var parent: PasteAwareTextField
         init(_ parent: PasteAwareTextField) { self.parent = parent }
 
-        func controlTextDidChange(_ obj: Notification) {
-            if let field = obj.object as? NSTextField {
-                parent.text = field.stringValue
-            }
-        }
-
-        func control(_ control: NSControl, textView: NSTextView,
-                     doCommandBy commandSelector: Selector) -> Bool {
-            if commandSelector == #selector(NSResponder.insertNewline(_:)) {
-                parent.onSubmit()
-                return true
-            }
-            // Cmd+V 인터셉트: 이미지/파일이면 첨부로 처리, 텍스트면 기본 동작
-            if commandSelector == #selector(NSText.paste(_:)) {
-                switch ChatPasteboardReader.payload(from: .general) {
-                case .image(let image):
-                    NotificationCenter.default.post(
-                        name: CalenNotification.pasteImage,
-                        object: nil,
-                        userInfo: ["image": image]
-                    )
-                    return true
-                case .files(let urls):
-                    NotificationCenter.default.post(
-                        name: CalenNotification.pasteFiles,
-                        object: nil,
-                        userInfo: ["urls": urls]
-                    )
-                    return true
-                case nil:
-                    return false  // 텍스트 붙여넣기는 기본 동작
-                }
-            }
-            return false
+        func textDidChange(_ notification: Notification) {
+            guard let tv = notification.object as? NSTextView else { return }
+            parent.text = tv.string
+            tv.needsDisplay = true  // 플레이스홀더 갱신
         }
     }
 }
