@@ -388,3 +388,12 @@
 "setup.complete" = "सब तैयार है! अब आप चैट करना शुरू कर सकते हैं।";
 "setup.installed" = "इंस्टॉल किया";
 "setup.copy.command" = "इंस्टॉल कमांड कॉपी करें";
+"review.today.todos" = "Today's Todos";
+"review.done.all" = "Mark All Done";
+"review.accept.all" = "Accept All";
+"review.todo.label" = "Todo";
+"review.plan.complete.title" = "Tomorrow's Plan Ready";
+"review.help.done" = "Done";
+"review.help.tomorrow" = "Move to Tomorrow";
+"review.help.skip" = "Skip";
+"settings.section.context" = "AI Context";

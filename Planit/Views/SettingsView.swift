@@ -6,6 +6,7 @@ enum SettingsSection: String, CaseIterable {
     case profile       = "profile"
     case schedule      = "schedule"
     case ai            = "ai"
+    case context       = "context"
     case integrations  = "integrations"
     case notifications = "notifications"
     case advanced      = "advanced"
@@ -17,6 +18,7 @@ enum SettingsSection: String, CaseIterable {
         case .profile:       return "person.circle"
         case .schedule:      return "clock"
         case .ai:            return "sparkles"
+        case .context:       return "brain.head.profile"
         case .integrations:  return "link"
         case .notifications: return "bell"
         case .advanced:      return "wrench.and.screwdriver"
@@ -31,17 +33,19 @@ struct SettingsView: View {
     @ObservedObject var authManager: GoogleAuthManager
     @ObservedObject var aiService: AIService
     @ObservedObject var viewModel: CalendarViewModel
+    @ObservedObject var userContextService: UserContextService
     var onDismiss: () -> Void
 
     @State private var selectedSection: SettingsSection = .profile
     @State private var profile: UserProfile
 
     init(goalService: GoalService, authManager: GoogleAuthManager, aiService: AIService,
-         viewModel: CalendarViewModel, onDismiss: @escaping () -> Void) {
+         viewModel: CalendarViewModel, userContextService: UserContextService, onDismiss: @escaping () -> Void) {
         self.goalService = goalService
         self.authManager = authManager
         self.aiService = aiService
         self.viewModel = viewModel
+        self.userContextService = userContextService
         self.onDismiss = onDismiss
         self._profile = State(initialValue: goalService.profile)
     }
@@ -131,6 +135,7 @@ struct SettingsView: View {
                 case .profile:       profileSection
                 case .schedule:      scheduleSection
                 case .ai:            aiSection
+                case .context:       contextSection
                 case .integrations:  integrationsSection
                 case .notifications: notificationsSection
                 case .advanced:      advancedSection
@@ -349,6 +354,87 @@ struct SettingsView: View {
                     Divider()
                     aiStatusRow("Codex CLI", available: aiService.codexAvailable,
                                 detail: aiService.codexAvailable ? String(localized: "settings.ai.codex.installed.detail") : String(localized: "settings.ai.codex.install.hint"))
+                    Divider()
+                    aiStatusRow("Hermes (Ollama)", available: aiService.ollamaAvailable,
+                                detail: aiService.ollamaAvailable
+                                    ? "실행 중 · 모델: \(aiService.ollamaModels.joined(separator: ", "))"
+                                    : "brew install ollama → ollama pull hermes3")
+                }
+            }
+
+            // Ollama 선택 시 모델 설정
+            if aiService.provider == .hermes {
+                settingsCard("Hermes 모델 설정") {
+                    VStack(alignment: .leading, spacing: 12) {
+                        if !aiService.ollamaModels.isEmpty {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("설치된 모델")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundStyle(.secondary)
+                                ForEach(aiService.ollamaModels, id: \.self) { model in
+                                    Button {
+                                        aiService.ollamaModel = model
+                                    } label: {
+                                        HStack {
+                                            Image(systemName: aiService.ollamaModel == model ? "checkmark.circle.fill" : "circle")
+                                                .foregroundStyle(aiService.ollamaModel == model ? .purple : .secondary)
+                                            Text(model)
+                                                .font(.system(size: 13, design: .monospaced))
+                                            Spacer()
+                                            if model.contains("hermes") || model.contains("nous") {
+                                                Text("추천")
+                                                    .font(.system(size: 10))
+                                                    .foregroundStyle(.purple)
+                                                    .padding(.horizontal, 6)
+                                                    .padding(.vertical, 2)
+                                                    .background(Capsule().fill(Color.purple.opacity(0.1)))
+                                            }
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        } else {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Hermes 모델이 없습니다. 아래 명령어로 설치하세요:")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(.secondary)
+                                HStack(spacing: 8) {
+                                    Text("ollama pull hermes3")
+                                        .font(.system(size: 12, design: .monospaced))
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 6)
+                                        .background(RoundedRectangle(cornerRadius: 6).fill(Color.secondary.opacity(0.1)))
+                                    Button {
+                                        #if os(macOS)
+                                        NSPasteboard.general.clearContents()
+                                        NSPasteboard.general.setString("ollama pull hermes3", forType: .string)
+                                        #endif
+                                    } label: {
+                                        Image(systemName: "doc.on.doc")
+                                            .font(.system(size: 12))
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .help("복사")
+                                }
+                                Text("권장: hermes3 (8B), nous-hermes-2-mixtral (더 강력, 48GB RAM 필요)")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.tertiary)
+                            }
+                        }
+
+                        Divider()
+
+                        Button {
+                            Task { await aiService.checkOllamaAvailability() }
+                        } label: {
+                            Label("Ollama 상태 새로고침", systemImage: "arrow.clockwise")
+                                .font(.system(size: 12))
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    }
                 }
             }
 
@@ -371,7 +457,12 @@ struct SettingsView: View {
 
     private func aiProviderRow(_ provider: AIProvider) -> some View {
         let isSelected = aiService.provider == provider
-        let isAvailable: Bool = provider == .claude ? aiService.claudeAvailable : aiService.codexAvailable
+        let isAvailable: Bool
+        switch provider {
+        case .claude: isAvailable = aiService.claudeAvailable
+        case .codex:  isAvailable = aiService.codexAvailable
+        case .hermes: isAvailable = aiService.ollamaAvailable
+        }
 
         return Button {
             aiService.provider = provider
@@ -428,6 +519,7 @@ struct SettingsView: View {
         switch provider {
         case .claude: return String(localized: "settings.ai.claude.desc")
         case .codex:  return String(localized: "settings.ai.codex.desc")
+        case .hermes: return "Ollama로 로컬 실행되는 오픈소스 LLM. 완전 프라이빗, 무료."
         }
     }
 
@@ -628,6 +720,133 @@ struct SettingsView: View {
     }
 
     // MARK: - Advanced Section
+
+    // MARK: - 사용자 컨텍스트 섹션
+
+    @State private var contextEditMode: Bool = false
+
+    private var contextSection: some View {
+        VStack(alignment: .leading, spacing: 22) {
+            sectionHeader("AI 초개인화 컨텍스트",
+                          subtitle: "AI가 당신에 대해 알고 있는 정보를 확인하고 관리하세요",
+                          icon: "brain.head.profile")
+
+            // 현재 파악된 정보 요약
+            settingsCard("AI가 파악한 내 정보") {
+                VStack(alignment: .leading, spacing: 12) {
+                    if userContextService.contextSummary.isEmpty {
+                        HStack(spacing: 8) {
+                            Image(systemName: "info.circle")
+                                .foregroundStyle(.secondary)
+                            Text("아직 대화를 충분히 나누지 않았어요.\nAI와 대화하면 자동으로 채워집니다.")
+                                .font(.system(size: 12))
+                                .foregroundStyle(.secondary)
+                        }
+                    } else {
+                        Text(userContextService.contextSummary)
+                            .font(.system(size: 12))
+                            .foregroundStyle(.primary)
+                            .lineLimit(8)
+                    }
+
+                    Divider()
+
+                    HStack(spacing: 12) {
+                        Button {
+                            openURL(URL(fileURLWithPath: userContextService.contextFilePath))
+                        } label: {
+                            Label("파일 열기", systemImage: "doc.text")
+                                .font(.system(size: 11, weight: .medium))
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+
+                        Button {
+                            // Finder에서 보기
+                            #if os(macOS)
+                            NSWorkspace.shared.selectFile(userContextService.contextFilePath, inFileViewerRootedAtPath: "")
+                            #endif
+                        } label: {
+                            Label("Finder에서 보기", systemImage: "folder")
+                                .font(.system(size: 11, weight: .medium))
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+
+                        Spacer()
+
+                        Text(userContextService.contextFilePath.components(separatedBy: "/").last ?? "")
+                            .font(.system(size: 10, design: .monospaced))
+                            .foregroundStyle(.tertiary)
+                            .lineLimit(1)
+                    }
+                }
+            }
+
+            // 외부 검색 지원 목록
+            settingsCard("지원하는 시험/자격증 자동 검색") {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("AI가 아래 키워드를 대화에서 감지하면 자동으로 외부 정보를 검색해 일정 추천에 활용합니다.")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+
+                    let exams = ["정보처리기사 (정처기)", "TOEIC (토익)", "TOEFL (토플)",
+                                 "공무원 시험", "한국사능력검정", "SQLD", "정보보안기사",
+                                 "리눅스마스터", "수능", "AWS 자격증", "CPA", "세무사"]
+
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 130))], spacing: 6) {
+                        ForEach(exams, id: \.self) { exam in
+                            HStack(spacing: 4) {
+                                Image(systemName: "magnifyingglass")
+                                    .font(.system(size: 9))
+                                    .foregroundStyle(.blue)
+                                Text(exam)
+                                    .font(.system(size: 11))
+                            }
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(RoundedRectangle(cornerRadius: 5).fill(Color.blue.opacity(0.06)))
+                        }
+                    }
+                }
+            }
+
+            // 작동 방식 안내
+            settingsCard("작동 방식") {
+                VStack(alignment: .leading, spacing: 8) {
+                    contextHowItWorksRow(icon: "message", color: .blue,
+                        title: "대화 분석",
+                        desc: "AI와 대화할 때마다 직업, 목표, 계획 스타일을 자동으로 파악합니다")
+                    contextHowItWorksRow(icon: "magnifyingglass.circle", color: .orange,
+                        title: "외부 정보 검색",
+                        desc: "시험 준비 중이라면 일정, 과목, 합격 기준을 자동으로 검색해 캐싱합니다")
+                    contextHowItWorksRow(icon: "brain", color: .purple,
+                        title: "초개인화 추천",
+                        desc: "파악된 정보를 바탕으로 일정 추천, 공부 계획, 시간 배분을 최적화합니다")
+                    contextHowItWorksRow(icon: "checkmark.square", color: .green,
+                        title: "계획 스타일 학습",
+                        desc: "할일을 세부적으로 작성하는지 간략히 쓰는지 파악해 맞춤 제안을 드립니다")
+                }
+            }
+        }
+        .padding(24)
+    }
+
+    private func contextHowItWorksRow(icon: String, color: Color, title: String, desc: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 14))
+                .foregroundStyle(color)
+                .frame(width: 24)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 12, weight: .semibold))
+                Text(desc)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
 
     private var advancedSection: some View {
         VStack(alignment: .leading, spacing: 22) {

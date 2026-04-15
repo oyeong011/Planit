@@ -34,6 +34,7 @@ struct MainCalendarView: View {
     @StateObject private var goalService: GoalService
     @StateObject private var reviewService: ReviewService
     @StateObject private var notificationService = NotificationService()
+    @StateObject private var userContextService = UserContextService()
     @State private var showLeftPanel: Bool = true
     @State private var leftPanelMode: LeftPanelMode = .chat
     @State private var showSettings: Bool = false
@@ -43,10 +44,8 @@ struct MainCalendarView: View {
         self._newTodoTitle = newTodoTitle
         let vm = CalendarViewModel(authManager: authManager)
         self._viewModel = StateObject(wrappedValue: vm)
-        self._aiService = StateObject(wrappedValue: AIService(
-            authManager: authManager,
-            calendarService: vm.googleService
-        ))
+        let ai = AIService(authManager: authManager, calendarService: vm.googleService)
+        self._aiService = StateObject(wrappedValue: ai)
         let gs = GoalService()
         vm.goalService = gs
         self._goalService = StateObject(wrappedValue: gs)
@@ -80,9 +79,20 @@ struct MainCalendarView: View {
         .onAppear {
             checkLeftPanelMode()
             scheduleNotifications()
+            // 초개인화: aiService에 컨텍스트 서비스 주입
+            aiService.userContextService = userContextService
+            // 할일 패턴으로 계획 스타일 분석
+            let todoTitles = viewModel.todos.map(\.title)
+            let eventTitles = viewModel.calendarEvents.prefix(30).map(\.title)
+            userContextService.analyzePlanningStyle(todos: todoTitles, events: Array(eventTitles))
         }
         .onChange(of: viewModel.calendarEvents) {
             updateEventReminders()
+        }
+        .onChange(of: viewModel.todos.count) {
+            // 할일 패턴 변화 시 계획 스타일 재분석
+            let todoTitles = viewModel.todos.map(\.title)
+            userContextService.analyzePlanningStyle(todos: todoTitles, events: [])
         }
         .sheet(isPresented: $showSettings) {
             SettingsView(
@@ -90,6 +100,7 @@ struct MainCalendarView: View {
                 authManager: authManager,
                 aiService: aiService,
                 viewModel: viewModel,
+                userContextService: userContextService,
                 onDismiss: { showSettings = false }
             )
         }

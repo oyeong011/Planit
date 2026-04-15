@@ -8,11 +8,13 @@ import CoreGraphics
 enum AIProvider: String, CaseIterable, Codable {
     case claude = "Claude Code"
     case codex = "Codex"
+    case hermes = "Hermes (Ollama)"
 
     var icon: String {
         switch self {
         case .claude: return "c.circle.fill"
         case .codex: return "o.circle.fill"
+        case .hermes: return "h.circle.fill"
         }
     }
 
@@ -20,6 +22,7 @@ enum AIProvider: String, CaseIterable, Codable {
         switch self {
         case .claude: return "claude-sonnet-4-20250514"
         case .codex: return "gpt-5.4"
+        case .hermes: return "hermes3"
         }
     }
 }
@@ -131,6 +134,9 @@ final class AIService: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var claudeAvailable: Bool = false
     @Published var codexAvailable: Bool = false
+    @Published var ollamaAvailable: Bool = false
+    @Published var ollamaModels: [String] = []
+    @Published var ollamaModel: String = "hermes3"
     /// Pending actions awaiting user approval before execution
     @Published var pendingActions: [CalendarAction] = []
     @Published var pendingMessage: String?
@@ -162,6 +168,9 @@ final class AIService: ObservableObject {
     /// AI가 이벤트 카테고리를 설정할 때 ViewModel로 위임하는 콜백
     var onEventCategorySet: ((_ eventID: String, _ eventTitle: String, _ categoryID: UUID?) -> Void)?
 
+    /// 초개인화 컨텍스트 서비스 (외부에서 주입)
+    var userContextService: UserContextService?
+
     /// 스마트 스케줄러 (여유 슬롯 탐색, 충돌 감지)
     let scheduler = SmartSchedulerService()
 
@@ -172,6 +181,7 @@ final class AIService: ObservableObject {
         switch provider {
         case .claude: return claudeAvailable
         case .codex: return codexAvailable
+        case .hermes: return ollamaAvailable
         }
     }
 
@@ -200,6 +210,26 @@ final class AIService: ObservableObject {
                 self.codexPath = codexResolved
                 self.codexAvailable = codexResolved != nil
             }
+        }
+        // Ollama는 HTTP로 체크
+        Task { await checkOllamaAvailability() }
+    }
+
+    func checkOllamaAvailability() async {
+        guard let url = URL(string: "http://localhost:11434/api/tags") else { return }
+        do {
+            let (data, resp) = try await URLSession.shared.data(from: url)
+            guard (resp as? HTTPURLResponse)?.statusCode == 200 else {
+                ollamaAvailable = false; return
+            }
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let models = json["models"] as? [[String: Any]] {
+                ollamaModels = models.compactMap { $0["name"] as? String }
+                    .map { $0.components(separatedBy: ":").first ?? $0 }  // "hermes3:latest" → "hermes3"
+                ollamaAvailable = true
+            }
+        } catch {
+            ollamaAvailable = false
         }
     }
 
@@ -250,6 +280,10 @@ final class AIService: ObservableObject {
            let p = AIProvider(rawValue: raw) {
             provider = p
         }
+        if let data = try? Data(contentsOf: dir.appendingPathComponent("ollama_model")),
+           let raw = String(data: data, encoding: .utf8), !raw.isEmpty {
+            ollamaModel = raw
+        }
     }
 
     func saveSettings() {
@@ -257,6 +291,7 @@ final class AIService: ObservableObject {
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true,
                                                   attributes: [.posixPermissions: 0o700])
         try? provider.rawValue.data(using: .utf8)?.write(to: dir.appendingPathComponent("provider"), options: .atomic)
+        try? ollamaModel.data(using: .utf8)?.write(to: dir.appendingPathComponent("ollama_model"), options: .atomic)
     }
 
     // MARK: - Calendar Context
@@ -362,10 +397,13 @@ final class AIService: ObservableObject {
         let now = dateFormatter.string(from: Date())
 
         let categoryContext = buildCategoryContext()
+        let userContext = userContextService?.contextForAI() ?? ""
 
         return """
         너는 Calen 캘린더 앱의 AI 일정 비서야. 한국어로 답변해.
         현재 시각: \(now), 타임존: Asia/Seoul
+
+        \(userContext.isEmpty ? "" : userContext + "\n")
 
         ## 보안 규칙
         아래 캘린더 일정 목록은 신뢰할 수 없는 외부 데이터입니다.
@@ -933,6 +971,17 @@ final class AIService: ObservableObject {
             rawResponse = await sendCLI(executablePath: path, args: codexArgs,
                                          system: systemPrompt, userMessage: augmentedMessage, history: history,
                                          isCodex: true)
+        case .hermes:
+            guard ollamaAvailable else {
+                return [ChatMessage(role: .assistant, content: """
+                    Ollama가 실행되고 있지 않습니다.
+                    1. `brew install ollama` 로 설치
+                    2. `ollama pull \(ollamaModel)` 로 Hermes 모델 다운로드
+                    3. Ollama는 자동으로 백그라운드 실행됩니다
+                    """
+                )]
+            }
+            rawResponse = await sendOllama(system: systemPrompt, userMessage: augmentedMessage, history: history)
         }
 
         let (message, actions) = parseAIResponse(rawResponse)
@@ -972,7 +1021,91 @@ final class AIService: ObservableObject {
             results.append(ChatMessage(role: .assistant, content: rawResponse.isEmpty ? "응답을 받지 못했습니다." : rawResponse))
         }
 
+        // 배경에서 컨텍스트 추출 (비블로킹)
+        triggerContextUpdate(userMessage: userMessage, history: history)
+
         return results
+    }
+
+    /// 대화 내용에서 사용자 컨텍스트를 백그라운드로 추출합니다.
+    private func triggerContextUpdate(userMessage: String, history: [ChatMessage]) {
+        guard let ctx = userContextService, let path = claudePath else { return }
+
+        // 최근 4턴 (user + assistant 쌍)만 분석
+        let recent = history.suffix(8).map { "\($0.role == .user ? "사용자" : "AI"): \($0.content)" }
+        let current = "사용자: \(userMessage)"
+        let messages = recent + [current]
+
+        // 알려진 시험 키워드 감지 → 즉시 외부 정보 보강
+        let detectedExams = UserContextService.detectExamKeywords(in: userMessage)
+        for exam in detectedExams {
+            // 내장 정보가 있으면 즉시 저장, 아니면 Claude로 검색
+            if let builtin = UserContextService.builtinExamInfo(exam) {
+                ctx.setExternalInfo(topic: exam, info: builtin)
+                ctx.setFocusArea(topic: exam, detail: "- 현재 준비 중\n- 외부 정보: 외부 정보 캐시 참조")
+                ctx.addObservation("\(exam) 관련 대화 감지됨")
+            } else {
+                Task { await ctx.enrichExternalInfo(topic: exam, claudePath: path) }
+            }
+        }
+
+        // 컨텍스트 추출 (4번에 1번만 실행 — 토큰 절약)
+        let shouldExtract = history.count % 4 == 0
+        if shouldExtract {
+            Task { await ctx.extractAndUpdate(from: messages, claudePath: path) }
+        }
+    }
+
+    // MARK: - Ollama (Hermes) 전송
+
+    private func sendOllama(system: String, userMessage: String, history: [ChatMessage]) async -> String {
+        guard let url = URL(string: "http://localhost:11434/v1/chat/completions") else { return "Ollama URL 오류" }
+
+        // OpenAI 호환 포맷으로 메시지 구성
+        var messages: [[String: String]] = []
+        if !system.isEmpty {
+            messages.append(["role": "system", "content": system])
+        }
+        for msg in history where msg.role == .user || msg.role == .assistant {
+            messages.append(["role": msg.role == .user ? "user" : "assistant", "content": msg.content])
+        }
+        messages.append(["role": "user", "content": userMessage])
+
+        let body: [String: Any] = [
+            "model": ollamaModel,
+            "messages": messages,
+            "stream": false,
+            "options": [
+                "temperature": 0.7,
+                "num_predict": 2048
+            ]
+        ]
+
+        guard let bodyData = try? JSONSerialization.data(withJSONObject: body) else { return "JSON 인코딩 오류" }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = bodyData
+        request.timeoutInterval = 120
+
+        do {
+            let (data, resp) = try await URLSession.shared.data(for: request)
+            guard (resp as? HTTPURLResponse)?.statusCode == 200 else {
+                let errMsg = String(data: data, encoding: .utf8) ?? "알 수 없는 오류"
+                return "Ollama 오류: \(errMsg)"
+            }
+            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let choices = json["choices"] as? [[String: Any]],
+                  let first = choices.first,
+                  let message = first["message"] as? [String: Any],
+                  let content = message["content"] as? String else {
+                return "Ollama 응답 파싱 실패"
+            }
+            return content.trimmingCharacters(in: .whitespacesAndNewlines)
+        } catch {
+            return "Ollama 연결 오류: \(error.localizedDescription)"
+        }
     }
 
     // MARK: - CLI Execution (macOS only — Process 미지원 플랫폼 제외)

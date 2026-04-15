@@ -234,10 +234,6 @@
 "energy.type.balanced" = "균형형";
 
 /* ===== Aggressiveness ===== */
-"aggressiveness.manual" = "수동";
-"aggressiveness.assist" = "보조";
-"aggressiveness.semiauto" = "반자동";
-"aggressiveness.auto" = "자동";
 
 /* ===== Settings View ===== */
 "settings.title" = "설정";
@@ -388,3 +384,8 @@
 "setup.complete" = "모두 완료! 이제 AI와 대화를 시작해보세요.";
 "setup.installed" = "설치됨";
 "setup.copy.command" = "설치 명령어 복사";
+"review.today.todos" = "오늘의 할 일";
+"review.done.all" = "전체 완료";
+"review.accept.all" = "전부 추가";
+"review.todo.label" = "할 일";
+"settings.section.context" = "AI 컨텍스트";

@@ -388,3 +388,12 @@
 "setup.complete" = "Totul e gata! Poți începe să discuți acum.";
 "setup.installed" = "Instalat";
 "setup.copy.command" = "Copiază comanda de instalare";
+"review.today.todos" = "Today's Todos";
+"review.done.all" = "Mark All Done";
+"review.accept.all" = "Accept All";
+"review.todo.label" = "Todo";
+"review.plan.complete.title" = "Tomorrow's Plan Ready";
+"review.help.done" = "Done";
+"review.help.tomorrow" = "Move to Tomorrow";
+"review.help.skip" = "Skip";
+"settings.section.context" = "AI Context";

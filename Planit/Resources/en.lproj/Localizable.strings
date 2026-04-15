@@ -234,10 +234,6 @@
 "energy.type.balanced" = "Balanced";
 
 /* ===== Aggressiveness ===== */
-"aggressiveness.manual" = "Manual";
-"aggressiveness.assist" = "Assist";
-"aggressiveness.semiauto" = "Semi-Auto";
-"aggressiveness.auto" = "Auto";
 
 /* ===== Settings View ===== */
 "settings.title" = "Settings";
@@ -388,3 +384,8 @@
 "setup.complete" = "All set! You can start chatting now.";
 "setup.installed" = "Installed";
 "setup.copy.command" = "Copy install command";
+"review.today.todos" = "Today's Todos";
+"review.done.all" = "Mark All Done";
+"review.accept.all" = "Accept All";
+"review.todo.label" = "Todo";
+"settings.section.context" = "AI Context";

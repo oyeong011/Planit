@@ -840,6 +840,7 @@ struct ProviderRow: View {
         switch provider {
         case .claude: return aiService.claudeAvailable
         case .codex: return aiService.codexAvailable
+        case .hermes: return aiService.ollamaAvailable
         }
     }
 
@@ -847,6 +848,7 @@ struct ProviderRow: View {
         switch provider {
         case .claude: return aiService.claudeAvailable ? String(localized: "ai.provider.installed") : String(localized: "ai.provider.not.installed")
         case .codex: return aiService.codexAvailable ? String(localized: "ai.provider.installed") : String(localized: "ai.provider.not.installed")
+        case .hermes: return aiService.ollamaAvailable ? "Ollama 실행 중" : "Ollama 미실행"
         }
     }
 
