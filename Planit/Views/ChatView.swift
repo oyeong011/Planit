@@ -645,8 +645,18 @@ struct ChatView: View {
         let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty || !attachments.isEmpty else { return }
 
-        // ViewModel의 캐시 이벤트를 AIService에 주입 (API 재호출 방지)
+        // ViewModel의 캐시 이벤트 + 카테고리를 AIService에 주입
         aiService.cachedCalendarEvents = viewModel.calendarEvents
+        aiService.cachedCategories = viewModel.categories
+
+        // 할일 생성 콜백 연결 (AIService → ViewModel)
+        aiService.onTodoCreate = { title, categoryID, date in
+            viewModel.addTodo(title: title, categoryID: categoryID, date: date)
+        }
+        // 이벤트 카테고리 설정 콜백 연결
+        aiService.onEventCategorySet = { eventID, eventTitle, categoryID in
+            viewModel.setEventCategory(eventID: eventID, eventTitle: eventTitle, categoryID: categoryID)
+        }
 
         let currentAttachments = attachments
         let displayText = text.isEmpty
