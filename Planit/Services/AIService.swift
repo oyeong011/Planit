@@ -92,14 +92,18 @@ struct ChatMessage: Identifiable {
 // MARK: - Calendar Action
 
 struct CalendarAction: Codable {
-    let action: String       // "create" | "createTodo" | "update" | "delete"
+    let action: String
+    // "create" | "createTodo" | "update" | "delete"
+    // "findFreeSlot" | "blockTime" | "analyzeLoad"
     let title: String?
     let startDate: String?   // ISO8601 (캘린더 이벤트용)
     let endDate: String?
     let eventId: String?
     let isAllDay: Bool?
     let categoryName: String?  // 카테고리 이름 (앱 내 카테고리와 매칭)
-    let date: String?          // yyyy-MM-dd (createTodo 전용)
+    let date: String?          // yyyy-MM-dd (createTodo / findFreeSlot 전용)
+    let durationMinutes: Int?  // findFreeSlot / blockTime 전용 (분 단위)
+    let preferredTime: String? // "morning" | "afternoon" | "evening"
 }
 
 struct AIResponseWithActions: Codable {
@@ -145,6 +149,9 @@ final class AIService: ObservableObject {
 
     /// AI가 이벤트 카테고리를 설정할 때 ViewModel로 위임하는 콜백
     var onEventCategorySet: ((_ eventID: String, _ eventTitle: String, _ categoryID: UUID?) -> Void)?
+
+    /// 스마트 스케줄러 (여유 슬롯 탐색, 충돌 감지)
+    let scheduler = SmartSchedulerService()
 
     nonisolated(unsafe) private static let cliTimeout: TimeInterval = 90
     nonisolated(unsafe) private static let maxOutputBytes = 1_048_576  // 1 MB
@@ -316,7 +323,17 @@ final class AIService: ObservableObject {
         }
         context += "\n오늘: \(dayFmt.string(from: Date()))\n"
 
-        return (String(context.prefix(20_000)), ids)
+        // 향후 7일 일정 밀도 + 여유 슬롯 분석
+        let analysisSource = sourceEvents.isEmpty ? [] : sourceEvents
+        if !analysisSource.isEmpty || !cachedCalendarEvents.isEmpty {
+            let eventsForAnalysis = cachedCalendarEvents.isEmpty ? analysisSource : cachedCalendarEvents
+            let today = cal.startOfDay(for: Date())
+            let dates = (0..<7).compactMap { cal.date(byAdding: .day, value: $0, to: today) }
+            let scheduleCtx = scheduler.buildScheduleContext(events: eventsForAnalysis, for: dates)
+            context += "\n\(scheduleCtx)\n"
+        }
+
+        return (String(context.prefix(24_000)), ids)
     }
 
     private func buildCategoryContext() -> String {
@@ -365,6 +382,14 @@ final class AIService: ObservableObject {
         - 새 일정의 시간대가 기존 일정과 겹치는지 확인해 (겹침 = 새 시작 < 기존 종료 AND 새 종료 > 기존 시작)
         - 겹치면 message에 "[기존 일정 제목] (HH:mm~HH:mm)과 시간이 겹칩니다" 경고 포함
         - 종일 일정끼리의 겹침은 경고하지 않아도 됨
+
+        ## 스마트 스케줄링 (Motion/Morgen 스타일)
+        - "비어있는 시간에 잡아줘", "적당한 시간에 넣어줘", "여유 시간에 배치해줘" → findFreeSlot 사용
+        - "집중 블록 잡아줘", "딥워크 시간 만들어줘", "방해 없는 시간 예약해줘" → blockTime 사용
+        - "이번 주 어느 날이 여유 있어?", "가장 한가한 날은?" → 위 밀도 분석 텍스트 보고 텍스트로 답변
+        - findFreeSlot/blockTime은 내가 직접 최적 시간을 계산해서 실행함 — 사용자가 시간을 몰라도 됨
+        - "언제 미팅 잡을까?", "X요일 괜찮아?" → 밀도 분석 참고해서 조언
+        - 여유 슬롯이 없으면 다음날 또는 더 여유로운 날 제안
 
         ## 일정 생성
         - 제목은 사용자가 말한 핵심만 간결하게 (예: "친구랑 밥먹기로 했어" → "친구 식사")
@@ -417,6 +442,14 @@ final class AIService: ObservableObject {
         - delete: eventId(필수) — 예: {"action":"delete","eventId":"abc123"}
         - update: eventId(필수) + 변경할 필드만 (title, startDate, endDate, isAllDay 중 변경분만)
           시간 이동 시 반드시 startDate와 endDate 둘 다 포함 (duration 유지)
+        - findFreeSlot: durationMinutes(필수), title(필수), date(선택, yyyy-MM-dd — 없으면 오늘부터 탐색),
+          preferredTime(선택, "morning"|"afternoon"|"evening"), categoryName(선택)
+          앱이 최적 여유 시간을 자동으로 찾아서 Google Calendar에 생성함
+          예: {"action":"findFreeSlot","title":"코드 리뷰","durationMinutes":60,"preferredTime":"morning"}
+        - blockTime: durationMinutes(필수), title(필수, 기본 "집중 블록"), date(선택),
+          preferredTime(선택, 기본 "morning"), categoryName(선택)
+          딥워크/집중 시간 블록 자동 배치 — findFreeSlot과 동일하게 동작하지만 의미가 명확함
+          예: {"action":"blockTime","title":"딥워크","durationMinutes":120,"preferredTime":"morning"}
 
         날짜 형식: ISO8601 with timezone (+09:00)
 
@@ -489,6 +522,74 @@ final class AIService: ObservableObject {
             }
 
             switch action.action {
+            case "findFreeSlot", "blockTime":
+                let rawTitle = String((action.title ?? (action.action == "blockTime" ? "집중 블록" : "")).prefix(500))
+                guard !rawTitle.isEmpty else {
+                    results.append(ChatMessage(role: .toolCall, content: "\(action.action) 실패: 제목 없음"))
+                    continue
+                }
+                let durationMins = action.durationMinutes ?? 60
+
+                // 선호 날짜 파싱
+                var preferredDate: Date? = nil
+                if let dateStr = action.date {
+                    let df = DateFormatter()
+                    df.dateFormat = "yyyy-MM-dd"
+                    df.timeZone = TimeZone.current
+                    preferredDate = df.date(from: dateStr)
+                }
+
+                // 스케줄러로 최적 슬롯 탐색
+                let slot = scheduler.suggestBestSlot(
+                    events: cachedCalendarEvents,
+                    durationMinutes: durationMins,
+                    preferredDate: preferredDate,
+                    preferredTime: action.preferredTime
+                )
+
+                guard let slot = slot else {
+                    let searchDate: String = {
+                        if let d = preferredDate {
+                            let df = DateFormatter(); df.dateFormat = "M/d"; return df.string(from: d)
+                        }
+                        return "오늘"
+                    }()
+                    results.append(ChatMessage(role: .toolCall, content: "\(rawTitle): \(searchDate) 기준 \(durationMins)분 이상 여유 슬롯 없음. 다른 날짜를 시도하세요."))
+                    continue
+                }
+
+                // 충돌 재확인 (스케줄러가 이미 비교하지만 이중 체크)
+                let conflicts = scheduler.detectConflicts(start: slot.start, end: slot.end, in: cachedCalendarEvents)
+                if !conflicts.isEmpty {
+                    let names = conflicts.map { $0.title }.joined(separator: ", ")
+                    results.append(ChatMessage(role: .toolCall, content: "\(rawTitle): 선택된 슬롯이 [\(names)]과 겹칩니다."))
+                    continue
+                }
+
+                do {
+                    let created = try await service.createEvent(
+                        title: rawTitle,
+                        startDate: slot.start,
+                        endDate: slot.end,
+                        isAllDay: false
+                    )
+                    // 카테고리 적용
+                    if let eventID = created?.id, let catName = action.categoryName,
+                       let catID = cachedCategories.first(where: { $0.name == catName })?.id {
+                        onEventCategorySet?(eventID, rawTitle, catID)
+                    }
+                    invalidateContextCache()
+                    let timeFmt = DateFormatter()
+                    timeFmt.dateFormat = "M/d HH:mm"
+                    timeFmt.timeZone = TimeZone(identifier: "Asia/Seoul")
+                    let catLabel = action.categoryName.map { " (\($0))" } ?? ""
+                    results.append(ChatMessage(role: .toolCall,
+                        content: "\(action.action == "blockTime" ? "블록" : "일정") 생성: \(rawTitle)\(catLabel) — \(timeFmt.string(from: slot.start))~\(timeFmt.string(from: slot.end))"))
+                } catch {
+                    let msg = Self.calendarErrorMessage(error)
+                    results.append(ChatMessage(role: .toolCall, content: "\(action.action) 실패: \(msg)"))
+                }
+
             case "createTodo":
                 let rawTitle = String((action.title ?? "").prefix(500))
                 guard !rawTitle.isEmpty else {
@@ -670,7 +771,9 @@ final class AIService: ObservableObject {
                 eventId: obj["eventId"] as? String ?? obj["event_id"] as? String ?? obj["id"] as? String,
                 isAllDay: obj["isAllDay"] as? Bool ?? obj["is_all_day"] as? Bool ?? obj["allDay"] as? Bool,
                 categoryName: obj["categoryName"] as? String ?? obj["category"] as? String,
-                date: obj["date"] as? String
+                date: obj["date"] as? String,
+                durationMinutes: obj["durationMinutes"] as? Int ?? obj["duration_minutes"] as? Int ?? obj["duration"] as? Int,
+                preferredTime: obj["preferredTime"] as? String ?? obj["preferred_time"] as? String
             )
         }
 
@@ -783,8 +886,10 @@ final class AIService: ObservableObject {
         var results: [ChatMessage] = []
 
         if let actions = actions, !actions.isEmpty {
-            // create / createTodo는 즉시 실행, delete/update만 승인 요청
-            let safeActions  = actions.filter { $0.action == "create" || $0.action == "createTodo" }
+            // create / createTodo / findFreeSlot / blockTime은 즉시 실행, delete/update는 승인 요청
+            let safeActions  = actions.filter {
+                ["create", "createTodo", "findFreeSlot", "blockTime"].contains($0.action)
+            }
             let riskyActions = actions.filter { $0.action == "delete" || $0.action == "update" }
 
             if !message.isEmpty {

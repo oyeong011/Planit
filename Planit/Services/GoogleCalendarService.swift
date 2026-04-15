@@ -16,6 +16,7 @@ final class GoogleCalendarService {
 
     func clearCache() {
         cachedCalendars = nil
+        needsReauth = false
     }
 
     // MARK: - Color mapping (Google Calendar colorId → Color)
@@ -48,8 +49,11 @@ final class GoogleCalendarService {
         var isWritable: Bool { accessRole == "owner" || accessRole == "writer" }
     }
 
+    /// calendarList 스코프가 없을 때 true — UI에서 재로그인 안내에 사용
+    private(set) var needsReauth: Bool = false
+
     /// 사용자가 구독 중인 모든 캘린더 목록을 가져옴 (세션 캐시)
-    /// calendarList 스코프가 없으면 primary 캘린더만 반환 (graceful fallback)
+    /// calendarList 스코프가 없으면 primary 캘린더만 반환 + needsReauth = true
     func fetchCalendarList() async throws -> [GoogleCalendarInfo] {
         if let cached = cachedCalendars { return cached }
 
@@ -66,9 +70,10 @@ final class GoogleCalendarService {
         let (data, response) = try await URLSession.shared.data(for: request)
         let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
 
-        // 스코프 없으면 (403) primary만 반환 — 기존 OAuth 토큰 호환
+        // 스코프 없으면 (403) primary만 반환 — 재로그인 필요 플래그 설정
         if statusCode == 403 || statusCode == 401 {
-            print("[Calen] calendarList 스코프 없음 — primary 캘린더만 사용")
+            print("[Calen] calendarList 스코프 없음 — primary 캘린더만 사용, 재로그인 필요")
+            needsReauth = true
             let primary = GoogleCalendarInfo(id: "primary", name: "Google", color: Self.defaultColor, accessRole: "owner")
             cachedCalendars = [primary]
             return [primary]

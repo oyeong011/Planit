@@ -48,6 +48,8 @@ final class CalendarViewModel: ObservableObject {
     }
     @Published var appleRemindersAccessGranted: Bool = false
     @Published var appleReminders: [TodoItem] = []
+    /// calendarList 스코프 없을 때 true → UI에서 재로그인 배너 표시
+    @Published var needsReauth: Bool = false
 
     // MARK: - Services
 
@@ -382,20 +384,37 @@ final class CalendarViewModel: ObservableObject {
             await syncPendingEdits()
 
             do {
-                var events = try await googleService.fetchEvents(for: month)
-                // Google 이벤트에 source 태그 설정
-                for i in events.indices {
-                    events[i].source = .google
+                // 현재 달 + 인접 달(격자에 표시되는 날짜들) 병렬 fetch
+                let prevMonth = calendar.date(byAdding: .month, value: -1, to: month) ?? month
+                let nextMonth = calendar.date(byAdding: .month, value: 1, to: month) ?? month
+
+                async let current = googleService.fetchEvents(for: month)
+                async let prev = googleService.fetchEvents(for: prevMonth)
+                async let next = googleService.fetchEvents(for: nextMonth)
+
+                var merged: [CalendarEvent] = []
+                var seen = Set<String>()
+                for batch in try await [current, prev, next] {
+                    for ev in batch where seen.insert(ev.id).inserted {
+                        merged.append(ev)
+                    }
                 }
-                self.calendarEvents = events
+
+                // Google 이벤트에 source 태그 설정
+                for i in merged.indices {
+                    merged[i].source = .google
+                }
+                self.calendarEvents = merged
                 self.isOffline = false
-                cacheEvents(events)
+                self.needsReauth = googleService.needsReauth
+                cacheEvents(merged)
                 // Apple Calendar 이벤트 병합
                 mergeAppleCalendarEvents(for: month)
                 applyEventCategoryMappings()
             } catch {
                 print("[Calen] Google Calendar fetch failed — using cached data")
                 self.isOffline = true
+                self.needsReauth = googleService.needsReauth
                 loadCachedEvents()
                 // 오프라인에서도 Apple Calendar 병합
                 mergeAppleCalendarEvents(for: month)

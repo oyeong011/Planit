@@ -228,10 +228,27 @@ struct CalendarGridView: View {
                     .font(.system(size: 28, weight: .bold))
 
                 if viewModel.authManager.isAuthenticated {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.green)
-                        .help(String(localized: "calendar.help.google.connected"))
+                    if viewModel.needsReauth {
+                        Button {
+                            viewModel.authManager.logout()
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "exclamationmark.circle.fill")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(.orange)
+                                Text("캘린더 권한 업데이트 필요")
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(.orange)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .help("일부 캘린더가 표시되지 않습니다. 탭하여 재로그인 → 전체 캘린더 권한 허용")
+                    } else {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.green)
+                            .help(String(localized: "calendar.help.google.connected"))
+                    }
                 }
 
                 Spacer()
