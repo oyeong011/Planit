@@ -1,4 +1,9 @@
 import SwiftUI
+#if os(macOS)
+import AppKit
+#elseif os(iOS)
+import UIKit
+#endif
 
 // MARK: - Platform Color Shims
 //
@@ -49,7 +54,7 @@ extension Color {
 func openURL(_ url: URL) {
     #if os(macOS)
     NSWorkspace.shared.open(url)
-    #else
+    #elseif os(iOS)
     UIApplication.shared.open(url)
     #endif
 }
@@ -65,12 +70,14 @@ extension Color {
         let g = Int(components.greenComponent * 255)
         let b = Int(components.blueComponent * 255)
         return String(format: "#%02X%02X%02X", r, g, b)
-        #else
+        #elseif os(iOS)
         guard let components = UIColor(self).cgColor.components, components.count >= 3 else { return "#6699FF" }
         let r = Int(components[0] * 255)
         let g = Int(components[1] * 255)
         let b = Int(components[2] * 255)
         return String(format: "#%02X%02X%02X", r, g, b)
+        #else
+        return "#6699FF"
         #endif
     }
 }

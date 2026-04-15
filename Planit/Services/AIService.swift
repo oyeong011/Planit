@@ -1,5 +1,7 @@
 import Foundation
 import PDFKit
+import ImageIO
+import CoreGraphics
 
 // MARK: - Provider
 
