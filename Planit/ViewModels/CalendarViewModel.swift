@@ -158,28 +158,20 @@ final class CalendarViewModel: ObservableObject {
         }
     }
 
-    /// 자정/정오 감지해서 롤오버 및 리뷰 실행
+    /// 자정(00:00) 날짜 변경 감지 → 재배치 실행
     private func observeDateChange() {
         var lastDay = Calendar.current.startOfDay(for: Date())
         dateChangeTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
             guard let self else { return }
-            let now = Date()
-            let today = Calendar.current.startOfDay(for: now)
-
-            // 날짜 변경 (자정 롤오버)
-            if today > lastDay {
-                lastDay = today
-                Task { @MainActor in
-                    MidnightRolloverService.shared.performIfNeeded(viewModel: self)
-                    self.currentMonth = today
-                    self.selectedDate = today
-                    self.refreshEvents()
-                }
-            } else {
-                // 정오 리뷰 (시간 기반 — 날짜 변경 없어도 체크)
-                Task { @MainActor in
-                    MidnightRolloverService.shared.performIfNeeded(viewModel: self)
-                }
+            let today = Calendar.current.startOfDay(for: Date())
+            guard today > lastDay else { return }
+            lastDay = today
+            Task { @MainActor in
+                // 자정: 미완료 할 일 스마트 재배치
+                MidnightRolloverService.shared.performIfNeeded(viewModel: self)
+                self.currentMonth = today
+                self.selectedDate = today
+                self.refreshEvents()
             }
         }
     }
