@@ -743,6 +743,11 @@ struct ChatView: View {
 struct ChatBubble: View {
     let message: ChatMessage
 
+    /// Markdown 문자열을 AttributedString으로 변환 (실패 시 plain text fallback)
+    static func markdownText(_ raw: String) -> AttributedString {
+        (try? AttributedString(markdown: raw, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))) ?? AttributedString(raw)
+    }
+
     var body: some View {
         HStack {
             if message.role == .user { Spacer(minLength: 20) }
@@ -787,9 +792,9 @@ struct ChatBubble: View {
                             }
                         }
 
-                        // 텍스트
+                        // 텍스트 (Markdown 렌더링)
                         if !message.content.isEmpty {
-                            Text(message.content)
+                            Text(message.role == .assistant ? Self.markdownText(message.content) : AttributedString(message.content))
                                 .font(.system(size: 12))
                                 .textSelection(.enabled)
                         }
