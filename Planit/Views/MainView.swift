@@ -895,9 +895,10 @@ struct ModalTodoDetail: View {
     @State private var editTitle = ""
     @State private var editCategoryID = UUID()
     @State private var editDate = Date()
+    @State private var selectedCategoryID: UUID? = nil
 
     private var category: TodoCategory {
-        viewModel.category(for: todo.categoryID)
+        viewModel.category(for: selectedCategoryID ?? todo.categoryID)
     }
 
     private var dateText: String {
@@ -975,7 +976,9 @@ struct ModalTodoDetail: View {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 6) {
                                 ForEach(viewModel.categories) { cat in
+                                    let isSelected = (selectedCategoryID ?? todo.categoryID) == cat.id
                                     Button {
+                                        selectedCategoryID = cat.id
                                         viewModel.updateTodo(id: todo.id, title: todo.title, categoryID: cat.id)
                                     } label: {
                                         HStack(spacing: 4) {
@@ -983,8 +986,8 @@ struct ModalTodoDetail: View {
                                             Text(cat.name).font(.system(size: 11))
                                         }
                                         .padding(.horizontal, 8).padding(.vertical, 4)
-                                        .background(RoundedRectangle(cornerRadius: 5).fill(todo.categoryID == cat.id ? cat.color.opacity(0.25) : cat.color.opacity(0.08)))
-                                        .foregroundStyle(todo.categoryID == cat.id ? cat.color : .secondary)
+                                        .background(RoundedRectangle(cornerRadius: 5).fill(isSelected ? cat.color.opacity(0.25) : cat.color.opacity(0.08)))
+                                        .foregroundStyle(isSelected ? cat.color : .secondary)
                                     }.buttonStyle(.plain)
                                 }
                             }
@@ -993,6 +996,7 @@ struct ModalTodoDetail: View {
                 }
             }
             .padding(.horizontal, 20).padding(.vertical, 14)
+            .onAppear { selectedCategoryID = todo.categoryID }
 
             Spacer(minLength: 0)
             Divider()
@@ -1286,22 +1290,28 @@ struct TodoRowView: View {
                 .frame(width: 4)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(todo.title)
-                    .font(.system(size: 14, weight: .medium))
-                    .strikethrough(todo.isCompleted)
-                    .foregroundStyle(todo.isCompleted ? .secondary : .primary)
-                HStack(spacing: 4) {
+                HStack(spacing: 6) {
+                    Text(todo.title)
+                        .font(.system(size: 14, weight: .medium))
+                        .strikethrough(todo.isCompleted)
+                        .foregroundStyle(todo.isCompleted ? .secondary : .primary)
                     if todo.source == .appleReminder {
-                        Image(systemName: "bell.fill")
-                            .font(.system(size: 9)).foregroundStyle(.orange)
-                        Text(String(localized: "detail.reminders")).font(.system(size: 11)).foregroundStyle(.orange)
+                        Text(String(localized: "detail.reminders"))
+                            .font(.system(size: 10))
+                            .padding(.horizontal, 5).padding(.vertical, 2)
+                            .background(RoundedRectangle(cornerRadius: 4).fill(Color.orange.opacity(0.15)))
+                            .foregroundStyle(.orange)
                     } else {
-                        Text(category.name).font(.system(size: 11)).foregroundStyle(.secondary)
+                        Text(category.name)
+                            .font(.system(size: 10))
+                            .padding(.horizontal, 5).padding(.vertical, 2)
+                            .background(RoundedRectangle(cornerRadius: 4).fill(category.color.opacity(0.15)))
+                            .foregroundStyle(category.color)
                     }
-                    if todo.isRepeating {
-                        Image(systemName: "arrow.triangle.2.circlepath")
-                            .font(.system(size: 9)).foregroundStyle(.secondary)
-                    }
+                }
+                if todo.isRepeating {
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                        .font(.system(size: 9)).foregroundStyle(.secondary)
                 }
             }
 
