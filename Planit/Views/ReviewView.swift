@@ -26,7 +26,7 @@ struct ReviewView: View {
                 morningView
             }
         }
-        .background(Color(nsColor: .windowBackgroundColor))
+        .background(Color.platformWindowBackground)
     }
 
     // MARK: - Header
@@ -195,7 +195,7 @@ struct ReviewView: View {
             }
         }
         .padding(12)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color(nsColor: .controlBackgroundColor)))
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground))
     }
 
     // MARK: - Suggestions Section
@@ -288,7 +288,7 @@ struct ReviewView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(s.status == .accepted ? colorFor(s.type).opacity(0.06) : Color(nsColor: .controlBackgroundColor))
+                .fill(s.status == .accepted ? colorFor(s.type).opacity(0.06) : Color.platformControlBackground)
         )
     }
 
@@ -428,7 +428,7 @@ struct ReviewView: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
-        .background(RoundedRectangle(cornerRadius: 8).fill(Color(nsColor: .controlBackgroundColor)))
+        .background(RoundedRectangle(cornerRadius: 8).fill(Color.platformControlBackground))
     }
 
     private func statusButton(sfSymbol: String, color: Color, help: String, action: @escaping () -> Void) -> some View {
@@ -550,7 +550,7 @@ struct ReviewView: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
-        .background(RoundedRectangle(cornerRadius: 7).fill(Color(nsColor: .controlBackgroundColor)))
+        .background(RoundedRectangle(cornerRadius: 7).fill(Color.platformControlBackground))
     }
 
     // MARK: - Actions

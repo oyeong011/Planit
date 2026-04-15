@@ -37,7 +37,7 @@ struct LoginView: View {
                         .foregroundStyle(.secondary)
 
                     Button {
-                        NSWorkspace.shared.open(URL(string: "https://console.cloud.google.com/apis/credentials")!)
+                        openURL(URL(string: "https://console.cloud.google.com/apis/credentials")!)
                     } label: {
                         HStack(spacing: 4) {
                             Image(systemName: "arrow.up.right.square")
@@ -75,7 +75,7 @@ struct LoginView: View {
                     .disabled(inputClientID.isEmpty || inputClientSecret.isEmpty)
                 }
                 .padding(16)
-                .background(RoundedRectangle(cornerRadius: 12).fill(Color(nsColor: .controlBackgroundColor)))
+                .background(RoundedRectangle(cornerRadius: 12).fill(Color.platformControlBackground))
                 .padding(.horizontal, 60)
             } else {
                 // Credentials exist → show login button
@@ -129,6 +129,6 @@ struct LoginView: View {
             .padding(.bottom, 24)
         }
         .frame(width: 880, height: 700)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .background(Color.platformWindowBackground)
     }
 }

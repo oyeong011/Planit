@@ -89,7 +89,7 @@ struct OnboardingView: View {
             .padding(.vertical, 10)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .background(Color.platformWindowBackground)
     }
 
     // MARK: - Step 0: Goals
@@ -311,7 +311,7 @@ struct OnboardingView: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
             .background(RoundedRectangle(cornerRadius: 6)
-                .fill(selected ? Color.purple.opacity(0.08) : Color(nsColor: .controlBackgroundColor)))
+                .fill(selected ? Color.purple.opacity(0.08) : Color.platformControlBackground))
             .overlay(RoundedRectangle(cornerRadius: 6)
                 .stroke(selected ? Color.purple.opacity(0.3) : Color.secondary.opacity(0.1), lineWidth: 1))
         }

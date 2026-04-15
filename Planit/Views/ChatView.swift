@@ -48,7 +48,7 @@ struct ChatView: View {
                     }
                 }
                 .padding(2)
-                .background(RoundedRectangle(cornerRadius: 8).fill(Color(nsColor: .controlBackgroundColor)))
+                .background(RoundedRectangle(cornerRadius: 8).fill(Color.platformControlBackground))
 
                 Spacer()
 
@@ -76,7 +76,7 @@ struct ChatView: View {
                 chatContent
             }
         }
-        .background(Color(nsColor: .windowBackgroundColor))
+        .background(Color.platformWindowBackground)
     }
 
     // MARK: - Setup Guide (CLI 미설치 시)
@@ -253,7 +253,7 @@ struct ChatView: View {
         .padding(10)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(done ? Color.green.opacity(0.04) : Color(nsColor: .controlBackgroundColor))
+                .fill(done ? Color.green.opacity(0.04) : Color.platformControlBackground)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 10)
@@ -295,8 +295,12 @@ struct ChatView: View {
                             .lineLimit(1)
                         Spacer(minLength: 0)
                         Button {
+                            #if os(macOS)
                             NSPasteboard.general.clearContents()
                             NSPasteboard.general.setString(cmd, forType: .string)
+                            #else
+                            UIPasteboard.general.string = cmd
+                            #endif
                         } label: {
                             Image(systemName: "doc.on.doc")
                                 .font(.system(size: 10))
@@ -451,7 +455,7 @@ struct ChatView: View {
                         .padding(.vertical, 8)
                         .background(
                             RoundedRectangle(cornerRadius: 8)
-                                .fill(Color(nsColor: .controlBackgroundColor))
+                                .fill(Color.platformControlBackground)
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
@@ -498,7 +502,7 @@ struct ChatView: View {
                     ZStack(alignment: .topTrailing) {
                         VStack(spacing: 2) {
                             if let thumb = att.thumbnail {
-                                Image(nsImage: thumb)
+                                Image(decorative: thumb, scale: 1)
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
                                     .frame(width: 44, height: 44)
@@ -540,6 +544,7 @@ struct ChatView: View {
     // MARK: - File Picker
 
     private func openFilePicker() {
+        #if os(macOS)
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = false
@@ -551,6 +556,8 @@ struct ChatView: View {
         for url in panel.urls {
             addAttachment(url: url)
         }
+        #endif
+        // iOS: PhotosPicker / UIDocumentPickerViewController (향후 구현)
     }
 
     private func addAttachment(url: URL) {
@@ -731,7 +738,7 @@ struct ChatBubble: View {
                             HStack(spacing: 4) {
                                 ForEach(message.attachments) { att in
                                     if let thumb = att.thumbnail {
-                                        Image(nsImage: thumb)
+                                        Image(decorative: thumb, scale: 1)
                                             .resizable()
                                             .aspectRatio(contentMode: .fill)
                                             .frame(width: 60, height: 60)
@@ -765,7 +772,7 @@ struct ChatBubble: View {
                         RoundedRectangle(cornerRadius: 12)
                             .fill(message.role == .user
                                   ? Color.purple.opacity(0.2)
-                                  : Color(nsColor: .controlBackgroundColor))
+                                  : Color.platformControlBackground)
                     )
                 }
             }
@@ -881,6 +888,7 @@ struct ProviderRow: View {
 
 // MARK: - PasteAwareTextField
 
+#if os(macOS)
 struct PasteAwareTextField: NSViewRepresentable {
     @Binding var text: String
     var placeholder: String
@@ -926,4 +934,17 @@ struct PasteAwareTextField: NSViewRepresentable {
         }
     }
 }
+#else
+/// iOS에서는 SwiftUI 기본 TextField 사용 (UIViewRepresentable 불필요)
+struct PasteAwareTextField: View {
+    @Binding var text: String
+    var placeholder: String
+    var onSubmit: () -> Void
+
+    var body: some View {
+        TextField(placeholder, text: $text)
+            .onSubmit { onSubmit() }
+    }
+}
+#endif
 

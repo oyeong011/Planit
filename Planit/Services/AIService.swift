@@ -35,7 +35,8 @@ struct ChatAttachment: Identifiable {
     let type: ChatAttachmentType
     let fileName: String
     /// 이미지 썸네일 (이미지는 원본 축소, PDF는 첫 페이지 렌더)
-    var thumbnail: NSImage?
+    /// CGImage 사용으로 크로스플랫폼 지원
+    var thumbnail: CGImage?
 
     init(url: URL) {
         self.url = url
@@ -46,25 +47,34 @@ struct ChatAttachment: Identifiable {
             self.thumbnail = Self.pdfThumbnail(url: url)
         } else {
             self.type = .image
-            self.thumbnail = NSImage(contentsOf: url)
+            self.thumbnail = Self.imageThumbnail(url: url)
         }
     }
 
-    /// PDF 첫 페이지를 썸네일로 렌더
-    private static func pdfThumbnail(url: URL, size: CGFloat = 80) -> NSImage? {
+    /// 이미지 파일에서 CGImage 로드
+    private static func imageThumbnail(url: URL) -> CGImage? {
+        guard let src = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
+        return CGImageSourceCreateImageAtIndex(src, 0, nil)
+    }
+
+    /// PDF 첫 페이지를 CGImage 썸네일로 렌더 (크로스플랫폼)
+    private static func pdfThumbnail(url: URL, size: CGFloat = 80) -> CGImage? {
         guard let doc = PDFDocument(url: url), let page = doc.page(at: 0) else { return nil }
         let bounds = page.bounds(for: .mediaBox)
         let scale = min(size / bounds.width, size / bounds.height)
-        let img = NSImage(size: NSSize(width: bounds.width * scale, height: bounds.height * scale))
-        img.lockFocus()
-        if let ctx = NSGraphicsContext.current?.cgContext {
-            ctx.setFillColor(NSColor.white.cgColor)
-            ctx.fill(CGRect(origin: .zero, size: img.size))
-            ctx.scaleBy(x: scale, y: scale)
-            page.draw(with: .mediaBox, to: ctx)
-        }
-        img.unlockFocus()
-        return img
+        let w = Int(bounds.width * scale)
+        let h = Int(bounds.height * scale)
+        guard let ctx = CGContext(
+            data: nil, width: w, height: h,
+            bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return nil }
+        ctx.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
+        ctx.fill(CGRect(x: 0, y: 0, width: w, height: h))
+        ctx.scaleBy(x: scale, y: scale)
+        page.draw(with: .mediaBox, to: ctx)
+        return ctx.makeImage()
     }
 }
 
@@ -961,8 +971,9 @@ final class AIService: ObservableObject {
         return results
     }
 
-    // MARK: - CLI Execution (Direct Process — no shell)
+    // MARK: - CLI Execution (macOS only — Process 미지원 플랫폼 제외)
 
+    #if os(macOS)
     private func sendCLI(executablePath: String, args: [String], system: String, userMessage: String,
                          history: [ChatMessage], isCodex: Bool = false) async -> String {
         // system이 비어있으면(claude의 경우 --system-prompt 플래그로 이미 전달) 개행 없이 시작
@@ -1134,6 +1145,13 @@ final class AIService: ObservableObject {
 
         return output
     }
+    #else
+    // iOS: CLI 실행 불가 — API 기반 AI 사용 (향후 구현)
+    private func sendCLI(executablePath: String, args: [String], system: String, userMessage: String,
+                         history: [ChatMessage], isCodex: Bool = false) async -> String {
+        return "CLI 기반 AI는 macOS에서만 지원됩니다."
+    }
+    #endif
 
     // MARK: - PDF 텍스트 추출
 

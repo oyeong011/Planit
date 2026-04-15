@@ -73,7 +73,7 @@ struct MainCalendarView: View {
                 .frame(width: 330)
         }
         .frame(width: showLeftPanel ? 1320 : 1040, height: 860)
-        .background(Color(nsColor: .controlBackgroundColor))
+        .background(Color.platformControlBackground)
         .onChange(of: authManager.isAuthenticated) { _ in
             viewModel.refreshEvents()
         }
@@ -660,7 +660,7 @@ struct DailyDetailView: View {
                 .animation(.easeInOut(duration: 0.2), value: tappedEvent?.id)
             }
         }
-        .background(Color(nsColor: .windowBackgroundColor).opacity(0.5))
+        .background(Color.platformWindowBackground.opacity(0.5))
         .popover(isPresented: $showCategoryManager) {
             CategoryManagerView(viewModel: viewModel)
         }
@@ -791,7 +791,7 @@ struct ModalEventDetail: View {
                         .textFieldStyle(.plain)
                         .font(.system(size: 15, weight: .medium))
                         .padding(10)
-                        .background(RoundedRectangle(cornerRadius: 8).fill(Color(nsColor: .textBackgroundColor).opacity(0.5)))
+                        .background(RoundedRectangle(cornerRadius: 8).fill(Color.platformTextBackground.opacity(0.5)))
 
                     Toggle(String(localized: "event.toggle.allday"), isOn: $editIsAllDay).font(.system(size: 13))
 
@@ -923,7 +923,7 @@ struct ModalEventDetail: View {
             }
         }
         .frame(width: 280, height: 320)
-        .background(RoundedRectangle(cornerRadius: 14).fill(Color(nsColor: .windowBackgroundColor)))
+        .background(RoundedRectangle(cornerRadius: 14).fill(Color.platformWindowBackground))
         .shadow(color: .black.opacity(0.2), radius: 20, y: 5)
     }
 }
@@ -973,7 +973,7 @@ struct ModalTodoDetail: View {
                         .textFieldStyle(.plain)
                         .font(.system(size: 15, weight: .medium))
                         .padding(10)
-                        .background(RoundedRectangle(cornerRadius: 8).fill(Color(nsColor: .textBackgroundColor).opacity(0.5)))
+                        .background(RoundedRectangle(cornerRadius: 8).fill(Color.platformTextBackground.opacity(0.5)))
 
                     // 날짜 선택
                     DatePicker(String(localized: "event.detail.start"), selection: $editDate, displayedComponents: [.date])
@@ -1090,7 +1090,7 @@ struct ModalTodoDetail: View {
             }
         }
         .frame(width: 280, height: 320)
-        .background(RoundedRectangle(cornerRadius: 14).fill(Color(nsColor: .windowBackgroundColor)))
+        .background(RoundedRectangle(cornerRadius: 14).fill(Color.platformWindowBackground))
         .shadow(color: .black.opacity(0.2), radius: 20, y: 5)
     }
 }
@@ -1133,7 +1133,7 @@ struct InlineAddTodoForm: View {
                             Text(cat.name)
                                 .font(.system(size: 10, weight: .medium))
                                 .padding(.horizontal, 7).padding(.vertical, 4)
-                                .background(RoundedRectangle(cornerRadius: 5).fill(effectiveCategoryID == cat.id ? cat.color.opacity(0.25) : Color(nsColor: .controlBackgroundColor)))
+                                .background(RoundedRectangle(cornerRadius: 5).fill(effectiveCategoryID == cat.id ? cat.color.opacity(0.25) : Color.platformControlBackground))
                                 .overlay(RoundedRectangle(cornerRadius: 5).stroke(effectiveCategoryID == cat.id ? cat.color : Color.clear, lineWidth: 1))
                                 .foregroundStyle(effectiveCategoryID == cat.id ? cat.color : .secondary)
                         }.buttonStyle(.plain)
@@ -1239,7 +1239,7 @@ struct DragGhostRow: View {
         .frame(width: 260)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color(nsColor: .controlBackgroundColor))
+                .fill(Color.platformControlBackground)
                 .shadow(color: .black.opacity(0.18), radius: 12, y: 6)
         )
         .opacity(0.92)
@@ -1307,7 +1307,7 @@ struct EventRowView: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color(nsColor: .controlBackgroundColor))
+                .fill(Color.platformControlBackground)
                 .shadow(color: .black.opacity(0.04), radius: 2, y: 1)
         )
         .contentShape(Rectangle())
@@ -1389,7 +1389,7 @@ struct TodoRowView: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color(nsColor: .controlBackgroundColor))
+                .fill(Color.platformControlBackground)
                 .shadow(color: .black.opacity(0.04), radius: 2, y: 1)
         )
         .contentShape(Rectangle())

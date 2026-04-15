@@ -194,7 +194,7 @@ final class CalendarViewModel: ObservableObject {
 
     /// Apple Calendar 접근 권한 요청 (Google 인증 상태에서 병합용)
     func requestAppleCalendarAccess() {
-        if #available(macOS 14.0, *) {
+        if #available(iOS 17.0, macOS 14.0, *) {
             eventStore.requestFullAccessToEvents { [weak self] granted, error in
                 Task { @MainActor in
                     self?.appleCalendarAccessGranted = granted && error == nil
@@ -257,7 +257,7 @@ final class CalendarViewModel: ObservableObject {
 
     /// Apple Reminders 접근 권한 요청
     func requestAppleRemindersAccess() {
-        if #available(macOS 14.0, *) {
+        if #available(iOS 17.0, macOS 14.0, *) {
             eventStore.requestFullAccessToReminders { [weak self] granted, error in
                 Task { @MainActor in
                     self?.appleRemindersAccessGranted = granted && error == nil
@@ -518,7 +518,7 @@ final class CalendarViewModel: ObservableObject {
     }
 
     func requestCalendarAccess() {
-        if #available(macOS 14.0, *) {
+        if #available(iOS 17.0, macOS 14.0, *) {
             eventStore.requestFullAccessToEvents { [weak self] granted, error in
                 guard granted, error == nil else { return }
                 Task { @MainActor in

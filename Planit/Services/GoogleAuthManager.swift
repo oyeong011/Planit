@@ -187,7 +187,7 @@ final class GoogleAuthManager: ObservableObject {
             ]
 
             guard let authURL = components.url else { throw AuthError.serverFailed }
-            NSWorkspace.shared.open(authURL)
+            openURL(authURL)
 
             let code = try await waitForAuthCode(serverFd: serverFd, expectedState: state)
             // serverFd is closed inside waitForAuthCode

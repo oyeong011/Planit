@@ -53,7 +53,7 @@ struct SettingsView: View {
             contentArea.frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(width: 1150, height: 780)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .background(Color.platformWindowBackground)
     }
 
     // MARK: - Sidebar
@@ -96,7 +96,7 @@ struct SettingsView: View {
                 .foregroundStyle(.tertiary)
                 .padding(.bottom, 16)
         }
-        .background(Color(nsColor: .controlBackgroundColor))
+        .background(Color.platformControlBackground)
     }
 
     private func sidebarItem(_ section: SettingsSection) -> some View {
@@ -191,7 +191,7 @@ struct SettingsView: View {
             .padding(.vertical, 12)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(profile.energyType == type ? Color.purple.opacity(0.12) : Color(nsColor: .controlColor))
+                    .fill(profile.energyType == type ? Color.purple.opacity(0.12) : Color.platformControl)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
@@ -413,7 +413,7 @@ struct SettingsView: View {
             .padding(12)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(isSelected ? Color.purple.opacity(0.08) : Color(nsColor: .controlColor).opacity(0.5))
+                    .fill(isSelected ? Color.purple.opacity(0.08) : Color.platformControl.opacity(0.5))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
@@ -618,7 +618,7 @@ struct SettingsView: View {
                     }
                     Spacer()
                     Button(String(localized: "settings.notifications.open.system")) {
-                        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.notifications")!)
+                        openURL(URL(string: "x-apple.systempreferences:com.apple.preference.notifications")!)
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
@@ -742,7 +742,7 @@ struct SettingsView: View {
                             .padding(.vertical, 7)
                             .background(
                                 RoundedRectangle(cornerRadius: 8)
-                                    .fill(isCurrent ? Color.purple.opacity(0.12) : Color(nsColor: .controlColor))
+                                    .fill(isCurrent ? Color.purple.opacity(0.12) : Color.platformControl)
                             )
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
@@ -804,7 +804,7 @@ struct SettingsView: View {
                 .padding(16)
                 .background(
                     RoundedRectangle(cornerRadius: 12)
-                        .fill(Color(nsColor: .controlBackgroundColor))
+                        .fill(Color.platformControlBackground)
                 )
         }
     }

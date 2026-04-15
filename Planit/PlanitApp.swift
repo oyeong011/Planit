@@ -2,6 +2,9 @@ import SwiftUI
 import EventKit
 import UserNotifications
 
+// MARK: - macOS App Entry Point
+
+#if os(macOS)
 @main
 struct PlanitApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
@@ -64,9 +67,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             NSApp.activate(ignoringOtherApps: true)
         }
     }
-
 }
-
 
 extension AppDelegate {
     func applicationWillTerminate(_ notification: Notification) {
@@ -77,3 +78,17 @@ extension AppDelegate {
     }
 }
 
+#elseif os(iOS)
+
+// MARK: - iOS App Entry Point (향후 구현)
+
+@main
+struct PlanitApp: App {
+    var body: some Scene {
+        WindowGroup {
+            MainView()
+        }
+    }
+}
+
+#endif
