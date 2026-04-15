@@ -490,8 +490,10 @@ final class AIService: ObservableObject {
     // MARK: - Execute Actions (with eventId validation)
 
     private func executeActions(_ actions: [CalendarAction]) async -> [ChatMessage] {
-        guard let service = calendarService else { return [] }
+        // createTodo는 Google 서비스 불필요 — guard 밖에서 먼저 처리
+        // Google 서비스가 필요한 action(create/update/delete/findFreeSlot/blockTime)만 아래서 체크
         var results: [ChatMessage] = []
+        let service = calendarService  // optional — nil이면 Google 관련 action만 실패
 
         // 일괄 삭제 방지: 2개 이상 delete 요청 시 거부
         let deleteCount = actions.filter { $0.action == "delete" }.count
@@ -566,25 +568,34 @@ final class AIService: ObservableObject {
                     continue
                 }
 
+                guard let svc = service else {
+                    results.append(ChatMessage(role: .toolCall, content: "\(action.action) 실패: Google 캘린더 미연결"))
+                    continue
+                }
                 do {
-                    let created = try await service.createEvent(
+                    let created = try await svc.createEvent(
                         title: rawTitle,
                         startDate: slot.start,
                         endDate: slot.end,
                         isAllDay: false
                     )
                     // 카테고리 적용
-                    if let eventID = created?.id, let catName = action.categoryName,
-                       let catID = cachedCategories.first(where: { $0.name == catName })?.id {
-                        onEventCategorySet?(eventID, rawTitle, catID)
+                    var slotCatLabel = ""
+                    if let catName = action.categoryName {
+                        if let eventID = created?.id,
+                           let catID = cachedCategories.first(where: { $0.name == catName })?.id {
+                            onEventCategorySet?(eventID, rawTitle, catID)
+                            slotCatLabel = " (\(catName))"
+                        } else {
+                            slotCatLabel = " (카테고리 미적용)"
+                        }
                     }
                     invalidateContextCache()
                     let timeFmt = DateFormatter()
                     timeFmt.dateFormat = "M/d HH:mm"
                     timeFmt.timeZone = TimeZone(identifier: "Asia/Seoul")
-                    let catLabel = action.categoryName.map { " (\($0))" } ?? ""
                     results.append(ChatMessage(role: .toolCall,
-                        content: "\(action.action == "blockTime" ? "블록" : "일정") 생성: \(rawTitle)\(catLabel) — \(timeFmt.string(from: slot.start))~\(timeFmt.string(from: slot.end))"))
+                        content: "\(action.action == "blockTime" ? "블록" : "일정") 생성: \(rawTitle)\(slotCatLabel) — \(timeFmt.string(from: slot.start))~\(timeFmt.string(from: slot.end))"))
                 } catch {
                     let msg = Self.calendarErrorMessage(error)
                     results.append(ChatMessage(role: .toolCall, content: "\(action.action) 실패: \(msg)"))
@@ -596,20 +607,30 @@ final class AIService: ObservableObject {
                     results.append(ChatMessage(role: .toolCall, content: "할일 생성 실패: 제목 없음"))
                     continue
                 }
-                // date 파싱 (yyyy-MM-dd)
-                var todoDate: Date? = nil
+                // date 파싱 (yyyy-MM-dd), 없으면 오늘로 기본 설정 / 잘못된 형식이면 실패
+                var todoDate: Date = Calendar.current.startOfDay(for: Date())
                 if let dateStr = action.date {
                     let df = DateFormatter()
                     df.dateFormat = "yyyy-MM-dd"
                     df.timeZone = TimeZone.current
-                    todoDate = df.date(from: dateStr)
+                    guard let parsed = df.date(from: dateStr) else {
+                        results.append(ChatMessage(role: .toolCall, content: "할일 생성 실패: 잘못된 날짜 형식 (\(dateStr))"))
+                        continue
+                    }
+                    todoDate = parsed
                 }
                 // 카테고리 이름 → UUID
-                let catID = action.categoryName.flatMap { name in
-                    cachedCategories.first(where: { $0.name == name })?.id
+                var catID: UUID? = nil
+                var catLabel = ""
+                if let catName = action.categoryName {
+                    if let matched = cachedCategories.first(where: { $0.name == catName }) {
+                        catID = matched.id
+                        catLabel = " (\(catName))"
+                    } else {
+                        catLabel = " (카테고리 미적용)"
+                    }
                 }
                 onTodoCreate?(rawTitle, catID, todoDate)
-                let catLabel = action.categoryName.map { " (\($0))" } ?? ""
                 results.append(ChatMessage(role: .toolCall, content: "할일 추가: \(rawTitle)\(catLabel)"))
 
             case "create":
@@ -622,14 +643,24 @@ final class AIService: ObservableObject {
                     results.append(ChatMessage(role: .toolCall, content: "생성 실패: 잘못된 파라미터"))
                     continue
                 }
+                guard let svc = service else {
+                    results.append(ChatMessage(role: .toolCall, content: "생성 실패: Google 캘린더 미연결"))
+                    continue
+                }
                 do {
-                    let created = try await service.createEvent(title: rawTitle, startDate: start, endDate: end, isAllDay: action.isAllDay ?? false)
+                    let created = try await svc.createEvent(title: rawTitle, startDate: start, endDate: end, isAllDay: action.isAllDay ?? false)
                     // 카테고리 이름 → UUID 매핑 후 콜백
-                    if let eventID = created?.id, let catName = action.categoryName,
-                       let catID = cachedCategories.first(where: { $0.name == catName })?.id {
-                        onEventCategorySet?(eventID, rawTitle, catID)
+                    var catLabel = ""
+                    if let catName = action.categoryName {
+                        if let catID = cachedCategories.first(where: { $0.name == catName })?.id {
+                            if let eventID = created?.id {
+                                onEventCategorySet?(eventID, rawTitle, catID)
+                            }
+                            catLabel = " (\(catName))"
+                        } else {
+                            catLabel = " (카테고리 미적용)"
+                        }
                     }
-                    let catLabel = action.categoryName.map { " (\($0))" } ?? ""
                     results.append(ChatMessage(role: .toolCall, content: "생성: \(rawTitle)\(catLabel)"))
                 } catch {
                     let msg = Self.calendarErrorMessage(error)
@@ -641,8 +672,12 @@ final class AIService: ObservableObject {
                     results.append(ChatMessage(role: .toolCall, content: "삭제 실패: 유효하지 않은 eventId"))
                     continue
                 }
+                guard let svc = service else {
+                    results.append(ChatMessage(role: .toolCall, content: "삭제 실패: Google 캘린더 미연결"))
+                    continue
+                }
                 do {
-                    let ok = try await service.deleteEvent(eventID: eventId)
+                    let ok = try await svc.deleteEvent(eventID: eventId)
                     results.append(ChatMessage(role: .toolCall, content: ok ? "삭제 완료" : "삭제 실패"))
                 } catch {
                     let msg = Self.calendarErrorMessage(error)
@@ -654,12 +689,16 @@ final class AIService: ObservableObject {
                     results.append(ChatMessage(role: .toolCall, content: "수정 실패: 유효하지 않은 eventId"))
                     continue
                 }
+                guard let svc = service else {
+                    results.append(ChatMessage(role: .toolCall, content: "수정 실패: Google 캘린더 미연결"))
+                    continue
+                }
                 // Only pass title if explicitly provided by the LLM — never overwrite with a placeholder
                 let updateTitle: String? = action.title.flatMap { $0.isEmpty ? nil : $0 }
                 // 날짜 없이 제목만 변경하는 경우 (이모지 제거 등) → patchEventTitle
                 if action.startDate == nil, let newTitle = updateTitle {
                     do {
-                        let ok = try await service.patchEventTitle(eventID: eventId, title: newTitle)
+                        let ok = try await svc.patchEventTitle(eventID: eventId, title: newTitle)
                         results.append(ChatMessage(role: .toolCall, content: ok ? "수정 완료" : "수정 실패"))
                     } catch {
                         let msg = Self.calendarErrorMessage(error)
@@ -681,7 +720,7 @@ final class AIService: ObservableObject {
                     continue
                 }
                 do {
-                    let ok = try await service.updateEvent(eventID: eventId, title: updateTitle, startDate: startDate, endDate: endDate, isAllDay: action.isAllDay ?? false)
+                    let ok = try await svc.updateEvent(eventID: eventId, title: updateTitle, startDate: startDate, endDate: endDate, isAllDay: action.isAllDay ?? false)
                     results.append(ChatMessage(role: .toolCall, content: ok ? "수정 완료" : "수정 실패"))
                 } catch {
                     let msg = Self.calendarErrorMessage(error)
