@@ -389,3 +389,22 @@
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
 "settings.section.context" = "AI Context";
+
+/* ===== AI Context Section ===== */
+"settings.context.title" = "AI Hyper-Personalization Context";
+"settings.context.subtitle" = "View and manage what AI knows about you";
+"settings.context.card.my.info" = "What AI Knows About Me";
+"settings.context.empty.hint" = "Not enough conversations yet.\nChat with AI and it will fill in automatically.";
+"settings.context.open.file" = "Open File";
+"settings.context.show.finder" = "Show in Finder";
+"settings.context.card.exams" = "Supported Exams / Certifications Auto-Search";
+"settings.context.exams.hint" = "When AI detects the keywords below in conversation, it automatically searches for external info to help with scheduling.";
+"settings.context.card.how" = "How It Works";
+"settings.context.how.chat" = "Conversation Analysis";
+"settings.context.how.chat.desc" = "Automatically learns your job, goals, and planning style from every AI conversation";
+"settings.context.how.search" = "External Info Search";
+"settings.context.how.search.desc" = "If you're preparing for an exam, it auto-searches schedules, subjects, and pass criteria and caches them";
+"settings.context.how.recommend" = "Hyper-Personalized Recommendations";
+"settings.context.how.recommend.desc" = "Uses gathered info to optimize schedule suggestions, study plans, and time allocation";
+"settings.context.how.style" = "Planning Style Learning";
+"settings.context.how.style.desc" = "Learns whether you write detailed or concise todos to make tailored suggestions";

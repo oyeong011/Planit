@@ -397,3 +397,22 @@
 "review.help.tomorrow" = "Move to Tomorrow";
 "review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
+
+/* ===== AI Context Section ===== */
+"settings.context.title" = "سياق التخصيص الفائق للذكاء الاصطناعي";
+"settings.context.subtitle" = "عرض وإدارة ما يعرفه الذكاء الاصطناعي عنك";
+"settings.context.card.my.info" = "ما يعرفه الذكاء الاصطناعي عني";
+"settings.context.empty.hint" = "لم تكن هناك محادثات كافية بعد.\nتحدث مع الذكاء الاصطناعي وسيتم ملؤه تلقائياً.";
+"settings.context.open.file" = "فتح الملف";
+"settings.context.show.finder" = "إظهار في Finder";
+"settings.context.card.exams" = "البحث التلقائي عن الاختبارات / الشهادات المدعومة";
+"settings.context.exams.hint" = "عندما يكتشف الذكاء الاصطناعي الكلمات الرئيسية أدناه في المحادثة، يبحث تلقائياً عن معلومات خارجية للمساعدة في الجدولة.";
+"settings.context.card.how" = "كيف يعمل";
+"settings.context.how.chat" = "تحليل المحادثة";
+"settings.context.how.chat.desc" = "يتعلم تلقائياً وظيفتك وأهدافك وأسلوب تخطيطك من كل محادثة مع الذكاء الاصطناعي";
+"settings.context.how.search" = "البحث عن المعلومات الخارجية";
+"settings.context.how.search.desc" = "إذا كنت تستعد لاختبار، يبحث تلقائياً عن الجداول والمواضيع ومعايير النجاح ويخزنها مؤقتاً";
+"settings.context.how.recommend" = "توصيات مخصصة فائقة";
+"settings.context.how.recommend.desc" = "يستخدم المعلومات المجمعة لتحسين اقتراحات الجدول الزمني وخطط الدراسة وتخصيص الوقت";
+"settings.context.how.style" = "تعلم أسلوب التخطيط";
+"settings.context.how.style.desc" = "يتعلم ما إذا كنت تكتب مهام مفصلة أو موجزة لتقديم اقتراحات مخصصة";

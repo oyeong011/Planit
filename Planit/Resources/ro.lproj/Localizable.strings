@@ -397,3 +397,22 @@
 "review.help.tomorrow" = "Move to Tomorrow";
 "review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
+
+/* ===== AI Context Section ===== */
+"settings.context.title" = "Context de Hiper-Personalizare AI";
+"settings.context.subtitle" = "Vizualizați și gestionați ce știe AI despre dumneavoastră";
+"settings.context.card.my.info" = "Ce știe AI despre mine";
+"settings.context.empty.hint" = "Nu sunt încă suficiente conversații.\nChatați cu AI și se va completa automat.";
+"settings.context.open.file" = "Deschide fișier";
+"settings.context.show.finder" = "Afișează în Finder";
+"settings.context.card.exams" = "Căutare automată de examene / certificări acceptate";
+"settings.context.exams.hint" = "Când AI detectează cuvintele cheie de mai jos în conversație, caută automat informații externe pentru a ajuta la planificare.";
+"settings.context.card.how" = "Cum funcționează";
+"settings.context.how.chat" = "Analiza conversației";
+"settings.context.how.chat.desc" = "Învață automat munca, obiectivele și stilul de planificare din fiecare conversație cu AI";
+"settings.context.how.search" = "Căutare informații externe";
+"settings.context.how.search.desc" = "Dacă vă pregătiți pentru un examen, caută automat orare, materii și criterii de promovare și le memorează în cache";
+"settings.context.how.recommend" = "Recomandări Hiper-Personalizate";
+"settings.context.how.recommend.desc" = "Folosește informațiile colectate pentru a optimiza sugestiile de program, planurile de studiu și alocarea timpului";
+"settings.context.how.style" = "Învățarea stilului de planificare";
+"settings.context.how.style.desc" = "Învață dacă scrieți sarcini detaliate sau concise pentru a face sugestii personalizate";

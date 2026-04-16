@@ -397,3 +397,22 @@
 "review.help.tomorrow" = "Move to Tomorrow";
 "review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
+
+/* ===== AI Context Section ===== */
+"settings.context.title" = "AI 超个性化上下文";
+"settings.context.subtitle" = "查看并管理 AI 对您的了解";
+"settings.context.card.my.info" = "AI 掌握的我的信息";
+"settings.context.empty.hint" = "对话还不够充分。\n与 AI 对话后将自动填充。";
+"settings.context.open.file" = "打开文件";
+"settings.context.show.finder" = "在 Finder 中显示";
+"settings.context.card.exams" = "支持的考试/证书自动搜索";
+"settings.context.exams.hint" = "当 AI 在对话中检测到以下关键词时，会自动搜索外部信息以辅助日程推荐。";
+"settings.context.card.how" = "工作原理";
+"settings.context.how.chat" = "对话分析";
+"settings.context.how.chat.desc" = "每次与 AI 对话时，自动掌握您的职业、目标和计划风格";
+"settings.context.how.search" = "外部信息搜索";
+"settings.context.how.search.desc" = "如果您正在备考，自动搜索日程、科目和合格标准并缓存";
+"settings.context.how.recommend" = "超个性化推荐";
+"settings.context.how.recommend.desc" = "基于掌握的信息优化日程建议、学习计划和时间分配";
+"settings.context.how.style" = "计划风格学习";
+"settings.context.how.style.desc" = "了解您是详细还是简洁地记录待办事项，以提供定制化建议";

@@ -397,3 +397,22 @@
 "review.help.tomorrow" = "Move to Tomorrow";
 "review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
+
+/* ===== AI Context Section ===== */
+"settings.context.title" = "KI Hyper-Personalisierungs-Kontext";
+"settings.context.subtitle" = "Was die KI über Sie weiß, anzeigen und verwalten";
+"settings.context.card.my.info" = "Was die KI über mich weiß";
+"settings.context.empty.hint" = "Noch nicht genug Gespräche.\nChatte mit der KI und es wird automatisch ausgefüllt.";
+"settings.context.open.file" = "Datei öffnen";
+"settings.context.show.finder" = "Im Finder anzeigen";
+"settings.context.card.exams" = "Unterstützte Prüfungen / Zertifizierungen Auto-Suche";
+"settings.context.exams.hint" = "Wenn die KI die folgenden Schlüsselwörter im Gespräch erkennt, sucht sie automatisch nach externen Informationen für die Terminplanung.";
+"settings.context.card.how" = "So funktioniert es";
+"settings.context.how.chat" = "Gesprächsanalyse";
+"settings.context.how.chat.desc" = "Lernt automatisch Ihren Beruf, Ziele und Planungsstil aus jedem KI-Gespräch";
+"settings.context.how.search" = "Externe Informationssuche";
+"settings.context.how.search.desc" = "Bei Prüfungsvorbereitung sucht es automatisch Zeitpläne, Themen und Bestehensvoraussetzungen und speichert sie zwischen";
+"settings.context.how.recommend" = "Hyper-Personalisierte Empfehlungen";
+"settings.context.how.recommend.desc" = "Nutzt gesammelte Informationen zur Optimierung von Terminvorschlägen, Lernplänen und Zeiteinteilung";
+"settings.context.how.style" = "Planungsstil-Lernen";
+"settings.context.how.style.desc" = "Lernt, ob Sie detaillierte oder knappe Aufgaben schreiben, um maßgeschneiderte Vorschläge zu machen";

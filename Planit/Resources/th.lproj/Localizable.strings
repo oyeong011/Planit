@@ -397,3 +397,22 @@
 "review.help.tomorrow" = "Move to Tomorrow";
 "review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
+
+/* ===== AI Context Section ===== */
+"settings.context.title" = "บริบทการปรับแต่งส่วนตัวขั้นสูงของ AI";
+"settings.context.subtitle" = "ดูและจัดการสิ่งที่ AI รู้เกี่ยวกับคุณ";
+"settings.context.card.my.info" = "สิ่งที่ AI รู้เกี่ยวกับฉัน";
+"settings.context.empty.hint" = "ยังไม่มีการสนทนาเพียงพอ\nสนทนากับ AI แล้วระบบจะเติมข้อมูลโดยอัตโนมัติ";
+"settings.context.open.file" = "เปิดไฟล์";
+"settings.context.show.finder" = "แสดงใน Finder";
+"settings.context.card.exams" = "ค้นหาอัตโนมัติสำหรับการสอบ / ใบรับรองที่รองรับ";
+"settings.context.exams.hint" = "เมื่อ AI ตรวจพบคำสำคัญด้านล่างในการสนทนา ระบบจะค้นหาข้อมูลภายนอกโดยอัตโนมัติเพื่อช่วยในการจัดตารางเวลา";
+"settings.context.card.how" = "วิธีการทำงาน";
+"settings.context.how.chat" = "การวิเคราะห์การสนทนา";
+"settings.context.how.chat.desc" = "เรียนรู้งาน เป้าหมาย และรูปแบบการวางแผนของคุณโดยอัตโนมัติจากทุกการสนทนากับ AI";
+"settings.context.how.search" = "การค้นหาข้อมูลภายนอก";
+"settings.context.how.search.desc" = "หากคุณกำลังเตรียมสอบ ระบบจะค้นหาตารางเวลา วิชา และเกณฑ์การผ่านโดยอัตโนมัติและแคชไว้";
+"settings.context.how.recommend" = "คำแนะนำที่ปรับแต่งส่วนตัวขั้นสูง";
+"settings.context.how.recommend.desc" = "ใช้ข้อมูลที่รวบรวมเพื่อปรับแต่งคำแนะนำตารางเวลา แผนการเรียน และการจัดสรรเวลา";
+"settings.context.how.style" = "การเรียนรู้รูปแบบการวางแผน";
+"settings.context.how.style.desc" = "เรียนรู้ว่าคุณเขียนงานแบบละเอียดหรือกระชับเพื่อให้คำแนะนำที่เหมาะสม";

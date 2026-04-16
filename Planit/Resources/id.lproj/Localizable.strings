@@ -397,3 +397,22 @@
 "review.help.tomorrow" = "Move to Tomorrow";
 "review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
+
+/* ===== AI Context Section ===== */
+"settings.context.title" = "Konteks Hiper-Personalisasi AI";
+"settings.context.subtitle" = "Lihat dan kelola apa yang AI ketahui tentang Anda";
+"settings.context.card.my.info" = "Yang AI Ketahui Tentang Saya";
+"settings.context.empty.hint" = "Belum cukup percakapan.\nObrol dengan AI dan akan terisi otomatis.";
+"settings.context.open.file" = "Buka File";
+"settings.context.show.finder" = "Tampilkan di Finder";
+"settings.context.card.exams" = "Pencarian Otomatis Ujian / Sertifikasi yang Didukung";
+"settings.context.exams.hint" = "Ketika AI mendeteksi kata kunci di bawah dalam percakapan, ia secara otomatis mencari informasi eksternal untuk membantu penjadwalan.";
+"settings.context.card.how" = "Cara Kerjanya";
+"settings.context.how.chat" = "Analisis Percakapan";
+"settings.context.how.chat.desc" = "Secara otomatis mempelajari pekerjaan, tujuan, dan gaya perencanaan Anda dari setiap percakapan AI";
+"settings.context.how.search" = "Pencarian Informasi Eksternal";
+"settings.context.how.search.desc" = "Jika Anda mempersiapkan ujian, secara otomatis mencari jadwal, mata pelajaran, dan kriteria kelulusan dan menyimpannya dalam cache";
+"settings.context.how.recommend" = "Rekomendasi Hiper-Personal";
+"settings.context.how.recommend.desc" = "Menggunakan informasi yang dikumpulkan untuk mengoptimalkan saran jadwal, rencana belajar, dan alokasi waktu";
+"settings.context.how.style" = "Pembelajaran Gaya Perencanaan";
+"settings.context.how.style.desc" = "Mempelajari apakah Anda menulis tugas secara terperinci atau ringkas untuk membuat saran yang disesuaikan";

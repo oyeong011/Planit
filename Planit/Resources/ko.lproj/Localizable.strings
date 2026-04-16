@@ -389,3 +389,22 @@
 "review.accept.all" = "전부 추가";
 "review.todo.label" = "할 일";
 "settings.section.context" = "AI 컨텍스트";
+
+/* ===== AI Context Section ===== */
+"settings.context.title" = "AI 초개인화 컨텍스트";
+"settings.context.subtitle" = "AI가 당신에 대해 알고 있는 정보를 확인하고 관리하세요";
+"settings.context.card.my.info" = "AI가 파악한 내 정보";
+"settings.context.empty.hint" = "아직 대화를 충분히 나누지 않았어요.\nAI와 대화하면 자동으로 채워집니다.";
+"settings.context.open.file" = "파일 열기";
+"settings.context.show.finder" = "Finder에서 보기";
+"settings.context.card.exams" = "지원하는 시험/자격증 자동 검색";
+"settings.context.exams.hint" = "AI가 아래 키워드를 대화에서 감지하면 자동으로 외부 정보를 검색해 일정 추천에 활용합니다.";
+"settings.context.card.how" = "작동 방식";
+"settings.context.how.chat" = "대화 분석";
+"settings.context.how.chat.desc" = "AI와 대화할 때마다 직업, 목표, 계획 스타일을 자동으로 파악합니다";
+"settings.context.how.search" = "외부 정보 검색";
+"settings.context.how.search.desc" = "시험 준비 중이라면 일정, 과목, 합격 기준을 자동으로 검색해 캐싱합니다";
+"settings.context.how.recommend" = "초개인화 추천";
+"settings.context.how.recommend.desc" = "파악된 정보를 바탕으로 일정 추천, 공부 계획, 시간 배분을 최적화합니다";
+"settings.context.how.style" = "계획 스타일 학습";
+"settings.context.how.style.desc" = "할일을 세부적으로 작성하는지 간략히 쓰는지 파악해 맞춤 제안을 드립니다";

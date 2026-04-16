@@ -397,3 +397,22 @@
 "review.help.tomorrow" = "Move to Tomorrow";
 "review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
+
+/* ===== AI Context Section ===== */
+"settings.context.title" = "Πλαίσιο Υπερ-Εξατομίκευσης AI";
+"settings.context.subtitle" = "Δείτε και διαχειριστείτε τι γνωρίζει το AI για εσάς";
+"settings.context.card.my.info" = "Τι γνωρίζει το AI για μένα";
+"settings.context.empty.hint" = "Δεν υπάρχουν ακόμα αρκετές συνομιλίες.\nΣυνομιλήστε με το AI και θα συμπληρωθεί αυτόματα.";
+"settings.context.open.file" = "Άνοιγμα αρχείου";
+"settings.context.show.finder" = "Εμφάνιση στο Finder";
+"settings.context.card.exams" = "Αυτόματη αναζήτηση υποστηριζόμενων εξετάσεων / πιστοποιήσεων";
+"settings.context.exams.hint" = "Όταν το AI εντοπίζει τις παρακάτω λέξεις-κλειδιά στη συνομιλία, αναζητά αυτόματα εξωτερικές πληροφορίες για βοήθεια στον προγραμματισμό.";
+"settings.context.card.how" = "Πώς λειτουργεί";
+"settings.context.how.chat" = "Ανάλυση συνομιλιών";
+"settings.context.how.chat.desc" = "Μαθαίνει αυτόματα την εργασία, τους στόχους και το στυλ προγραμματισμού σας από κάθε συνομιλία με AI";
+"settings.context.how.search" = "Αναζήτηση εξωτερικών πληροφοριών";
+"settings.context.how.search.desc" = "Αν προετοιμάζεστε για εξέταση, αναζητά αυτόματα χρονοδιαγράμματα, θέματα και κριτήρια επιτυχίας και τα αποθηκεύει στην κρυφή μνήμη";
+"settings.context.how.recommend" = "Υπερ-Εξατομικευμένες Προτάσεις";
+"settings.context.how.recommend.desc" = "Χρησιμοποιεί τις συγκεντρωμένες πληροφορίες για να βελτιστοποιήσει προτάσεις προγράμματος, σχέδια μελέτης και κατανομή χρόνου";
+"settings.context.how.style" = "Εκμάθηση στυλ προγραμματισμού";
+"settings.context.how.style.desc" = "Μαθαίνει αν γράφετε λεπτομερείς ή συνοπτικές εργασίες για να κάνει εξατομικευμένες προτάσεις";
