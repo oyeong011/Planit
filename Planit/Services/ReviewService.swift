@@ -83,7 +83,8 @@ final class ReviewService: ObservableObject {
         for suggestion in suggestions where suggestion.status == .pending {
             let minutes = Int((suggestion.proposedEnd ?? Date()).timeIntervalSince(suggestion.proposedStart ?? Date()) / 60)
             goalService.markCompletion(
-                eventId: suggestion.proposedTitle ?? suggestion.title,
+                eventId: suggestion.sourceEventId ?? suggestion.title,
+                eventTitle: suggestion.title,
                 goalId: suggestion.goalId,
                 status: .moved,
                 plannedMinutes: max(minutes, 30)
@@ -252,9 +253,10 @@ final class ReviewService: ObservableObject {
                     title: event.title,
                     description: "\(formatTime(event.startDate))~\(formatTime(event.endDate))",
                     goalId: nil,
+                    sourceEventId: event.id,
                     proposedStart: event.startDate,
                     proposedEnd: event.endDate,
-                    proposedTitle: event.id
+                    proposedTitle: event.title
                 ))
             }
         }
@@ -346,7 +348,10 @@ final class ReviewService: ObservableObject {
 
         return goalService.completions.values
             .filter { $0.date >= yesterday && $0.date < today && $0.status != .done }
-            .map { ($0.eventId, $0.goalId) }  // eventId used as title fallback
+            .compactMap { record -> (String, String?)? in
+                guard let title = record.eventTitle else { return nil }
+                return (title, record.goalId)
+            }  // eventTitle 없는 레코드 제외 (eventId가 제목으로 노출되는 것 방지)
     }
 
     private func countThisWeekSessions(goalId: String) -> Int {

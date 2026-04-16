@@ -69,6 +69,7 @@ struct RecurrencePlan: Codable {
 struct CompletionRecord: Identifiable, Codable {
     let id: String
     var eventId: String  // Google Calendar event ID
+    var eventTitle: String?  // 사람이 읽을 수 있는 이벤트 제목 (알림/리뷰에 표시)
     var goalId: String?
     var date: Date
     var status: CompletionStatus
@@ -76,11 +77,12 @@ struct CompletionRecord: Identifiable, Codable {
     var actualMinutes: Int?
     var note: String?
 
-    init(id: String = UUID().uuidString, eventId: String, goalId: String? = nil,
-         date: Date = Date(), status: CompletionStatus = .unknown,
+    init(id: String = UUID().uuidString, eventId: String, eventTitle: String? = nil,
+         goalId: String? = nil, date: Date = Date(), status: CompletionStatus = .unknown,
          plannedMinutes: Int = 0, actualMinutes: Int? = nil, note: String? = nil) {
         self.id = id
         self.eventId = eventId
+        self.eventTitle = eventTitle
         self.goalId = goalId
         self.date = date
         self.status = status
@@ -172,9 +174,10 @@ struct ReviewSuggestion: Identifiable {
     var title: String
     var description: String
     var goalId: String?
+    var sourceEventId: String?   // 원본 CalendarEvent.id (completionFor 조회 키로 사용)
     var proposedStart: Date?
     var proposedEnd: Date?
-    var proposedTitle: String?
+    var proposedTitle: String?   // 새로 생성할 이벤트 제목 (표시용)
     var status: SuggestionStatus = .pending
 }
 

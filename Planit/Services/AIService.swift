@@ -436,18 +436,18 @@ final class AIService: ObservableObject {
           - 애매하면 createTodo로 처리
 
         ## 응답 형식
-        캘린더 작업이 필요하면 반드시 아래 JSON 형식으로 응답:
+        캘린더 작업이 필요하면 반드시 아래 JSON 형식으로 응답. 아래는 형식 예시이며, 실제 응답 시에는 사용자 요청에 맞는 내용으로 채워야 함. 예시 값을 그대로 복사하지 말 것.
         ```json
         {
-          "message": "사용자에게 보여줄 메시지",
+          "message": "4월 25일에 도랑 캐치테이블 예약 일정을 추가했어요.",
           "actions": [
             {
               "action": "create",
-              "title": "일정 제목",
-              "startDate": "2026-04-14T15:00:00+09:00",
-              "endDate": "2026-04-14T16:00:00+09:00",
+              "title": "도랑 캐치테이블 예약",
+              "startDate": "2026-04-25T12:00:00+09:00",
+              "endDate": "2026-04-25T13:00:00+09:00",
               "isAllDay": false,
-              "categoryName": "공부"
+              "categoryName": "약속"
             }
           ]
         }
@@ -838,6 +838,22 @@ final class AIService: ObservableObject {
         return (message, actions.isEmpty ? nil : actions)
     }
 
+    /// 이미지 URL의 심볼릭 링크를 해제하고 실제 파일인지 검증
+    nonisolated private static func safeImagePath(_ url: URL) -> String? {
+        let resolved = url.resolvingSymlinksInPath()
+        let path = resolved.path
+        // 실제 파일 존재 여부 확인
+        guard FileManager.default.fileExists(atPath: path) else { return nil }
+        // 디렉터리 아닌지 확인
+        var isDir: ObjCBool = false
+        FileManager.default.fileExists(atPath: path, isDirectory: &isDir)
+        guard !isDir.boolValue else { return nil }
+        // 허용된 이미지 확장자만 허용
+        let allowed = ["png", "jpg", "jpeg", "gif", "webp", "heic"]
+        guard allowed.contains(resolved.pathExtension.lowercased()) else { return nil }
+        return path
+    }
+
     /// Strip ANSI escape sequences (CSI, OSC, DCS, C0, C1) and normalize CR
     nonisolated private static func stripANSI(_ str: String) -> String {
         // CSI sequences: ESC[ or 0x9B ... final byte
@@ -918,7 +934,9 @@ final class AIService: ObservableObject {
                               "--model", "claude-haiku-4-5-20251001",
                               "--system-prompt", systemPrompt]
             for img in imageAttachments {
-                claudeArgs += ["--image", img.url.path]
+                if let safePath = Self.safeImagePath(img.url) {
+                    claudeArgs += ["--image", safePath]
+                }
             }
             // system: "" — 시스템 프롬프트는 이미 args에 포함됨
             rawResponse = await sendCLI(executablePath: path, args: claudeArgs,
@@ -934,7 +952,9 @@ final class AIService: ObservableObject {
                              "-c", "model=gpt-4.1-mini",
                              "-c", "model_reasoning_effort=low"]
             for img in imageAttachments {
-                codexArgs += ["--image", img.url.path]
+                if let safePath = Self.safeImagePath(img.url) {
+                    codexArgs += ["--image", safePath]
+                }
             }
             rawResponse = await sendCLI(executablePath: path, args: codexArgs,
                                          system: systemPrompt, userMessage: augmentedMessage, history: history,
@@ -1019,7 +1039,8 @@ final class AIService: ObservableObject {
     private func sendCLI(executablePath: String, args: [String], system: String, userMessage: String,
                          history: [ChatMessage], isCodex: Bool = false) async -> String {
         // system이 비어있으면(claude의 경우 --system-prompt 플래그로 이미 전달) 개행 없이 시작
-        var fullPrompt = system.isEmpty ? "" : system + "\n\n"
+        // Codex용: 시스템 프롬프트와 대화 내용을 명확히 분리해 인젝션 경계 강화
+        var fullPrompt = system.isEmpty ? "" : system + "\n\n=== 대화 시작 ===\n"
 
         let recentHistory = history.suffix(6)
         for msg in recentHistory {
@@ -1028,6 +1049,7 @@ final class AIService: ObservableObject {
                 let safe = String(msg.content
                     .replacingOccurrences(of: "\n어시스턴트:", with: " ")
                     .replacingOccurrences(of: "\n사용자:", with: " ")
+                    .replacingOccurrences(of: "\n=== ", with: " ")
                     .replacingOccurrences(of: "```", with: "")
                     .prefix(2000))
                 fullPrompt += "사용자: \(safe)\n"
@@ -1035,6 +1057,7 @@ final class AIService: ObservableObject {
                 let safe = String(msg.content
                     .replacingOccurrences(of: "\n어시스턴트:", with: " ")
                     .replacingOccurrences(of: "\n사용자:", with: " ")
+                    .replacingOccurrences(of: "\n=== ", with: " ")
                     .replacingOccurrences(of: "```", with: "")
                     .prefix(2000))
                 fullPrompt += "어시스턴트: \(safe)\n"
@@ -1044,6 +1067,7 @@ final class AIService: ObservableObject {
         let safeMsg = String(userMessage
             .replacingOccurrences(of: "\n어시스턴트:", with: " ")
             .replacingOccurrences(of: "\n사용자:", with: " ")
+            .replacingOccurrences(of: "\n=== ", with: " ")
             .replacingOccurrences(of: "```", with: "")
             .prefix(4000))
         fullPrompt += "\n사용자: \(safeMsg)"

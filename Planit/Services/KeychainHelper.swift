@@ -23,6 +23,7 @@ enum KeychainHelper {
         let updateAttrs: [String: Any] = [
             kSecValueData as String: data,
             kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlocked,
+            kSecAttrSynchronizable as String: false,  // iCloud 동기화 방지
         ]
         let updateStatus = SecItemUpdate(lookup as CFDictionary, updateAttrs as CFDictionary)
         if updateStatus == errSecSuccess { return true }
@@ -31,6 +32,7 @@ enum KeychainHelper {
         var addQuery = lookup
         addQuery[kSecValueData as String] = data
         addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlocked
+        addQuery[kSecAttrSynchronizable as String] = false  // iCloud 동기화 방지
         return SecItemAdd(addQuery as CFDictionary, nil) == errSecSuccess
     }
 

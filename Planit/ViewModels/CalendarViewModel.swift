@@ -793,7 +793,7 @@ final class CalendarViewModel: ObservableObject {
         // 달성률 반영 — 항상 UUID 기반 고정 키 사용 (googleEventId는 나중에 할당될 수 있어 키가 불안정)
         let completionKey = "todo:\(todos[index].id.uuidString)"
         if todos[index].isCompleted {
-            goalService?.markCompletion(eventId: completionKey, goalId: nil, status: .done, plannedMinutes: 30)
+            goalService?.markCompletion(eventId: completionKey, eventTitle: todos[index].title, goalId: nil, status: .done, plannedMinutes: 30)
         } else {
             goalService?.removeCompletion(eventId: completionKey)
         }
@@ -986,13 +986,13 @@ final class CalendarViewModel: ObservableObject {
         completedEventIDs.contains(eventID)
     }
 
-    func toggleEventCompleted(_ eventID: String) {
+    func toggleEventCompleted(_ eventID: String, title: String? = nil) {
         if completedEventIDs.contains(eventID) {
             completedEventIDs.remove(eventID)
             goalService?.removeCompletion(eventId: eventID)
         } else {
             completedEventIDs.insert(eventID)
-            goalService?.markCompletion(eventId: eventID, goalId: nil, status: .done, plannedMinutes: 60)
+            goalService?.markCompletion(eventId: eventID, eventTitle: title, goalId: nil, status: .done, plannedMinutes: 60)
         }
         saveCompletedEvents()
     }

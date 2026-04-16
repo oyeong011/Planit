@@ -863,7 +863,8 @@ struct ReviewView: View {
         let s = reviewService.suggestions[index]
         let minutes = Int((s.proposedEnd ?? Date()).timeIntervalSince(s.proposedStart ?? Date()) / 60)
         goalService.markCompletion(
-            eventId: s.proposedTitle ?? s.title,
+            eventId: s.sourceEventId ?? s.title,
+            eventTitle: s.title,
             goalId: s.goalId,
             status: status,
             plannedMinutes: max(minutes, 30)

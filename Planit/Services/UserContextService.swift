@@ -22,7 +22,8 @@ final class UserContextService: ObservableObject {
     }
 
     init() {
-        let support = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let support = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Library/Application Support")
         let dir = support.appendingPathComponent("Planit", isDirectory: true)
         try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
         contextFileURL = dir.appendingPathComponent("user_context.md")
@@ -52,11 +53,13 @@ final class UserContextService: ObservableObject {
             trimmed.append(line)
         }
 
+        // 전체 컨텍스트 최대 8000자 제한 (토큰 스터핑 방지)
+        let body = String(trimmed.joined(separator: "\n").prefix(8000))
         return """
         ## 🧠 사용자 개인 컨텍스트 (초개인화)
         > 아래는 이 사용자에 대해 누적된 개인 정보입니다. 일정 추천 시 반드시 참고하세요.
 
-        \(trimmed.joined(separator: "\n"))
+        \(body)
         ---
         """
     }
@@ -108,7 +111,7 @@ final class UserContextService: ObservableObject {
             } else {
                 rest = ""
             }
-            existing = existing.components(separatedBy: marker).first! + marker + "\n\(detail)\n" + rest
+            existing = (existing.components(separatedBy: marker).first ?? "") + marker + "\n\(detail)\n" + rest
         } else {
             existing += "\n\(marker)\n\(detail)\n"
         }
@@ -153,8 +156,10 @@ final class UserContextService: ObservableObject {
     func extractAndUpdate(from messages: [String], claudePath: String) async {
         guard !messages.isEmpty else { return }
 
-        let conversation = messages.suffix(10).joined(separator: "\n")
-        let existingContext = sectionContent(Section.profile) + "\n" + sectionContent(Section.style)
+        let conversation = Self.sanitizeForPrompt(messages.suffix(10).joined(separator: "\n"))
+        let existingContext = Self.sanitizeForPrompt(
+            sectionContent(Section.profile) + "\n" + sectionContent(Section.style)
+        )
 
         let prompt = """
         다음은 캘린더 앱 사용자와 AI의 대화 내용입니다.
@@ -257,7 +262,7 @@ final class UserContextService: ObservableObject {
                 - 프로젝트라면: 주요 단계, 체크포인트
 
                 DuckDuckGo 검색 결과 참고:
-                \(ddgResult.isEmpty ? "없음" : ddgResult)
+                \(ddgResult.isEmpty ? "없음" : Self.sanitizeForPrompt(ddgResult, maxLength: 1500))
 
                 5-10줄로 간결하게. 날짜 정보는 "확인 필요"로 표시.
                 """
@@ -428,6 +433,27 @@ final class UserContextService: ObservableObject {
             }.resume()
         }
         return result
+    }
+
+    // MARK: - Sanitization (프롬프트 인젝션 방지)
+
+    /// 사용자/외부 데이터를 프롬프트에 삽입하기 전 sanitize
+    nonisolated private static func sanitizeForPrompt(_ text: String, maxLength: Int = 2000) -> String {
+        String(text
+            .replacingOccurrences(of: "\r", with: " ")
+            .components(separatedBy: "\n")
+            .map { line -> String in
+                // 프롬프트 구조를 깨는 패턴 제거 (role 마커, JSON 탈출 시도)
+                let trimmed = line.trimmingCharacters(in: .whitespaces)
+                if trimmed.hasPrefix("사용자:") || trimmed.hasPrefix("어시스턴트:") ||
+                   trimmed.hasPrefix("Human:") || trimmed.hasPrefix("Assistant:") ||
+                   trimmed.hasPrefix("System:") || trimmed.hasPrefix("SYSTEM:") {
+                    return "[filtered]"
+                }
+                return line
+            }
+            .joined(separator: "\n")
+            .prefix(maxLength))
     }
 
     // MARK: - Claude One-shot (nonisolated helper)

@@ -1,6 +1,16 @@
 import Foundation
 import SwiftUI
 import CommonCrypto
+import os
+
+// double-close 방지용 경량 mutex
+private final class UnfairLock: @unchecked Sendable {
+    private let _lock = UnsafeMutablePointer<os_unfair_lock>.allocate(capacity: 1)
+    init() { _lock.initialize(to: os_unfair_lock()) }
+    deinit { _lock.deallocate() }
+    func lock()   { os_unfair_lock_lock(_lock) }
+    func unlock() { os_unfair_lock_unlock(_lock) }
+}
 
 enum AuthError: LocalizedError {
     case noCredentials
@@ -59,7 +69,7 @@ final class GoogleAuthManager: ObservableObject {
         }
 
         // 2. Legacy plaintext JSON file → migrate to Keychain
-        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        guard let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else { return }
         let legacyPath = support.appendingPathComponent("Planit/google_credentials.json")
         if let data = try? Data(contentsOf: legacyPath),
            let json = try? JSONSerialization.jsonObject(with: data) as? [String: String],
@@ -254,14 +264,24 @@ final class GoogleAuthManager: ObservableObject {
     private func waitForAuthCode(serverFd: Int32, expectedState: String) async throws -> String {
         try await withCheckedThrowingContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
-                // Close serverFd after 5 minutes to unblock accept()
-                let timeoutItem = DispatchWorkItem { close(serverFd) }
-                DispatchQueue.global().asyncAfter(deadline: .now() + 300, execute: timeoutItem)
+                // atomic flag — 타임아웃과 defer 중 딱 한 번만 close()
+                let closed = UnfairLock()
+                var didClose = false
+                let safeClose = {
+                    closed.lock()
+                    defer { closed.unlock() }
+                    guard !didClose else { return }
+                    didClose = true
+                    close(serverFd)
+                }
+
+                // 90초 타임아웃으로 단축 (5분 → 90초)
+                let timeoutItem = DispatchWorkItem { safeClose() }
+                DispatchQueue.global().asyncAfter(deadline: .now() + 90, execute: timeoutItem)
 
                 defer {
                     timeoutItem.cancel()
-                    // Only close if timeout didn't already close it
-                    close(serverFd)
+                    safeClose()
                 }
 
                 var clientAddr = sockaddr_in()
