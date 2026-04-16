@@ -420,3 +420,20 @@
 /* ===== Update Banner ===== */
 "update.available" = "Update verfügbar";
 "update.tap.to.update" = "Klicken zum Update auf v%@";
+
+/* Update notifications */
+"update.notification.title" = "Calen-Update verfügbar";
+"update.notification.body" = "Version %@ ist verfügbar. Klicke auf das Menüleistensymbol zum Aktualisieren.";
+
+/* AI setup */
+"setup.or.npm" = "oder mit npm";
+
+/* Auth errors */
+"auth.error.no.credentials" = "Google-OAuth-Anmeldedaten nicht konfiguriert. Gehe zu Einstellungen zur Registrierung.";
+"auth.error.server.failed" = "Lokaler Authentifizierungsserver konnte nicht gestartet werden.";
+"auth.error.no.code" = "Kein Autorisierungscode empfangen. Bitte erneut versuchen.";
+"auth.error.redirect.mismatch" = "OAuth-Weiterleitungsfehler. Stelle sicher, dass der OAuth-Clienttyp in der Google Cloud Console 'Desktop-App' ist.";
+"auth.error.token.exchange" = "Token-Austausch fehlgeschlagen: %@";
+"auth.error.not.authenticated" = "Nicht bei Google angemeldet.";
+"auth.error.state.mismatch" = "Authentifizierungsstatus-Abweichung (CSRF-Schutz).";
+"auth.error.timeout" = "Authentifizierung abgelaufen. Bitte erneut versuchen.";

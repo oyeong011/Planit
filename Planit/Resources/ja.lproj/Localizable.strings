@@ -420,3 +420,20 @@
 /* ===== Update Banner ===== */
 "update.available" = "アップデートあり";
 "update.tap.to.update" = "v%@にアップデートするにはクリック";
+
+/* Update notifications */
+"update.notification.title" = "Calenのアップデートが利用可能";
+"update.notification.body" = "バージョン%@が利用可能です。メニューバーのアイコンをクリックして更新してください。";
+
+/* AI setup */
+"setup.or.npm" = "またはnpmで";
+
+/* Auth errors */
+"auth.error.no.credentials" = "Google OAuth認証情報が設定されていません。設定で登録してください。";
+"auth.error.server.failed" = "ローカル認証サーバーの起動に失敗しました。";
+"auth.error.no.code" = "認証コードを受信できませんでした。再試行してください。";
+"auth.error.redirect.mismatch" = "OAuthリダイレクトエラー。Google CloudコンソールでOAuthクライアントの種類が「デスクトップアプリ」であることを確認してください。";
+"auth.error.token.exchange" = "トークン交換失敗: %@";
+"auth.error.not.authenticated" = "Googleにサインインしていません。";
+"auth.error.state.mismatch" = "認証状態の不一致（CSRF保護）。";
+"auth.error.timeout" = "認証がタイムアウトしました。再試行してください。";
