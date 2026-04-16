@@ -11,10 +11,26 @@ final class NotificationService: NSObject, ObservableObject, UNUserNotificationC
     override init() {
         super.init()
         center.delegate = self
-        Task { await requestPermission() }
+        Task { await checkOrRequestPermission() }
     }
 
     // MARK: - Permission
+
+    /// 현재 권한 상태를 먼저 확인하고, notDetermined일 때만 시스템 다이얼로그 표시
+    func checkOrRequestPermission() async {
+        let settings = await center.notificationSettings()
+        switch settings.authorizationStatus {
+        case .authorized, .provisional:
+            isAuthorized = true
+        case .notDetermined:
+            await requestPermission()
+        case .denied, .ephemeral:
+            isAuthorized = false
+            print("[NotificationService] 권한 거부됨 — 알림 비활성화")
+        @unknown default:
+            isAuthorized = false
+        }
+    }
 
     private func requestPermission() async {
         do {
@@ -23,6 +39,15 @@ final class NotificationService: NSObject, ObservableObject, UNUserNotificationC
         } catch {
             print("[NotificationService] 권한 요청 실패: \(error)")
         }
+    }
+
+    /// 권한이 있을 때만 알림을 예약하는 헬퍼
+    private func addRequest(_ request: UNNotificationRequest) {
+        guard isAuthorized else {
+            print("[NotificationService] 권한 없음 — 알림 스킵: \(request.identifier)")
+            return
+        }
+        addRequest(request)
     }
 
     // MARK: - Daily Briefing
@@ -45,9 +70,7 @@ final class NotificationService: NSObject, ObservableObject, UNUserNotificationC
             trigger: trigger
         )
 
-        center.add(request) { error in
-            if let error { print("[NotificationService] 데일리 브리핑 예약 실패: \(error)") }
-        }
+        addRequest(request)
     }
 
     func updateDailyBriefingContent(events: [String], todos: [String], morningBriefHour: Int = 8) {
@@ -81,9 +104,7 @@ final class NotificationService: NSObject, ObservableObject, UNUserNotificationC
             trigger: trigger
         )
 
-        center.add(request) { error in
-            if let error { print("[NotificationService] 브리핑 업데이트 실패: \(error)") }
-        }
+        addRequest(request)
     }
 
     // MARK: - Event Reminder
@@ -107,9 +128,7 @@ final class NotificationService: NSObject, ObservableObject, UNUserNotificationC
             trigger: trigger
         )
 
-        center.add(request) { error in
-            if let error { print("[NotificationService] 이벤트 알림 예약 실패: \(error)") }
-        }
+        addRequest(request)
     }
 
     func cancelEventReminder(eventId: String) {
@@ -136,9 +155,7 @@ final class NotificationService: NSObject, ObservableObject, UNUserNotificationC
             trigger: trigger
         )
 
-        center.add(request) { error in
-            if let error { print("[NotificationService] 이브닝 리뷰 예약 실패: \(error)") }
-        }
+        addRequest(request)
     }
 
     // MARK: - Batch Schedule for Today's Events

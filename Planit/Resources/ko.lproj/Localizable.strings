@@ -272,7 +272,7 @@
 "settings.ai.installed.badge" = "설치됨";
 "settings.ai.not.installed.badge" = "미설치";
 "settings.ai.claude.installed.detail" = "설치됨 — 강력한 자연어 이해";
-"settings.ai.claude.install.hint" = "설치 필요: brew install claude";
+"settings.ai.claude.install.hint" = "설치 필요: brew install claude-code";
 "settings.ai.codex.installed.detail" = "설치됨 — 코드 최적화 특화";
 "settings.ai.codex.install.hint" = "설치 필요: npm install -g @openai/codex";
 "settings.ai.save.button" = "AI 설정 저장";

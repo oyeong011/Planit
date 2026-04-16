@@ -272,7 +272,7 @@
 "settings.ai.installed.badge" = "Installed";
 "settings.ai.not.installed.badge" = "Not Installed";
 "settings.ai.claude.installed.detail" = "Installed — Powerful natural language understanding";
-"settings.ai.claude.install.hint" = "Required: brew install claude";
+"settings.ai.claude.install.hint" = "Required: brew install claude-code";
 "settings.ai.codex.installed.detail" = "Installed — Optimized for code";
 "settings.ai.codex.install.hint" = "Required: npm install -g @openai/codex";
 "settings.ai.save.button" = "Save AI Settings";

@@ -827,7 +827,8 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 3) {
                         Text("Calen")
                             .font(.system(size: 14, weight: .semibold))
-                        Text(String(localized: "settings.app.version"))
+                        let bundleVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+                        Text("v\(bundleVersion) · Personal AI Calendar Assistant")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }

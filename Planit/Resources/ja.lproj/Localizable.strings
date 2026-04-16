@@ -273,7 +273,7 @@
 "settings.ai.installed.badge" = "インストール済み";
 "settings.ai.not.installed.badge" = "未インストール";
 "settings.ai.claude.installed.detail" = "インストール済み — 強力な自然言語理解";
-"settings.ai.claude.install.hint" = "必要: brew install claude";
+"settings.ai.claude.install.hint" = "必要: brew install claude-code";
 "settings.ai.codex.installed.detail" = "インストール済み — コード最適化";
 "settings.ai.codex.install.hint" = "必要: npm install -g @openai/codex";
 "settings.ai.save.button" = "AI設定を保存";

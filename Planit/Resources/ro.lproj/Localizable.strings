@@ -273,7 +273,7 @@
 "settings.ai.installed.badge" = "Instalat";
 "settings.ai.not.installed.badge" = "Neinstalat";
 "settings.ai.claude.installed.detail" = "Instalat — Înțelegere puternică a limbajului natural";
-"settings.ai.claude.install.hint" = "Necesar: brew install claude";
+"settings.ai.claude.install.hint" = "Necesar: brew install claude-code";
 "settings.ai.codex.installed.detail" = "Instalat — Optimizat pentru cod";
 "settings.ai.codex.install.hint" = "Necesar: npm install -g @openai/codex";
 "settings.ai.save.button" = "Salvează setările AI";
