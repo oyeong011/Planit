@@ -104,6 +104,10 @@ struct MainCalendarView: View {
                 onDismiss: { showSettings = false }
             )
         }
+        // popover가 바깥 클릭으로 닫히면 설정 시트도 함께 닫기
+        .onReceive(NotificationCenter.default.publisher(for: .calenPopoverDidClose)) { _ in
+            showSettings = false
+        }
     }
 
     // MARK: - Left Panel

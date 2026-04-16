@@ -52,6 +52,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         popover = NSPopover()
         popover.contentSize = NSSize(width: 1320, height: 860)
         popover.behavior = .transient
+        popover.delegate = self
         popover.contentViewController = NSHostingController(rootView: MainView())
 
         globalClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
@@ -178,6 +179,18 @@ extension AppDelegate {
             globalClickMonitor = nil
         }
     }
+}
+
+// MARK: - NSPopoverDelegate
+extension AppDelegate: NSPopoverDelegate {
+    /// popover가 외부 클릭 등으로 닫힐 때 → MainView의 showSettings를 리셋
+    func popoverDidClose(_ notification: Notification) {
+        NotificationCenter.default.post(name: .calenPopoverDidClose, object: nil)
+    }
+}
+
+extension Notification.Name {
+    static let calenPopoverDidClose = Notification.Name("calenPopoverDidClose")
 }
 
 #elseif os(iOS)
