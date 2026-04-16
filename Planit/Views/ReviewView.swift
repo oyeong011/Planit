@@ -155,7 +155,7 @@ struct ReviewView: View {
         let rateColor = progressRateColor(rate)
 
         return VStack(alignment: .leading, spacing: 10) {
-            // 기간 탭
+            // 기간 탭 — 언더라인 스타일
             HStack(spacing: 0) {
                 ForEach([
                     (GoalService.CompletionPeriod.day,   String(localized: "common.today")),
@@ -163,69 +163,67 @@ struct ReviewView: View {
                     (.month, String(localized: "review.period.month")),
                     (.year,  String(localized: "review.period.year")),
                 ], id: \.1) { period, label in
+                    let isSelected = selectedPeriod == period
                     Button { selectedPeriod = period } label: {
-                        Text(label)
-                            .font(.system(size: 10, weight: selectedPeriod == period ? .medium : .regular))
-                            .foregroundStyle(selectedPeriod == period ? .primary : .secondary)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 4)
-                            .background(
-                                RoundedRectangle(cornerRadius: 5)
-                                    .fill(selectedPeriod == period ? Color.secondary.opacity(0.15) : Color.clear)
-                            )
-                            .contentShape(Rectangle())
+                        VStack(spacing: 3) {
+                            Text(label)
+                                .font(.system(size: 10, weight: isSelected ? .semibold : .regular))
+                                .foregroundStyle(isSelected ? Color.primary : Color.secondary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 4)
+                            Capsule()
+                                .fill(isSelected ? rateColor : Color.clear)
+                                .frame(height: 2)
+                        }
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .animation(.easeInOut(duration: 0.2), value: isSelected)
                 }
             }
-            .padding(3)
-            .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.06)))
 
             if total > 0 {
-                VStack(spacing: 8) {
-                    HStack(spacing: 16) {
-                        // 원형 링 진행률
-                        ZStack {
-                            Circle()
-                                .stroke(Color.secondary.opacity(0.12), lineWidth: 5)
-                            Circle()
-                                .trim(from: 0, to: CGFloat(rate))
-                                .stroke(rateColor, style: StrokeStyle(lineWidth: 5, lineCap: .round))
-                                .rotationEffect(.degrees(-90))
-                                .animation(.spring(duration: 0.5), value: rate)
-                            VStack(spacing: 0) {
-                                Text("\(done)")
-                                    .font(.system(size: 14, weight: .bold))
-                                Text("/ \(total)")
-                                    .font(.system(size: 9))
-                                    .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 8) {
+                    // 카운트 + 비율 한 줄
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text("\(done)")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.primary)
+                        Text("/ \(total)")
+                            .font(.system(size: 13, weight: .regular))
+                            .foregroundStyle(.secondary)
+                        Text(String(localized: "review.completion.rate"))
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text("\(Int(rate * 100))%")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(rateColor)
+                    }
+
+                    // 도트 인디케이터 (total ≤ 20) 또는 슬림 바
+                    if total <= 20 {
+                        HStack(spacing: 5) {
+                            ForEach(0..<total, id: \.self) { i in
+                                Circle()
+                                    .fill(i < done ? rateColor : Color.secondary.opacity(0.18))
+                                    .frame(width: 8, height: 8)
+                                    .animation(.spring(duration: 0.4).delay(Double(i) * 0.03), value: done)
+                            }
+                            Spacer()
+                        }
+                    } else {
+                        GeometryReader { geo in
+                            ZStack(alignment: .leading) {
+                                Capsule().fill(Color.secondary.opacity(0.12))
+                                Capsule()
+                                    .fill(rateColor)
+                                    .frame(width: max(geo.size.width * CGFloat(rate), rate > 0 ? 4 : 0))
+                                    .animation(.spring(duration: 0.5), value: rate)
                             }
                         }
-                        .frame(width: 52, height: 52)
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("\(Int(rate * 100))%")
-                                .font(.system(size: 22, weight: .bold))
-                                .foregroundStyle(rateColor)
-                            Text(String(localized: "review.completion.rate"))
-                                .font(.system(size: 10))
-                                .foregroundStyle(.secondary)
-                        }
-
-                        Spacer()
+                        .frame(height: 4)
                     }
-
-                    // 얇은 진행 바
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 2).fill(Color.secondary.opacity(0.12))
-                            RoundedRectangle(cornerRadius: 2)
-                                .fill(rateColor)
-                                .frame(width: max(geo.size.width * CGFloat(rate), rate > 0 ? 4 : 0))
-                                .animation(.spring(duration: 0.4), value: rate)
-                        }
-                    }
-                    .frame(height: 4)
                 }
             } else {
                 HStack(spacing: 6) {
