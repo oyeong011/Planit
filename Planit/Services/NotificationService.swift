@@ -47,7 +47,9 @@ final class NotificationService: NSObject, ObservableObject, UNUserNotificationC
             print("[NotificationService] 권한 없음 — 알림 스킵: \(request.identifier)")
             return
         }
-        addRequest(request)
+        center.add(request) { error in
+            if let error { print("[NotificationService] 알림 등록 실패: \(error)") }
+        }
     }
 
     // MARK: - Daily Briefing

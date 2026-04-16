@@ -437,3 +437,59 @@
 "auth.error.not.authenticated" = "Googleにサインインしていません。";
 "auth.error.state.mismatch" = "認証状態の不一致（CSRF保護）。";
 "auth.error.timeout" = "認証がタイムアウトしました。再試行してください。";
+"review.tab.title" = "レビュー";
+"review.category.title" = "カレンダー別達成率";
+"review.category.other" = "その他";
+"review.tomorrow.empty" = "明日の予定はありません";
+"review.tomorrow.more" = "+%d件";
+"review.category.primary" = "メインカレンダー";
+"review.weekly.chart.title" = "7日間の達成状況";
+"review.day.today.short" = "今日";
+"goal.section.title" = "長期目標";
+"goal.section.subtitle" = "チャットから検出";
+"goal.no.activity" = "今月の関連活動なし";
+"goal.delete" = "目標を削除";
+"goal.detected.notice" = "目標を保存: %@";
+"goal.timeline.month" = "今月";
+"goal.timeline.quarter" = "今四半期";
+"goal.timeline.year" = "今年";
+"goal.timeline.longterm" = "長期";
+
+/* Goal CRUD */
+"goal.empty.hint" = "チャットで目標を話すとここに保存されます";
+"goal.add.title" = "目標を追加";
+"goal.edit.title" = "目標を編集";
+"goal.field.name" = "目標名";
+"goal.field.name.placeholder" = "例：大手IT企業への就職";
+"goal.field.targets" = "ターゲット（カンマ区切り）";
+"goal.field.targets.placeholder" = "例：Google, Apple, Sony";
+"goal.field.timeline" = "期間";
+"goal.cancel" = "キャンセル";
+"goal.save" = "保存";
+
+/* Habit Heatmap */
+"habit.heatmap.title" = "習慣達成率";
+"habit.avg.rate" = "平均%d%%";
+"habit.streak.days" = "%d日連続達成 🔥";
+"habit.streak.none" = "今日からストリークを始めましょう";
+"habit.legend.low" = "低";
+"habit.legend.high" = "高";
+
+/* My Habits Section */
+"habit.section.title" = "My Habits";
+"habit.empty.hint" = "Tap + to add your first habit";
+"habit.add.title" = "Add Habit";
+"habit.edit" = "Edit Habit";
+"habit.delete" = "Delete Habit";
+"habit.field.name" = "Habit Name";
+"habit.field.name.placeholder" = "e.g. Exercise, Wake up early";
+"habit.field.emoji" = "Icon";
+"habit.field.color" = "Color";
+"habit.field.weekly" = "Weekly Goal (times)";
+"habit.detected.notice" = "Habit added: %@";
+"habit.graph.title" = "習慣達成率";
+"habit.graph.thisweek" = "今週";
+"habit.graph.lastweek" = "先週";
+"habit.graph.2weeksago" = "2週前";
+"habit.graph.3weeksago" = "3週前";
+"habit.graph.4weeksago" = "4週前";

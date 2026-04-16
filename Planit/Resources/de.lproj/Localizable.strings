@@ -437,3 +437,59 @@
 "auth.error.not.authenticated" = "Nicht bei Google angemeldet.";
 "auth.error.state.mismatch" = "Authentifizierungsstatus-Abweichung (CSRF-Schutz).";
 "auth.error.timeout" = "Authentifizierung abgelaufen. Bitte erneut versuchen.";
+"review.tab.title" = "Review";
+"review.category.title" = "By Calendar";
+"review.category.other" = "Other";
+"review.tomorrow.empty" = "No events scheduled for tomorrow";
+"review.tomorrow.more" = "+%d more";
+"review.category.primary" = "Primary";
+"review.weekly.chart.title" = "7-Day Progress";
+"review.day.today.short" = "Today";
+"goal.section.title" = "Long-term Goals";
+"goal.section.subtitle" = "Detected from chat";
+"goal.no.activity" = "No related activity this month";
+"goal.delete" = "Delete Goal";
+"goal.detected.notice" = "Goal saved: %@";
+"goal.timeline.month" = "This Month";
+"goal.timeline.quarter" = "This Quarter";
+"goal.timeline.year" = "This Year";
+"goal.timeline.longterm" = "Long-term";
+
+/* Goal CRUD */
+"goal.empty.hint" = "Spreche im Chat über deine Ziele – sie erscheinen hier";
+"goal.add.title" = "Ziel hinzufügen";
+"goal.edit.title" = "Ziel bearbeiten";
+"goal.field.name" = "Zielname";
+"goal.field.name.placeholder" = "z.B. Einen Tech-Job finden";
+"goal.field.targets" = "Zielunternehmen (kommagetrennt)";
+"goal.field.targets.placeholder" = "z.B. Google, SAP, Siemens";
+"goal.field.timeline" = "Zeitraum";
+"goal.cancel" = "Abbrechen";
+"goal.save" = "Speichern";
+
+/* Habit Heatmap */
+"habit.heatmap.title" = "Gewohnheitsrate";
+"habit.avg.rate" = "Ø %d%%";
+"habit.streak.days" = "%d Tage in Folge 🔥";
+"habit.streak.none" = "Starte heute deine Serie";
+"habit.legend.low" = "Wenig";
+"habit.legend.high" = "Viel";
+
+/* My Habits Section */
+"habit.section.title" = "My Habits";
+"habit.empty.hint" = "Tap + to add your first habit";
+"habit.add.title" = "Add Habit";
+"habit.edit" = "Edit Habit";
+"habit.delete" = "Delete Habit";
+"habit.field.name" = "Habit Name";
+"habit.field.name.placeholder" = "e.g. Exercise, Wake up early";
+"habit.field.emoji" = "Icon";
+"habit.field.color" = "Color";
+"habit.field.weekly" = "Weekly Goal (times)";
+"habit.detected.notice" = "Habit added: %@";
+"habit.graph.title" = "Gewohnheitstreue";
+"habit.graph.thisweek" = "Diese W.";
+"habit.graph.lastweek" = "Letzte W.";
+"habit.graph.2weeksago" = "Vor 2 W.";
+"habit.graph.3weeksago" = "Vor 3 W.";
+"habit.graph.4weeksago" = "Vor 4 W.";

@@ -437,3 +437,59 @@
 "auth.error.not.authenticated" = "Non connecté à Google.";
 "auth.error.state.mismatch" = "Discordance d'état d'authentification (protection CSRF).";
 "auth.error.timeout" = "L'authentification a expiré. Réessayez.";
+"review.tab.title" = "Review";
+"review.category.title" = "By Calendar";
+"review.category.other" = "Other";
+"review.tomorrow.empty" = "No events scheduled for tomorrow";
+"review.tomorrow.more" = "+%d more";
+"review.category.primary" = "Primary";
+"review.weekly.chart.title" = "7-Day Progress";
+"review.day.today.short" = "Today";
+"goal.section.title" = "Long-term Goals";
+"goal.section.subtitle" = "Detected from chat";
+"goal.no.activity" = "No related activity this month";
+"goal.delete" = "Delete Goal";
+"goal.detected.notice" = "Goal saved: %@";
+"goal.timeline.month" = "This Month";
+"goal.timeline.quarter" = "This Quarter";
+"goal.timeline.year" = "This Year";
+"goal.timeline.longterm" = "Long-term";
+
+/* Goal CRUD */
+"goal.empty.hint" = "Parlez de vos objectifs dans le chat, ils apparaîtront ici";
+"goal.add.title" = "Ajouter un objectif";
+"goal.edit.title" = "Modifier l'objectif";
+"goal.field.name" = "Nom de l'objectif";
+"goal.field.name.placeholder" = "ex : Décrocher un emploi tech";
+"goal.field.targets" = "Cibles (séparées par des virgules)";
+"goal.field.targets.placeholder" = "ex : Google, Apple, Meta";
+"goal.field.timeline" = "Horizon";
+"goal.cancel" = "Annuler";
+"goal.save" = "Enregistrer";
+
+/* Habit Heatmap */
+"habit.heatmap.title" = "Taux de complétion";
+"habit.avg.rate" = "Moy. %d%%";
+"habit.streak.days" = "%d jours d'affilée 🔥";
+"habit.streak.none" = "Commencez votre série aujourd'hui";
+"habit.legend.low" = "Peu";
+"habit.legend.high" = "Bcp";
+
+/* My Habits Section */
+"habit.section.title" = "My Habits";
+"habit.empty.hint" = "Tap + to add your first habit";
+"habit.add.title" = "Add Habit";
+"habit.edit" = "Edit Habit";
+"habit.delete" = "Delete Habit";
+"habit.field.name" = "Habit Name";
+"habit.field.name.placeholder" = "e.g. Exercise, Wake up early";
+"habit.field.emoji" = "Icon";
+"habit.field.color" = "Color";
+"habit.field.weekly" = "Weekly Goal (times)";
+"habit.detected.notice" = "Habit added: %@";
+"habit.graph.title" = "Taux d'adherence";
+"habit.graph.thisweek" = "Cette sem.";
+"habit.graph.lastweek" = "Sem. derniere";
+"habit.graph.2weeksago" = "Il y a 2 sem.";
+"habit.graph.3weeksago" = "Il y a 3 sem.";
+"habit.graph.4weeksago" = "Il y a 4 sem.";

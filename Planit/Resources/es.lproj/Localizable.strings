@@ -437,3 +437,59 @@
 "auth.error.not.authenticated" = "No has iniciado sesión en Google.";
 "auth.error.state.mismatch" = "Discrepancia de estado de autenticación (protección CSRF).";
 "auth.error.timeout" = "La autenticación ha agotado el tiempo. Intenta de nuevo.";
+"review.tab.title" = "Review";
+"review.category.title" = "By Calendar";
+"review.category.other" = "Other";
+"review.tomorrow.empty" = "No events scheduled for tomorrow";
+"review.tomorrow.more" = "+%d more";
+"review.category.primary" = "Primary";
+"review.weekly.chart.title" = "7-Day Progress";
+"review.day.today.short" = "Today";
+"goal.section.title" = "Long-term Goals";
+"goal.section.subtitle" = "Detected from chat";
+"goal.no.activity" = "No related activity this month";
+"goal.delete" = "Delete Goal";
+"goal.detected.notice" = "Goal saved: %@";
+"goal.timeline.month" = "This Month";
+"goal.timeline.quarter" = "This Quarter";
+"goal.timeline.year" = "This Year";
+"goal.timeline.longterm" = "Long-term";
+
+/* Goal CRUD */
+"goal.empty.hint" = "Habla de tus metas en el chat y aparecerán aquí";
+"goal.add.title" = "Agregar meta";
+"goal.edit.title" = "Editar meta";
+"goal.field.name" = "Nombre de la meta";
+"goal.field.name.placeholder" = "ej: Conseguir trabajo en tecnología";
+"goal.field.targets" = "Objetivos (separados por comas)";
+"goal.field.targets.placeholder" = "ej: Google, Apple, Meta";
+"goal.field.timeline" = "Plazo";
+"goal.cancel" = "Cancelar";
+"goal.save" = "Guardar";
+
+/* Habit Heatmap */
+"habit.heatmap.title" = "Tasa de hábitos";
+"habit.avg.rate" = "Prom. %d%%";
+"habit.streak.days" = "%d días seguidos 🔥";
+"habit.streak.none" = "Empieza tu racha hoy";
+"habit.legend.low" = "Poco";
+"habit.legend.high" = "Mucho";
+
+/* My Habits Section */
+"habit.section.title" = "My Habits";
+"habit.empty.hint" = "Tap + to add your first habit";
+"habit.add.title" = "Add Habit";
+"habit.edit" = "Edit Habit";
+"habit.delete" = "Delete Habit";
+"habit.field.name" = "Habit Name";
+"habit.field.name.placeholder" = "e.g. Exercise, Wake up early";
+"habit.field.emoji" = "Icon";
+"habit.field.color" = "Color";
+"habit.field.weekly" = "Weekly Goal (times)";
+"habit.detected.notice" = "Habit added: %@";
+"habit.graph.title" = "Adherencia al habito";
+"habit.graph.thisweek" = "Esta sem.";
+"habit.graph.lastweek" = "Sem. pasada";
+"habit.graph.2weeksago" = "Hace 2 sem.";
+"habit.graph.3weeksago" = "Hace 3 sem.";
+"habit.graph.4weeksago" = "Hace 4 sem.";

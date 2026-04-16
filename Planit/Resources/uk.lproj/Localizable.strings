@@ -437,4 +437,59 @@
 "auth.error.token.exchange" = "Token exchange failed: %@";
 "auth.error.not.authenticated" = "Not signed in to Google.";
 "auth.error.state.mismatch" = "Auth state mismatch (CSRF protection triggered).";
-"auth.error.timeout" = "Authentication timed out. Please try again.";
+"auth.error.timeout" = "Authentication timed out. Please try again.";"review.tab.title" = "Review";
+"review.category.title" = "By Calendar";
+"review.category.other" = "Other";
+"review.tomorrow.empty" = "No events scheduled for tomorrow";
+"review.tomorrow.more" = "+%d more";
+"review.category.primary" = "Primary";
+"review.weekly.chart.title" = "7-Day Progress";
+"review.day.today.short" = "Today";
+"goal.section.title" = "Long-term Goals";
+"goal.section.subtitle" = "Detected from chat";
+"goal.no.activity" = "No related activity this month";
+"goal.delete" = "Delete Goal";
+"goal.detected.notice" = "Goal saved: %@";
+"goal.timeline.month" = "This Month";
+"goal.timeline.quarter" = "This Quarter";
+"goal.timeline.year" = "This Year";
+"goal.timeline.longterm" = "Long-term";
+
+/* Goal CRUD */
+"goal.empty.hint" = "Розкажіть про цілі в чаті — вони з'являться тут";
+"goal.add.title" = "Додати ціль";
+"goal.edit.title" = "Редагувати ціль";
+"goal.field.name" = "Назва цілі";
+"goal.field.name.placeholder" = "напр: Влаштуватися в IT-компанію";
+"goal.field.targets" = "Цілі (через кому)";
+"goal.field.targets.placeholder" = "напр: Яндекс, EPAM, Luxoft";
+"goal.field.timeline" = "Термін";
+"goal.cancel" = "Скасувати";
+"goal.save" = "Зберегти";
+
+/* Habit Heatmap */
+"habit.heatmap.title" = "Виконання звичок";
+"habit.avg.rate" = "Середнє %d%%";
+"habit.streak.days" = "%d днів поспіль 🔥";
+"habit.streak.none" = "Почніть серію сьогодні";
+"habit.legend.low" = "Мало";
+"habit.legend.high" = "Багато";
+
+/* My Habits Section */
+"habit.section.title" = "My Habits";
+"habit.empty.hint" = "Tap + to add your first habit";
+"habit.add.title" = "Add Habit";
+"habit.edit" = "Edit Habit";
+"habit.delete" = "Delete Habit";
+"habit.field.name" = "Habit Name";
+"habit.field.name.placeholder" = "e.g. Exercise, Wake up early";
+"habit.field.emoji" = "Icon";
+"habit.field.color" = "Color";
+"habit.field.weekly" = "Weekly Goal (times)";
+"habit.detected.notice" = "Habit added: %@";
+"habit.graph.title" = "Habit Adherence";
+"habit.graph.thisweek" = "This Wk";
+"habit.graph.lastweek" = "Last Wk";
+"habit.graph.2weeksago" = "2 Wks";
+"habit.graph.3weeksago" = "3 Wks";
+"habit.graph.4weeksago" = "4 Wks";

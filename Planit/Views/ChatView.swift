@@ -5,9 +5,16 @@ import PDFKit
 struct ChatView: View {
     @ObservedObject var aiService: AIService
     @ObservedObject var viewModel: CalendarViewModel
-    @State private var messages: [ChatMessage] = []
+    var goalMemoryService: GoalMemoryService? = nil
+    var habitService: HabitService? = nil          // 습관 — 목표와 완전히 분리
+    // aiService.chatMessages 사용 — 탭 전환 후에도 유지
     @State private var inputText: String = ""
     @State private var attachments: [ChatAttachment] = []
+    @State private var detectedGoalNotice: String? = nil
+    @State private var detectedHabitNotice: String? = nil  // 습관 감지 알림 (별도 상태)
+    // 배너 자동 닫기 Task 핸들 — 새 배너가 오면 이전 dismiss를 취소하여 경합 방지
+    @State private var goalNoticeDismissTask: Task<Void, Never>? = nil
+    @State private var habitNoticeDismissTask: Task<Void, Never>? = nil
 
     /// 허용하는 파일 타입
     private static let allowedTypes: [UTType] = [.pdf]
@@ -53,9 +60,9 @@ struct ChatView: View {
                 Spacer()
 
                 // 채팅 지우기 버튼
-                if !messages.isEmpty {
+                if !aiService.chatMessages.isEmpty {
                     Button {
-                        messages = []
+                        aiService.chatMessages = []
                     } label: {
                         Image(systemName: "trash")
                             .font(.system(size: 12))
@@ -70,13 +77,54 @@ struct ChatView: View {
 
             Divider()
 
+            // 목표 감지 알림 배너
+            if let notice = detectedGoalNotice {
+                HStack(spacing: 6) {
+                    Image(systemName: "flag.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.indigo)
+                    Text(notice)
+                        .font(.system(size: 11))
+                        .foregroundStyle(.indigo)
+                    Spacer()
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.indigo.opacity(0.08))
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+            // 습관 감지 알림 배너 (목표와 분리, 다른 색상)
+            if let notice = detectedHabitNotice {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.teal)
+                    Text(notice)
+                        .font(.system(size: 11))
+                        .foregroundStyle(.teal)
+                    Spacer()
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.teal.opacity(0.08))
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+
             if !aiService.isConfigured {
                 unconfiguredView
             } else {
                 chatContent
             }
         }
+        .animation(.easeInOut(duration: 0.3), value: detectedGoalNotice)
+        .animation(.easeInOut(duration: 0.3), value: detectedHabitNotice)
         .background(Color.platformWindowBackground)
+        // AI 응답의 Markdown 링크 피싱 방지 — https/http만 허용
+        .environment(\.openURL, OpenURLAction { url in
+            guard let scheme = url.scheme?.lowercased(),
+                  scheme == "https" || scheme == "http" else { return .discarded }
+            return .systemAction
+        })
     }
 
     // MARK: - Setup Guide (CLI 미설치 시)
@@ -336,11 +384,11 @@ struct ChatView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 8) {
-                        if messages.isEmpty {
+                        if aiService.chatMessages.isEmpty {
                             emptyStateView
                         }
 
-                        ForEach(messages) { msg in
+                        ForEach(aiService.chatMessages) { msg in
                             ChatBubble(message: msg)
                                 .id(msg.id)
                         }
@@ -366,8 +414,8 @@ struct ChatView: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 8)
                 }
-                .onChange(of: messages.count) {
-                    if let lastId = messages.last?.id {
+                .onChange(of: aiService.chatMessages.count) {
+                    if let lastId = aiService.chatMessages.last?.id {
                         withAnimation { proxy.scrollTo(lastId, anchor: .bottom) }
                     }
                 }
@@ -627,7 +675,7 @@ struct ChatView: View {
                 Button {
                     Task {
                         let results = await aiService.confirmPendingActions()
-                        messages.append(contentsOf: results)
+                        aiService.chatMessages.append(contentsOf: results)
                         viewModel.refreshEvents()
                     }
                 } label: {
@@ -647,7 +695,7 @@ struct ChatView: View {
 
                 Button {
                     let msg = aiService.declinePendingActions()
-                    messages.append(msg)
+                    aiService.chatMessages.append(msg)
                 } label: {
                     Text(String(localized: "common.cancel"))
                         .font(.system(size: 10))
@@ -700,13 +748,44 @@ struct ChatView: View {
             ? currentAttachments.map { "[\($0.fileName)]" }.joined(separator: " ")
             : text
 
-        messages.append(ChatMessage(role: .user, content: displayText, attachments: currentAttachments))
+        aiService.chatMessages.append(ChatMessage(role: .user, content: displayText, attachments: currentAttachments))
         inputText = ""
         attachments = []
 
+        // 목표 감지 — 장기 성취 목표 (취업, 합격 등) → GoalMemoryService
+        if let gms = goalMemoryService, !text.isEmpty {
+            let added = gms.processUserMessage(text)
+            if !added.isEmpty {
+                let names = added.map { $0.title }.joined(separator: ", ")
+                withAnimation { detectedGoalNotice = String(format: String(localized: "goal.detected.notice"), names) }
+                // 이전 dismiss task 취소 → stale closure 경합 방지
+                goalNoticeDismissTask?.cancel()
+                goalNoticeDismissTask = Task {
+                    try? await Task.sleep(nanoseconds: 3_500_000_000)
+                    guard !Task.isCancelled else { return }
+                    withAnimation { detectedGoalNotice = nil }
+                }
+            }
+        }
+        // 습관 감지 — 반복 행동 루틴 (운동, 독서 등) → HabitService (목표와 완전히 분리)
+        if let hs = habitService, !text.isEmpty {
+            let added = hs.processUserMessage(text)
+            if !added.isEmpty {
+                let names = added.map { $0.emoji + " " + $0.name }.joined(separator: ", ")
+                withAnimation { detectedHabitNotice = String(format: String(localized: "habit.detected.notice"), names) }
+                // 이전 dismiss task 취소 → stale closure 경합 방지
+                habitNoticeDismissTask?.cancel()
+                habitNoticeDismissTask = Task {
+                    try? await Task.sleep(nanoseconds: 3_500_000_000)
+                    guard !Task.isCancelled else { return }
+                    withAnimation { detectedHabitNotice = nil }
+                }
+            }
+        }
+
         Task {
-            let response = await aiService.sendMessage(text, attachments: currentAttachments, history: Array(messages.dropLast()))
-            messages.append(contentsOf: response)
+            let response = await aiService.sendMessage(text, attachments: currentAttachments, history: Array(aiService.chatMessages.dropLast()))
+            aiService.chatMessages.append(contentsOf: response)
             viewModel.refreshEvents()
         }
     }
