@@ -5,9 +5,11 @@ import PDFKit
 struct ChatView: View {
     @ObservedObject var aiService: AIService
     @ObservedObject var viewModel: CalendarViewModel
+    var goalMemoryService: GoalMemoryService? = nil
     @State private var messages: [ChatMessage] = []
     @State private var inputText: String = ""
     @State private var attachments: [ChatAttachment] = []
+    @State private var detectedGoalNotice: String? = nil
 
     /// 허용하는 파일 타입
     private static let allowedTypes: [UTType] = [.pdf]
@@ -70,12 +72,30 @@ struct ChatView: View {
 
             Divider()
 
+            // 목표 감지 알림 배너
+            if let notice = detectedGoalNotice {
+                HStack(spacing: 6) {
+                    Image(systemName: "flag.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.indigo)
+                    Text(notice)
+                        .font(.system(size: 11))
+                        .foregroundStyle(.indigo)
+                    Spacer()
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.indigo.opacity(0.08))
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+
             if !aiService.isConfigured {
                 unconfiguredView
             } else {
                 chatContent
             }
         }
+        .animation(.easeInOut(duration: 0.3), value: detectedGoalNotice != nil)
         .background(Color.platformWindowBackground)
     }
 
@@ -703,6 +723,18 @@ struct ChatView: View {
         messages.append(ChatMessage(role: .user, content: displayText, attachments: currentAttachments))
         inputText = ""
         attachments = []
+
+        // 목표 감지 — 사용자 메시지에서 장기 목표 자동 추출/저장
+        if let gms = goalMemoryService, !text.isEmpty {
+            let added = gms.processUserMessage(text)
+            if !added.isEmpty {
+                let names = added.map { $0.title }.joined(separator: ", ")
+                detectedGoalNotice = String(format: String(localized: "goal.detected.notice"), names)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
+                    detectedGoalNotice = nil
+                }
+            }
+        }
 
         Task {
             let response = await aiService.sendMessage(text, attachments: currentAttachments, history: Array(messages.dropLast()))

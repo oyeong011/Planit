@@ -445,3 +445,12 @@
 "review.category.primary" = "メインカレンダー";
 "review.weekly.chart.title" = "7日間の達成状況";
 "review.day.today.short" = "今日";
+"goal.section.title" = "長期目標";
+"goal.section.subtitle" = "チャットから検出";
+"goal.no.activity" = "今月の関連活動なし";
+"goal.delete" = "目標を削除";
+"goal.detected.notice" = "目標を保存: %@";
+"goal.timeline.month" = "今月";
+"goal.timeline.quarter" = "今四半期";
+"goal.timeline.year" = "今年";
+"goal.timeline.longterm" = "長期";

@@ -445,3 +445,12 @@
 "review.category.primary" = "主日历";
 "review.weekly.chart.title" = "7天完成情况";
 "review.day.today.short" = "今天";
+"goal.section.title" = "长期目标";
+"goal.section.subtitle" = "从聊天中检测";
+"goal.no.activity" = "本月无相关活动";
+"goal.delete" = "删除目标";
+"goal.detected.notice" = "目标已保存: %@";
+"goal.timeline.month" = "本月";
+"goal.timeline.quarter" = "本季度";
+"goal.timeline.year" = "今年";
+"goal.timeline.longterm" = "长期";

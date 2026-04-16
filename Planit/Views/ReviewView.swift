@@ -3,6 +3,7 @@ import SwiftUI
 struct ReviewView: View {
     @ObservedObject var reviewService: ReviewService
     @ObservedObject var goalService: GoalService
+    @ObservedObject var goalMemoryService: GoalMemoryService
     @ObservedObject var viewModel: CalendarViewModel
     let onCreateEvent: (String, Date, Date) -> Void
     let onDismiss: () -> Void
@@ -96,6 +97,12 @@ struct ReviewView: View {
                     // 기간별 달성률
                     progressSection
                         .padding(.horizontal, 10)
+
+                    // 장기 목표 (채팅에서 감지된 목표)
+                    if !goalMemoryService.goals.isEmpty {
+                        longTermGoalsSection
+                            .padding(.horizontal, 10)
+                    }
 
                     // 저녁: 내일 프리뷰 / 아침: AI 제안
                     if reviewService.currentMode == .evening {
@@ -624,6 +631,117 @@ struct ReviewView: View {
         }
         .padding(12)
         .background(RoundedRectangle(cornerRadius: 10).fill(Color.indigo.opacity(0.06)))
+    }
+
+    // MARK: - Long-Term Goals Section
+
+    private var longTermGoalsSection: some View {
+        let events = viewModel.calendarEvents.map {
+            (id: $0.id, title: $0.title, startDate: $0.startDate)
+        }
+        let completedIDs = viewModel.completedEventIDs
+
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Label(String(localized: "goal.section.title"), systemImage: "flag.checkered")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text(String(localized: "goal.section.subtitle"))
+                    .font(.system(size: 9))
+                    .foregroundStyle(.tertiary)
+            }
+
+            VStack(spacing: 6) {
+                ForEach(goalMemoryService.goals) { goal in
+                    goalCard(goal, events: events, completedIDs: completedIDs)
+                }
+            }
+        }
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground))
+    }
+
+    private func goalCard(
+        _ goal: ChatGoal,
+        events: [(id: String, title: String, startDate: Date)],
+        completedIDs: Set<String>
+    ) -> some View {
+        let rate = goalMemoryService.progressRate(for: goal, events: events, completedIDs: completedIDs)
+        let trend = goalMemoryService.trend(for: goal)
+        let barColor = progressColor(for: rate)
+        let hasActivity = goal.weeklyActivity.reduce(0, +) > 0
+
+        return VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                Image(systemName: goal.timeline.icon)
+                    .font(.system(size: 9))
+                    .foregroundStyle(.secondary)
+                Text(goal.title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .lineLimit(1)
+                Spacer()
+                // 트렌드 화살표
+                if hasActivity {
+                    Image(systemName: trend.icon)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(trend.color)
+                }
+                Text(goal.timeline.label)
+                    .font(.system(size: 9))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 5).padding(.vertical, 2)
+                    .background(Capsule().fill(Color.secondary.opacity(0.1)))
+            }
+
+            // 타깃 태그
+            if !goal.targets.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 4) {
+                        ForEach(goal.targets.prefix(4), id: \.self) { target in
+                            Text(target)
+                                .font(.system(size: 9))
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 6).padding(.vertical, 2)
+                                .background(Capsule().fill(Color.secondary.opacity(0.08)))
+                        }
+                    }
+                }
+            }
+
+            // 이번달 활동 진행 바
+            if hasActivity {
+                HStack(spacing: 6) {
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 3).fill(Color.secondary.opacity(0.10))
+                            RoundedRectangle(cornerRadius: 3)
+                                .fill(barColor)
+                                .frame(width: max(geo.size.width * CGFloat(rate), rate > 0 ? 6 : 0))
+                                .animation(.spring(duration: 0.5), value: rate)
+                        }
+                    }
+                    .frame(height: 6)
+                    Text("\(Int(rate * 100))%")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(barColor)
+                        .frame(width: 28, alignment: .trailing)
+                }
+            } else {
+                Text(String(localized: "goal.no.activity"))
+                    .font(.system(size: 10))
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 8).fill(Color.platformWindowBackground))
+        .contextMenu {
+            Button(role: .destructive) {
+                goalMemoryService.delete(goal)
+            } label: {
+                Label(String(localized: "goal.delete"), systemImage: "trash")
+            }
+        }
     }
 
     // MARK: - AI Plan Result View

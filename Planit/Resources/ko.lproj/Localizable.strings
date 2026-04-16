@@ -437,3 +437,12 @@
 "review.category.primary" = "기본 캘린더";
 "review.weekly.chart.title" = "7일 달성 현황";
 "review.day.today.short" = "오늘";
+"goal.section.title" = "장기 목표";
+"goal.section.subtitle" = "채팅에서 감지됨";
+"goal.no.activity" = "이번달 관련 활동 없음";
+"goal.delete" = "목표 삭제";
+"goal.detected.notice" = "목표 저장됨: %@";
+"goal.timeline.month" = "이번달";
+"goal.timeline.quarter" = "이번 분기";
+"goal.timeline.year" = "올해";
+"goal.timeline.longterm" = "장기";
