@@ -435,3 +435,5 @@
 "review.tomorrow.empty" = "내일 예정된 일정이 없어요";
 "review.tomorrow.more" = "+%d개 더";
 "review.category.primary" = "기본 캘린더";
+"review.weekly.chart.title" = "7일 달성 현황";
+"review.day.today.short" = "오늘";

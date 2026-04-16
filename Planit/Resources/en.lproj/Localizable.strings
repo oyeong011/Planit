@@ -435,3 +435,5 @@
 "review.tomorrow.empty" = "No events scheduled for tomorrow";
 "review.tomorrow.more" = "+%d more";
 "review.category.primary" = "Primary";
+"review.weekly.chart.title" = "7-Day Progress";
+"review.day.today.short" = "Today";

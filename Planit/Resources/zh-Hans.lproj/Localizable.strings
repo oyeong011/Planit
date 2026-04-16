@@ -443,3 +443,5 @@
 "review.tomorrow.empty" = "明天没有安排";
 "review.tomorrow.more" = "+%d个";
 "review.category.primary" = "主日历";
+"review.weekly.chart.title" = "7天完成情况";
+"review.day.today.short" = "今天";

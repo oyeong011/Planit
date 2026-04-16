@@ -88,9 +88,14 @@ struct ReviewView: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(spacing: 10) {
-                    progressSection
+                    // 7일 달성 바 차트 — 리뷰탭 고유 콘텐츠, 항상 표시
+                    weeklyChartSection
                         .padding(.horizontal, 10)
                         .padding(.top, 10)
+
+                    // 기간별 달성률
+                    progressSection
+                        .padding(.horizontal, 10)
 
                     // 저녁: 내일 프리뷰 / 아침: AI 제안
                     if reviewService.currentMode == .evening {
@@ -107,7 +112,6 @@ struct ReviewView: View {
             Divider()
 
             if reviewService.currentMode == .evening {
-                // 저녁 하단: AI 계획 생성
                 Button { generatePlan() } label: {
                     HStack(spacing: 7) {
                         if isGenerating {
@@ -132,7 +136,6 @@ struct ReviewView: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
             } else {
-                // 아침 하단: 전부 추가 + 확인
                 HStack(spacing: 8) {
                     if !reviewService.suggestions.isEmpty {
                         Button { acceptAllSuggestions() } label: {
@@ -165,6 +168,91 @@ struct ReviewView: View {
                 .padding(.vertical, 8)
             }
         }
+    }
+
+    // MARK: - Weekly Chart (7일 달성 바 차트)
+
+    private var weeklyChartSection: some View {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        let days = (0..<7).compactMap { cal.date(byAdding: .day, value: -6 + $0, to: today) }
+
+        return VStack(alignment: .leading, spacing: 8) {
+            Label(String(localized: "review.weekly.chart.title"), systemImage: "chart.bar.xaxis")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.secondary)
+
+            HStack(alignment: .bottom, spacing: 5) {
+                ForEach(days, id: \.self) { day in
+                    weekDayBar(day)
+                }
+            }
+            .frame(height: 56)
+        }
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground))
+    }
+
+    private func weekDayBar(_ day: Date) -> some View {
+        let cal = Calendar.current
+        let (done, total) = dayStats(for: day)
+        let rate = total > 0 ? Double(done) / Double(total) : 0
+        let isToday = cal.isDateInToday(day)
+        let barColor = progressColor(for: rate)
+        let maxBarH: CGFloat = 40
+
+        return VStack(spacing: 3) {
+            // 바 — bottom-aligned
+            ZStack(alignment: .bottom) {
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(Color.secondary.opacity(0.10))
+                    .frame(height: maxBarH)
+
+                if total > 0 {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(isToday ? barColor : barColor.opacity(0.65))
+                        .frame(height: max(maxBarH * CGFloat(rate), 4))
+                        .animation(.spring(duration: 0.4), value: rate)
+                }
+            }
+            // 요일 레이블
+            Text(weekDayLabel(day))
+                .font(.system(size: 9, weight: isToday ? .bold : .regular))
+                .foregroundStyle(isToday ? .primary : .secondary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func dayStats(for date: Date) -> (done: Int, total: Int) {
+        let cal = Calendar.current
+        guard let interval = cal.dateInterval(of: .day, for: date) else { return (0, 0) }
+        let todoEventIds = Set(viewModel.todos.compactMap { $0.googleEventId })
+        let completedIDs = viewModel.completedEventIDs
+
+        let events = viewModel.calendarEvents.filter { ev in
+            !ev.isAllDay && !todoEventIds.contains(ev.id) &&
+            ev.startDate >= interval.start && ev.startDate < interval.end
+        }
+        let localTodos = viewModel.todos.filter {
+            cal.startOfDay(for: $0.date) == cal.startOfDay(for: date)
+        }
+        let reminderTodos = viewModel.appleReminders.filter {
+            cal.startOfDay(for: $0.date) == cal.startOfDay(for: date)
+        }
+        let allTodos = localTodos + reminderTodos
+
+        let doneEvents = events.filter { completedIDs.contains($0.id) }.count
+        let doneTodos = allTodos.filter { $0.isCompleted }.count
+        return (doneEvents + doneTodos, events.count + allTodos.count)
+    }
+
+    private func weekDayLabel(_ date: Date) -> String {
+        if Calendar.current.isDateInToday(date) {
+            return String(localized: "review.day.today.short")
+        }
+        let fmt = DateFormatter()
+        fmt.dateFormat = "E"
+        return fmt.string(from: date)
     }
 
     // MARK: - Progress Section

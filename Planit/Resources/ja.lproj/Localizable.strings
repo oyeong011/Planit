@@ -443,3 +443,5 @@
 "review.tomorrow.empty" = "明日の予定はありません";
 "review.tomorrow.more" = "+%d件";
 "review.category.primary" = "メインカレンダー";
+"review.weekly.chart.title" = "7日間の達成状況";
+"review.day.today.short" = "今日";
