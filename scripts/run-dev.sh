@@ -31,6 +31,7 @@ done
 # 기타 리소스
 cp "$BUILD_DIR/Calen_Calen.bundle/AppIcon.icns" "$APP/Contents/Resources/" 2>/dev/null || true
 cp "$BUILD_DIR/Calen_Calen.bundle/PrivacyInfo.xcprivacy" "$APP/Contents/Resources/" 2>/dev/null || true
+cp "$PROJECT_DIR/Planit/Planit.entitlements" "$APP/Contents/Resources/" 2>/dev/null || true
 
 # Info.plist 생성
 cat > "$APP/Contents/Info.plist" << 'EOF'
@@ -39,7 +40,7 @@ cat > "$APP/Contents/Info.plist" << 'EOF'
 <plist version="1.0">
 <dict>
     <key>CFBundleIdentifier</key>
-    <string>com.calen.app</string>
+    <string>com.oy.planit</string>
     <key>CFBundleName</key>
     <string>Calen</string>
     <key>CFBundleVersion</key>
@@ -57,6 +58,19 @@ cat > "$APP/Contents/Info.plist" << 'EOF'
 </dict>
 </plist>
 EOF
+
+# 개발 빌드 서명 (키체인 프롬프트 방지)
+# DEVELOPER_ID 환경변수 없으면 로컬 키체인에서 자동 감지
+DEV_SIGN="${DEVELOPER_ID:-$(security find-identity -v -p codesigning 2>/dev/null | grep 'Developer ID Application' | head -1 | sed 's/.*"\(.*\)"/\1/')}"
+if [ -n "$DEV_SIGN" ]; then
+    echo "✍️  Signing with: $DEV_SIGN"
+    codesign --force --options runtime \
+        --entitlements "$PROJECT_DIR/Planit/Planit-dev.entitlements" \
+        --sign "$DEV_SIGN" \
+        "$APP" 2>/dev/null && echo "   Signed OK" || echo "   Sign failed (continuing unsigned)"
+else
+    echo "⚠️  No Developer ID found — running unsigned (키체인 프롬프트 발생)"
+fi
 
 echo "🔄 Restarting Calen..."
 pkill -f "Calen.app/Contents/MacOS/Calen" 2>/dev/null || true

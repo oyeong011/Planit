@@ -65,6 +65,7 @@
 
 /* ===== Todo Detail Modal ===== */
 "todo.detail.title" = "Aufgabendetails";
+"todo.source.local" = "App (Local)";
 
 /* ===== Inline Add Todo ===== */
 "todo.input.placeholder" = "Aufgabe eingeben";
@@ -223,3 +224,176 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "Alltag";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "Morgen";
+"energy.type.evening" = "Abend";
+"energy.type.balanced" = "Ausgewogen";
+
+/* ===== Aggressiveness ===== */
+"aggressiveness.manual" = "Manuell";
+"aggressiveness.assist" = "Assistiert";
+"aggressiveness.semiauto" = "Halbautomatisch";
+"aggressiveness.auto" = "Automatisch";
+
+/* ===== Settings View ===== */
+"settings.title" = "Einstellungen";
+"settings.autosave" = "Änderungen werden automatisch gespeichert";
+"settings.section.profile" = "Profil";
+"settings.section.schedule" = "Zeitplan";
+"settings.section.ai" = "KI-Einstellungen";
+"settings.section.integrations" = "Integrationen";
+"settings.section.notifications" = "Benachrichtigungen";
+"settings.section.advanced" = "Erweitert";
+"settings.profile.subtitle" = "Persönlichen Rhythmus und Arbeitsstil konfigurieren";
+"settings.energy.card" = "Energiemuster";
+"settings.energy.desc" = "Wähle deine beste Fokuszeit. Die KI plant wichtige Aufgaben in diesem Zeitraum.";
+"settings.pace.card" = "Planungstempo";
+"settings.pace.desc" = "Legt fest, wie aggressiv die KI deinen Zeitplan bei Vorschlägen füllt.";
+"settings.schedule.subtitle" = "Arbeitszeiten und tägliche Fokuskapazität festlegen";
+"settings.work.card" = "Arbeitszeiten";
+"settings.work.start.label" = "Beginn";
+"settings.work.end.label" = "Ende";
+"settings.lunch.start.label" = "Mittagsbeginn";
+"settings.lunch.end.label" = "Mittagsende";
+"settings.work.hours.format" = "%d Std. Arbeit";
+"settings.commute.card" = "Pendelzeit";
+"settings.commute.label" = "Einfache Pendelzeit";
+"settings.commute.minutes.format" = "%d Min.";
+"settings.commute.roundtrip.format" = "Hin und zurück %d Min. · Nicht in der täglichen Fokuszeit enthalten";
+"settings.capacity.card" = "Tägliche Fokuskapazität";
+"settings.capacity.weekday" = "Wochentag";
+"settings.capacity.weekend" = "Wochenende";
+"settings.capacity.hours.format" = "%d Std.";
+"settings.capacity.hours.minutes.format" = "%d Std. %d Min.";
+"settings.ai.subtitle" = "KI für Zeitplananalyse und Planung auswählen";
+"settings.ai.engine.card" = "KI-Engine";
+"settings.ai.status.card" = "Aktueller Status";
+"settings.ai.save.card" = "Speichern";
+"settings.ai.installed.badge" = "Installiert";
+"settings.ai.not.installed.badge" = "Nicht installiert";
+"settings.ai.claude.installed.detail" = "Installiert — Leistungsstarkes Sprachverständnis";
+"settings.ai.claude.install.hint" = "Erforderlich: brew install claude";
+"settings.ai.codex.installed.detail" = "Installiert — Für Code optimiert";
+"settings.ai.codex.install.hint" = "Erforderlich: npm install -g @openai/codex";
+"settings.ai.save.button" = "KI-Einstellungen speichern";
+"settings.ai.claude.desc" = "Hervorragendes Sprachverständnis. Ideal für komplexe Terminplanung und Zielanalyse.";
+"settings.ai.codex.desc" = "Spezialisiert auf codebasierte Optimierung. Gut für schnelle regelbasierte Planung.";
+"settings.aggressiveness.manual.desc" = "Alle Zeitpläne manuell verwalten. KI bleibt ruhig.";
+"settings.aggressiveness.assist.desc" = "KI schlägt nur vor. Du entscheidest, ob du es akzeptierst.";
+"settings.aggressiveness.semiauto.desc" = "Genehmigte Vorschläge werden automatisch in den Kalender eingetragen.";
+"settings.aggressiveness.auto.desc" = "KI erstellt und registriert automatisch optimale Zeitpläne.";
+"settings.integrations.subtitle" = "Verbindungen zu externen Diensten und Kalendern verwalten";
+"settings.google.connected" = "Verbunden";
+"settings.google.not.connected" = "Nicht verbunden";
+"settings.google.no.email" = "Keine E-Mail-Informationen";
+"settings.google.connect.hint" = "Verbinde dein Google-Konto, um deinen Zeitplan zu synchronisieren";
+"settings.google.disconnect.button" = "Trennen";
+"settings.google.login.button" = "Mit Google anmelden";
+"settings.google.privacy" = "Kalenderdaten werden nur auf dem Gerät gespeichert. KI verwendet nur Ereignistitel und -zeiten.";
+"settings.apple.card" = "Apple-Integration";
+"settings.apple.calendar.title" = "Apple Kalender-Synchronisierung";
+"settings.apple.calendar.desc" = "Zeigt Apple Kalender-Ereignisse auf deinem Gerät an";
+"settings.apple.reminders.title" = "Apple Erinnerungen importieren";
+"settings.apple.reminders.desc" = "Importiert Erinnerungen als Aufgaben";
+"settings.google.skip.card" = "Ohne Google verwenden";
+"settings.google.skip.title" = "Google-Anmeldung überspringen";
+"settings.google.skip.desc" = "KI-Funktionen ohne Google Kalender nutzen";
+"settings.notifications.subtitle" = "Benachrichtigungszeiten für Morgenbriefing und Abendüberblick festlegen";
+"settings.morning.card" = "Morgenbriefing";
+"settings.morning.time.title" = "Morgenbriefing-Zeit";
+"settings.morning.time.desc" = "Informiert dich über die Zusammenfassung des heutigen Zeitplans und den Zielfortschritt";
+"settings.evening.card" = "Abendüberblick";
+"settings.evening.time.title" = "Abendüberblick-Zeit";
+"settings.evening.time.desc" = "Überprüft abgeschlossene Termine und plant für morgen";
+"settings.notifications.permission.card" = "Benachrichtigungsberechtigung";
+"settings.notifications.permission.title" = "Systemberechtigung für Benachrichtigungen erforderlich";
+"settings.notifications.permission.desc" = "macOS Systemeinstellungen → Benachrichtigungen → Calen zulassen";
+"settings.notifications.open.system" = "Systemeinstellungen öffnen";
+"settings.hour.format" = "%d:00";
+"settings.advanced.subtitle" = "Datenverwaltung und App-Zurücksetzen";
+"settings.onboarding.card" = "Onboarding";
+"settings.onboarding.restart.title" = "Onboarding neu starten";
+"settings.onboarding.restart.desc" = "Zieleinrichtungsbildschirm von Anfang an wiederholen";
+"settings.onboarding.restart.button" = "Neu starten";
+"settings.data.reset.card" = "Daten zurücksetzen";
+"settings.completions.reset.title" = "Abschlussverlauf zurücksetzen";
+"settings.completions.reset.desc" = "Löscht alle Ereignisabschlussaufzeichnungen";
+"settings.completions.reset.button" = "Zurücksetzen";
+"settings.review.reset.title" = "Tagesüberblick zurücksetzen";
+"settings.review.reset.desc" = "Setzt den heute abgeschlossenen Überblick zurück, damit er erneut angezeigt wird";
+"settings.review.reset.button" = "Zurücksetzen";
+"settings.goals.delete.title" = "Alle Ziele löschen";
+"settings.goals.delete.desc" = "Löscht alle registrierten Ziele. Dies kann nicht rückgängig gemacht werden.";
+"settings.goals.delete.button" = "Löschen";
+"settings.language.card" = "Sprache";
+"settings.language.desc" = "Sprache auswählen. Die App wird neu gestartet, um die Änderung zu übernehmen.";
+"settings.app.info.card" = "App-Info";
+"settings.app.version" = "Version 1.0 · Persönlicher KI-Kalenderassistent";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "Plan für morgen ist fertig";
+"review.today.lookback" = "Rückblick auf heute";
+"review.move.all" = "Alles auf morgen verschieben";
+"review.generating.button" = "Plan wird erstellt...";
+"review.generate.tomorrow" = "Plan für morgen automatisch erstellen";
+"review.no.past.events" = "Heute keine vergangenen Termine";
+"review.generate.now.hint" = "Du kannst jetzt den Plan für morgen erstellen";
+"review.on.track" = "Läuft gut";
+"review.evening.auto.plan" = "Wir erstellen abends automatisch den Plan für morgen";
+"review.ok.button" = "OK";
+"review.close.button" = "Schließen";
+"review.add.button" = "Hinzufügen";
+"review.skip.button" = "Überspringen";
+"review.period.week" = "Diese Woche";
+"review.period.month" = "Dieser Monat";
+"review.period.year" = "Dieses Jahr";
+"review.completion.rate" = "Abschlussrate";
+"review.completion.count.format" = "%d / %d abgeschlossen";
+"review.no.todos" = "Keine Aufgaben registriert";
+"review.added.to.calendar" = "Zum Kalender hinzugefügt";
+"review.tomorrow.sufficient" = "Der Zeitplan für morgen ist bereits voll";
+
+/* ===== MainView ===== */
+"event.category.label" = "Kategorie";
+"event.category.none" = "Keine";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "Neuer Tag";
+"rollover.notification.body" = "Überprüfe deine heutigen Aufgaben";
+"rollover.moved.title" = "Aufgaben verschoben";
+"rollover.moved.body" = "%d unvollständige Aufgabe(n) auf heute verschoben";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "Tippe auf ein Beispiel unten";
+"chat.quick.today" = "Was steht heute auf meinem Plan?";
+"chat.quick.add.meeting" = "Meeting morgen um 15 Uhr hinzufügen";
+"chat.quick.free.time" = "Freie Zeit diese Woche finden";
+"chat.quick.tomorrow.plan" = "Morgen planen";
+"chat.attach.pdf.hint" = "Attach PDF | Paste images with Cmd+V";
+"chat.attach.hint" = "Bild oder PDF anhängen (max. 5, 20 MB)";
+"chat.attach.picker.message" = "Bilder oder PDFs zum Anhängen auswählen";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "Einrichtung erforderlich";
+"setup.subtitle" = "Schließe diese Schritte ab, um den KI-Assistenten zu nutzen";
+"setup.step1.title" = "AI CLI installieren";
+"setup.step2.title" = "Google Kalender verbinden";
+"setup.claude.desc" = "Lass Claude dir bei der Tagesplanung helfen";
+"setup.codex.desc" = "Nutze Codex für intelligente Vorschläge";
+"setup.google.desc" = "Synchronisiere Kalenderereignisse für intelligentere Planung";
+"setup.google.connect.button" = "Google Kalender verbinden";
+"setup.google.skip.hint" = "Du kannst es später in den Einstellungen verbinden";
+"setup.google.connected" = "Verbunden";
+"setup.complete" = "Alles bereit! Du kannst jetzt mit dem Chatten beginnen.";
+"setup.installed" = "Installiert";
+"setup.copy.command" = "Installationsbefehl kopieren";
+"review.today.todos" = "Today's Todos";
+"review.done.all" = "Mark All Done";
+"review.accept.all" = "Accept All";
+"review.todo.label" = "Todo";
+"review.plan.complete.title" = "Tomorrow's Plan Ready";
+"review.help.done" = "Done";
+"review.help.tomorrow" = "Move to Tomorrow";
+"review.help.skip" = "Skip";
+"settings.section.context" = "AI Context";

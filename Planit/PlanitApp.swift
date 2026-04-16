@@ -44,7 +44,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         popover = NSPopover()
-        popover.contentSize = NSSize(width: 1320, height: 860)
+        popover.contentSize = NSSize(width: 1150, height: 780)
         popover.behavior = .transient
         popover.contentViewController = NSHostingController(rootView: MainView())
         popover.delegate = self
@@ -65,9 +65,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
             NSApp.activate(ignoringOtherApps: true)
             setupPasteMonitor()
+            NotificationCenter.default.post(name: CalenNotification.popoverOpened, object: nil)
         }
     }
-
 
     // MARK: - 로컬 Cmd+V 인터셉트
     // performKeyEquivalent 방식은 Edit 메뉴가 먼저 가로채기 때문에 동작 안 함.
@@ -132,6 +132,7 @@ extension AppDelegate {
 enum CalenNotification {
     static let pasteImage = Notification.Name("CalenPasteImage")
     static let pasteFiles = Notification.Name("CalenPasteFiles")
+    static let popoverOpened = Notification.Name("CalenPopoverOpened")
 }
 
 enum ChatPastePayload {

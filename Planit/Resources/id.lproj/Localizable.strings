@@ -65,6 +65,7 @@
 
 /* ===== Todo Detail Modal ===== */
 "todo.detail.title" = "Detail Tugas";
+"todo.source.local" = "App (Local)";
 
 /* ===== Inline Add Todo ===== */
 "todo.input.placeholder" = "Masukkan tugas";
@@ -223,3 +224,176 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "Harian";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "Pagi";
+"energy.type.evening" = "Malam";
+"energy.type.balanced" = "Seimbang";
+
+/* ===== Aggressiveness ===== */
+"aggressiveness.manual" = "Manual";
+"aggressiveness.assist" = "Dibantu";
+"aggressiveness.semiauto" = "Semi-Otomatis";
+"aggressiveness.auto" = "Otomatis";
+
+/* ===== Settings View ===== */
+"settings.title" = "Pengaturan";
+"settings.autosave" = "Perubahan disimpan otomatis";
+"settings.section.profile" = "Profil";
+"settings.section.schedule" = "Jadwal";
+"settings.section.ai" = "Pengaturan AI";
+"settings.section.integrations" = "Integrasi";
+"settings.section.notifications" = "Notifikasi";
+"settings.section.advanced" = "Lanjutan";
+"settings.profile.subtitle" = "Atur ritme pribadi dan gaya kerja Anda";
+"settings.energy.card" = "Pola Energi";
+"settings.energy.desc" = "Pilih waktu fokus puncak. AI akan menjadwalkan tugas penting pada periode ini.";
+"settings.pace.card" = "Kecepatan Jadwal";
+"settings.pace.desc" = "Menentukan seberapa agresif AI mengisi jadwal saat membuat saran.";
+"settings.schedule.subtitle" = "Atur jam kerja dan kapasitas fokus harian";
+"settings.work.card" = "Jam Kerja";
+"settings.work.start.label" = "Mulai";
+"settings.work.end.label" = "Selesai";
+"settings.lunch.start.label" = "Mulai Makan Siang";
+"settings.lunch.end.label" = "Selesai Makan Siang";
+"settings.work.hours.format" = "%d jam kerja";
+"settings.commute.card" = "Waktu Perjalanan";
+"settings.commute.label" = "Waktu perjalanan satu arah";
+"settings.commute.minutes.format" = "%d menit";
+"settings.commute.roundtrip.format" = "Pulang pergi %d menit · Tidak termasuk dalam waktu fokus harian";
+"settings.capacity.card" = "Kapasitas Fokus Harian";
+"settings.capacity.weekday" = "Hari Kerja";
+"settings.capacity.weekend" = "Akhir Pekan";
+"settings.capacity.hours.format" = "%d j";
+"settings.capacity.hours.minutes.format" = "%d j %d menit";
+"settings.ai.subtitle" = "Pilih AI untuk analisis dan perencanaan jadwal";
+"settings.ai.engine.card" = "AI Engine";
+"settings.ai.status.card" = "Status Saat Ini";
+"settings.ai.save.card" = "Simpan";
+"settings.ai.installed.badge" = "Terpasang";
+"settings.ai.not.installed.badge" = "Belum Terpasang";
+"settings.ai.claude.installed.detail" = "Terpasang — Pemahaman bahasa alami yang kuat";
+"settings.ai.claude.install.hint" = "Diperlukan: brew install claude";
+"settings.ai.codex.installed.detail" = "Terpasang — Dioptimalkan untuk kode";
+"settings.ai.codex.install.hint" = "Diperlukan: npm install -g @openai/codex";
+"settings.ai.save.button" = "Simpan Pengaturan AI";
+"settings.ai.claude.desc" = "Pemahaman bahasa alami yang sangat baik. Ideal untuk penjadwalan kompleks dan analisis tujuan.";
+"settings.ai.codex.desc" = "Khusus untuk optimasi berbasis kode. Bagus untuk perencanaan berbasis aturan yang cepat.";
+"settings.aggressiveness.manual.desc" = "Kelola semua jadwal secara manual. AI diam saja.";
+"settings.aggressiveness.assist.desc" = "AI hanya menyarankan. Anda memutuskan untuk menerima.";
+"settings.aggressiveness.semiauto.desc" = "Otomatis mendaftarkan saran yang disetujui ke kalender.";
+"settings.aggressiveness.auto.desc" = "AI secara otomatis membuat dan mendaftarkan jadwal optimal.";
+"settings.integrations.subtitle" = "Kelola koneksi layanan eksternal dan kalender";
+"settings.google.connected" = "Terhubung";
+"settings.google.not.connected" = "Tidak Terhubung";
+"settings.google.no.email" = "Tidak ada info email";
+"settings.google.connect.hint" = "Hubungkan akun Google Anda untuk menyinkronkan jadwal";
+"settings.google.disconnect.button" = "Putuskan Sambungan";
+"settings.google.login.button" = "Masuk dengan Google";
+"settings.google.privacy" = "Data kalender hanya disimpan di perangkat. AI hanya mereferensikan judul dan waktu acara.";
+"settings.apple.card" = "Integrasi Apple";
+"settings.apple.calendar.title" = "Sinkronisasi Apple Calendar";
+"settings.apple.calendar.desc" = "Menampilkan acara Apple Calendar di perangkat Anda";
+"settings.apple.reminders.title" = "Impor Apple Reminders";
+"settings.apple.reminders.desc" = "Mengimpor pengingat sebagai tugas";
+"settings.google.skip.card" = "Gunakan Tanpa Google";
+"settings.google.skip.title" = "Lewati Masuk Google";
+"settings.google.skip.desc" = "Gunakan fitur AI tanpa Google Calendar";
+"settings.notifications.subtitle" = "Atur waktu notifikasi briefing pagi dan tinjauan malam";
+"settings.morning.card" = "Briefing Pagi";
+"settings.morning.time.title" = "Waktu Briefing Pagi";
+"settings.morning.time.desc" = "Memberitahu ringkasan jadwal hari ini dan kemajuan tujuan";
+"settings.evening.card" = "Tinjauan Malam";
+"settings.evening.time.title" = "Waktu Tinjauan Malam";
+"settings.evening.time.desc" = "Meninjau jadwal yang selesai dan merencanakan untuk besok";
+"settings.notifications.permission.card" = "Izin Notifikasi";
+"settings.notifications.permission.title" = "Izin notifikasi sistem diperlukan";
+"settings.notifications.permission.desc" = "Pengaturan Sistem macOS → Notifikasi → Izinkan Calen";
+"settings.notifications.open.system" = "Buka Pengaturan Sistem";
+"settings.hour.format" = "%d:00";
+"settings.advanced.subtitle" = "Manajemen data dan opsi pengaturan ulang aplikasi";
+"settings.onboarding.card" = "Onboarding";
+"settings.onboarding.restart.title" = "Mulai Ulang Onboarding";
+"settings.onboarding.restart.desc" = "Ulangi layar pengaturan tujuan dari awal";
+"settings.onboarding.restart.button" = "Mulai Ulang";
+"settings.data.reset.card" = "Reset Data";
+"settings.completions.reset.title" = "Reset Riwayat Penyelesaian";
+"settings.completions.reset.desc" = "Menghapus semua catatan penyelesaian acara";
+"settings.completions.reset.button" = "Reset";
+"settings.review.reset.title" = "Reset Tinjauan Harian";
+"settings.review.reset.desc" = "Mengatur ulang tinjauan hari ini yang sudah selesai untuk ditampilkan lagi";
+"settings.review.reset.button" = "Reset";
+"settings.goals.delete.title" = "Hapus Semua Tujuan";
+"settings.goals.delete.desc" = "Menghapus semua tujuan yang terdaftar. Ini tidak dapat dibatalkan.";
+"settings.goals.delete.button" = "Hapus";
+"settings.language.card" = "Bahasa";
+"settings.language.desc" = "Pilih bahasa. Aplikasi akan dimulai ulang untuk menerapkan perubahan.";
+"settings.app.info.card" = "Info Aplikasi";
+"settings.app.version" = "Versi 1.0 · Asisten Kalender AI Pribadi";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "Rencana Besok Siap";
+"review.today.lookback" = "Tinjauan Hari Ini";
+"review.move.all" = "Pindahkan Semua ke Besok";
+"review.generating.button" = "Membuat rencana...";
+"review.generate.tomorrow" = "Buat Rencana Besok Otomatis";
+"review.no.past.events" = "Tidak ada acara yang lalu hari ini";
+"review.generate.now.hint" = "Anda dapat membuat rencana besok sekarang";
+"review.on.track" = "Berjalan lancar";
+"review.evening.auto.plan" = "Kami akan membuat rencana besok secara otomatis di malam hari";
+"review.ok.button" = "OK";
+"review.close.button" = "Tutup";
+"review.add.button" = "Tambah";
+"review.skip.button" = "Lewati";
+"review.period.week" = "Minggu Ini";
+"review.period.month" = "Bulan Ini";
+"review.period.year" = "Tahun Ini";
+"review.completion.rate" = "Tingkat Penyelesaian";
+"review.completion.count.format" = "%d / %d selesai";
+"review.no.todos" = "Tidak ada tugas terdaftar";
+"review.added.to.calendar" = "Ditambahkan ke Kalender";
+"review.tomorrow.sufficient" = "Jadwal besok sudah penuh";
+
+/* ===== MainView ===== */
+"event.category.label" = "Kategori";
+"event.category.none" = "Tidak Ada";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "Hari baru";
+"rollover.notification.body" = "Periksa tugas hari ini Anda";
+"rollover.moved.title" = "Tugas dipindahkan";
+"rollover.moved.body" = "%d tugas yang belum selesai dipindahkan ke hari ini";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "Ketuk contoh di bawah untuk memulai";
+"chat.quick.today" = "Apa jadwal saya hari ini?";
+"chat.quick.add.meeting" = "Tambahkan rapat besok jam 3 sore";
+"chat.quick.free.time" = "Cari waktu luang minggu ini";
+"chat.quick.tomorrow.plan" = "Rencanakan hari saya besok";
+"chat.attach.pdf.hint" = "Attach PDF | Paste images with Cmd+V";
+"chat.attach.hint" = "Lampirkan gambar atau PDF (maks. 5, 20 MB)";
+"chat.attach.picker.message" = "Pilih gambar atau PDF untuk dilampirkan";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "Penyiapan Diperlukan";
+"setup.subtitle" = "Selesaikan langkah-langkah ini untuk mulai menggunakan asisten AI";
+"setup.step1.title" = "Instal AI CLI";
+"setup.step2.title" = "Hubungkan Google Kalender";
+"setup.claude.desc" = "Minta Claude membantu merencanakan dan mengatur harimu";
+"setup.codex.desc" = "Gunakan Codex untuk saran yang cerdas";
+"setup.google.desc" = "Sinkronkan acara kalender untuk penjadwalan yang lebih cerdas";
+"setup.google.connect.button" = "Hubungkan Google Kalender";
+"setup.google.skip.hint" = "Kamu bisa menghubungkan nanti di Pengaturan";
+"setup.google.connected" = "Terhubung";
+"setup.complete" = "Semua siap! Kamu sudah bisa mulai mengobrol.";
+"setup.installed" = "Terinstal";
+"setup.copy.command" = "Salin perintah instalasi";
+"review.today.todos" = "Today's Todos";
+"review.done.all" = "Mark All Done";
+"review.accept.all" = "Accept All";
+"review.todo.label" = "Todo";
+"review.plan.complete.title" = "Tomorrow's Plan Ready";
+"review.help.done" = "Done";
+"review.help.tomorrow" = "Move to Tomorrow";
+"review.help.skip" = "Skip";
+"settings.section.context" = "AI Context";

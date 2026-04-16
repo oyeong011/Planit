@@ -5,6 +5,8 @@ import PDFKit
 struct ChatView: View {
     @ObservedObject var aiService: AIService
     @ObservedObject var viewModel: CalendarViewModel
+    @Binding var pendingPasteImage: NSImage?
+    @Binding var pendingPasteURLs: [URL]
     @State private var messages: [ChatMessage] = []
     @State private var inputText: String = ""
     @State private var attachments: [ChatAttachment] = []
@@ -55,6 +57,16 @@ struct ChatView: View {
             }
         }
         .background(Color(nsColor: .windowBackgroundColor))
+        .onChange(of: pendingPasteImage) { image in
+            guard let image else { return }
+            pasteImageFromClipboard(image)
+            pendingPasteImage = nil
+        }
+        .onChange(of: pendingPasteURLs) { urls in
+            guard !urls.isEmpty else { return }
+            for url in urls { addAttachment(url: url) }
+            pendingPasteURLs = []
+        }
     }
 
     // MARK: - Unconfigured
@@ -218,16 +230,6 @@ struct ChatView: View {
         }
         .onDrop(of: [.fileURL], isTargeted: $isDragOver) { providers in
             handleDrop(providers)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: CalenNotification.pasteImage)) { notif in
-            if let image = notif.userInfo?["image"] as? NSImage {
-                pasteImageFromClipboard(image)
-            }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: CalenNotification.pasteFiles)) { notif in
-            if let urls = notif.userInfo?["urls"] as? [URL] {
-                for url in urls { addAttachment(url: url) }
-            }
         }
         .overlay {
             if isDragOver {

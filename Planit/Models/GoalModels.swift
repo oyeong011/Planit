@@ -69,6 +69,7 @@ struct RecurrencePlan: Codable {
 struct CompletionRecord: Identifiable, Codable {
     let id: String
     var eventId: String  // Google Calendar event ID
+    var eventTitle: String?  // 사람이 읽을 수 있는 이벤트 제목 (알림/리뷰에 표시)
     var goalId: String?
     var date: Date
     var status: CompletionStatus
@@ -76,11 +77,12 @@ struct CompletionRecord: Identifiable, Codable {
     var actualMinutes: Int?
     var note: String?
 
-    init(id: String = UUID().uuidString, eventId: String, goalId: String? = nil,
-         date: Date = Date(), status: CompletionStatus = .unknown,
+    init(id: String = UUID().uuidString, eventId: String, eventTitle: String? = nil,
+         goalId: String? = nil, date: Date = Date(), status: CompletionStatus = .unknown,
          plannedMinutes: Int = 0, actualMinutes: Int? = nil, note: String? = nil) {
         self.id = id
         self.eventId = eventId
+        self.eventTitle = eventTitle
         self.goalId = goalId
         self.date = date
         self.status = status
@@ -131,6 +133,14 @@ enum EnergyType: String, Codable, CaseIterable {
     case evening = "저녁형"
     case balanced = "균형형"
 
+    var localizedTitle: String {
+        switch self {
+        case .morning:  return NSLocalizedString("energy.type.morning", comment: "")
+        case .evening:  return NSLocalizedString("energy.type.evening", comment: "")
+        case .balanced: return NSLocalizedString("energy.type.balanced", comment: "")
+        }
+    }
+
     var deepSlots: [String] {
         switch self {
         case .morning: return ["AM-Deep"]
@@ -145,6 +155,15 @@ enum Aggressiveness: String, Codable, CaseIterable {
     case assist = "보조"
     case semiAuto = "반자동"
     case auto = "자동"
+
+    var localizedTitle: String {
+        switch self {
+        case .manual:   return NSLocalizedString("aggressiveness.manual", comment: "")
+        case .assist:   return NSLocalizedString("aggressiveness.assist", comment: "")
+        case .semiAuto: return NSLocalizedString("aggressiveness.semiauto", comment: "")
+        case .auto:     return NSLocalizedString("aggressiveness.auto", comment: "")
+        }
+    }
 }
 
 // MARK: - Review Suggestion
@@ -155,9 +174,10 @@ struct ReviewSuggestion: Identifiable {
     var title: String
     var description: String
     var goalId: String?
+    var sourceEventId: String?   // 원본 CalendarEvent.id (completionFor 조회 키로 사용)
     var proposedStart: Date?
     var proposedEnd: Date?
-    var proposedTitle: String?
+    var proposedTitle: String?   // 새로 생성할 이벤트 제목 (표시용)
     var status: SuggestionStatus = .pending
 }
 

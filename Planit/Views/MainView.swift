@@ -37,6 +37,8 @@ struct MainCalendarView: View {
     @State private var showLeftPanel: Bool = true
     @State private var leftPanelMode: LeftPanelMode = .chat
     @State private var showSettings: Bool = false
+    @State private var pendingPasteImage: NSImage? = nil
+    @State private var pendingPasteURLs: [URL] = []
 
     init(authManager: GoogleAuthManager, newTodoTitle: Binding<String>) {
         self.authManager = authManager
@@ -65,14 +67,12 @@ struct MainCalendarView: View {
             }
 
             CalendarGridView(viewModel: viewModel, showChat: $showLeftPanel)
-                .frame(maxWidth: .infinity)
-
-            Divider()
+                .frame(width: showLeftPanel ? 560 : 620)
 
             DailyDetailView(viewModel: viewModel, newTodoTitle: $newTodoTitle, showSettings: $showSettings)
-                .frame(width: 330)
+                .frame(width: 310)
         }
-        .frame(width: showLeftPanel ? 1320 : 1040, height: 860)
+        .frame(width: showLeftPanel ? 1150 : 930, height: 780)
         .background(Color(nsColor: .controlBackgroundColor))
         .onChange(of: authManager.isAuthenticated) { _ in
             viewModel.refreshEvents()
@@ -83,6 +83,21 @@ struct MainCalendarView: View {
         }
         .onChange(of: viewModel.calendarEvents) { _ in
             updateEventReminders()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: CalenNotification.popoverOpened)) { _ in
+            viewModel.refreshEvents()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: CalenNotification.pasteImage)) { notif in
+            if let image = notif.userInfo?["image"] as? NSImage {
+                leftPanelMode = .chat
+                pendingPasteImage = image
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: CalenNotification.pasteFiles)) { notif in
+            if let urls = notif.userInfo?["urls"] as? [URL] {
+                leftPanelMode = .chat
+                pendingPasteURLs = urls
+            }
         }
         .sheet(isPresented: $showSettings) {
             SettingsView(
@@ -137,7 +152,9 @@ struct MainCalendarView: View {
                 )
 
             case .chat:
-                ChatView(aiService: aiService, viewModel: viewModel)
+                ChatView(aiService: aiService, viewModel: viewModel,
+                         pendingPasteImage: $pendingPasteImage,
+                         pendingPasteURLs: $pendingPasteURLs)
             }
         }
     }
@@ -262,9 +279,7 @@ struct CalendarGridView: View {
                         )
                         .frame(maxWidth: .infinity)
                 }
-            }
-            .padding(.horizontal, 8)
-            .padding(.bottom, 4)
+            }.padding(.horizontal, 12)
 
             let days = viewModel.daysInMonth()
             let rows = stride(from: 0, to: days.count, by: 7).map { Array(days[$0..<min($0+7, days.count)]) }
@@ -298,17 +313,15 @@ struct CalendarGridView: View {
                                 )
                                 .onTapGesture { viewModel.selectedDate = date }
                             } else {
-                                Color.clear
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                VStack { Spacer() }
+                                    .frame(maxWidth: .infinity, minHeight: 105)
                             }
                         }
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-            }
-            .frame(maxHeight: .infinity)
-            .padding(.horizontal, 8)
-            .padding(.bottom, 8)
+            }.padding(.horizontal, 8)
+
+            Spacer(minLength: 0)
         }
     }
 }
@@ -343,82 +356,69 @@ struct DayCellView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            dayCellHeader
-            dayCellItems
+            HStack {
+                if isToday {
+                    Text(dayNumber)
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 26, height: 26)
+                        .background(Circle().fill(Color.blue))
+                } else {
+                    Text(dayNumber)
+                        .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
+                        .foregroundStyle(textColor)
+                        .frame(width: 26, height: 26)
+                }
+                Spacer()
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(Array(events.prefix(3).enumerated()), id: \.offset) { _, event in
+                    let label = String(event.title.prefix(10))
+                    let fg: Color = isCurrentMonth ? event.color.opacity(0.85) : .secondary.opacity(0.3)
+                    Text(label)
+                        .font(.system(size: 9))
+                        .lineLimit(1)
+                        .padding(.horizontal, 3)
+                        .padding(.vertical, 1)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(RoundedRectangle(cornerRadius: 3).fill(event.color.opacity(0.15)))
+                        .foregroundStyle(fg)
+                }
+                ForEach(Array(todos.prefix(max(0, 3 - events.count)).enumerated()), id: \.offset) { _, todo in
+                    let cat = categoryFor(todo.categoryID)
+                    let fg: Color = isCurrentMonth ? cat.color.opacity(0.85) : .secondary.opacity(0.3)
+                    HStack(spacing: 2) {
+                        Circle().fill(cat.color.opacity(0.7)).frame(width: 4, height: 4)
+                        Text(String(todo.title.prefix(10)))
+                            .font(.system(size: 9))
+                            .lineLimit(1)
+                    }
+                    .padding(.horizontal, 3)
+                    .padding(.vertical, 1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(RoundedRectangle(cornerRadius: 3).fill(cat.color.opacity(0.1)))
+                    .foregroundStyle(fg)
+                }
+            }
+
             Spacer(minLength: 0)
         }
-        .padding(6)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(RoundedRectangle(cornerRadius: 6).fill(cellBackground))
-        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.purple.opacity(isDropTarget ? 0.7 : 0), lineWidth: 2))
+        .padding(5)
+        .frame(maxWidth: .infinity, minHeight: 105, alignment: .topLeading)
+        .background(RoundedRectangle(cornerRadius: 6).fill(
+            isDropTarget ? Color.purple.opacity(0.12) : (isSelected ? Color.blue.opacity(0.08) : Color.clear)
+        ))
+        .overlay(
+            RoundedRectangle(cornerRadius: 6)
+                .stroke(Color.purple.opacity(isDropTarget ? 0.7 : 0), lineWidth: 2)
+        )
         .contentShape(Rectangle())
         .dropDestination(for: String.self) { items, _ in
             guard let payload = items.first else { return false }
             onDrop?(payload, date)
             return true
         } isTargeted: { isDropTarget = $0 }
-    }
-
-    private var cellBackground: Color {
-        if isDropTarget { return Color.purple.opacity(0.12) }
-        if isSelected { return Color.blue.opacity(0.08) }
-        return Color.clear
-    }
-
-    @ViewBuilder private var dayCellHeader: some View {
-        HStack {
-            if isToday {
-                Text(dayNumber)
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(.white)
-                    .frame(width: 26, height: 26)
-                    .background(Circle().fill(Color.blue))
-            } else {
-                Text(dayNumber)
-                    .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
-                    .foregroundStyle(textColor)
-                    .frame(width: 26, height: 26)
-            }
-            Spacer()
-        }
-    }
-
-    @ViewBuilder private var dayCellItems: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            ForEach(Array(events.prefix(4).enumerated()), id: \.offset) { _, event in
-                Text(event.title)
-                    .font(.system(size: 10))
-                    .lineLimit(1)
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 1.5)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(RoundedRectangle(cornerRadius: 3).fill(event.color.opacity(0.15)))
-                    .foregroundStyle(isCurrentMonth ? event.color.opacity(0.85) : .secondary.opacity(0.3))
-            }
-            ForEach(Array(todos.prefix(max(0, 4 - events.count)).enumerated()), id: \.offset) { _, todo in
-                DayCellTodoRow(todo: todo, cat: categoryFor(todo.categoryID), isCurrentMonth: isCurrentMonth)
-            }
-        }
-    }
-}
-
-private struct DayCellTodoRow: View {
-    let todo: TodoItem
-    let cat: TodoCategory
-    let isCurrentMonth: Bool
-
-    var body: some View {
-        HStack(spacing: 3) {
-            Circle().fill(cat.color.opacity(0.7)).frame(width: 5, height: 5)
-            Text(todo.title)
-                .font(.system(size: 10))
-                .lineLimit(1)
-        }
-        .padding(.horizontal, 4)
-        .padding(.vertical, 1.5)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 3).fill(cat.color.opacity(0.1)))
-        .foregroundStyle(isCurrentMonth ? cat.color.opacity(0.85) : .secondary.opacity(0.3))
     }
 }
 

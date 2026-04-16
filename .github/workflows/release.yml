@@ -1,0 +1,221 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-15
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Import Developer ID certificate
+        env:
+          CERT_P12_BASE64: ${{ secrets.DEVELOPER_ID_CERT_P12 }}
+          CERT_PASSWORD: ${{ secrets.DEVELOPER_ID_CERT_PASSWORD }}
+        run: |
+          KEYCHAIN_PATH="$RUNNER_TEMP/signing.keychain-db"
+          KEYCHAIN_PASSWORD="$(openssl rand -hex 16)"
+
+          # 임시 키체인 생성
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 3600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # 인증서 import
+          echo "$CERT_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" \
+            -k "$KEYCHAIN_PATH" \
+            -P "$CERT_PASSWORD" \
+            -T /usr/bin/codesign \
+            -T /usr/bin/security
+          rm "$RUNNER_TEMP/cert.p12"
+
+          # 키체인 검색 목록에 추가, 파티션 설정
+          security list-keychains -d user -s "$KEYCHAIN_PATH" "$(security list-keychains -d user | tr -d '"')"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
+
+      - name: Build universal binary
+        run: swift build -c release --arch arm64 --arch x86_64
+
+      - name: Create .app bundle
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          BUILD_DIR=".build/apple/Products/Release"
+          APP_BUNDLE="$BUILD_DIR/Calen.app"
+
+          rm -rf "$APP_BUNDLE"
+          mkdir -p "$APP_BUNDLE/Contents/MacOS"
+          mkdir -p "$APP_BUNDLE/Contents/Resources"
+
+          cp "$BUILD_DIR/Calen" "$APP_BUNDLE/Contents/MacOS/Calen"
+          cp "Planit/Info.plist" "$APP_BUNDLE/Contents/Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$APP_BUNDLE/Contents/Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VERSION" "$APP_BUNDLE/Contents/Info.plist"
+          cp "Planit/Resources/AppIcon.icns" "$APP_BUNDLE/Contents/Resources/AppIcon.icns"
+
+          if [ -f "Planit/Resources/PrivacyInfo.xcprivacy" ]; then
+            cp "Planit/Resources/PrivacyInfo.xcprivacy" "$APP_BUNDLE/Contents/Resources/"
+          fi
+          if [ -d "$BUILD_DIR/Calen_Calen.bundle" ]; then
+            cp -R "$BUILD_DIR/Calen_Calen.bundle" "$APP_BUNDLE/Contents/Resources/"
+          fi
+
+          echo "APP_BUNDLE=$APP_BUNDLE" >> "$GITHUB_ENV"
+
+      - name: Code sign
+        env:
+          DEVELOPER_ID: ${{ secrets.DEVELOPER_ID }}
+        run: |
+          codesign --force --options runtime \
+            --entitlements "Planit/Planit.entitlements" \
+            --sign "$DEVELOPER_ID" \
+            --timestamp \
+            "$APP_BUNDLE"
+          codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE"
+
+      - name: Create zip for notarization
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          BUILD_DIR=".build/apple/Products/Release"
+          ZIP_NAME="Calen-${VERSION}-universal.zip"
+          cd "$BUILD_DIR"
+          ditto -c -k --keepParent "Calen.app" "$ZIP_NAME"
+          echo "ZIP_PATH=$BUILD_DIR/$ZIP_NAME" >> "$GITHUB_ENV"
+          echo "ZIP_NAME=$ZIP_NAME" >> "$GITHUB_ENV"
+
+      - name: Notarize
+        env:
+          NOTARIZE_APPLE_ID: ${{ secrets.NOTARIZE_APPLE_ID }}
+          NOTARIZE_PASSWORD: ${{ secrets.NOTARIZE_PASSWORD }}
+          NOTARIZE_TEAM_ID: ${{ secrets.NOTARIZE_TEAM_ID }}
+        run: |
+          xcrun notarytool submit "$ZIP_PATH" \
+            --apple-id "$NOTARIZE_APPLE_ID" \
+            --password "$NOTARIZE_PASSWORD" \
+            --team-id "$NOTARIZE_TEAM_ID" \
+            --wait
+
+          xcrun stapler staple "$APP_BUNDLE"
+
+          # 공증 완료 후 zip 재생성 (staple된 앱)
+          BUILD_DIR=".build/apple/Products/Release"
+          cd "$BUILD_DIR"
+          rm -f "$ZIP_NAME"
+          ditto -c -k --keepParent "Calen.app" "$ZIP_NAME"
+
+      - name: Create DMG
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          BUILD_DIR=".build/apple/Products/Release"
+          DMG_NAME="Calen-${VERSION}-universal.dmg"
+          STAGING="$BUILD_DIR/dmg-staging"
+
+          rm -rf "$STAGING" && mkdir -p "$STAGING"
+          cp -R "$APP_BUNDLE" "$STAGING/"
+          ln -s /Applications "$STAGING/Applications"
+          hdiutil create -volname "Calen" \
+            -srcfolder "$STAGING" \
+            -ov -format UDZO \
+            "$BUILD_DIR/$DMG_NAME"
+          rm -rf "$STAGING"
+
+          echo "DMG_PATH=$BUILD_DIR/$DMG_NAME" >> "$GITHUB_ENV"
+          echo "DMG_NAME=$DMG_NAME" >> "$GITHUB_ENV"
+
+      - name: Compute checksums
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          ZIP_SHA=$(shasum -a 256 "$ZIP_PATH" | awk '{print $1}')
+          DMG_SHA=$(shasum -a 256 "$DMG_PATH" | awk '{print $1}')
+          echo "ZIP_SHA=$ZIP_SHA" >> "$GITHUB_ENV"
+          echo "DMG_SHA=$DMG_SHA" >> "$GITHUB_ENV"
+          echo "ZIP SHA256: $ZIP_SHA"
+          echo "DMG SHA256: $DMG_SHA"
+
+      - name: Create GitHub Release & upload artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          gh release create "v${VERSION}" \
+            --title "Calen v${VERSION}" \
+            --notes "## Calen v${VERSION}
+
+          ### 설치 방법 (Homebrew)
+          \`\`\`bash
+          brew tap oyeong011/calen
+          brew install --cask calen
+          \`\`\`
+
+          ### 직접 다운로드
+          아래 Assets에서 DMG 파일을 받아 설치하세요." \
+            "$ZIP_PATH" \
+            "$DMG_PATH"
+
+      - name: Update homebrew-calen tap
+        env:
+          TAP_REPO_TOKEN: ${{ secrets.TAP_REPO_TOKEN }}
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          git clone "https://x-access-token:${TAP_REPO_TOKEN}@github.com/oyeong011/homebrew-calen.git" /tmp/homebrew-calen
+          cd /tmp/homebrew-calen
+          mkdir -p Casks
+
+          python3 - <<PYEOF
+          import os
+          version = os.environ["VERSION"]
+          sha256  = os.environ["ZIP_SHA"]
+          content = f'''cask "calen" do
+            version "{version}"
+            sha256 "{sha256}"
+
+            url "https://github.com/oyeong011/Planit/releases/download/v{version}/Calen-{version}-universal.zip"
+            name "Calen"
+            desc "AI-powered macOS menu bar calendar with Google Calendar integration"
+            homepage "https://github.com/oyeong011/Planit"
+
+            depends_on macos: ">= :sonoma"
+
+            app "Calen.app"
+
+            zap trash: [
+              "~/Library/Application Support/Calen",
+              "~/Library/Caches/com.oy.planit",
+              "~/Library/Preferences/com.oy.planit.plist",
+              "~/Library/Saved Application State/com.oy.planit.savedState",
+            ]
+          end
+          '''
+          with open("Casks/calen.rb", "w") as f:
+              f.write(content)
+          PYEOF
+
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add Casks/calen.rb
+          git commit -m "chore: update calen cask to v${VERSION}"
+          git push
+
+      - name: Cleanup keychain
+        if: always()
+        run: |
+          security delete-keychain "$KEYCHAIN_PATH" 2>/dev/null || true

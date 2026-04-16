@@ -65,6 +65,7 @@
 
 /* ===== Todo Detail Modal ===== */
 "todo.detail.title" = "Opgavedetaljer";
+"todo.source.local" = "App (Local)";
 
 /* ===== Inline Add Todo ===== */
 "todo.input.placeholder" = "Indtast en opgave";
@@ -223,3 +224,176 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "Daglig";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "Morgen";
+"energy.type.evening" = "Aften";
+"energy.type.balanced" = "Afbalanceret";
+
+/* ===== Aggressiveness ===== */
+"aggressiveness.manual" = "Manuel";
+"aggressiveness.assist" = "Assisteret";
+"aggressiveness.semiauto" = "Halvautomatisk";
+"aggressiveness.auto" = "Automatisk";
+
+/* ===== Settings View ===== */
+"settings.title" = "Indstillinger";
+"settings.autosave" = "Ændringer gemmes automatisk";
+"settings.section.profile" = "Profil";
+"settings.section.schedule" = "Tidsplan";
+"settings.section.ai" = "AI-indstillinger";
+"settings.section.integrations" = "Integrationer";
+"settings.section.notifications" = "Notifikationer";
+"settings.section.advanced" = "Avanceret";
+"settings.profile.subtitle" = "Konfigurer din personlige rytme og arbejdsstil";
+"settings.energy.card" = "Energimønster";
+"settings.energy.desc" = "Vælg din bedste fokustid. AI planlægger vigtige opgaver i denne periode.";
+"settings.pace.card" = "Planlægningstempo";
+"settings.pace.desc" = "Bestemmer hvor aggressivt AI fylder din tidsplan med forslag.";
+"settings.schedule.subtitle" = "Angiv dine arbejdstimer og daglig fokuskapacitet";
+"settings.work.card" = "Arbejdstimer";
+"settings.work.start.label" = "Start";
+"settings.work.end.label" = "Slut";
+"settings.lunch.start.label" = "Frokoststart";
+"settings.lunch.end.label" = "Frokostslut";
+"settings.work.hours.format" = "%d t arbejde";
+"settings.commute.card" = "Pendlingstid";
+"settings.commute.label" = "Ensrettet pendlingstid";
+"settings.commute.minutes.format" = "%d min";
+"settings.commute.roundtrip.format" = "Tur-retur %d min · Ekskluderet fra daglig fokustid";
+"settings.capacity.card" = "Daglig fokuskapacitet";
+"settings.capacity.weekday" = "Hverdag";
+"settings.capacity.weekend" = "Weekend";
+"settings.capacity.hours.format" = "%d t";
+"settings.capacity.hours.minutes.format" = "%d t %d min";
+"settings.ai.subtitle" = "Vælg AI til tidsplananalyse og planlægning";
+"settings.ai.engine.card" = "AI-motor";
+"settings.ai.status.card" = "Aktuel status";
+"settings.ai.save.card" = "Gem";
+"settings.ai.installed.badge" = "Installeret";
+"settings.ai.not.installed.badge" = "Ikke installeret";
+"settings.ai.claude.installed.detail" = "Installeret — Kraftfuld sprogforståelse";
+"settings.ai.claude.install.hint" = "Krævet: brew install claude";
+"settings.ai.codex.installed.detail" = "Installeret — Optimeret til kode";
+"settings.ai.codex.install.hint" = "Krævet: npm install -g @openai/codex";
+"settings.ai.save.button" = "Gem AI-indstillinger";
+"settings.ai.claude.desc" = "Fremragende sprogforståelse. Ideel til kompleks planlægning og målanalyse.";
+"settings.ai.codex.desc" = "Specialiseret i kodebaseret optimering. God til hurtig regelbaseret planlægning.";
+"settings.aggressiveness.manual.desc" = "Administrer alle tidsplaner manuelt. AI holder sig stille.";
+"settings.aggressiveness.assist.desc" = "AI foreslår kun. Du bestemmer, om du accepterer.";
+"settings.aggressiveness.semiauto.desc" = "Godkendte forslag registreres automatisk i kalenderen.";
+"settings.aggressiveness.auto.desc" = "AI opretter og registrerer automatisk optimale tidsplaner.";
+"settings.integrations.subtitle" = "Administrer forbindelser til eksterne tjenester og kalendere";
+"settings.google.connected" = "Forbundet";
+"settings.google.not.connected" = "Ikke forbundet";
+"settings.google.no.email" = "Ingen e-mailoplysninger";
+"settings.google.connect.hint" = "Forbind din Google-konto for at synkronisere din tidsplan";
+"settings.google.disconnect.button" = "Afbryd forbindelsen";
+"settings.google.login.button" = "Log ind med Google";
+"settings.google.privacy" = "Kalenderdata gemmes kun på enheden. AI refererer kun til begivenhedstitler og -tider.";
+"settings.apple.card" = "Apple-integration";
+"settings.apple.calendar.title" = "Apple Kalender-synkronisering";
+"settings.apple.calendar.desc" = "Viser Apple Kalender-begivenheder på din enhed";
+"settings.apple.reminders.title" = "Importér Apple Påmindelser";
+"settings.apple.reminders.desc" = "Importerer påmindelser som opgaver";
+"settings.google.skip.card" = "Brug uden Google";
+"settings.google.skip.title" = "Spring Google-login over";
+"settings.google.skip.desc" = "Brug AI-funktioner uden Google Kalender";
+"settings.notifications.subtitle" = "Indstil notifikationstider for morgenbriefing og aftenanmeldelse";
+"settings.morning.card" = "Morgenbriefing";
+"settings.morning.time.title" = "Tid for morgenbriefing";
+"settings.morning.time.desc" = "Giver dig besked om dagens tidsplanoversigt og målfremdrift";
+"settings.evening.card" = "Aftenanmeldelse";
+"settings.evening.time.title" = "Tid for aftenanmeldelse";
+"settings.evening.time.desc" = "Gennemgår afsluttede tidsplaner og planlægger for i morgen";
+"settings.notifications.permission.card" = "Notifikationstilladelse";
+"settings.notifications.permission.title" = "Systemnotifikationstilladelse kræves";
+"settings.notifications.permission.desc" = "macOS Systemindstillinger → Notifikationer → Tillad Calen";
+"settings.notifications.open.system" = "Åbn systemindstillinger";
+"settings.hour.format" = "%d:00";
+"settings.advanced.subtitle" = "Datastyring og app-nulstillingsmuligheder";
+"settings.onboarding.card" = "Onboarding";
+"settings.onboarding.restart.title" = "Genstart onboarding";
+"settings.onboarding.restart.desc" = "Gentag målopsætningsskærmen fra begyndelsen";
+"settings.onboarding.restart.button" = "Genstart";
+"settings.data.reset.card" = "Nulstil data";
+"settings.completions.reset.title" = "Nulstil fuldførelseshistorik";
+"settings.completions.reset.desc" = "Sletter alle begivenhedsfuldførelsesoptegnelser";
+"settings.completions.reset.button" = "Nulstil";
+"settings.review.reset.title" = "Nulstil daglig anmeldelse";
+"settings.review.reset.desc" = "Nulstiller dagens fuldførte anmeldelse for at vise den igen";
+"settings.review.reset.button" = "Nulstil";
+"settings.goals.delete.title" = "Slet alle mål";
+"settings.goals.delete.desc" = "Sletter alle registrerede mål. Dette kan ikke fortrydes.";
+"settings.goals.delete.button" = "Slet";
+"settings.language.card" = "Sprog";
+"settings.language.desc" = "Vælg et sprog. Appen genstarter for at anvende ændringen.";
+"settings.app.info.card" = "App-info";
+"settings.app.version" = "Version 1.0 · Personlig AI-kalenderassistent";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "Morgendagens plan klar";
+"review.today.lookback" = "Tilbageblik på i dag";
+"review.move.all" = "Flyt alt til i morgen";
+"review.generating.button" = "Genererer plan...";
+"review.generate.tomorrow" = "Generer morgendagens plan automatisk";
+"review.no.past.events" = "Ingen tidligere begivenheder i dag";
+"review.generate.now.hint" = "Du kan generere morgendagens plan nu";
+"review.on.track" = "Går godt";
+"review.evening.auto.plan" = "Vi genererer automatisk morgendagens plan om aftenen";
+"review.ok.button" = "OK";
+"review.close.button" = "Luk";
+"review.add.button" = "Tilføj";
+"review.skip.button" = "Spring over";
+"review.period.week" = "Denne uge";
+"review.period.month" = "Denne måned";
+"review.period.year" = "Dette år";
+"review.completion.rate" = "Fuldførelsesrate";
+"review.completion.count.format" = "%d / %d fuldført";
+"review.no.todos" = "Ingen opgaver registreret";
+"review.added.to.calendar" = "Tilføjet til kalender";
+"review.tomorrow.sufficient" = "Morgendagens tidsplan er allerede fuld";
+
+/* ===== MainView ===== */
+"event.category.label" = "Kategori";
+"event.category.none" = "Ingen";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "Ny dag";
+"rollover.notification.body" = "Tjek dine opgaver for i dag";
+"rollover.moved.title" = "Opgaver flyttet";
+"rollover.moved.body" = "%d ufuldstændig(e) opgave(r) flyttet til i dag";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "Tryk på et eksempel nedenfor for at starte";
+"chat.quick.today" = "Hvad har jeg i dag?";
+"chat.quick.add.meeting" = "Tilføj møde i morgen kl. 15";
+"chat.quick.free.time" = "Find ledig tid denne uge";
+"chat.quick.tomorrow.plan" = "Planlæg min dag i morgen";
+"chat.attach.pdf.hint" = "Attach PDF | Paste images with Cmd+V";
+"chat.attach.hint" = "Vedhæft billede eller PDF (maks 5, 20 MB)";
+"chat.attach.picker.message" = "Vælg billeder eller PDF-filer til vedhæftning";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "Opsætning krævet";
+"setup.subtitle" = "Fuldfør disse trin for at begynde at bruge AI-assistenten";
+"setup.step1.title" = "Installer AI CLI";
+"setup.step2.title" = "Tilslut Google Kalender";
+"setup.claude.desc" = "Bed Claude om hjælp til at planlægge din dag";
+"setup.codex.desc" = "Brug Codex til smarte forslag";
+"setup.google.desc" = "Synkroniser kalenderbegivenheder for smartere planlægning";
+"setup.google.connect.button" = "Tilslut Google Kalender";
+"setup.google.skip.hint" = "Du kan tilslutte senere i Indstillinger";
+"setup.google.connected" = "Tilsluttet";
+"setup.complete" = "Alt er klar! Du kan begynde at chatte nu.";
+"setup.installed" = "Installeret";
+"setup.copy.command" = "Kopiér installationskommando";
+"review.today.todos" = "Today's Todos";
+"review.done.all" = "Mark All Done";
+"review.accept.all" = "Accept All";
+"review.todo.label" = "Todo";
+"review.plan.complete.title" = "Tomorrow's Plan Ready";
+"review.help.done" = "Done";
+"review.help.tomorrow" = "Move to Tomorrow";
+"review.help.skip" = "Skip";
+"settings.section.context" = "AI Context";

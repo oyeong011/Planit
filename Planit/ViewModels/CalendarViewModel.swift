@@ -19,6 +19,7 @@ final class CalendarViewModel: ObservableObject {
     @Published var calendarEvents: [CalendarEvent] = []
     @Published var completedEventIDs: Set<String> = []
     @Published var categories: [TodoCategory] = []
+    @Published var eventCategoryMappings: [String: EventCategoryMapping] = [:]  // eventID → mapping
     @Published var isOffline: Bool = false
     @Published var pendingEditsCount: Int = 0
     @Published var appleCalendarEnabled: Bool = UserDefaults.standard.bool(forKey: "planit.appleCalendarEnabled") {
@@ -47,6 +48,10 @@ final class CalendarViewModel: ObservableObject {
     }
     @Published var appleRemindersAccessGranted: Bool = false
     @Published var appleReminders: [TodoItem] = []
+    /// calendarList 스코프 없을 때 true → UI에서 재로그인 배너 표시
+    @Published var needsReauth: Bool = false
+    /// Calen이 자동 재배치한 Todo ID 집합 (UI 인디케이터용)
+    @Published var rescheduledTodoIDs: Set<UUID> = []
 
     // MARK: - Services
 
@@ -74,12 +79,17 @@ final class CalendarViewModel: ObservableObject {
     private var categoriesPath: URL { appSupportDir.appendingPathComponent("categories.json") }
     private var eventCachePath: URL { appSupportDir.appendingPathComponent("events_cache.json") }
     private var pendingEditsPath: URL { appSupportDir.appendingPathComponent("pending_edits.json") }
+    private var eventCategoryMappingsPath: URL { appSupportDir.appendingPathComponent("event_category_mappings.json") }
 
     // MARK: - Init
 
     private var refreshTimer: Timer?
+    private var dateChangeTimer: Timer?
 
     private var notificationObserver: Any?
+    private var authCancellable: AnyCancellable?
+    /// syncPendingEdits 재진입 방지 플래그
+    private var isSyncingPendingEdits = false
 
     init(authManager: GoogleAuthManager) {
         self.authManager = authManager
@@ -87,7 +97,26 @@ final class CalendarViewModel: ObservableObject {
         loadTodos()
         loadCompletedEvents()
         loadPendingEdits()
+        loadEventCategoryMappings()
         startPeriodicRefresh()
+
+        // 자정 롤오버 + 정오 리뷰 트리거 등록
+        Task { @MainActor in
+            MidnightRolloverService.shared.performIfNeeded(viewModel: self)
+            MidnightRolloverService.shared.scheduleAllTriggers()
+        }
+
+        // 날짜 변경 감지 (앱이 켜진 상태로 자정 넘길 때)
+        observeDateChange()
+
+        // 로그인/로그아웃 시 캘린더 목록 캐시 초기화
+        authCancellable = authManager.$isAuthenticated.dropFirst().sink { [weak self] authenticated in
+            guard let self else { return }
+            if !authenticated {
+                // 로그아웃: 캐시 클리어
+                self.googleService.clearCache()
+            }
+        }
 
         // Load cached events first (instant display), then try network
         loadCachedEvents()
@@ -112,6 +141,8 @@ final class CalendarViewModel: ObservableObject {
     deinit {
         refreshTimer?.invalidate()
         refreshTimer = nil
+        dateChangeTimer?.invalidate()
+        dateChangeTimer = nil
         if let observer = notificationObserver {
             NotificationCenter.default.removeObserver(observer)
         }
@@ -125,6 +156,24 @@ final class CalendarViewModel: ObservableObject {
         refreshTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.refreshEvents()
+            }
+        }
+    }
+
+    /// 자정(00:00) 날짜 변경 감지 → 재배치 실행
+    private func observeDateChange() {
+        var lastDay = Calendar.current.startOfDay(for: Date())
+        dateChangeTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            let today = Calendar.current.startOfDay(for: Date())
+            guard today > lastDay else { return }
+            lastDay = today
+            Task { @MainActor in
+                // 자정: 미완료 할 일 스마트 재배치
+                MidnightRolloverService.shared.performIfNeeded(viewModel: self)
+                self.currentMonth = today
+                self.selectedDate = today
+                self.refreshEvents()
             }
         }
     }
@@ -145,7 +194,7 @@ final class CalendarViewModel: ObservableObject {
 
     /// Apple Calendar 접근 권한 요청 (Google 인증 상태에서 병합용)
     func requestAppleCalendarAccess() {
-        if #available(macOS 14.0, *) {
+        if #available(iOS 17.0, macOS 14.0, *) {
             eventStore.requestFullAccessToEvents { [weak self] granted, error in
                 Task { @MainActor in
                     self?.appleCalendarAccessGranted = granted && error == nil
@@ -188,6 +237,7 @@ final class CalendarViewModel: ObservableObject {
                 color: Color(cgColor: cgColor),
                 isAllDay: event.isAllDay,
                 calendarName: event.calendar.title,
+                calendarID: "apple:\(event.calendar.calendarIdentifier)",
                 source: .apple
             )
         }
@@ -200,13 +250,14 @@ final class CalendarViewModel: ObservableObject {
         // 기존 Apple 이벤트 제거 후 다시 추가 (중복 방지)
         calendarEvents.removeAll { $0.source == .apple }
         calendarEvents.append(contentsOf: appleEvents)
+        applyEventCategoryMappings()
     }
 
     // MARK: - Apple Reminders (EventKit)
 
     /// Apple Reminders 접근 권한 요청
     func requestAppleRemindersAccess() {
-        if #available(macOS 14.0, *) {
+        if #available(iOS 17.0, macOS 14.0, *) {
             eventStore.requestFullAccessToReminders { [weak self] granted, error in
                 Task { @MainActor in
                     self?.appleRemindersAccessGranted = granted && error == nil
@@ -261,9 +312,6 @@ final class CalendarViewModel: ObservableObject {
             return
         }
         ensureRemindersCategory()
-
-        let startOfDay = calendar.startOfDay(for: date)
-        guard let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else { return }
 
         // 미완료 + 완료된 미리알림 모두 가져오기 (해당 날짜)
         let predicate = eventStore.predicateForReminders(in: nil)
@@ -335,22 +383,41 @@ final class CalendarViewModel: ObservableObject {
             await syncPendingEdits()
 
             do {
-                var events = try await googleService.fetchEvents(for: month)
-                // Google 이벤트에 source 태그 설정
-                for i in events.indices {
-                    events[i].source = .google
+                // 현재 달 + 인접 달(격자에 표시되는 날짜들) 병렬 fetch
+                let prevMonth = calendar.date(byAdding: .month, value: -1, to: month) ?? month
+                let nextMonth = calendar.date(byAdding: .month, value: 1, to: month) ?? month
+
+                async let current = googleService.fetchEvents(for: month)
+                async let prev = googleService.fetchEvents(for: prevMonth)
+                async let next = googleService.fetchEvents(for: nextMonth)
+
+                var merged: [CalendarEvent] = []
+                var seen = Set<String>()
+                for batch in try await [current, prev, next] {
+                    for ev in batch where seen.insert(ev.id).inserted {
+                        merged.append(ev)
+                    }
                 }
-                self.calendarEvents = events
+
+                // Google 이벤트에 source 태그 설정
+                for i in merged.indices {
+                    merged[i].source = .google
+                }
+                self.calendarEvents = merged
                 self.isOffline = false
-                cacheEvents(events)
+                self.needsReauth = googleService.needsReauth
+                cacheEvents(merged)
                 // Apple Calendar 이벤트 병합
                 mergeAppleCalendarEvents(for: month)
+                applyEventCategoryMappings()
             } catch {
                 print("[Calen] Google Calendar fetch failed — using cached data")
                 self.isOffline = true
+                self.needsReauth = googleService.needsReauth
                 loadCachedEvents()
                 // 오프라인에서도 Apple Calendar 병합
                 mergeAppleCalendarEvents(for: month)
+                applyEventCategoryMappings()
             }
         }
     }
@@ -369,17 +436,19 @@ final class CalendarViewModel: ObservableObject {
                 let tempEvent = CalendarEvent(
                     id: "pending-\(UUID().uuidString)", title: title,
                     startDate: startDate, endDate: endDate,
-                    color: .blue, isAllDay: isAllDay)
+                    color: .blue, isAllDay: isAllDay,
+                    calendarName: "Google", calendarID: "google:primary", source: .google)
                 calendarEvents.append(tempEvent)
+                applyEventCategoryMappings()
                 cacheEvents(calendarEvents)
             }
         }
     }
 
-    func updateGoogleEvent(eventID: String, title: String, startDate: Date, endDate: Date, isAllDay: Bool) {
+    func updateGoogleEvent(eventID: String, calendarID: String = "google:primary", title: String, startDate: Date, endDate: Date, isAllDay: Bool) {
         Task {
             do {
-                _ = try await googleService.updateEvent(eventID: eventID, title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
+                _ = try await googleService.updateEvent(eventID: eventID, calendarID: calendarID, title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
                 fetchEventsFromGoogle(for: currentMonth)
             } catch {
                 print("[Calen] Offline — queuing update event")
@@ -398,10 +467,10 @@ final class CalendarViewModel: ObservableObject {
         }
     }
 
-    func deleteGoogleEvent(eventID: String) {
+    func deleteGoogleEvent(eventID: String, calendarID: String = "google:primary") {
         Task {
             do {
-                _ = try await googleService.deleteEvent(eventID: eventID)
+                _ = try await googleService.deleteEvent(eventID: eventID, calendarID: calendarID)
                 completedEventIDs.remove(eventID)
                 goalService?.removeCompletion(eventId: eventID)
                 saveCompletedEvents()
@@ -423,19 +492,30 @@ final class CalendarViewModel: ObservableObject {
     // MARK: - EventKit (fallback when not using Google API)
 
     private func observeCalendarChanges() {
+        // 기존 observer 제거 후 재등록 — 중복 리스너 누수 방지
+        if let existing = notificationObserver {
+            NotificationCenter.default.removeObserver(existing)
+        }
         notificationObserver = NotificationCenter.default.addObserver(
             forName: .EKEventStoreChanged,
             object: eventStore,
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
-                self?.fetchEventsFromEventKit(for: self?.currentMonth ?? Date())
+                guard let self else { return }
+                // Google 인증 상태일 때 EventKit만 불러오면 Google 이벤트가 유실되므로
+                // refreshEvents()를 통해 적절한 소스에서 로드
+                if self.authManager.isAuthenticated {
+                    self.refreshEvents()
+                } else {
+                    self.fetchEventsFromEventKit(for: self.currentMonth)
+                }
             }
         }
     }
 
     func requestCalendarAccess() {
-        if #available(macOS 14.0, *) {
+        if #available(iOS 17.0, macOS 14.0, *) {
             eventStore.requestFullAccessToEvents { [weak self] granted, error in
                 guard granted, error == nil else { return }
                 Task { @MainActor in
@@ -470,9 +550,11 @@ final class CalendarViewModel: ObservableObject {
                 color: Color(cgColor: cgColor),
                 isAllDay: event.isAllDay,
                 calendarName: event.calendar.title,
+                calendarID: "apple:\(event.calendar.calendarIdentifier)",
                 source: .local
             )
         }
+        applyEventCategoryMappings()
     }
 
     // EventKit write methods (fallback)
@@ -498,9 +580,9 @@ final class CalendarViewModel: ObservableObject {
         }
     }
 
-    func updateCalendarEvent(eventID: String, title: String, startDate: Date, endDate: Date, isAllDay: Bool) -> Bool {
+    func updateCalendarEvent(eventID: String, calendarID: String = "google:primary", title: String, startDate: Date, endDate: Date, isAllDay: Bool) -> Bool {
         if authManager.isAuthenticated {
-            updateGoogleEvent(eventID: eventID, title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
+            updateGoogleEvent(eventID: eventID, calendarID: calendarID, title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
             return true
         }
         guard let ekEvent = eventStore.event(withIdentifier: eventID) else { return false }
@@ -515,9 +597,9 @@ final class CalendarViewModel: ObservableObject {
         } catch { return false }
     }
 
-    func deleteCalendarEvent(eventID: String) -> Bool {
+    func deleteCalendarEvent(eventID: String, calendarID: String = "google:primary") -> Bool {
         if authManager.isAuthenticated {
-            deleteGoogleEvent(eventID: eventID)
+            deleteGoogleEvent(eventID: eventID, calendarID: calendarID)
             return true
         }
         guard let ekEvent = eventStore.event(withIdentifier: eventID) else { return false }
@@ -668,7 +750,7 @@ final class CalendarViewModel: ObservableObject {
     // MARK: - Todo CRUD
 
     func addTodo(title: String, categoryID: UUID? = nil, date: Date? = nil, isRepeating: Bool = false) {
-        var todo = TodoItem(
+        let todo = TodoItem(
             title: title,
             categoryID: categoryID ?? defaultCategoryID,
             date: date ?? selectedDate,
@@ -711,7 +793,7 @@ final class CalendarViewModel: ObservableObject {
         // 달성률 반영 — 항상 UUID 기반 고정 키 사용 (googleEventId는 나중에 할당될 수 있어 키가 불안정)
         let completionKey = "todo:\(todos[index].id.uuidString)"
         if todos[index].isCompleted {
-            goalService?.markCompletion(eventId: completionKey, goalId: nil, status: .done, plannedMinutes: 30)
+            goalService?.markCompletion(eventId: completionKey, eventTitle: todos[index].title, goalId: nil, status: .done, plannedMinutes: 30)
         } else {
             goalService?.removeCompletion(eventId: completionKey)
         }
@@ -744,10 +826,11 @@ final class CalendarViewModel: ObservableObject {
         saveTodos()
     }
 
-    func updateTodo(id: UUID, title: String, categoryID: UUID) {
+    func updateTodo(id: UUID, title: String, categoryID: UUID, date: Date? = nil) {
         guard let index = todos.firstIndex(where: { $0.id == id }) else { return }
         todos[index].title = title
         todos[index].categoryID = categoryID
+        if let newDate = date { todos[index].date = newDate }
         saveTodos()
 
         if authManager.isAuthenticated, let eventId = todos[index].googleEventId {
@@ -783,6 +866,19 @@ final class CalendarViewModel: ObservableObject {
         }
     }
 
+    /// Calen 자동 재배치 전용 — rescheduledTodoIDs에 기록
+    func moveTodoBySystem(id: UUID, toDate: Date) {
+        moveTodo(id: id, toDate: toDate)
+        rescheduledTodoIDs.insert(id)
+    }
+
+    /// 지금 즉시 재배치 실행 (자정 안 기다리고 수동 트리거)
+    func rescheduleNow() {
+        // rolloverKey 리셋 → performIfNeeded가 다시 실행되도록
+        UserDefaults.standard.removeObject(forKey: "planit.lastRolloverDate")
+        MidnightRolloverService.shared.performIfNeeded(viewModel: self)
+    }
+
     func moveCalendarEvent(id: String, toDate: Date) {
         guard let event = calendarEvents.first(where: { $0.id == id }) else { return }
         let cal = Calendar.current
@@ -794,7 +890,7 @@ final class CalendarViewModel: ObservableObject {
 
         switch event.source {
         case .google:
-            updateGoogleEvent(eventID: id, title: event.title, startDate: newStart, endDate: newEnd, isAllDay: event.isAllDay)
+            updateGoogleEvent(eventID: id, calendarID: event.calendarID, title: event.title, startDate: newStart, endDate: newEnd, isAllDay: event.isAllDay)
         case .apple, .local:
             _ = updateCalendarEvent(eventID: id, title: event.title, startDate: newStart, endDate: newEnd, isAllDay: event.isAllDay)
         }
@@ -817,6 +913,10 @@ final class CalendarViewModel: ObservableObject {
         }
         categories.removeAll { $0.id == id }
         saveCategories()
+        // 삭제된 카테고리를 참조하는 캘린더 매핑 제거
+        eventCategoryMappings = eventCategoryMappings.filter { $0.value.categoryID != id }
+        saveEventCategoryMappings()
+        applyEventCategoryMappings()
     }
 
     func updateCategory(id: UUID, name: String, colorHex: String) {
@@ -826,19 +926,73 @@ final class CalendarViewModel: ObservableObject {
         saveCategories()
     }
 
+    // MARK: - Event Category Mappings (이벤트별 독립 매핑)
+
+    /// 이벤트의 카테고리를 반환 (매핑 없으면 nil)
+    func categoryForEvent(_ event: CalendarEvent) -> TodoCategory? {
+        guard let catID = event.categoryID else { return nil }
+        return categories.first { $0.id == catID }
+    }
+
+    /// 이벤트에 카테고리 매핑 설정 (categoryID == nil이면 매핑 제거)
+    func setEventCategory(eventID: String, eventTitle: String, categoryID: UUID?) {
+        if let catID = categoryID {
+            eventCategoryMappings[eventID] = EventCategoryMapping(
+                eventID: eventID,
+                eventTitle: eventTitle,
+                categoryID: catID
+            )
+        } else {
+            eventCategoryMappings.removeValue(forKey: eventID)
+        }
+        saveEventCategoryMappings()
+        applyEventCategoryMappings()
+    }
+
+    /// 현재 로드된 이벤트에 매핑 적용 (존재하지 않는 카테고리는 무시)
+    func applyEventCategoryMappings() {
+        let validCategoryIDs = Set(categories.map { $0.id })
+        for i in calendarEvents.indices {
+            let eid = calendarEvents[i].id
+            if let mapping = eventCategoryMappings[eid],
+               validCategoryIDs.contains(mapping.categoryID) {
+                calendarEvents[i].categoryID = mapping.categoryID
+            } else {
+                calendarEvents[i].categoryID = nil
+            }
+        }
+    }
+
+    private func saveEventCategoryMappings() {
+        let store = EventCategoryMappingsStore(
+            version: 1,
+            mappings: Array(eventCategoryMappings.values)
+        )
+        do {
+            let data = try JSONEncoder().encode(store)
+            try data.write(to: eventCategoryMappingsPath, options: .atomic)
+        } catch { print("[Calen] Failed to save event category mappings: \(error)") }
+    }
+
+    func loadEventCategoryMappings() {
+        guard let data = try? Data(contentsOf: eventCategoryMappingsPath),
+              let store = try? JSONDecoder().decode(EventCategoryMappingsStore.self, from: data) else { return }
+        eventCategoryMappings = store.mappings.reduce(into: [:]) { $0[$1.eventID] = $1 }
+    }
+
     // MARK: - Event Completion
 
     func isEventCompleted(_ eventID: String) -> Bool {
         completedEventIDs.contains(eventID)
     }
 
-    func toggleEventCompleted(_ eventID: String) {
+    func toggleEventCompleted(_ eventID: String, title: String? = nil) {
         if completedEventIDs.contains(eventID) {
             completedEventIDs.remove(eventID)
             goalService?.removeCompletion(eventId: eventID)
         } else {
             completedEventIDs.insert(eventID)
-            goalService?.markCompletion(eventId: eventID, goalId: nil, status: .done, plannedMinutes: 60)
+            goalService?.markCompletion(eventId: eventID, eventTitle: title, goalId: nil, status: .done, plannedMinutes: 60)
         }
         saveCompletedEvents()
     }
@@ -921,6 +1075,7 @@ final class CalendarViewModel: ObservableObject {
             // Only use cache if we don't already have live data
             if calendarEvents.isEmpty {
                 calendarEvents = cached.map { $0.toCalendarEvent() }
+                applyEventCategoryMappings()
             }
         } catch { print("[Calen] Failed to load cached events") }
     }
@@ -955,10 +1110,19 @@ final class CalendarViewModel: ObservableObject {
     /// Sync all pending offline edits to Google Calendar
     func syncPendingEdits() async {
         guard !pendingEdits.isEmpty, authManager.isAuthenticated else { return }
+        guard !isSyncingPendingEdits else { return }  // 재진입 방지
+        isSyncingPendingEdits = true
+        defer { isSyncingPendingEdits = false }
+
+        // 처리할 배치를 스냅샷하고 pendingEdits를 즉시 비움
+        // → await 구간에 새로 추가된 편집이 remaining 덮어쓰기로 유실되는 문제 방지
+        let batch = pendingEdits
+        pendingEdits = []
+        savePendingEdits()
 
         var remaining: [PendingCalendarEdit] = []
 
-        for edit in pendingEdits {
+        for edit in batch {
             do {
                 switch edit.action {
                 case "create":
@@ -984,8 +1148,9 @@ final class CalendarViewModel: ObservableObject {
             }
         }
 
-        pendingEdits = remaining
-        pendingEditsCount = remaining.count
+        // 실패한 편집 + sync 도중 새로 추가된 편집을 합산
+        pendingEdits = remaining + pendingEdits
+        pendingEditsCount = pendingEdits.count
         savePendingEdits()
     }
 }
