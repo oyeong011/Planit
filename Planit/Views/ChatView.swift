@@ -254,7 +254,7 @@ struct ChatView: View {
                     ZStack(alignment: .topTrailing) {
                         VStack(spacing: 2) {
                             if let thumb = att.thumbnail {
-                                Image(nsImage: thumb)
+                                Image(nsImage: NSImage(cgImage: thumb, size: .zero))
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
                                     .frame(width: 44, height: 44)
@@ -501,7 +501,7 @@ struct ChatBubble: View {
                             HStack(spacing: 4) {
                                 ForEach(message.attachments) { att in
                                     if let thumb = att.thumbnail {
-                                        Image(nsImage: thumb)
+                                        Image(nsImage: NSImage(cgImage: thumb, size: .zero))
                                             .resizable()
                                             .aspectRatio(contentMode: .fill)
                                             .frame(width: 60, height: 60)

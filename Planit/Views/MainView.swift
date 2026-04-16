@@ -34,6 +34,7 @@ struct MainCalendarView: View {
     @StateObject private var goalService: GoalService
     @StateObject private var reviewService: ReviewService
     @StateObject private var notificationService = NotificationService()
+    @StateObject private var userContextService = UserContextService()
     @State private var showLeftPanel: Bool = true
     @State private var leftPanelMode: LeftPanelMode = .chat
     @State private var showSettings: Bool = false
@@ -105,6 +106,7 @@ struct MainCalendarView: View {
                 authManager: authManager,
                 aiService: aiService,
                 viewModel: viewModel,
+                userContextService: userContextService,
                 onDismiss: { showSettings = false }
             )
         }
