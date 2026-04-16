@@ -36,6 +36,7 @@ struct MainCalendarView: View {
     @StateObject private var notificationService = NotificationService()
     @StateObject private var userContextService = UserContextService()
     @StateObject private var goalMemoryService = GoalMemoryService()
+    @StateObject private var habitService = HabitService()
     @State private var showLeftPanel: Bool = true
     @State private var leftPanelMode: LeftPanelMode = .chat
     @State private var showSettings: Bool = false
@@ -143,6 +144,7 @@ struct MainCalendarView: View {
                     reviewService: reviewService,
                     goalService: goalService,
                     goalMemoryService: goalMemoryService,
+                    habitService: habitService,
                     viewModel: viewModel,
                     onCreateEvent: { title, start, end in
                         Task {
@@ -159,7 +161,8 @@ struct MainCalendarView: View {
 
             case .chat:
                 ChatView(aiService: aiService, viewModel: viewModel,
-                         goalMemoryService: goalMemoryService)
+                         goalMemoryService: goalMemoryService,
+                         habitService: habitService)
             }
         }
     }

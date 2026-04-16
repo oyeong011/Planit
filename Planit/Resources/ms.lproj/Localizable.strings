@@ -454,3 +454,42 @@
 "goal.timeline.quarter" = "This Quarter";
 "goal.timeline.year" = "This Year";
 "goal.timeline.longterm" = "Long-term";
+
+/* Goal CRUD */
+"goal.empty.hint" = "Bercakap tentang matlamat anda dalam sembang dan ia akan muncul di sini";
+"goal.add.title" = "Tambah matlamat";
+"goal.edit.title" = "Edit matlamat";
+"goal.field.name" = "Nama matlamat";
+"goal.field.name.placeholder" = "cth: Dapat kerja di syarikat teknologi";
+"goal.field.targets" = "Sasaran (pisahkan dengan koma)";
+"goal.field.targets.placeholder" = "cth: Google, Apple, Meta";
+"goal.field.timeline" = "Tempoh masa";
+"goal.cancel" = "Batal";
+"goal.save" = "Simpan";
+
+/* Habit Heatmap */
+"habit.heatmap.title" = "Kadar tabiat";
+"habit.avg.rate" = "Purata %d%%";
+"habit.streak.days" = "%d hari berturut 🔥";
+"habit.streak.none" = "Mulakan streak hari ini";
+"habit.legend.low" = "Kurang";
+"habit.legend.high" = "Banyak";
+
+/* My Habits Section */
+"habit.section.title" = "My Habits";
+"habit.empty.hint" = "Tap + to add your first habit";
+"habit.add.title" = "Add Habit";
+"habit.edit" = "Edit Habit";
+"habit.delete" = "Delete Habit";
+"habit.field.name" = "Habit Name";
+"habit.field.name.placeholder" = "e.g. Exercise, Wake up early";
+"habit.field.emoji" = "Icon";
+"habit.field.color" = "Color";
+"habit.field.weekly" = "Weekly Goal (times)";
+"habit.detected.notice" = "Habit added: %@";
+"habit.graph.title" = "Habit Adherence";
+"habit.graph.thisweek" = "This Wk";
+"habit.graph.lastweek" = "Last Wk";
+"habit.graph.2weeksago" = "2 Wks";
+"habit.graph.3weeksago" = "3 Wks";
+"habit.graph.4weeksago" = "4 Wks";

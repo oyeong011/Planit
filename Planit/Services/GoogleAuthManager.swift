@@ -72,8 +72,9 @@ final class GoogleAuthManager: ObservableObject {
     // MARK: - Credentials
 
     private func loadCredentials() {
-        // 1. Consolidated Keychain entry
-        if let creds = KeychainHelper.loadCredentials() {
+        // 1. Consolidated Keychain entry — 빈 값이면 무시 (삭제 후 재설치 시 stale entry 방지)
+        if let creds = KeychainHelper.loadCredentials(),
+           !creds.clientID.isEmpty, !creds.clientSecret.isEmpty {
             clientID = creds.clientID
             clientSecret = creds.clientSecret
             return
@@ -108,6 +109,9 @@ final class GoogleAuthManager: ObservableObject {
     }
 
     func setupCredentials(clientID: String, clientSecret: String) {
+        // 빈 값이면 저장하지 않음 (stale Keychain entry 방지)
+        guard !clientID.trimmingCharacters(in: .whitespaces).isEmpty,
+              !clientSecret.trimmingCharacters(in: .whitespaces).isEmpty else { return }
         self.clientID = clientID
         self.clientSecret = clientSecret
         KeychainHelper.saveCredentials(KeychainHelper.OAuthCredentials(clientID: clientID, clientSecret: clientSecret))

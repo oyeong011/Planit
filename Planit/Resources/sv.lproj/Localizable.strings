@@ -454,3 +454,42 @@
 "goal.timeline.quarter" = "This Quarter";
 "goal.timeline.year" = "This Year";
 "goal.timeline.longterm" = "Long-term";
+
+/* Goal CRUD */
+"goal.empty.hint" = "Prata om dina mål i chatten så visas de här";
+"goal.add.title" = "Lägg till mål";
+"goal.edit.title" = "Redigera mål";
+"goal.field.name" = "Målnamn";
+"goal.field.name.placeholder" = "t.ex. Få jobb på ett techföretag";
+"goal.field.targets" = "Mål (kommaseparerade)";
+"goal.field.targets.placeholder" = "t.ex. Google, Spotify, Klarna";
+"goal.field.timeline" = "Tidsram";
+"goal.cancel" = "Avbryt";
+"goal.save" = "Spara";
+
+/* Habit Heatmap */
+"habit.heatmap.title" = "Vanefrekvens";
+"habit.avg.rate" = "Snitt %d%%";
+"habit.streak.days" = "%d dagar i rad 🔥";
+"habit.streak.none" = "Börja din serie idag";
+"habit.legend.low" = "Lite";
+"habit.legend.high" = "Mycket";
+
+/* My Habits Section */
+"habit.section.title" = "My Habits";
+"habit.empty.hint" = "Tap + to add your first habit";
+"habit.add.title" = "Add Habit";
+"habit.edit" = "Edit Habit";
+"habit.delete" = "Delete Habit";
+"habit.field.name" = "Habit Name";
+"habit.field.name.placeholder" = "e.g. Exercise, Wake up early";
+"habit.field.emoji" = "Icon";
+"habit.field.color" = "Color";
+"habit.field.weekly" = "Weekly Goal (times)";
+"habit.detected.notice" = "Habit added: %@";
+"habit.graph.title" = "Habit Adherence";
+"habit.graph.thisweek" = "This Wk";
+"habit.graph.lastweek" = "Last Wk";
+"habit.graph.2weeksago" = "2 Wks";
+"habit.graph.3weeksago" = "3 Wks";
+"habit.graph.4weeksago" = "4 Wks";

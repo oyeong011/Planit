@@ -454,3 +454,42 @@
 "goal.timeline.quarter" = "This Quarter";
 "goal.timeline.year" = "This Year";
 "goal.timeline.longterm" = "Long-term";
+
+/* Goal CRUD */
+"goal.empty.hint" = "चैट में अपने लक्ष्यों के बारे में बात करें — वे यहाँ दिखेंगे";
+"goal.add.title" = "लक्ष्य जोड़ें";
+"goal.edit.title" = "लक्ष्य संपादित करें";
+"goal.field.name" = "लक्ष्य का नाम";
+"goal.field.name.placeholder" = "जैसे: IT कंपनी में नौकरी पाना";
+"goal.field.targets" = "लक्ष्य कंपनियाँ (अल्पविराम से अलग)";
+"goal.field.targets.placeholder" = "जैसे: Google, TCS, Infosys";
+"goal.field.timeline" = "समय सीमा";
+"goal.cancel" = "रद्द करें";
+"goal.save" = "सहेजें";
+
+/* Habit Heatmap */
+"habit.heatmap.title" = "आदत पूर्णता";
+"habit.avg.rate" = "औसत %d%%";
+"habit.streak.days" = "%d दिन लगातार 🔥";
+"habit.streak.none" = "आज से शुरू करें";
+"habit.legend.low" = "कम";
+"habit.legend.high" = "अधिक";
+
+/* My Habits Section */
+"habit.section.title" = "My Habits";
+"habit.empty.hint" = "Tap + to add your first habit";
+"habit.add.title" = "Add Habit";
+"habit.edit" = "Edit Habit";
+"habit.delete" = "Delete Habit";
+"habit.field.name" = "Habit Name";
+"habit.field.name.placeholder" = "e.g. Exercise, Wake up early";
+"habit.field.emoji" = "Icon";
+"habit.field.color" = "Color";
+"habit.field.weekly" = "Weekly Goal (times)";
+"habit.detected.notice" = "Habit added: %@";
+"habit.graph.title" = "Habit Adherence";
+"habit.graph.thisweek" = "This Wk";
+"habit.graph.lastweek" = "Last Wk";
+"habit.graph.2weeksago" = "2 Wks";
+"habit.graph.3weeksago" = "3 Wks";
+"habit.graph.4weeksago" = "4 Wks";

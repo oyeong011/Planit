@@ -35,20 +35,18 @@ struct ChatGoal: Codable, Identifiable {
     var keywords: [String]         // 캘린더 이벤트 매칭 키워드
     var timeline: GoalTimeline
     var detectedAt: Date
-    var sourceMessage: String      // 원본 발언 (맥락 보존)
     // 최근 4주 주별 관련 이벤트 수 (index 0 = 4주전, index 3 = 이번주)
     var weeklyActivity: [Int]
     var lastActivityUpdate: Date
 
     init(title: String, targets: [String], keywords: [String],
-         timeline: GoalTimeline, sourceMessage: String) {
+         timeline: GoalTimeline) {
         self.id = UUID()
         self.title = title
         self.targets = targets
         self.keywords = keywords
         self.timeline = timeline
         self.detectedAt = Date()
-        self.sourceMessage = sourceMessage
         self.weeklyActivity = [0, 0, 0, 0]
         self.lastActivityUpdate = Date()
     }
@@ -71,7 +69,8 @@ struct GoalDraft {
 
 // MARK: - Local Keyword Detector (API 없이 동작)
 
-final class LocalKeywordGoalDetector: GoalDetector, @unchecked Sendable {
+// struct → 저장 프로퍼티가 불변이므로 Sendable 자동 준수
+struct LocalKeywordGoalDetector: GoalDetector, Sendable {
 
     // 목표 의도 감지 트리거
     private let goalTriggers = [
@@ -128,8 +127,14 @@ final class LocalKeywordGoalDetector: GoalDetector, @unchecked Sendable {
         var drafts: [GoalDraft] = []
 
         for category in categoryMap {
-            let matchedTriggers = category.triggers.filter { message.contains($0) }
+            // 대소문자 무시 매칭 (aws, sqld 등 소문자 입력 대응)
+            var matchedTriggers = category.triggers.filter { message.localizedCaseInsensitiveContains($0) }
             guard !matchedTriggers.isEmpty else { continue }
+
+            // 중복 제거: "삼성전자"가 있으면 "삼성" 제거 (부분 문자열)
+            matchedTriggers = matchedTriggers.filter { t in
+                !matchedTriggers.contains { other in other != t && other.localizedCaseInsensitiveContains(t) }
+            }
 
             let confidence = min(Double(matchedTriggers.count) * 0.3 + 0.5, 1.0)
             drafts.append(GoalDraft(
@@ -141,21 +146,45 @@ final class LocalKeywordGoalDetector: GoalDetector, @unchecked Sendable {
             ))
         }
 
-        // 카테고리 미매칭이지만 목표 의도가 강하면 raw 저장
+        // 카테고리 미매칭: raw 문장에서 핵심 명사만 추출해 저장
         if drafts.isEmpty {
-            let cleaned = message.trimmingCharacters(in: .whitespacesAndNewlines)
-            if cleaned.count > 5 {
+            let cleanedTitle = extractGoalTitle(from: message)
+            if cleanedTitle.count > 2 {
                 drafts.append(GoalDraft(
-                    title: cleaned.prefix(30).description,
+                    title: cleanedTitle,
                     targets: [],
                     keywords: [],
                     timeline: detectTimeline(in: message),
-                    confidence: 0.4
+                    confidence: 0.5
                 ))
             }
         }
 
         return drafts.filter { $0.confidence >= 0.4 }
+    }
+
+    /// "대학원입학이 올해 목표야" → "대학원 입학" 처럼 핵심만 추출
+    private func extractGoalTitle(from message: String) -> String {
+        let noisePatterns = [
+            "이 올해 목표야", "가 올해 목표야", "이 목표야", "가 목표야",
+            "이 목표입니다", "가 목표입니다", "이 내 목표", "이 나의 목표",
+            "하고 싶어", "하고싶어", "하고 싶다", "하고싶다",
+            "되고 싶어", "되고싶어", "되고 싶다", "되고싶다",
+            "올해", "이번 달", "이번달", "이번 분기", "올 해",
+            "목표야", "목표입니다", "목표다", "목표에요",
+            "이야", "이에요", "입니다", "이다"
+        ]
+        var result = message
+        for noise in noisePatterns {
+            result = result.replacingOccurrences(of: noise, with: " ")
+        }
+        // 공백 정리 + 앞뒤 특수문자 제거
+        result = result
+            .components(separatedBy: .whitespacesAndNewlines)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+            .trimmingCharacters(in: CharacterSet.alphanumerics.inverted.subtracting(CharacterSet(charactersIn: "가-힣a-zA-Z0-9 ")))
+        return String(result.prefix(20)).trimmingCharacters(in: .whitespaces)
     }
 
     private func detectTimeline(in message: String) -> GoalTimeline {
@@ -208,8 +237,7 @@ final class GoalMemoryService: ObservableObject {
                     title: draft.title,
                     targets: draft.targets,
                     keywords: draft.keywords,
-                    timeline: draft.timeline,
-                    sourceMessage: String(message.prefix(120))
+                    timeline: draft.timeline
                 )
                 goals.append(goal)
                 added.append(goal)
@@ -283,10 +311,27 @@ final class GoalMemoryService: ObservableObject {
         return .steady
     }
 
-    // MARK: - 목표 삭제
+    // MARK: - CRUD
+
+    func update(_ goal: ChatGoal) {
+        if let idx = goals.firstIndex(where: { $0.id == goal.id }) {
+            goals[idx] = goal
+            save()
+        }
+    }
 
     func delete(_ goal: ChatGoal) {
         goals.removeAll { $0.id == goal.id }
+        save()
+    }
+
+    func add(title: String, targets: [String], timeline: GoalTimeline) {
+        let keywords = targets  // 타깃 자체를 키워드로
+        let goal = ChatGoal(
+            title: title, targets: targets, keywords: keywords,
+            timeline: timeline
+        )
+        goals.append(goal)
         save()
     }
 
@@ -302,6 +347,7 @@ final class GoalMemoryService: ObservableObject {
         guard let data = UserDefaults.standard.data(forKey: storageKey),
               let decoded = try? JSONDecoder().decode([ChatGoal].self, from: data) else { return }
         goals = decoded
+        save()  // sourceMessage 등 구버전 필드 제거를 위해 즉시 재저장
     }
 }
 

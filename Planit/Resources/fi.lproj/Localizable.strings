@@ -454,3 +454,42 @@
 "goal.timeline.quarter" = "This Quarter";
 "goal.timeline.year" = "This Year";
 "goal.timeline.longterm" = "Long-term";
+
+/* Goal CRUD */
+"goal.empty.hint" = "Kerro tavoitteistasi chatissa ja ne näkyvät täällä";
+"goal.add.title" = "Lisää tavoite";
+"goal.edit.title" = "Muokkaa tavoitetta";
+"goal.field.name" = "Tavoitteen nimi";
+"goal.field.name.placeholder" = "esim. Saada töitä teknologiayrityksestä";
+"goal.field.targets" = "Kohteet (pilkuilla erotettu)";
+"goal.field.targets.placeholder" = "esim. Google, Nokia, Reaktor";
+"goal.field.timeline" = "Aikajänne";
+"goal.cancel" = "Peruuta";
+"goal.save" = "Tallenna";
+
+/* Habit Heatmap */
+"habit.heatmap.title" = "Tapatoteutus";
+"habit.avg.rate" = "Ka. %d%%";
+"habit.streak.days" = "%d päivää peräkkäin 🔥";
+"habit.streak.none" = "Aloita putki tänään";
+"habit.legend.low" = "Vähän";
+"habit.legend.high" = "Paljon";
+
+/* My Habits Section */
+"habit.section.title" = "My Habits";
+"habit.empty.hint" = "Tap + to add your first habit";
+"habit.add.title" = "Add Habit";
+"habit.edit" = "Edit Habit";
+"habit.delete" = "Delete Habit";
+"habit.field.name" = "Habit Name";
+"habit.field.name.placeholder" = "e.g. Exercise, Wake up early";
+"habit.field.emoji" = "Icon";
+"habit.field.color" = "Color";
+"habit.field.weekly" = "Weekly Goal (times)";
+"habit.detected.notice" = "Habit added: %@";
+"habit.graph.title" = "Habit Adherence";
+"habit.graph.thisweek" = "This Wk";
+"habit.graph.lastweek" = "Last Wk";
+"habit.graph.2weeksago" = "2 Wks";
+"habit.graph.3weeksago" = "3 Wks";
+"habit.graph.4weeksago" = "4 Wks";

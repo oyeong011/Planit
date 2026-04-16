@@ -454,3 +454,42 @@
 "goal.timeline.quarter" = "This Quarter";
 "goal.timeline.year" = "This Year";
 "goal.timeline.longterm" = "Long-term";
+
+/* Goal CRUD */
+"goal.empty.hint" = "Расскажите о целях в чате — они появятся здесь";
+"goal.add.title" = "Добавить цель";
+"goal.edit.title" = "Редактировать цель";
+"goal.field.name" = "Название цели";
+"goal.field.name.placeholder" = "напр: Устроиться в IT-компанию";
+"goal.field.targets" = "Цели (через запятую)";
+"goal.field.targets.placeholder" = "напр: Яндекс, VK, Сбер";
+"goal.field.timeline" = "Срок";
+"goal.cancel" = "Отмена";
+"goal.save" = "Сохранить";
+
+/* Habit Heatmap */
+"habit.heatmap.title" = "Выполнение привычек";
+"habit.avg.rate" = "Среднее %d%%";
+"habit.streak.days" = "%d дней подряд 🔥";
+"habit.streak.none" = "Начните серию сегодня";
+"habit.legend.low" = "Мало";
+"habit.legend.high" = "Много";
+
+/* My Habits Section */
+"habit.section.title" = "My Habits";
+"habit.empty.hint" = "Tap + to add your first habit";
+"habit.add.title" = "Add Habit";
+"habit.edit" = "Edit Habit";
+"habit.delete" = "Delete Habit";
+"habit.field.name" = "Habit Name";
+"habit.field.name.placeholder" = "e.g. Exercise, Wake up early";
+"habit.field.emoji" = "Icon";
+"habit.field.color" = "Color";
+"habit.field.weekly" = "Weekly Goal (times)";
+"habit.detected.notice" = "Habit added: %@";
+"habit.graph.title" = "Soblyudeniye privychek";
+"habit.graph.thisweek" = "Eta ned.";
+"habit.graph.lastweek" = "Prosh. ned.";
+"habit.graph.2weeksago" = "2 ned. nazad";
+"habit.graph.3weeksago" = "3 ned. nazad";
+"habit.graph.4weeksago" = "4 ned. nazad";

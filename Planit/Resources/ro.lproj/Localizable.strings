@@ -454,3 +454,42 @@
 "goal.timeline.quarter" = "This Quarter";
 "goal.timeline.year" = "This Year";
 "goal.timeline.longterm" = "Long-term";
+
+/* Goal CRUD */
+"goal.empty.hint" = "Vorbește despre obiectivele tale în chat și vor apărea aici";
+"goal.add.title" = "Adaugă obiectiv";
+"goal.edit.title" = "Editează obiectivul";
+"goal.field.name" = "Numele obiectivului";
+"goal.field.name.placeholder" = "ex: Obține un job în tech";
+"goal.field.targets" = "Ținte (separate prin virgulă)";
+"goal.field.targets.placeholder" = "ex: Google, Apple, Meta";
+"goal.field.timeline" = "Interval de timp";
+"goal.cancel" = "Anulează";
+"goal.save" = "Salvează";
+
+/* Habit Heatmap */
+"habit.heatmap.title" = "Rata obiceiuri";
+"habit.avg.rate" = "Med. %d%%";
+"habit.streak.days" = "%d zile la rând 🔥";
+"habit.streak.none" = "Începe seria azi";
+"habit.legend.low" = "Puțin";
+"habit.legend.high" = "Mult";
+
+/* My Habits Section */
+"habit.section.title" = "My Habits";
+"habit.empty.hint" = "Tap + to add your first habit";
+"habit.add.title" = "Add Habit";
+"habit.edit" = "Edit Habit";
+"habit.delete" = "Delete Habit";
+"habit.field.name" = "Habit Name";
+"habit.field.name.placeholder" = "e.g. Exercise, Wake up early";
+"habit.field.emoji" = "Icon";
+"habit.field.color" = "Color";
+"habit.field.weekly" = "Weekly Goal (times)";
+"habit.detected.notice" = "Habit added: %@";
+"habit.graph.title" = "Habit Adherence";
+"habit.graph.thisweek" = "This Wk";
+"habit.graph.lastweek" = "Last Wk";
+"habit.graph.2weeksago" = "2 Wks";
+"habit.graph.3weeksago" = "3 Wks";
+"habit.graph.4weeksago" = "4 Wks";

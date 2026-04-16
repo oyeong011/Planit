@@ -454,3 +454,42 @@
 "goal.timeline.quarter" = "This Quarter";
 "goal.timeline.year" = "This Year";
 "goal.timeline.longterm" = "Long-term";
+
+/* Goal CRUD */
+"goal.empty.hint" = "Mesélj a céljaidról a chatben és itt fognak megjelenni";
+"goal.add.title" = "Cél hozzáadása";
+"goal.edit.title" = "Cél szerkesztése";
+"goal.field.name" = "Cél neve";
+"goal.field.name.placeholder" = "pl. IT állást találni";
+"goal.field.targets" = "Célok (vesszővel elválasztva)";
+"goal.field.targets.placeholder" = "pl. Google, Apple, Meta";
+"goal.field.timeline" = "Időkeret";
+"goal.cancel" = "Mégse";
+"goal.save" = "Mentés";
+
+/* Habit Heatmap */
+"habit.heatmap.title" = "Szokásteljesítés";
+"habit.avg.rate" = "Átl. %d%%";
+"habit.streak.days" = "%d egymást követő nap 🔥";
+"habit.streak.none" = "Kezdd ma a sorozatot";
+"habit.legend.low" = "Kevés";
+"habit.legend.high" = "Sok";
+
+/* My Habits Section */
+"habit.section.title" = "My Habits";
+"habit.empty.hint" = "Tap + to add your first habit";
+"habit.add.title" = "Add Habit";
+"habit.edit" = "Edit Habit";
+"habit.delete" = "Delete Habit";
+"habit.field.name" = "Habit Name";
+"habit.field.name.placeholder" = "e.g. Exercise, Wake up early";
+"habit.field.emoji" = "Icon";
+"habit.field.color" = "Color";
+"habit.field.weekly" = "Weekly Goal (times)";
+"habit.detected.notice" = "Habit added: %@";
+"habit.graph.title" = "Habit Adherence";
+"habit.graph.thisweek" = "This Wk";
+"habit.graph.lastweek" = "Last Wk";
+"habit.graph.2weeksago" = "2 Wks";
+"habit.graph.3weeksago" = "3 Wks";
+"habit.graph.4weeksago" = "4 Wks";
