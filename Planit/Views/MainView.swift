@@ -573,7 +573,7 @@ struct DailyDetailView: View {
                                     tappedEvent = event
                                     tappedTodo = nil
                                 },
-                                onToggle: { viewModel.toggleEventCompleted(event.id) }
+                                onToggle: { viewModel.toggleEventCompleted(event.id, title: event.title) }
                             )
                         }
 
@@ -901,7 +901,7 @@ struct ModalEventDetail: View {
                 }.padding(.horizontal, 20).padding(.vertical, 12)
             } else {
                 HStack(spacing: 8) {
-                    Button { viewModel.toggleEventCompleted(event.id); onClose() } label: {
+                    Button { viewModel.toggleEventCompleted(event.id, title: event.title); onClose() } label: {
                         HStack(spacing: 4) {
                             Image(systemName: viewModel.isEventCompleted(event.id) ? "arrow.uturn.backward" : "checkmark").font(.system(size: 12))
                             Text(viewModel.isEventCompleted(event.id) ? String(localized: "common.incomplete") : String(localized: "common.done")).font(.system(size: 13))
