@@ -145,17 +145,22 @@ struct ReviewView: View {
 
     // MARK: - Progress Section
 
-    private func progressRateColor(_ rate: Double) -> Color {
-        rate >= 0.7 ? .green : rate >= 0.4 ? .orange : .red
+    /// HSB 공간에서 빨강(0°) → 노랑(60°) → 연두(120°)를 rate에 따라 연속 보간
+    /// pastel 톤: saturation 0.48, brightness 0.90
+    private func progressColor(for rate: Double) -> Color {
+        let clamped = max(0, min(1, rate))
+        // hue: 0.0(빨강) → 0.167(노랑) → 0.333(연두)
+        let hue = clamped * (120.0 / 360.0)
+        return Color(hue: hue, saturation: 0.48, brightness: 0.90)
     }
 
     private var progressSection: some View {
         let (done, total) = progressCounts(for: selectedPeriod)
         let rate = total > 0 ? Double(done) / Double(total) : 0
-        let rateColor = progressRateColor(rate)
+        let barColor = progressColor(for: rate)
 
         return VStack(alignment: .leading, spacing: 10) {
-            // 기간 탭 — 언더라인 스타일
+            // 기간 탭 — 언더라인 스타일 (탭 색도 현재 달성률 색으로)
             HStack(spacing: 0) {
                 ForEach([
                     (GoalService.CompletionPeriod.day,   String(localized: "common.today")),
@@ -172,13 +177,13 @@ struct ReviewView: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 4)
                             Capsule()
-                                .fill(isSelected ? rateColor : Color.clear)
+                                .fill(isSelected ? barColor : Color.clear)
                                 .frame(height: 2)
                         }
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .animation(.easeInOut(duration: 0.2), value: isSelected)
+                    .animation(.easeInOut(duration: 0.25), value: isSelected)
                 }
             }
 
@@ -190,40 +195,57 @@ struct ReviewView: View {
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(.primary)
                         Text("/ \(total)")
-                            .font(.system(size: 13, weight: .regular))
+                            .font(.system(size: 13))
                             .foregroundStyle(.secondary)
                         Text(String(localized: "review.completion.rate"))
                             .font(.system(size: 11))
                             .foregroundStyle(.secondary)
                         Spacer()
                         Text("\(Int(rate * 100))%")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(rateColor)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(barColor)
+                            .animation(.easeInOut(duration: 0.4), value: rate)
                     }
 
-                    // 도트 인디케이터 (total ≤ 20) 또는 슬림 바
-                    if total <= 20 {
-                        HStack(spacing: 5) {
-                            ForEach(0..<total, id: \.self) { i in
-                                Circle()
-                                    .fill(i < done ? rateColor : Color.secondary.opacity(0.18))
-                                    .frame(width: 8, height: 8)
-                                    .animation(.spring(duration: 0.4).delay(Double(i) * 0.03), value: done)
-                            }
-                            Spacer()
+                    // 그라데이션 바 — 전체 스펙트럼(빨→노→연두)을 배경에 깔고
+                    // 흰 마스크로 미완성 영역을 덮어 "서서히 변하는" 색감 표현
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            // 전체 스펙트럼 배경 (항상 빨→노→연두 그라데이션)
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(
+                                    LinearGradient(
+                                        stops: [
+                                            .init(color: progressColor(for: 0.0),  location: 0.0),
+                                            .init(color: progressColor(for: 0.25), location: 0.25),
+                                            .init(color: progressColor(for: 0.5),  location: 0.5),
+                                            .init(color: progressColor(for: 0.75), location: 0.75),
+                                            .init(color: progressColor(for: 1.0),  location: 1.0),
+                                        ],
+                                        startPoint: .leading, endPoint: .trailing
+                                    )
+                                )
+                                .opacity(0.22)  // 미완성 영역: 흐릿하게
+
+                            // 완성된 영역 — 동일 그라데이션이지만 진하게
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(
+                                    LinearGradient(
+                                        stops: [
+                                            .init(color: progressColor(for: 0.0),  location: 0.0),
+                                            .init(color: progressColor(for: 0.25), location: 0.25),
+                                            .init(color: progressColor(for: 0.5),  location: 0.5),
+                                            .init(color: progressColor(for: 0.75), location: 0.75),
+                                            .init(color: progressColor(for: 1.0),  location: 1.0),
+                                        ],
+                                        startPoint: .leading, endPoint: .trailing
+                                    )
+                                )
+                                .frame(width: max(geo.size.width * CGFloat(rate), rate > 0 ? 8 : 0))
+                                .animation(.spring(duration: 0.5), value: rate)
                         }
-                    } else {
-                        GeometryReader { geo in
-                            ZStack(alignment: .leading) {
-                                Capsule().fill(Color.secondary.opacity(0.12))
-                                Capsule()
-                                    .fill(rateColor)
-                                    .frame(width: max(geo.size.width * CGFloat(rate), rate > 0 ? 4 : 0))
-                                    .animation(.spring(duration: 0.5), value: rate)
-                            }
-                        }
-                        .frame(height: 4)
                     }
+                    .frame(height: 10)
                 }
             } else {
                 HStack(spacing: 6) {
