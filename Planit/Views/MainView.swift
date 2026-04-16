@@ -124,10 +124,14 @@ struct MainCalendarView: View {
             // Panel content
             switch leftPanelMode {
             case .onboarding:
-                OnboardingView(goalService: goalService) {
+                OnboardingView(goalService: goalService, onComplete: {
                     leftPanelMode = .chat
                     reviewService.checkAndActivate()
-                }
+                }, onSkip: {
+                    goalService.profile.onboardingDone = true
+                    goalService.saveProfile()
+                    leftPanelMode = .chat
+                })
 
             case .review:
                 ReviewView(
