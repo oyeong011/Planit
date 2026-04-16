@@ -273,7 +273,7 @@
 "settings.ai.installed.badge" = "已安装";
 "settings.ai.not.installed.badge" = "未安装";
 "settings.ai.claude.installed.detail" = "已安装 — 强大的自然语言理解";
-"settings.ai.claude.install.hint" = "需要: brew install claude";
+"settings.ai.claude.install.hint" = "需要: brew install claude-code";
 "settings.ai.codex.installed.detail" = "已安装 — 针对代码优化";
 "settings.ai.codex.install.hint" = "需要: npm install -g @openai/codex";
 "settings.ai.save.button" = "保存AI设置";

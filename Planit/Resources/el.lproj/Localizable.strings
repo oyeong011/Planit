@@ -273,7 +273,7 @@
 "settings.ai.installed.badge" = "Εγκατεστημένο";
 "settings.ai.not.installed.badge" = "Μη Εγκατεστημένο";
 "settings.ai.claude.installed.detail" = "Εγκατεστημένο — Ισχυρή κατανόηση φυσικής γλώσσας";
-"settings.ai.claude.install.hint" = "Απαιτείται: brew install claude";
+"settings.ai.claude.install.hint" = "Απαιτείται: brew install claude-code";
 "settings.ai.codex.installed.detail" = "Εγκατεστημένο — Βελτιστοποιημένο για κώδικα";
 "settings.ai.codex.install.hint" = "Απαιτείται: npm install -g @openai/codex";
 "settings.ai.save.button" = "Αποθήκευση Ρυθμίσεων AI";

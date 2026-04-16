@@ -273,7 +273,7 @@
 "settings.ai.installed.badge" = "ติดตั้งแล้ว";
 "settings.ai.not.installed.badge" = "ยังไม่ได้ติดตั้ง";
 "settings.ai.claude.installed.detail" = "ติดตั้งแล้ว — เข้าใจภาษาธรรมชาติได้ดีเยี่ยม";
-"settings.ai.claude.install.hint" = "จำเป็น: brew install claude";
+"settings.ai.claude.install.hint" = "จำเป็น: brew install claude-code";
 "settings.ai.codex.installed.detail" = "ติดตั้งแล้ว — ปรับแต่งสำหรับโค้ด";
 "settings.ai.codex.install.hint" = "จำเป็น: npm install -g @openai/codex";
 "settings.ai.save.button" = "บันทึกการตั้งค่า AI";

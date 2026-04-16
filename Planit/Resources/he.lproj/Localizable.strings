@@ -273,7 +273,7 @@
 "settings.ai.installed.badge" = "מותקן";
 "settings.ai.not.installed.badge" = "לא מותקן";
 "settings.ai.claude.installed.detail" = "מותקן — הבנת שפה טבעית חזקה";
-"settings.ai.claude.install.hint" = "נדרש: brew install claude";
+"settings.ai.claude.install.hint" = "נדרש: brew install claude-code";
 "settings.ai.codex.installed.detail" = "מותקן — מותאם לקוד";
 "settings.ai.codex.install.hint" = "נדרש: npm install -g @openai/codex";
 "settings.ai.save.button" = "שמור הגדרות AI";

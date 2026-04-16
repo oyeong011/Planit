@@ -273,7 +273,7 @@
 "settings.ai.installed.badge" = "इंस्टॉल है";
 "settings.ai.not.installed.badge" = "इंस्टॉल नहीं है";
 "settings.ai.claude.installed.detail" = "इंस्टॉल — शक्तिशाली प्राकृतिक भाषा समझ";
-"settings.ai.claude.install.hint" = "आवश्यक: brew install claude";
+"settings.ai.claude.install.hint" = "आवश्यक: brew install claude-code";
 "settings.ai.codex.installed.detail" = "इंस्टॉल — कोड के लिए अनुकूलित";
 "settings.ai.codex.install.hint" = "आवश्यक: npm install -g @openai/codex";
 "settings.ai.save.button" = "AI सेटिंग्स सहेजें";

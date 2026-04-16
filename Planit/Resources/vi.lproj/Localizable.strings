@@ -273,7 +273,7 @@
 "settings.ai.installed.badge" = "Đã cài";
 "settings.ai.not.installed.badge" = "Chưa cài";
 "settings.ai.claude.installed.detail" = "Đã cài — Hiểu ngôn ngữ tự nhiên mạnh mẽ";
-"settings.ai.claude.install.hint" = "Bắt buộc: brew install claude";
+"settings.ai.claude.install.hint" = "Bắt buộc: brew install claude-code";
 "settings.ai.codex.installed.detail" = "Đã cài — Tối ưu cho code";
 "settings.ai.codex.install.hint" = "Bắt buộc: npm install -g @openai/codex";
 "settings.ai.save.button" = "Lưu cài đặt AI";

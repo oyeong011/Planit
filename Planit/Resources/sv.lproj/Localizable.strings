@@ -273,7 +273,7 @@
 "settings.ai.installed.badge" = "Installerad";
 "settings.ai.not.installed.badge" = "Ej installerad";
 "settings.ai.claude.installed.detail" = "Installerad — Kraftfullt språkförståelse";
-"settings.ai.claude.install.hint" = "Krävs: brew install claude";
+"settings.ai.claude.install.hint" = "Krävs: brew install claude-code";
 "settings.ai.codex.installed.detail" = "Installerad — Optimerad för kod";
 "settings.ai.codex.install.hint" = "Krävs: npm install -g @openai/codex";
 "settings.ai.save.button" = "Spara AI-inställningar";

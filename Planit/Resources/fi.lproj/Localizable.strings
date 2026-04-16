@@ -273,7 +273,7 @@
 "settings.ai.installed.badge" = "Asennettu";
 "settings.ai.not.installed.badge" = "Ei asennettu";
 "settings.ai.claude.installed.detail" = "Asennettu — Tehokas kielen ymmärtäminen";
-"settings.ai.claude.install.hint" = "Vaaditaan: brew install claude";
+"settings.ai.claude.install.hint" = "Vaaditaan: brew install claude-code";
 "settings.ai.codex.installed.detail" = "Asennettu — Optimoitu koodille";
 "settings.ai.codex.install.hint" = "Vaaditaan: npm install -g @openai/codex";
 "settings.ai.save.button" = "Tallenna tekoälyasetukset";

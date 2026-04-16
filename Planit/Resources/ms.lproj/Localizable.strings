@@ -273,7 +273,7 @@
 "settings.ai.installed.badge" = "Dipasang";
 "settings.ai.not.installed.badge" = "Tidak Dipasang";
 "settings.ai.claude.installed.detail" = "Dipasang — Pemahaman bahasa semula jadi yang hebat";
-"settings.ai.claude.install.hint" = "Diperlukan: brew install claude";
+"settings.ai.claude.install.hint" = "Diperlukan: brew install claude-code";
 "settings.ai.codex.installed.detail" = "Dipasang — Dioptimumkan untuk kod";
 "settings.ai.codex.install.hint" = "Diperlukan: npm install -g @openai/codex";
 "settings.ai.save.button" = "Simpan Tetapan AI";

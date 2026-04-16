@@ -273,7 +273,7 @@
 "settings.ai.installed.badge" = "Telepítve";
 "settings.ai.not.installed.badge" = "Nincs telepítve";
 "settings.ai.claude.installed.detail" = "Telepítve — Hatékony természetes nyelvértés";
-"settings.ai.claude.install.hint" = "Szükséges: brew install claude";
+"settings.ai.claude.install.hint" = "Szükséges: brew install claude-code";
 "settings.ai.codex.installed.detail" = "Telepítve — Kódra optimalizálva";
 "settings.ai.codex.install.hint" = "Szükséges: npm install -g @openai/codex";
 "settings.ai.save.button" = "AI beállítások mentése";

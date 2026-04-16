@@ -273,7 +273,7 @@
 "settings.ai.installed.badge" = "مثبّت";
 "settings.ai.not.installed.badge" = "غير مثبّت";
 "settings.ai.claude.installed.detail" = "مثبّت — فهم قوي للغة الطبيعية";
-"settings.ai.claude.install.hint" = "مطلوب: brew install claude";
+"settings.ai.claude.install.hint" = "مطلوب: brew install claude-code";
 "settings.ai.codex.installed.detail" = "مثبّت — محسّن للكود";
 "settings.ai.codex.install.hint" = "مطلوب: npm install -g @openai/codex";
 "settings.ai.save.button" = "حفظ إعدادات الذكاء الاصطناعي";

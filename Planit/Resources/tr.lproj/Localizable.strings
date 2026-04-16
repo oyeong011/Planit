@@ -273,7 +273,7 @@
 "settings.ai.installed.badge" = "Yüklü";
 "settings.ai.not.installed.badge" = "Yüklü Değil";
 "settings.ai.claude.installed.detail" = "Yüklü — Güçlü doğal dil anlama";
-"settings.ai.claude.install.hint" = "Gerekli: brew install claude";
+"settings.ai.claude.install.hint" = "Gerekli: brew install claude-code";
 "settings.ai.codex.installed.detail" = "Yüklü — Kod için optimize edilmiş";
 "settings.ai.codex.install.hint" = "Gerekli: npm install -g @openai/codex";
 "settings.ai.save.button" = "AI Ayarlarını Kaydet";

@@ -273,7 +273,7 @@
 "settings.ai.installed.badge" = "Nainstalováno";
 "settings.ai.not.installed.badge" = "Nenainstalováno";
 "settings.ai.claude.installed.detail" = "Nainstalováno — Výkonné porozumění přirozenému jazyku";
-"settings.ai.claude.install.hint" = "Vyžadováno: brew install claude";
+"settings.ai.claude.install.hint" = "Vyžadováno: brew install claude-code";
 "settings.ai.codex.installed.detail" = "Nainstalováno — Optimalizováno pro kód";
 "settings.ai.codex.install.hint" = "Vyžadováno: npm install -g @openai/codex";
 "settings.ai.save.button" = "Uložit nastavení AI";
