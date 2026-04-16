@@ -145,13 +145,18 @@ struct ReviewView: View {
 
     // MARK: - Progress Section
 
+    private func progressRateColor(_ rate: Double) -> Color {
+        rate >= 0.7 ? .green : rate >= 0.4 ? .orange : .red
+    }
+
     private var progressSection: some View {
         let (done, total) = progressCounts(for: selectedPeriod)
         let rate = total > 0 ? Double(done) / Double(total) : 0
+        let rateColor = progressRateColor(rate)
 
         return VStack(alignment: .leading, spacing: 10) {
             // 기간 탭
-            HStack(spacing: 2) {
+            HStack(spacing: 0) {
                 ForEach([
                     (GoalService.CompletionPeriod.day,   String(localized: "common.today")),
                     (.week,  String(localized: "review.period.week")),
@@ -160,13 +165,13 @@ struct ReviewView: View {
                 ], id: \.1) { period, label in
                     Button { selectedPeriod = period } label: {
                         Text(label)
-                            .font(.system(size: 10, weight: selectedPeriod == period ? .semibold : .regular))
-                            .foregroundStyle(selectedPeriod == period ? .white : .secondary)
+                            .font(.system(size: 10, weight: selectedPeriod == period ? .medium : .regular))
+                            .foregroundStyle(selectedPeriod == period ? .primary : .secondary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 4)
                             .background(
                                 RoundedRectangle(cornerRadius: 5)
-                                    .fill(selectedPeriod == period ? Color.orange : Color.clear)
+                                    .fill(selectedPeriod == period ? Color.secondary.opacity(0.15) : Color.clear)
                             )
                             .contentShape(Rectangle())
                     }
@@ -174,38 +179,54 @@ struct ReviewView: View {
                 }
             }
             .padding(3)
-            .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.08)))
+            .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.06)))
 
             if total > 0 {
-                HStack(alignment: .bottom) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(String(format: "%d / %d", done, total))
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundStyle(rate >= 0.7 ? .green : rate >= 0.4 ? .orange : .red)
-                        Text(String(localized: "review.completion.rate"))
-                            .font(.system(size: 10))
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Text("\(Int(rate * 100))%")
-                        .font(.system(size: 28, weight: .heavy))
-                        .foregroundStyle(rate >= 0.7 ? Color.green : rate >= 0.4 ? Color.orange : Color.red)
-                }
+                VStack(spacing: 8) {
+                    HStack(spacing: 16) {
+                        // 원형 링 진행률
+                        ZStack {
+                            Circle()
+                                .stroke(Color.secondary.opacity(0.12), lineWidth: 5)
+                            Circle()
+                                .trim(from: 0, to: CGFloat(rate))
+                                .stroke(rateColor, style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                                .rotationEffect(.degrees(-90))
+                                .animation(.spring(duration: 0.5), value: rate)
+                            VStack(spacing: 0) {
+                                Text("\(done)")
+                                    .font(.system(size: 14, weight: .bold))
+                                Text("/ \(total)")
+                                    .font(.system(size: 9))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .frame(width: 52, height: 52)
 
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 4).fill(Color.secondary.opacity(0.12))
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(
-                                LinearGradient(
-                                    colors: rate >= 0.7 ? [.green, .mint] : rate >= 0.4 ? [.orange, .yellow] : [.red, .orange],
-                                    startPoint: .leading, endPoint: .trailing)
-                            )
-                            .frame(width: max(geo.size.width * CGFloat(rate), rate > 0 ? 8 : 0))
-                            .animation(.spring(duration: 0.4), value: rate)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("\(Int(rate * 100))%")
+                                .font(.system(size: 22, weight: .bold))
+                                .foregroundStyle(rateColor)
+                            Text(String(localized: "review.completion.rate"))
+                                .font(.system(size: 10))
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Spacer()
                     }
+
+                    // 얇은 진행 바
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 2).fill(Color.secondary.opacity(0.12))
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(rateColor)
+                                .frame(width: max(geo.size.width * CGFloat(rate), rate > 0 ? 4 : 0))
+                                .animation(.spring(duration: 0.4), value: rate)
+                        }
+                    }
+                    .frame(height: 4)
                 }
-                .frame(height: 8)
             } else {
                 HStack(spacing: 6) {
                     Image(systemName: "tray")
