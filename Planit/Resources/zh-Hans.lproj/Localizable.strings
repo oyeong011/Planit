@@ -420,3 +420,20 @@
 /* ===== Update Banner ===== */
 "update.available" = "有更新";
 "update.tap.to.update" = "点击更新到 v%@";
+
+/* Update notifications */
+"update.notification.title" = "Calen 有可用更新";
+"update.notification.body" = "版本 %@ 已发布。点击菜单栏图标进行更新。";
+
+/* AI setup */
+"setup.or.npm" = "或通过 npm";
+
+/* Auth errors */
+"auth.error.no.credentials" = "未配置 Google OAuth 凭据，请在设置中注册。";
+"auth.error.server.failed" = "无法启动本地认证服务器。";
+"auth.error.no.code" = "未收到授权码，请重试。";
+"auth.error.redirect.mismatch" = "OAuth 重定向错误。请在 Google Cloud 控制台中确认 OAuth 客户端类型为"桌面应用"。";
+"auth.error.token.exchange" = "令牌交换失败：%@";
+"auth.error.not.authenticated" = "未登录 Google 账户。";
+"auth.error.state.mismatch" = "认证状态不匹配（CSRF 保护）。";
+"auth.error.timeout" = "认证超时，请重试。";

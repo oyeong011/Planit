@@ -420,3 +420,20 @@
 /* ===== Update Banner ===== */
 "update.available" = "Mise à jour disponible";
 "update.tap.to.update" = "Cliquer pour mettre à jour vers v%@";
+
+/* Update notifications */
+"update.notification.title" = "Mise à jour de Calen disponible";
+"update.notification.body" = "La version %@ est disponible. Cliquez sur l'icône de la barre de menus pour mettre à jour.";
+
+/* AI setup */
+"setup.or.npm" = "ou avec npm";
+
+/* Auth errors */
+"auth.error.no.credentials" = "Identifiants OAuth Google non configurés. Allez dans Paramètres pour les enregistrer.";
+"auth.error.server.failed" = "Impossible de démarrer le serveur d'authentification local.";
+"auth.error.no.code" = "Aucun code d'autorisation reçu. Réessayez.";
+"auth.error.redirect.mismatch" = "Erreur de redirection OAuth. Assurez-vous que le type de client OAuth dans Google Cloud Console est 'Application de bureau'.";
+"auth.error.token.exchange" = "Échec de l'échange de jeton : %@";
+"auth.error.not.authenticated" = "Non connecté à Google.";
+"auth.error.state.mismatch" = "Discordance d'état d'authentification (protection CSRF).";
+"auth.error.timeout" = "L'authentification a expiré. Réessayez.";

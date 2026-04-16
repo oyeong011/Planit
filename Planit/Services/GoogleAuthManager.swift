@@ -23,13 +23,24 @@ enum AuthError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .noCredentials: return "Google Cloud 자격증명이 설정되지 않았습니다"
-        case .serverFailed: return "로컬 인증 서버 시작 실패"
-        case .noCodeReceived: return "인증 코드를 받지 못했습니다"
-        case .tokenExchangeFailed(let msg): return "토큰 교환 실패: \(msg)"
-        case .notAuthenticated: return "Google 계정에 로그인되지 않았습니다"
-        case .stateMismatch: return "인증 상태 불일치 (CSRF 보호)"
-        case .timeout: return "인증 시간이 초과되었습니다"
+        case .noCredentials:
+            return String(localized: "auth.error.no.credentials")
+        case .serverFailed:
+            return String(localized: "auth.error.server.failed")
+        case .noCodeReceived:
+            return String(localized: "auth.error.no.code")
+        case .tokenExchangeFailed(let msg):
+            // redirect_uri_mismatch → OAuth 클라이언트 타입 안내
+            if msg.contains("redirect_uri_mismatch") || msg.contains("400") {
+                return String(localized: "auth.error.redirect.mismatch")
+            }
+            return String(format: String(localized: "auth.error.token.exchange"), msg)
+        case .notAuthenticated:
+            return String(localized: "auth.error.not.authenticated")
+        case .stateMismatch:
+            return String(localized: "auth.error.state.mismatch")
+        case .timeout:
+            return String(localized: "auth.error.timeout")
         }
     }
 }

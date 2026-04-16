@@ -1,4 +1,5 @@
 import Foundation
+import UserNotifications
 
 /// GitHub Releases API로 최신 버전을 확인하고 업데이트 여부를 알려줍니다.
 @MainActor
@@ -10,6 +11,7 @@ final class UpdateCheckerService: ObservableObject {
 
     private let repoURL = URL(string: "https://api.github.com/repos/oyeong011/Planit/releases/latest")!
     private let lastCheckKey = "planit.updateChecker.lastCheckDate"
+    private let notifiedVersionKey = "planit.updateChecker.notifiedVersion"
     private let checkInterval: TimeInterval = 60 * 60 * 24 // 24시간
 
     var currentVersion: String {
@@ -40,10 +42,33 @@ final class UpdateCheckerService: ObservableObject {
 
             let latest = tagName.hasPrefix("v") ? String(tagName.dropFirst()) : tagName
             latestVersion = latest
-            updateAvailable = isNewer(latest, than: currentVersion)
+            let hasUpdate = isNewer(latest, than: currentVersion)
+            updateAvailable = hasUpdate
+
+            // 새 버전을 처음 감지했을 때만 시스템 알림 발송
+            if hasUpdate {
+                let alreadyNotified = UserDefaults.standard.string(forKey: notifiedVersionKey) == latest
+                if !alreadyNotified {
+                    sendUpdateNotification(version: latest)
+                    UserDefaults.standard.set(latest, forKey: notifiedVersionKey)
+                }
+            }
         } catch {
             // 네트워크 실패 — 조용히 무시
         }
+    }
+
+    private func sendUpdateNotification(version: String) {
+        let content = UNMutableNotificationContent()
+        content.title = String(localized: "update.notification.title")
+        content.body = String(format: String(localized: "update.notification.body"), version)
+        content.sound = .default
+        let request = UNNotificationRequest(
+            identifier: "calen.update.\(version)",
+            content: content,
+            trigger: nil
+        )
+        UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
     }
 
     /// latest가 current보다 높으면 true (semantic versioning)

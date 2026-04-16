@@ -113,7 +113,11 @@ struct ChatView: View {
                         installOption(
                             name: "Claude Code",
                             description: String(localized: "setup.claude.desc"),
-                            commands: ["npm install -g @anthropic-ai/claude-code", "claude --version"],
+                            commands: [
+                                "brew install claude-code",
+                                "# " + String(localized: "setup.or.npm") + ": npm install -g @anthropic-ai/claude-code",
+                                "claude --version"
+                            ],
                             isInstalled: aiService.claudeAvailable,
                             badgeColor: .purple
                         )
@@ -122,7 +126,10 @@ struct ChatView: View {
                         installOption(
                             name: "Codex",
                             description: String(localized: "setup.codex.desc"),
-                            commands: ["npm install -g @openai/codex", "codex --version"],
+                            commands: [
+                                "npm install -g @openai/codex",
+                                "codex --version"
+                            ],
                             isInstalled: aiService.codexAvailable,
                             badgeColor: .green
                         )
