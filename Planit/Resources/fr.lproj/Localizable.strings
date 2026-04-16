@@ -437,3 +437,11 @@
 "auth.error.not.authenticated" = "Non connecté à Google.";
 "auth.error.state.mismatch" = "Discordance d'état d'authentification (protection CSRF).";
 "auth.error.timeout" = "L'authentification a expiré. Réessayez.";
+"review.tab.title" = "Review";
+"review.category.title" = "By Calendar";
+"review.category.other" = "Other";
+"review.tomorrow.empty" = "No events scheduled for tomorrow";
+"review.tomorrow.more" = "+%d more";
+"review.category.primary" = "Primary";
+"review.weekly.chart.title" = "7-Day Progress";
+"review.day.today.short" = "Today";

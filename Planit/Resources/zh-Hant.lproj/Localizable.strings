@@ -437,3 +437,11 @@
 "auth.error.not.authenticated" = "未登入 Google 帳戶。";
 "auth.error.state.mismatch" = "認證狀態不符（CSRF 保護）。";
 "auth.error.timeout" = "認證逾時，請重試。";
+"review.tab.title" = "回顧";
+"review.category.title" = "按日曆統計";
+"review.category.other" = "其他";
+"review.tomorrow.empty" = "明天沒有安排";
+"review.tomorrow.more" = "+%d個";
+"review.category.primary" = "主日曆";
+"review.weekly.chart.title" = "7天完成情況";
+"review.day.today.short" = "今天";

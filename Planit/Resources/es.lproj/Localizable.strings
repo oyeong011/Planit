@@ -437,3 +437,11 @@
 "auth.error.not.authenticated" = "No has iniciado sesión en Google.";
 "auth.error.state.mismatch" = "Discrepancia de estado de autenticación (protección CSRF).";
 "auth.error.timeout" = "La autenticación ha agotado el tiempo. Intenta de nuevo.";
+"review.tab.title" = "Review";
+"review.category.title" = "By Calendar";
+"review.category.other" = "Other";
+"review.tomorrow.empty" = "No events scheduled for tomorrow";
+"review.tomorrow.more" = "+%d more";
+"review.category.primary" = "Primary";
+"review.weekly.chart.title" = "7-Day Progress";
+"review.day.today.short" = "Today";

@@ -429,3 +429,11 @@
 "auth.error.not.authenticated" = "Google에 로그인되지 않았습니다.";
 "auth.error.state.mismatch" = "인증 상태 불일치 (CSRF 보호).";
 "auth.error.timeout" = "인증이 시간 초과되었습니다. 다시 시도하세요.";
+"review.tab.title" = "리뷰";
+"review.category.title" = "캘린더별 달성률";
+"review.category.other" = "기타";
+"review.tomorrow.empty" = "내일 예정된 일정이 없어요";
+"review.tomorrow.more" = "+%d개 더";
+"review.category.primary" = "기본 캘린더";
+"review.weekly.chart.title" = "7일 달성 현황";
+"review.day.today.short" = "오늘";
