@@ -11,11 +11,6 @@ struct ReviewView: View {
     @State private var showPlanResult = false
     @State private var aiPlan: ReviewAIPlan?
     @State private var selectedPeriod: GoalService.CompletionPeriod = .day
-    @State private var reviewedItems: [(title: String, status: CompletionStatus, start: Date, end: Date)] = []
-    // 저녁 리뷰: 카드별 상태 표시 (선택 후 잠깐 보여주고 제거)
-    @State private var cardStatuses: [String: CompletionStatus] = [:]
-    // 저녁 리뷰: 숨겨진 todo IDs
-    @State private var hiddenTodoIDs: Set<UUID> = []
 
     var body: some View {
         VStack(spacing: 0) {
@@ -335,33 +330,49 @@ struct ReviewView: View {
 
     // MARK: - Evening View
 
-    private var todayPendingTodos: [TodoItem] {
-        let cal = Calendar.current
-        let localPending = viewModel.todos.filter {
-            !$0.isCompleted && cal.isDateInToday($0.date) && !hiddenTodoIDs.contains($0.id)
-        }
-        let reminderPending = viewModel.appleReminders.filter {
-            !$0.isCompleted && cal.isDateInToday($0.date) && !hiddenTodoIDs.contains($0.id)
-        }
-        return localPending + reminderPending
+    // 오늘 이벤트 (Google Calendar + Apple Calendar)
+    private var todayEvents: [CalendarEvent] {
+        viewModel.eventsForDate(Calendar.current.startOfDay(for: Date()))
+            .filter { !$0.isAllDay }
     }
 
+    // 오늘 할 일
+    private var todayTodos: [TodoItem] {
+        viewModel.todosForDate(Calendar.current.startOfDay(for: Date()))
+    }
+
+    // 자동 계산: 완료한 항목 수
+    private var todayDoneCount: Int {
+        let doneEvents = todayEvents.filter { viewModel.isEventCompleted($0.id) }.count
+        let doneTodos = todayTodos.filter { $0.isCompleted }.count
+        return doneEvents + doneTodos
+    }
+
+    // 자동 계산: 전체 항목 수
+    private var todayTotalCount: Int {
+        todayEvents.count + todayTodos.count
+    }
+
+    // MARK: - Evening Stats Row (자동 계산)
+
     private var eveningStatsRow: some View {
-        let (done, total) = progressCounts(for: .day)
+        let done = todayDoneCount
+        let total = todayTotalCount
         let rate = total > 0 ? Double(done) / Double(total) : 0
+        let color = progressColor(for: rate)
 
         return HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(alignment: .bottom, spacing: 4) {
                     Text("\(Int(rate * 100))%")
                         .font(.system(size: 26, weight: .heavy))
-                        .foregroundStyle(rate >= 0.7 ? Color.green : rate >= 0.4 ? Color.orange : Color.red)
-                    Text("달성")
+                        .foregroundStyle(color)
+                    Text(String(localized: "review.achievement"))
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                         .padding(.bottom, 3)
                 }
-                Text("\(done) / \(total)개 완료")
+                Text(String(format: String(localized: "review.count.done"), done, total))
                     .font(.system(size: 10))
                     .foregroundStyle(.secondary)
             }
@@ -370,304 +381,155 @@ struct ReviewView: View {
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 4).fill(Color.secondary.opacity(0.12))
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(LinearGradient(
-                            colors: rate >= 0.7 ? [.green, .mint] : rate >= 0.4 ? [.orange, .yellow] : [.red, .orange],
-                            startPoint: .leading, endPoint: .trailing))
+                    RoundedRectangle(cornerRadius: 6).fill(Color.secondary.opacity(0.12))
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(color)
                         .frame(width: max(geo.size.width * CGFloat(rate), rate > 0 ? 8 : 0))
-                        .animation(.spring(duration: 0.4), value: rate)
+                        .animation(.spring(duration: 0.5), value: rate)
                 }
             }
-            .frame(width: 100, height: 8)
+            .frame(width: 110, height: 10)
         }
         .padding(12)
-        .background(RoundedRectangle(cornerRadius: 10).fill(
-            rate >= 0.7 ? Color.green.opacity(0.06) : rate >= 0.4 ? Color.orange.opacity(0.06) : Color.red.opacity(0.06)
-        ))
+        .background(RoundedRectangle(cornerRadius: 10).fill(color.opacity(0.06)))
     }
 
-    @ViewBuilder
-    private var eveningEventsSection: some View {
-        if !reviewService.suggestions.isEmpty {
-            VStack(alignment: .leading, spacing: 6) {
-                HStack {
-                    Label(String(localized: "review.today.lookback"), systemImage: "list.bullet.clipboard")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Text(String(format: "%d", reviewService.suggestions.count))
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(.indigo)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Capsule().fill(Color.indigo.opacity(0.1)))
-                }
-                .padding(.horizontal, 2)
-                ForEach(Array(reviewService.suggestions.enumerated()), id: \.element.id) { idx, s in
-                    eveningCard(s, index: idx)
-                }
-            }
-            .padding(.horizontal, 10)
-        }
-    }
-
-    @ViewBuilder
-    private var eveningTodosSection: some View {
-        let pending = todayPendingTodos
-        if !pending.isEmpty {
-            VStack(alignment: .leading, spacing: 6) {
-                HStack {
-                    Label(String(localized: "review.today.todos"), systemImage: "checkmark.square")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Text(String(format: "%d", pending.count))
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(.blue)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Capsule().fill(Color.blue.opacity(0.1)))
-                }
-                .padding(.horizontal, 2)
-                ForEach(pending) { todo in
-                    eveningTodoCard(todo)
-                }
-            }
-            .padding(.horizontal, 10)
-        }
-    }
-
-    @ViewBuilder
-    private var eveningEmptySection: some View {
-        if reviewService.suggestions.isEmpty && todayPendingTodos.isEmpty {
-            VStack(spacing: 10) {
-                Image(systemName: "moon.stars.fill")
-                    .font(.system(size: 32))
-                    .foregroundStyle(.indigo)
-                Text(String(localized: "review.no.past.events"))
-                    .font(.system(size: 13, weight: .semibold))
-                Text(String(localized: "review.generate.now.hint"))
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 20)
-        }
-    }
-
-    private var eveningHasContent: Bool {
-        !reviewService.suggestions.isEmpty || !todayPendingTodos.isEmpty
-    }
+    // MARK: - Evening View (읽기 전용 — AI가 자동 분석)
 
     private var eveningView: some View {
         VStack(spacing: 0) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 10) {
                     eveningStatsRow
                         .padding(.horizontal, 10)
                         .padding(.top, 10)
-                    eveningEmptySection
-                    eveningEventsSection
-                    eveningTodosSection
+
+                    if todayEvents.isEmpty && todayTodos.isEmpty {
+                        // 오늘 일정 없음
+                        VStack(spacing: 10) {
+                            Image(systemName: "moon.stars.fill")
+                                .font(.system(size: 32))
+                                .foregroundStyle(.indigo)
+                            Text(String(localized: "review.no.past.events"))
+                                .font(.system(size: 13, weight: .semibold))
+                            Text(String(localized: "review.generate.now.hint"))
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 24)
+                    } else {
+                        // 오늘 이벤트 (읽기 전용)
+                        if !todayEvents.isEmpty {
+                            VStack(alignment: .leading, spacing: 5) {
+                                Label(String(localized: "review.today.lookback"), systemImage: "calendar")
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundStyle(.secondary)
+                                    .padding(.horizontal, 12)
+
+                                ForEach(todayEvents) { event in
+                                    eveningReadOnlyEventRow(event)
+                                }
+                            }
+                        }
+
+                        // 오늘 할 일 (읽기 전용)
+                        if !todayTodos.isEmpty {
+                            VStack(alignment: .leading, spacing: 5) {
+                                Label(String(localized: "review.today.todos"), systemImage: "checkmark.square")
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundStyle(.secondary)
+                                    .padding(.horizontal, 12)
+
+                                ForEach(todayTodos) { todo in
+                                    eveningReadOnlyTodoRow(todo)
+                                }
+                            }
+                        }
+                    }
                 }
                 .padding(.bottom, 10)
             }
 
             Divider()
 
-            HStack(spacing: 6) {
-                if eveningHasContent {
-                    // Button 1: 완료
-                    Button { markAllDone() } label: {
-                        VStack(spacing: 3) {
-                            Image(systemName: "checkmark.square.fill")
-                                .font(.system(size: 14))
-                            Text(String(localized: "review.done.all"))
-                                .font(.system(size: 10, weight: .medium))
-                                .lineLimit(1)
-                        }
-                        .foregroundStyle(.green)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 7)
-                        .background(RoundedRectangle(cornerRadius: 8).stroke(Color.green.opacity(0.5), lineWidth: 1))
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-
-                    // Button 2: 내일로
-                    Button { moveAllToTomorrow() } label: {
-                        VStack(spacing: 3) {
-                            Image(systemName: "arrow.right.to.line")
-                                .font(.system(size: 14))
-                            Text(String(localized: "review.move.all"))
-                                .font(.system(size: 10, weight: .medium))
-                                .lineLimit(1)
-                        }
-                        .foregroundStyle(.orange)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 7)
-                        .background(RoundedRectangle(cornerRadius: 8).stroke(Color.orange.opacity(0.5), lineWidth: 1))
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                }
-
-                // Button 3: AI 계획 (always shown, fills remaining space)
-                Button { generatePlan() } label: {
+            // 단일 AI 버튼
+            Button { generatePlan() } label: {
+                HStack(spacing: 7) {
                     if isGenerating {
-                        VStack(spacing: 3) {
-                            ProgressView().controlSize(.small).tint(.white)
-                            Text(String(localized: "review.generating.button"))
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundStyle(.white)
-                                .lineLimit(1)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 7)
-                        .background(RoundedRectangle(cornerRadius: 8).fill(.indigo))
+                        ProgressView().controlSize(.small).tint(.white)
+                        Text(String(localized: "review.generating.button"))
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.white)
                     } else {
-                        VStack(spacing: 3) {
-                            Image(systemName: "wand.and.stars")
-                                .font(.system(size: 14))
-                            Text(String(localized: "review.generate.tomorrow"))
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundStyle(.white)
-                                .lineLimit(1)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 7)
-                        .background(RoundedRectangle(cornerRadius: 8).fill(.indigo))
+                        Image(systemName: "wand.and.stars")
+                            .font(.system(size: 13))
+                        Text(String(localized: "review.generate.tomorrow"))
+                            .font(.system(size: 13, weight: .semibold))
                     }
                 }
-                .buttonStyle(.plain)
-                .disabled(isGenerating)
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 11)
+                .background(RoundedRectangle(cornerRadius: 10).fill(.indigo))
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .disabled(isGenerating)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
         }
     }
 
-    private func eveningTodoCard(_ todo: TodoItem) -> some View {
-        let selectedStatus = cardStatuses["todo-\(todo.id)"]
-
+    // 읽기 전용 이벤트 행
+    private func eveningReadOnlyEventRow(_ event: CalendarEvent) -> some View {
+        let done = viewModel.isEventCompleted(event.id)
         return HStack(spacing: 10) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(todo.title)
+            RoundedRectangle(cornerRadius: 2)
+                .fill(done ? Color.green : Color.secondary.opacity(0.35))
+                .frame(width: 3)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(event.title)
                     .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(done ? .primary : .primary)
+                    .strikethrough(done)
                     .lineLimit(1)
-                    .strikethrough(selectedStatus == .done)
-                Text(String(localized: "review.todo.label"))
+                Text("\(formatTime(event.startDate)) – \(formatTime(event.endDate))")
                     .font(.system(size: 10))
                     .foregroundStyle(.secondary)
             }
-
-            Spacer(minLength: 0)
-
-            if let status = selectedStatus {
-                // 상태 선택 후 표시
-                Image(systemName: status == .done ? "checkmark.circle.fill" : "xmark.circle.fill")
-                    .font(.system(size: 22))
-                    .foregroundStyle(status == .done ? Color.green : Color.secondary)
-                    .transition(.scale.combined(with: .opacity))
-            } else {
-                HStack(spacing: 2) {
-                    statusButton(sfSymbol: "checkmark.circle.fill", color: .green,
-                                 help: String(localized: "review.help.done")) {
-                        completeTodo(todo)
-                    }
-                    statusButton(sfSymbol: "xmark.circle.fill", color: .secondary,
-                                 help: String(localized: "review.help.skip")) {
-                        skipTodo(todo)
-                    }
-                }
-            }
+            Spacer()
+            Image(systemName: done ? "checkmark.circle.fill" : "circle")
+                .font(.system(size: 16))
+                .foregroundStyle(done ? Color.green : Color.secondary.opacity(0.4))
         }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 7)
+        .background(RoundedRectangle(cornerRadius: 8).fill(Color.platformControlBackground))
         .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-        .background(RoundedRectangle(cornerRadius: 8).fill(
-            selectedStatus == .done ? Color.green.opacity(0.06) : Color.platformControlBackground
-        ))
-        .animation(.easeInOut(duration: 0.2), value: selectedStatus != nil)
     }
 
-    private func eveningCard(_ s: ReviewSuggestion, index: Int) -> some View {
-        let cardKey = s.id.uuidString
-        let selectedStatus = cardStatuses[cardKey]
-
+    // 읽기 전용 할 일 행
+    private func eveningReadOnlyTodoRow(_ todo: TodoItem) -> some View {
+        let done = todo.isCompleted
         return HStack(spacing: 10) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(s.title)
-                    .font(.system(size: 12, weight: .medium))
-                    .lineLimit(1)
-                    .strikethrough(selectedStatus == .done)
-                if let start = s.proposedStart, let end = s.proposedEnd {
-                    Text("\(formatTime(start)) – \(formatTime(end))")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
-                } else {
-                    Text(s.description)
-                        .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
-            }
-
-            Spacer(minLength: 0)
-
-            if let status = selectedStatus {
-                // 상태 선택 후 아이콘 표시 (0.5초 후 제거)
-                Group {
-                    switch status {
-                    case .done:
-                        Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.green)
-                    case .moved:
-                        Image(systemName: "arrow.right.circle.fill").foregroundStyle(Color.orange)
-                    default:
-                        Image(systemName: "xmark.circle.fill").foregroundStyle(Color.secondary)
-                    }
-                }
-                .font(.system(size: 22))
-                .transition(.scale.combined(with: .opacity))
-            } else {
-                HStack(spacing: 2) {
-                    statusButton(sfSymbol: "checkmark.circle.fill", color: .green,
-                                 help: String(localized: "review.help.done")) {
-                        markCompletionWithFeedback(suggestion: s, at: index, status: .done)
-                    }
-                    statusButton(sfSymbol: "arrow.right.circle.fill", color: .orange,
-                                 help: String(localized: "review.help.tomorrow")) {
-                        markCompletionWithFeedback(suggestion: s, at: index, status: .moved)
-                    }
-                    statusButton(sfSymbol: "xmark.circle.fill", color: .secondary,
-                                 help: String(localized: "review.help.skip")) {
-                        markCompletionWithFeedback(suggestion: s, at: index, status: .skipped)
-                    }
-                }
-            }
+            RoundedRectangle(cornerRadius: 2)
+                .fill(done ? Color.green : Color.secondary.opacity(0.35))
+                .frame(width: 3)
+            Text(todo.title)
+                .font(.system(size: 12, weight: .medium))
+                .strikethrough(done)
+                .lineLimit(1)
+            Spacer()
+            Image(systemName: done ? "checkmark.circle.fill" : "circle")
+                .font(.system(size: 16))
+                .foregroundStyle(done ? Color.green : Color.secondary.opacity(0.4))
         }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 7)
+        .background(RoundedRectangle(cornerRadius: 8).fill(Color.platformControlBackground))
         .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-        .background(RoundedRectangle(cornerRadius: 8).fill(
-            selectedStatus == .done ? Color.green.opacity(0.06)
-            : selectedStatus == .moved ? Color.orange.opacity(0.06)
-            : Color.platformControlBackground
-        ))
-        .animation(.easeInOut(duration: 0.2), value: selectedStatus != nil)
-    }
-
-    private func statusButton(sfSymbol: String, color: Color, help: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: sfSymbol)
-                .font(.system(size: 22))
-                .foregroundStyle(color)
-                .frame(width: 30, height: 30)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .help(help)
     }
 
     // MARK: - AI Plan Result View
@@ -788,70 +650,24 @@ struct ReviewView: View {
         }
     }
 
-    private func markAllDone() {
-        // 이벤트 전체 완료
-        for i in (0..<reviewService.suggestions.count).reversed() {
-            markCompletion(at: i, status: .done)
-        }
-        // 할 일 전체 완료
-        for todo in todayPendingTodos {
-            completeTodo(todo)
-        }
-    }
-
-    private func completeTodo(_ todo: TodoItem) {
-        withAnimation {
-            cardStatuses["todo-\(todo.id)"] = .done
-        }
-        reviewedItems.append((
-            title: todo.title,
-            status: .done,
-            start: Calendar.current.startOfDay(for: todo.date),
-            end: Calendar.current.startOfDay(for: todo.date).addingTimeInterval(1800)
-        ))
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            withAnimation { _ = hiddenTodoIDs.insert(todo.id) }
-        }
-        // 실제 완료 처리
-        if todo.source == .appleReminder, let identifier = todo.appleReminderIdentifier {
-            viewModel.toggleAppleReminder(identifier: identifier)
-        } else {
-            viewModel.toggleTodo(id: todo.id)
-        }
-    }
-
-    private func skipTodo(_ todo: TodoItem) {
-        withAnimation {
-            cardStatuses["todo-\(todo.id)"] = .skipped
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-            withAnimation { _ = hiddenTodoIDs.insert(todo.id) }
-        }
-    }
-
-    private func markCompletionWithFeedback(suggestion s: ReviewSuggestion, at index: Int, status: CompletionStatus) {
-        withAnimation {
-            cardStatuses[s.id.uuidString] = status
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            markCompletion(at: index, status: status)
-            cardStatuses.removeValue(forKey: s.id.uuidString)
-        }
-    }
-
     private func generatePlan() {
         isGenerating = true
-        let remaining = reviewService.suggestions.map { s in
-            (title: s.title,
-             status: CompletionStatus.moved,
-             start: s.proposedStart ?? Date(),
-             end: s.proposedEnd ?? Date())
+        // 앱이 이미 알고 있는 완료 상태 자동 수집 (수동 입력 불필요)
+        var reviewed: [(title: String, status: CompletionStatus, start: Date, end: Date)] = []
+        for event in todayEvents {
+            let status: CompletionStatus = viewModel.isEventCompleted(event.id) ? .done : .moved
+            reviewed.append((title: event.title, status: status,
+                             start: event.startDate, end: event.endDate))
         }
-        moveAllToTomorrow()
-        let allReviewed = reviewedItems + remaining
+        for todo in todayTodos {
+            let status: CompletionStatus = todo.isCompleted ? .done : .moved
+            reviewed.append((title: todo.title, status: status,
+                             start: todo.date,
+                             end: todo.date.addingTimeInterval(1800)))
+        }
 
         Task {
-            let plan = await reviewService.generateAITomorrowPlan(reviewed: allReviewed)
+            let plan = await reviewService.generateAITomorrowPlan(reviewed: reviewed)
             for event in plan.events {
                 onCreateEvent(event.title, event.start, event.end)
             }
@@ -888,19 +704,7 @@ struct ReviewView: View {
             status: status,
             plannedMinutes: max(minutes, 30)
         )
-        reviewedItems.append((
-            title: s.title,
-            status: status,
-            start: s.proposedStart ?? Date(),
-            end: s.proposedEnd ?? Date()
-        ))
         reviewService.suggestions.remove(at: index)
-    }
-
-    private func moveAllToTomorrow() {
-        for i in (0..<reviewService.suggestions.count).reversed() {
-            markCompletion(at: i, status: .moved)
-        }
     }
 
     // MARK: - Progress Helpers
