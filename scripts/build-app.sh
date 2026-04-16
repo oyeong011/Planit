@@ -43,6 +43,10 @@ fi
 cp "$PROJECT_DIR/Planit/Resources/AppIcon.icns" "$APP_BUNDLE/Contents/Resources/AppIcon.icns"
 if [ -d "$BUILD_DIR/Calen_Calen.bundle" ]; then
     cp -R "$BUILD_DIR/Calen_Calen.bundle" "$APP_BUNDLE/Contents/Resources/"
+    # lproj 파일을 Bundle.main이 찾을 수 있도록 Contents/Resources/ 바로 아래에도 복사
+    for lproj in "$BUILD_DIR/Calen_Calen.bundle"/*.lproj; do
+        [ -d "$lproj" ] && cp -R "$lproj" "$APP_BUNDLE/Contents/Resources/"
+    done
 fi
 
 echo "→ .app bundle created at: $APP_BUNDLE"
