@@ -2,17 +2,15 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <!-- 비샌드박스 앱: app-sandbox=false이면 network.client/server/files.user-selected는
+         의미 없음. 남겨두면 macOS Sonoma TCC가 Photos/Music/네트워크볼륨 권한을
+         선제적으로 요청하는 부작용 발생 → 제거 -->
     <key>com.apple.security.app-sandbox</key>
     <false/>
-    <key>com.apple.security.network.client</key>
-    <true/>
-    <key>com.apple.security.network.server</key>
-    <true/>
+    <!-- Hardened Runtime: calendars/reminders는 실제로 사용하므로 유지 -->
     <key>com.apple.security.personal-information.calendars</key>
     <true/>
     <key>com.apple.security.personal-information.reminders</key>
-    <true/>
-    <key>com.apple.security.files.user-selected.read-write</key>
     <true/>
 </dict>
 </plist>
