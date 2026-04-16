@@ -442,3 +442,4 @@
 "review.category.other" = "其他";
 "review.tomorrow.empty" = "明天没有安排";
 "review.tomorrow.more" = "+%d个";
+"review.category.primary" = "主日历";

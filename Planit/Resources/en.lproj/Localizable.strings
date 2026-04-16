@@ -434,3 +434,4 @@
 "review.category.other" = "Other";
 "review.tomorrow.empty" = "No events scheduled for tomorrow";
 "review.tomorrow.more" = "+%d more";
+"review.category.primary" = "Primary";

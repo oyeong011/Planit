@@ -434,3 +434,4 @@
 "review.category.other" = "기타";
 "review.tomorrow.empty" = "내일 예정된 일정이 없어요";
 "review.tomorrow.more" = "+%d개 더";
+"review.category.primary" = "기본 캘린더";

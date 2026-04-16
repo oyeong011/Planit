@@ -92,12 +92,6 @@ struct ReviewView: View {
                         .padding(.horizontal, 10)
                         .padding(.top, 10)
 
-                    // 카테고리별 달성률 (항상 표시 — 빈 화면 채우기)
-                    if !categoryStats.isEmpty {
-                        categorySection
-                            .padding(.horizontal, 10)
-                    }
-
                     // 저녁: 내일 프리뷰 / 아침: AI 제안
                     if reviewService.currentMode == .evening {
                         tomorrowPreviewSection
@@ -418,7 +412,16 @@ struct ReviewView: View {
         for event in viewModel.calendarEvents {
             guard !event.isAllDay, !todoEventIds.contains(event.id) else { continue }
             guard event.startDate >= interval.start && event.startDate < interval.end else { continue }
-            let name = event.calendarName.isEmpty ? String(localized: "review.category.other") : event.calendarName
+            let rawName = event.calendarName
+            // 이메일 주소가 캘린더 이름으로 표시되면 "기본 캘린더"로 대체
+            let name: String
+            if rawName.isEmpty {
+                name = String(localized: "review.category.other")
+            } else if rawName.contains("@") || rawName.contains(".com") || rawName.contains(".net") {
+                name = String(localized: "review.category.primary")
+            } else {
+                name = rawName
+            }
             var g = groups[name] ?? (color: event.color, done: 0, total: 0)
             g.total += 1
             if completedIDs.contains(event.id) { g.done += 1 }

@@ -442,3 +442,4 @@
 "review.category.other" = "その他";
 "review.tomorrow.empty" = "明日の予定はありません";
 "review.tomorrow.more" = "+%d件";
+"review.category.primary" = "メインカレンダー";
