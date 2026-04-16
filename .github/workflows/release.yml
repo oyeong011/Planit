@@ -83,6 +83,9 @@ jobs:
           fi
           if [ -d "$BUILD_DIR/Calen_Calen.bundle" ]; then
             cp -R "$BUILD_DIR/Calen_Calen.bundle" "$APP_BUNDLE/Contents/Resources/"
+            for lproj in "$BUILD_DIR/Calen_Calen.bundle"/*.lproj; do
+              [ -d "$lproj" ] && cp -R "$lproj" "$APP_BUNDLE/Contents/Resources/"
+            done
           fi
 
           echo "APP_BUNDLE=$APP_BUNDLE" >> "$GITHUB_ENV"
