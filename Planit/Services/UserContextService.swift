@@ -4,6 +4,17 @@ import Foundation
 // 사용자의 행동 패턴, 목표, 배경 정보를 마크다운 파일로 관리합니다.
 // AI가 이 파일을 읽어 초개인화 일정 추천에 활용합니다.
 
+/// 현재 앱 표시 언어의 BCP-47 코드 (예: "ko", "en", "zh-Hant")
+private func userDisplayLanguage() -> String {
+    Locale.current.language.languageCode?.identifier ?? "en"
+}
+
+/// AI 프롬프트에 붙일 "이 언어로 응답하세요" 지시문
+private func languageInstruction() -> String {
+    let lang = Locale.current.localizedString(forLanguageCode: userDisplayLanguage()) ?? "English"
+    return "Respond entirely in \(lang) (\(userDisplayLanguage()))."
+}
+
 @MainActor
 final class UserContextService: ObservableObject {
 
@@ -161,26 +172,28 @@ final class UserContextService: ObservableObject {
             sectionContent(Section.profile) + "\n" + sectionContent(Section.style)
         )
 
+        let langNote = languageInstruction()
         let prompt = """
-        다음은 캘린더 앱 사용자와 AI의 대화 내용입니다.
-        대화에서 사용자 정보를 추출해 JSON으로만 응답하세요. 마크다운 없이 순수 JSON만.
+        \(langNote)
+        You are analyzing a calendar app user's conversation to extract profile information.
+        Respond with pure JSON only — no markdown, no explanation.
 
-        대화:
+        Conversation:
         \(conversation)
 
-        기존 파악된 정보:
+        Previously known info:
         \(existingContext)
 
-        JSON 형식 (변화가 없는 필드는 null):
+        JSON format (use null for fields with no new information):
         {
-          "role": "직업/역할 (예: 대학생, 직장인, 취준생)",
-          "situation": "현재 상황 (예: 정보처리기사 2회 시험 준비 중)",
-          "primaryGoal": "주요 목표",
-          "planningGranularity": "세부적/큰그림/혼합 중 하나",
-          "preferredFocusTime": "오전/오후/저녁/새벽 중 하나 또는 null",
-          "focusTopic": "현재 집중 주제 (시험명, 프로젝트명 등)",
-          "observations": ["이 대화에서 파악된 관찰 사항들 (최대 2개)"],
-          "needsExternalInfo": "외부 검색이 필요한 주제 (예: 정보처리기사 시험 일정) 또는 null"
+          "role": "job/role in user's language (e.g. student, developer, job seeker)",
+          "situation": "current situation in user's language",
+          "primaryGoal": "main goal in user's language",
+          "planningGranularity": "detailed / big-picture / mixed",
+          "preferredFocusTime": "morning / afternoon / evening / late-night or null",
+          "focusTopic": "current focus topic name (exam, project, etc.)",
+          "observations": ["observations from this conversation (max 2)"],
+          "needsExternalInfo": "topic needing web search or null"
         }
         """
 
@@ -217,7 +230,7 @@ final class UserContextService: ObservableObject {
             updatePlanningStyle(granularity: gran, preferredTime: prefTime)
         }
         if let f = focus, !f.isEmpty {
-            setFocusArea(topic: f, detail: "- 현재 진행 중")
+            setFocusArea(topic: f, detail: "- in progress")
         }
         for ob in obs where !ob.isEmpty {
             addObservation(ob)
@@ -251,20 +264,22 @@ final class UserContextService: ObservableObject {
         // 2. Claude로 구조화된 정보 생성
         let claudeResult: String
         if let path = claudePath {
+            let langNote = languageInstruction()
             claudeResult = await Task.detached(priority: .background) {
                 let prompt = """
-                다음 주제에 대한 정보를 한국어로 간결하게 정리해주세요 (마크다운 리스트 형식):
-                주제: \(topic)
+                \(langNote)
+                Summarize the following topic concisely in markdown list format:
+                Topic: \(topic)
 
-                포함할 정보:
-                - 시험/자격증이라면: 시험 일정(연간), 시험 과목/단원, 합격 기준
-                - 공부 주제라면: 학습 순서, 핵심 챕터, 예상 소요 시간
-                - 프로젝트라면: 주요 단계, 체크포인트
+                Include:
+                - If exam/certification: annual schedule, subjects/modules, pass criteria
+                - If study topic: learning sequence, key chapters, estimated time
+                - If project: major phases, checkpoints
 
-                DuckDuckGo 검색 결과 참고:
-                \(ddgResult.isEmpty ? "없음" : Self.sanitizeForPrompt(ddgResult, maxLength: 1500))
+                DuckDuckGo search result for reference:
+                \(ddgResult.isEmpty ? "(none)" : Self.sanitizeForPrompt(ddgResult, maxLength: 1500))
 
-                5-10줄로 간결하게. 날짜 정보는 "확인 필요"로 표시.
+                Keep it to 5-10 lines. Mark uncertain dates as "TBD".
                 """
                 return UserContextService.runClaude(prompt: prompt, claudePath: path)
             }.value
@@ -280,7 +295,7 @@ final class UserContextService: ObservableObject {
 
         // 집중 영역에도 외부 정보 요약 연결
         let shortSummary = claudeResult.components(separatedBy: "\n").prefix(3).joined(separator: "\n")
-        setFocusArea(topic: topic, detail: shortSummary + "\n→ 외부정보: 📌 외부 정보 캐시 섹션 참조")
+        setFocusArea(topic: topic, detail: shortSummary + "\n→ see: 📌 External Info Cache section")
     }
 
     // MARK: - 계획 스타일 분석
@@ -294,19 +309,19 @@ final class UserContextService: ObservableObject {
         let hasDetailedItems = allItems.contains { $0.count > 15 || $0.contains(":") || $0.contains("-") }
         let hasVagueItems = allItems.contains { $0.count < 8 }
 
+        // 로케일 무관한 영어 값 사용 (AI가 읽는 내부 데이터)
         let granularity: String
         if hasDetailedItems && !hasVagueItems {
-            granularity = "세부적 (단계별로 나눠서 계획)"
+            granularity = "detailed (step-by-step planning)"
         } else if hasVagueItems && !hasDetailedItems {
-            granularity = "큰그림 (간략하게 계획)"
+            granularity = "big-picture (brief planning)"
         } else {
-            granularity = "혼합 (상황에 따라 다름)"
+            granularity = "mixed (varies by situation)"
         }
 
-        // 아이템 개수와 평균 길이가 임계값 이상이면 업데이트
         if allItems.count >= 5 {
             updatePlanningStyle(granularity: granularity,
-                                extra: "평균 할일 제목 길이: \(avgLength)자")
+                                extra: "avg todo title length: \(avgLength) chars")
         }
     }
 
@@ -315,25 +330,26 @@ final class UserContextService: ObservableObject {
     private func ensureFileExists() {
         guard !fm.fileExists(atPath: contextFileURL.path) else { return }
 
+        // 파일 초기 내용은 언어 무관 — 섹션 헤더는 파싱 키이므로 고정
         let initial = """
-        # 🧠 Planit 사용자 컨텍스트
-        > 이 파일은 앱이 자동으로 관리합니다. 직접 편집도 가능합니다.
-        > AI가 이 파일을 읽어 초개인화 일정 추천에 활용합니다.
+        # 🧠 Calen User Context
+        > This file is automatically managed by the app. You can also edit it directly.
+        > AI reads this file to provide hyper-personalized schedule recommendations.
 
         \(Section.profile)
-        (대화를 나누면 자동으로 채워집니다)
+        _[auto-filled from conversations]_
 
         \(Section.focus)
-        (현재 집중하는 시험, 프로젝트, 학습 주제가 표시됩니다)
+        _[current focus area — exams, projects, topics]_
 
         \(Section.style)
-        (할일/일정 패턴 분석을 통해 자동으로 파악됩니다)
+        _[auto-detected from your todo/event patterns]_
 
         \(Section.external)
-        (시험 일정, 커리큘럼 등 외부에서 검색된 정보가 저장됩니다)
+        _[external info cached from web searches]_
 
         \(Section.log)
-        (대화에서 파악된 관찰 사항들이 기록됩니다)
+        _[observations noted from your conversations]_
         """
         try? initial.write(to: contextFileURL, atomically: true, encoding: .utf8)
     }
@@ -342,7 +358,13 @@ final class UserContextService: ObservableObject {
         let content = (try? String(contentsOf: contextFileURL, encoding: .utf8)) ?? ""
         let profile = extractSection(Section.profile, from: content)
         let focus = extractSection(Section.focus, from: content)
-        contextSummary = [profile, focus].filter { !$0.isEmpty && !$0.contains("자동으로") }.joined(separator: "\n")
+        // placeholder 줄 제거: 언더스코어 italics(_[...]_) 또는 괄호로만 이루어진 줄
+        let isPlaceholder: (String) -> Bool = { text in
+            let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            return t.isEmpty || t.hasPrefix("_[") || (t.hasPrefix("(") && t.hasSuffix(")"))
+        }
+        let cleaned = [profile, focus].filter { !isPlaceholder($0) }
+        contextSummary = cleaned.joined(separator: "\n")
     }
 
     private func updateSection(_ header: String, body: String) {
