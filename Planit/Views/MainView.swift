@@ -34,18 +34,21 @@ struct MainCalendarView: View {
     @StateObject private var goalService: GoalService
     @StateObject private var reviewService: ReviewService
     @StateObject private var notificationService = NotificationService()
-    @StateObject private var userContextService = UserContextService()
     @State private var showLeftPanel: Bool = true
     @State private var leftPanelMode: LeftPanelMode = .chat
     @State private var showSettings: Bool = false
+    @State private var pendingPasteImage: NSImage? = nil
+    @State private var pendingPasteURLs: [URL] = []
 
     init(authManager: GoogleAuthManager, newTodoTitle: Binding<String>) {
         self.authManager = authManager
         self._newTodoTitle = newTodoTitle
         let vm = CalendarViewModel(authManager: authManager)
         self._viewModel = StateObject(wrappedValue: vm)
-        let ai = AIService(authManager: authManager, calendarService: vm.googleService)
-        self._aiService = StateObject(wrappedValue: ai)
+        self._aiService = StateObject(wrappedValue: AIService(
+            authManager: authManager,
+            calendarService: vm.googleService
+        ))
         let gs = GoalService()
         vm.goalService = gs
         self._goalService = StateObject(wrappedValue: gs)
@@ -64,35 +67,37 @@ struct MainCalendarView: View {
             }
 
             CalendarGridView(viewModel: viewModel, showChat: $showLeftPanel)
-                .frame(maxWidth: .infinity)
-
-            Divider()
+                .frame(width: showLeftPanel ? 560 : 620)
 
             DailyDetailView(viewModel: viewModel, newTodoTitle: $newTodoTitle, showSettings: $showSettings)
-                .frame(width: 330)
+                .frame(width: 310)
         }
-        .frame(width: showLeftPanel ? 1320 : 1040, height: 860)
-        .background(Color.platformControlBackground)
-        .onChange(of: authManager.isAuthenticated) {
+        .frame(width: showLeftPanel ? 1150 : 930, height: 780)
+        .background(Color(nsColor: .controlBackgroundColor))
+        .onChange(of: authManager.isAuthenticated) { _ in
             viewModel.refreshEvents()
         }
         .onAppear {
             checkLeftPanelMode()
             scheduleNotifications()
-            // 초개인화: aiService에 컨텍스트 서비스 주입
-            aiService.userContextService = userContextService
-            // 할일 패턴으로 계획 스타일 분석
-            let todoTitles = viewModel.todos.map(\.title)
-            let eventTitles = viewModel.calendarEvents.prefix(30).map(\.title)
-            userContextService.analyzePlanningStyle(todos: todoTitles, events: Array(eventTitles))
         }
-        .onChange(of: viewModel.calendarEvents) {
+        .onChange(of: viewModel.calendarEvents) { _ in
             updateEventReminders()
         }
-        .onChange(of: viewModel.todos.count) {
-            // 할일 패턴 변화 시 계획 스타일 재분석
-            let todoTitles = viewModel.todos.map(\.title)
-            userContextService.analyzePlanningStyle(todos: todoTitles, events: [])
+        .onReceive(NotificationCenter.default.publisher(for: CalenNotification.popoverOpened)) { _ in
+            viewModel.refreshEvents()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: CalenNotification.pasteImage)) { notif in
+            if let image = notif.userInfo?["image"] as? NSImage {
+                leftPanelMode = .chat
+                pendingPasteImage = image
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: CalenNotification.pasteFiles)) { notif in
+            if let urls = notif.userInfo?["urls"] as? [URL] {
+                leftPanelMode = .chat
+                pendingPasteURLs = urls
+            }
         }
         .sheet(isPresented: $showSettings) {
             SettingsView(
@@ -100,7 +105,6 @@ struct MainCalendarView: View {
                 authManager: authManager,
                 aiService: aiService,
                 viewModel: viewModel,
-                userContextService: userContextService,
                 onDismiss: { showSettings = false }
             )
         }
@@ -148,7 +152,9 @@ struct MainCalendarView: View {
                 )
 
             case .chat:
-                ChatView(aiService: aiService, viewModel: viewModel)
+                ChatView(aiService: aiService, viewModel: viewModel,
+                         pendingPasteImage: $pendingPasteImage,
+                         pendingPasteURLs: $pendingPasteURLs)
             }
         }
     }
@@ -239,52 +245,14 @@ struct CalendarGridView: View {
                     .font(.system(size: 28, weight: .bold))
 
                 if viewModel.authManager.isAuthenticated {
-                    if viewModel.needsReauth {
-                        Button {
-                            viewModel.authManager.logout()
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "exclamationmark.circle.fill")
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(.orange)
-                                Text("캘린더 권한 업데이트 필요")
-                                    .font(.system(size: 10))
-                                    .foregroundStyle(.orange)
-                            }
-                        }
-                        .buttonStyle(.plain)
-                        .help("일부 캘린더가 표시되지 않습니다. 탭하여 재로그인 → 전체 캘린더 권한 허용")
-                    } else {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 12))
-                            .foregroundStyle(.green)
-                            .help(String(localized: "calendar.help.google.connected"))
-                    }
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.green)
+                        .help(String(localized: "calendar.help.google.connected"))
                 }
 
                 Spacer()
                 HStack(spacing: 12) {
-                    // 미완료 할 일 즉시 재배치 버튼
-                    let overdueCount = viewModel.todos.filter {
-                        !$0.isCompleted && $0.source == .local &&
-                        $0.date < Calendar.current.startOfDay(for: Date())
-                    }.count
-                    if overdueCount > 0 {
-                        Button {
-                            viewModel.rescheduleNow()
-                        } label: {
-                            HStack(spacing: 3) {
-                                Image(systemName: "arrow.uturn.right.circle.fill")
-                                    .font(.system(size: 12))
-                                Text("\(overdueCount)")
-                                    .font(.system(size: 11, weight: .semibold))
-                            }
-                            .foregroundStyle(.purple)
-                        }
-                        .buttonStyle(.plain)
-                        .help("밀린 할 일 \(overdueCount)개를 지금 재배치")
-                    }
-
                     Button(action: viewModel.previousMonth) {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 14, weight: .semibold))
@@ -300,11 +268,6 @@ struct CalendarGridView: View {
             .padding(.horizontal, 20)
             .padding(.top, 16)
 
-            // 주간 일정 밀도 바
-            WeekDensityBar(events: viewModel.calendarEvents)
-                .padding(.horizontal, 20)
-                .padding(.bottom, 4)
-
             HStack(spacing: 0) {
                 ForEach(Array(weekdays.enumerated()), id: \.offset) { index, day in
                     Text(day)
@@ -316,9 +279,7 @@ struct CalendarGridView: View {
                         )
                         .frame(maxWidth: .infinity)
                 }
-            }
-            .padding(.horizontal, 8)
-            .padding(.bottom, 4)
+            }.padding(.horizontal, 12)
 
             let days = viewModel.daysInMonth()
             let rows = stride(from: 0, to: days.count, by: 7).map { Array(days[$0..<min($0+7, days.count)]) }
@@ -338,7 +299,6 @@ struct CalendarGridView: View {
                                     events: viewModel.eventsForDate(date),
                                     todos: viewModel.todosForDate(date),
                                     categoryFor: { viewModel.category(for: $0) },
-                                    categoryForEvent: { viewModel.categoryForEvent($0) },
                                     onDrop: { payload, targetDate in
                                         switch CalendarDragPayload(payload) {
                                         case .todo(let id):
@@ -353,17 +313,15 @@ struct CalendarGridView: View {
                                 )
                                 .onTapGesture { viewModel.selectedDate = date }
                             } else {
-                                Color.clear
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                VStack { Spacer() }
+                                    .frame(maxWidth: .infinity, minHeight: 105)
                             }
                         }
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-            }
-            .frame(maxHeight: .infinity)
-            .padding(.horizontal, 8)
-            .padding(.bottom, 8)
+            }.padding(.horizontal, 8)
+
+            Spacer(minLength: 0)
         }
     }
 }
@@ -380,7 +338,6 @@ struct DayCellView: View {
     let events: [CalendarEvent]
     let todos: [TodoItem]
     let categoryFor: (UUID) -> TodoCategory
-    var categoryForEvent: ((CalendarEvent) -> TodoCategory?)? = nil
     var onDrop: ((String, Date) -> Void)? = nil
 
     @State private var isDropTarget = false
@@ -399,83 +356,69 @@ struct DayCellView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            dayCellHeader
-            dayCellItems
+            HStack {
+                if isToday {
+                    Text(dayNumber)
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 26, height: 26)
+                        .background(Circle().fill(Color.blue))
+                } else {
+                    Text(dayNumber)
+                        .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
+                        .foregroundStyle(textColor)
+                        .frame(width: 26, height: 26)
+                }
+                Spacer()
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(Array(events.prefix(3).enumerated()), id: \.offset) { _, event in
+                    let label = String(event.title.prefix(10))
+                    let fg: Color = isCurrentMonth ? event.color.opacity(0.85) : .secondary.opacity(0.3)
+                    Text(label)
+                        .font(.system(size: 9))
+                        .lineLimit(1)
+                        .padding(.horizontal, 3)
+                        .padding(.vertical, 1)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(RoundedRectangle(cornerRadius: 3).fill(event.color.opacity(0.15)))
+                        .foregroundStyle(fg)
+                }
+                ForEach(Array(todos.prefix(max(0, 3 - events.count)).enumerated()), id: \.offset) { _, todo in
+                    let cat = categoryFor(todo.categoryID)
+                    let fg: Color = isCurrentMonth ? cat.color.opacity(0.85) : .secondary.opacity(0.3)
+                    HStack(spacing: 2) {
+                        Circle().fill(cat.color.opacity(0.7)).frame(width: 4, height: 4)
+                        Text(String(todo.title.prefix(10)))
+                            .font(.system(size: 9))
+                            .lineLimit(1)
+                    }
+                    .padding(.horizontal, 3)
+                    .padding(.vertical, 1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(RoundedRectangle(cornerRadius: 3).fill(cat.color.opacity(0.1)))
+                    .foregroundStyle(fg)
+                }
+            }
+
             Spacer(minLength: 0)
         }
-        .padding(6)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(RoundedRectangle(cornerRadius: 6).fill(cellBackground))
-        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.purple.opacity(isDropTarget ? 0.7 : 0), lineWidth: 2))
+        .padding(5)
+        .frame(maxWidth: .infinity, minHeight: 105, alignment: .topLeading)
+        .background(RoundedRectangle(cornerRadius: 6).fill(
+            isDropTarget ? Color.purple.opacity(0.12) : (isSelected ? Color.blue.opacity(0.08) : Color.clear)
+        ))
+        .overlay(
+            RoundedRectangle(cornerRadius: 6)
+                .stroke(Color.purple.opacity(isDropTarget ? 0.7 : 0), lineWidth: 2)
+        )
         .contentShape(Rectangle())
         .dropDestination(for: String.self) { items, _ in
             guard let payload = items.first else { return false }
             onDrop?(payload, date)
             return true
         } isTargeted: { isDropTarget = $0 }
-    }
-
-    private var cellBackground: Color {
-        if isDropTarget { return Color.purple.opacity(0.12) }
-        if isSelected { return Color.blue.opacity(0.08) }
-        return Color.clear
-    }
-
-    @ViewBuilder private var dayCellHeader: some View {
-        HStack {
-            if isToday {
-                Text(dayNumber)
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(.white)
-                    .frame(width: 26, height: 26)
-                    .background(Circle().fill(Color.blue))
-            } else {
-                Text(dayNumber)
-                    .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
-                    .foregroundStyle(textColor)
-                    .frame(width: 26, height: 26)
-            }
-            Spacer()
-        }
-    }
-
-    @ViewBuilder private var dayCellItems: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            ForEach(Array(events.prefix(4).enumerated()), id: \.offset) { _, event in
-                let displayColor = categoryForEvent?(event)?.color ?? event.color
-                Text(event.title)
-                    .font(.system(size: 10))
-                    .lineLimit(1)
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 1.5)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(RoundedRectangle(cornerRadius: 3).fill(displayColor.opacity(0.15)))
-                    .foregroundStyle(isCurrentMonth ? displayColor.opacity(0.85) : .secondary.opacity(0.3))
-            }
-            ForEach(Array(todos.prefix(max(0, 4 - events.count)).enumerated()), id: \.offset) { _, todo in
-                DayCellTodoRow(todo: todo, cat: categoryFor(todo.categoryID), isCurrentMonth: isCurrentMonth)
-            }
-        }
-    }
-}
-
-private struct DayCellTodoRow: View {
-    let todo: TodoItem
-    let cat: TodoCategory
-    let isCurrentMonth: Bool
-
-    var body: some View {
-        HStack(spacing: 3) {
-            Circle().fill(cat.color.opacity(0.7)).frame(width: 5, height: 5)
-            Text(todo.title)
-                .font(.system(size: 10))
-                .lineLimit(1)
-        }
-        .padding(.horizontal, 4)
-        .padding(.vertical, 1.5)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 3).fill(cat.color.opacity(0.1)))
-        .foregroundStyle(isCurrentMonth ? cat.color.opacity(0.85) : .secondary.opacity(0.3))
     }
 }
 
@@ -518,6 +461,22 @@ struct DailyDetailView: View {
                             Text(dDayText)
                                 .font(.system(size: 13))
                                 .foregroundStyle(.secondary)
+                            if viewModel.authManager.isAuthenticated {
+                                Text("Google")
+                                    .font(.system(size: 10, weight: .medium))
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(RoundedRectangle(cornerRadius: 4).fill(Color.green.opacity(0.15)))
+                                    .foregroundStyle(.green)
+                            }
+                            if viewModel.appleCalendarEnabled && viewModel.appleCalendarAccessGranted {
+                                Text("Apple")
+                                    .font(.system(size: 10, weight: .medium))
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(RoundedRectangle(cornerRadius: 4).fill(Color.orange.opacity(0.15)))
+                                    .foregroundStyle(.orange)
+                            }
                             if viewModel.appleRemindersEnabled && viewModel.appleRemindersAccessGranted {
                                 Text(String(localized: "detail.reminders"))
                                     .font(.system(size: 10, weight: .medium))
@@ -567,13 +526,12 @@ struct DailyDetailView: View {
                         ForEach(events) { event in
                             EventRowView(
                                 event: event,
-                                category: viewModel.categoryForEvent(event),
                                 isCompleted: viewModel.isEventCompleted(event.id),
                                 onTap: {
                                     tappedEvent = event
                                     tappedTodo = nil
                                 },
-                                onToggle: { viewModel.toggleEventCompleted(event.id, title: event.title) }
+                                onToggle: { viewModel.toggleEventCompleted(event.id) }
                             )
                         }
 
@@ -583,7 +541,6 @@ struct DailyDetailView: View {
                             TodoRowView(
                                 todo: todo,
                                 category: cat,
-                                isRescheduled: viewModel.rescheduledTodoIDs.contains(todo.id),
                                 onTap: {
                                     tappedTodo = todo
                                     tappedEvent = nil
@@ -671,7 +628,7 @@ struct DailyDetailView: View {
                 .animation(.easeInOut(duration: 0.2), value: tappedEvent?.id)
             }
         }
-        .background(Color.platformWindowBackground.opacity(0.5))
+        .background(Color(nsColor: .windowBackgroundColor).opacity(0.5))
         .popover(isPresented: $showCategoryManager) {
             CategoryManagerView(viewModel: viewModel)
         }
@@ -802,7 +759,7 @@ struct ModalEventDetail: View {
                         .textFieldStyle(.plain)
                         .font(.system(size: 15, weight: .medium))
                         .padding(10)
-                        .background(RoundedRectangle(cornerRadius: 8).fill(Color.platformTextBackground.opacity(0.5)))
+                        .background(RoundedRectangle(cornerRadius: 8).fill(Color(nsColor: .textBackgroundColor).opacity(0.5)))
 
                     Toggle(String(localized: "event.toggle.allday"), isOn: $editIsAllDay).font(.system(size: 13))
 
@@ -811,12 +768,8 @@ struct ModalEventDetail: View {
                         DatePicker(String(localized: "event.detail.end"), selection: $editEndDate, displayedComponents: [.date, .hourAndMinute]).font(.system(size: 12))
                     }
                 } else {
-                    // 카테고리 매핑이 있으면 카테고리 색상, 없으면 Google 캘린더 색상
-                    let mappedCatID = viewModel.eventCategoryMappings[event.id]?.categoryID
-                    let barColor: Color = mappedCatID.flatMap { id in viewModel.categories.first(where: { $0.id == id })?.color } ?? event.color
-
                     HStack(spacing: 10) {
-                        RoundedRectangle(cornerRadius: 3).fill(barColor).frame(width: 5)
+                        RoundedRectangle(cornerRadius: 3).fill(event.color).frame(width: 5)
                         Text(event.title).font(.system(size: 16, weight: .semibold))
                     }.frame(height: 24)
 
@@ -840,41 +793,6 @@ struct ModalEventDetail: View {
                             .foregroundStyle(viewModel.isEventCompleted(event.id) ? .green : .secondary)
                         Text(viewModel.isEventCompleted(event.id) ? String(localized: "common.completed") : String(localized: "common.incomplete")).font(.system(size: 13)).foregroundStyle(.secondary)
                     }
-
-                    // 이벤트 카테고리 매핑 (이 이벤트 독립적으로 적용)
-                    Divider()
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(String(localized: "event.category.label"))
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(.secondary)
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 6) {
-                                Button {
-                                    viewModel.setEventCategory(eventID: event.id, eventTitle: event.title, categoryID: nil)
-                                } label: {
-                                    Text(String(localized: "event.category.none"))
-                                        .font(.system(size: 11))
-                                        .padding(.horizontal, 8).padding(.vertical, 4)
-                                        .background(RoundedRectangle(cornerRadius: 5).fill(mappedCatID == nil ? Color.secondary.opacity(0.3) : Color.secondary.opacity(0.1)))
-                                        .foregroundStyle(mappedCatID == nil ? .primary : .secondary)
-                                }.buttonStyle(.plain)
-
-                                ForEach(viewModel.categories) { cat in
-                                    Button {
-                                        viewModel.setEventCategory(eventID: event.id, eventTitle: event.title, categoryID: cat.id)
-                                    } label: {
-                                        HStack(spacing: 4) {
-                                            Circle().fill(cat.color).frame(width: 8, height: 8)
-                                            Text(cat.name).font(.system(size: 11))
-                                        }
-                                        .padding(.horizontal, 8).padding(.vertical, 4)
-                                        .background(RoundedRectangle(cornerRadius: 5).fill(mappedCatID == cat.id ? cat.color.opacity(0.25) : cat.color.opacity(0.08)))
-                                        .foregroundStyle(mappedCatID == cat.id ? cat.color : .secondary)
-                                    }.buttonStyle(.plain)
-                                }
-                            }
-                        }
-                    }
                 }
             }
             .padding(.horizontal, 20).padding(.vertical, 14)
@@ -891,7 +809,7 @@ struct ModalEventDetail: View {
                         let t = editTitle.trimmingCharacters(in: .whitespaces)
                         if !t.isEmpty {
                             let end = editIsAllDay ? Calendar.current.date(byAdding: .day, value: 1, to: editStartDate)! : editEndDate
-                            _ = viewModel.updateCalendarEvent(eventID: event.id, calendarID: event.calendarID, title: t, startDate: editStartDate, endDate: end, isAllDay: editIsAllDay)
+                            _ = viewModel.updateCalendarEvent(eventID: event.id, title: t, startDate: editStartDate, endDate: end, isAllDay: editIsAllDay)
                         }
                         onClose()
                     } label: {
@@ -901,7 +819,7 @@ struct ModalEventDetail: View {
                 }.padding(.horizontal, 20).padding(.vertical, 12)
             } else {
                 HStack(spacing: 8) {
-                    Button { viewModel.toggleEventCompleted(event.id, title: event.title); onClose() } label: {
+                    Button { viewModel.toggleEventCompleted(event.id); onClose() } label: {
                         HStack(spacing: 4) {
                             Image(systemName: viewModel.isEventCompleted(event.id) ? "arrow.uturn.backward" : "checkmark").font(.system(size: 12))
                             Text(viewModel.isEventCompleted(event.id) ? String(localized: "common.incomplete") : String(localized: "common.done")).font(.system(size: 13))
@@ -921,7 +839,7 @@ struct ModalEventDetail: View {
                     }.buttonStyle(.plain)
 
                     Button {
-                        _ = viewModel.deleteCalendarEvent(eventID: event.id, calendarID: event.calendarID)
+                        _ = viewModel.deleteCalendarEvent(eventID: event.id)
                         onClose()
                     } label: {
                         HStack(spacing: 4) {
@@ -934,7 +852,7 @@ struct ModalEventDetail: View {
             }
         }
         .frame(width: 280, height: 320)
-        .background(RoundedRectangle(cornerRadius: 14).fill(Color.platformWindowBackground))
+        .background(RoundedRectangle(cornerRadius: 14).fill(Color(nsColor: .windowBackgroundColor)))
         .shadow(color: .black.opacity(0.2), radius: 20, y: 5)
     }
 }
@@ -949,11 +867,9 @@ struct ModalTodoDetail: View {
     @State private var isEditing = false
     @State private var editTitle = ""
     @State private var editCategoryID = UUID()
-    @State private var editDate = Date()
-    @State private var selectedCategoryID: UUID? = nil
 
     private var category: TodoCategory {
-        viewModel.category(for: selectedCategoryID ?? todo.categoryID)
+        viewModel.category(for: isEditing ? editCategoryID : todo.categoryID)
     }
 
     private var dateText: String {
@@ -965,7 +881,6 @@ struct ModalTodoDetail: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // 헤더
             HStack {
                 Text(String(localized: "todo.detail.title")).font(.system(size: 15, weight: .bold))
                 Spacer()
@@ -979,26 +894,35 @@ struct ModalTodoDetail: View {
 
             VStack(alignment: .leading, spacing: 12) {
                 if isEditing {
-                    // 수정 모드: 제목 입력
-                    TextField(String(localized: "event.field.title"), text: $editTitle)
-                        .textFieldStyle(.plain)
-                        .font(.system(size: 15, weight: .medium))
-                        .padding(10)
-                        .background(RoundedRectangle(cornerRadius: 8).fill(Color.platformTextBackground.opacity(0.5)))
-
-                    // 날짜 선택
-                    DatePicker(String(localized: "event.detail.start"), selection: $editDate, displayedComponents: [.date])
-                        .font(.system(size: 12))
-                } else {
-                    // 보기 모드: image2 스타일 — 컬러 바 + 제목
                     HStack(spacing: 10) {
-                        RoundedRectangle(cornerRadius: 3).fill(category.color).frame(width: 5)
-                        Text(todo.title).font(.system(size: 16, weight: .semibold))
+                        Circle().fill(category.color).frame(width: 10, height: 10)
+                        TextField(String(localized: "event.field.title"), text: $editTitle)
+                            .textFieldStyle(.plain).font(.system(size: 15, weight: .medium))
+                    }
+                    .padding(10)
+                    .background(RoundedRectangle(cornerRadius: 8).fill(Color(nsColor: .textBackgroundColor).opacity(0.5)))
+
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 5) {
+                            ForEach(viewModel.categories) { cat in
+                                Button { editCategoryID = cat.id } label: {
+                                    Text(cat.name).font(.system(size: 11, weight: .medium))
+                                        .padding(.horizontal, 8).padding(.vertical, 5)
+                                        .background(RoundedRectangle(cornerRadius: 6).fill(editCategoryID == cat.id ? cat.color.opacity(0.25) : Color(nsColor: .controlBackgroundColor)))
+                                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(editCategoryID == cat.id ? cat.color : Color.clear, lineWidth: 1))
+                                        .foregroundStyle(editCategoryID == cat.id ? cat.color : .secondary)
+                                }.buttonStyle(.plain)
+                            }
+                        }
+                    }
+                } else {
+                    HStack(spacing: 10) {
+                        Circle().fill(category.color).frame(width: 10, height: 10)
+                        Text(todo.title).font(.system(size: 15, weight: .medium))
                             .strikethrough(todo.isCompleted)
                             .foregroundStyle(todo.isCompleted ? .secondary : .primary)
-                    }.frame(height: 24)
+                    }
 
-                    // 날짜 행
                     HStack(spacing: 8) {
                         Image(systemName: "calendar").font(.system(size: 13)).foregroundStyle(.secondary)
                         Text(dateText).font(.system(size: 13)).foregroundStyle(.secondary)
@@ -1006,52 +930,21 @@ struct ModalTodoDetail: View {
                             Image(systemName: "arrow.triangle.2.circlepath").font(.system(size: 11)).foregroundStyle(.blue)
                         }
                     }
-
-                    // 소스 행 (앱 내 할 일)
                     HStack(spacing: 8) {
-                        Image(systemName: "tray").font(.system(size: 13)).foregroundStyle(.secondary)
-                        Text(String(localized: "todo.source.local")).font(.system(size: 13)).foregroundStyle(.secondary)
+                        Image(systemName: "tag").font(.system(size: 13)).foregroundStyle(.secondary)
+                        Text(category.name).font(.system(size: 13))
+                            .padding(.horizontal, 8).padding(.vertical, 4)
+                            .background(RoundedRectangle(cornerRadius: 6).fill(category.color.opacity(0.15)))
+                            .foregroundStyle(category.color)
                     }
-
-                    // 완료 상태 행
                     HStack(spacing: 8) {
-                        Image(systemName: todo.isCompleted ? "checkmark.circle.fill" : "circle")
-                            .font(.system(size: 13))
+                        Image(systemName: todo.isCompleted ? "checkmark.circle.fill" : "circle").font(.system(size: 13))
                             .foregroundStyle(todo.isCompleted ? .green : .secondary)
-                        Text(todo.isCompleted ? String(localized: "common.completed") : String(localized: "common.incomplete"))
-                            .font(.system(size: 13)).foregroundStyle(.secondary)
-                    }
-
-                    // 카테고리 피커 (image2 스타일)
-                    Divider()
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(String(localized: "event.category.label"))
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(.secondary)
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 6) {
-                                ForEach(viewModel.categories) { cat in
-                                    let isSelected = (selectedCategoryID ?? todo.categoryID) == cat.id
-                                    Button {
-                                        selectedCategoryID = cat.id
-                                        viewModel.updateTodo(id: todo.id, title: todo.title, categoryID: cat.id)
-                                    } label: {
-                                        HStack(spacing: 4) {
-                                            Circle().fill(cat.color).frame(width: 8, height: 8)
-                                            Text(cat.name).font(.system(size: 11))
-                                        }
-                                        .padding(.horizontal, 8).padding(.vertical, 4)
-                                        .background(RoundedRectangle(cornerRadius: 5).fill(isSelected ? cat.color.opacity(0.25) : cat.color.opacity(0.08)))
-                                        .foregroundStyle(isSelected ? cat.color : .secondary)
-                                    }.buttonStyle(.plain)
-                                }
-                            }
-                        }
+                        Text(todo.isCompleted ? String(localized: "common.completed") : String(localized: "common.incomplete")).font(.system(size: 13)).foregroundStyle(.secondary)
                     }
                 }
             }
             .padding(.horizontal, 20).padding(.vertical, 14)
-            .onAppear { selectedCategoryID = todo.categoryID }
 
             Spacer(minLength: 0)
             Divider()
@@ -1063,7 +956,7 @@ struct ModalTodoDetail: View {
                     }.buttonStyle(.plain)
                     Button {
                         let t = editTitle.trimmingCharacters(in: .whitespaces)
-                        if !t.isEmpty { viewModel.updateTodo(id: todo.id, title: t, categoryID: editCategoryID, date: editDate) }
+                        if !t.isEmpty { viewModel.updateTodo(id: todo.id, title: t, categoryID: editCategoryID) }
                         onClose()
                     } label: {
                         Text(String(localized: "common.save")).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white).frame(maxWidth: .infinity).padding(.vertical, 10)
@@ -1081,7 +974,7 @@ struct ModalTodoDetail: View {
                     }.buttonStyle(.plain)
 
                     Button {
-                        editTitle = todo.title; editCategoryID = todo.categoryID; editDate = todo.date; isEditing = true
+                        editTitle = todo.title; editCategoryID = todo.categoryID; isEditing = true
                     } label: {
                         HStack(spacing: 4) {
                             Image(systemName: "pencil").font(.system(size: 12))
@@ -1100,8 +993,8 @@ struct ModalTodoDetail: View {
                 }.padding(.horizontal, 20).padding(.vertical, 12)
             }
         }
-        .frame(width: 280, height: 320)
-        .background(RoundedRectangle(cornerRadius: 14).fill(Color.platformWindowBackground))
+        .frame(width: 280, height: 300)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Color(nsColor: .windowBackgroundColor)))
         .shadow(color: .black.opacity(0.2), radius: 20, y: 5)
     }
 }
@@ -1144,7 +1037,7 @@ struct InlineAddTodoForm: View {
                             Text(cat.name)
                                 .font(.system(size: 10, weight: .medium))
                                 .padding(.horizontal, 7).padding(.vertical, 4)
-                                .background(RoundedRectangle(cornerRadius: 5).fill(effectiveCategoryID == cat.id ? cat.color.opacity(0.25) : Color.platformControlBackground))
+                                .background(RoundedRectangle(cornerRadius: 5).fill(effectiveCategoryID == cat.id ? cat.color.opacity(0.25) : Color(nsColor: .controlBackgroundColor)))
                                 .overlay(RoundedRectangle(cornerRadius: 5).stroke(effectiveCategoryID == cat.id ? cat.color : Color.clear, lineWidth: 1))
                                 .foregroundStyle(effectiveCategoryID == cat.id ? cat.color : .secondary)
                         }.buttonStyle(.plain)
@@ -1250,7 +1143,7 @@ struct DragGhostRow: View {
         .frame(width: 260)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color.platformControlBackground)
+                .fill(Color(nsColor: .controlBackgroundColor))
                 .shadow(color: .black.opacity(0.18), radius: 12, y: 6)
         )
         .opacity(0.92)
@@ -1261,12 +1154,9 @@ struct DragGhostRow: View {
 
 struct EventRowView: View {
     let event: CalendarEvent
-    var category: TodoCategory? = nil    // 매핑된 카테고리 (있으면 색상 오버라이드)
     var isCompleted: Bool = false
     var onTap: () -> Void = {}
     var onToggle: (() -> Void)? = nil
-
-    private var displayColor: Color { category?.color ?? event.color }
 
     private var timeText: String {
         if event.isAllDay { return String(localized: "event.detail.allday") }
@@ -1278,22 +1168,13 @@ struct EventRowView: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            RoundedRectangle(cornerRadius: 2).fill(displayColor).frame(width: 4)
+            RoundedRectangle(cornerRadius: 2).fill(event.color).frame(width: 4)
 
             VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
-                    Text(event.title)
-                        .font(.system(size: 14, weight: .medium))
-                        .strikethrough(isCompleted)
-                        .foregroundStyle(isCompleted ? .secondary : .primary)
-                    if let cat = category {
-                        Text(cat.name)
-                            .font(.system(size: 10))
-                            .padding(.horizontal, 5).padding(.vertical, 2)
-                            .background(RoundedRectangle(cornerRadius: 4).fill(cat.color.opacity(0.15)))
-                            .foregroundStyle(cat.color)
-                    }
-                }
+                Text(event.title)
+                    .font(.system(size: 14, weight: .medium))
+                    .strikethrough(isCompleted)
+                    .foregroundStyle(isCompleted ? .secondary : .primary)
                 Text(timeText).font(.system(size: 11)).foregroundStyle(.secondary)
             }
 
@@ -1302,11 +1183,11 @@ struct EventRowView: View {
             Button { onToggle?() } label: {
                 ZStack {
                     Circle()
-                        .stroke(isCompleted ? displayColor : Color.secondary.opacity(0.4), lineWidth: 2)
+                        .stroke(isCompleted ? event.color : Color.secondary.opacity(0.4), lineWidth: 2)
                         .frame(width: 22, height: 22)
                     if isCompleted {
-                        Circle().fill(displayColor.opacity(0.15)).frame(width: 22, height: 22)
-                        Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundStyle(displayColor)
+                        Circle().fill(event.color.opacity(0.15)).frame(width: 22, height: 22)
+                        Image(systemName: "checkmark").font(.system(size: 10, weight: .bold)).foregroundStyle(event.color)
                     }
                 }
                 .frame(width: 32, height: 32)
@@ -1318,13 +1199,13 @@ struct EventRowView: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color.platformControlBackground)
+                .fill(Color(nsColor: .controlBackgroundColor))
                 .shadow(color: .black.opacity(0.04), radius: 2, y: 1)
         )
         .contentShape(Rectangle())
         .onTapGesture { onTap() }
         .draggable("event:\(event.id)") {
-            DragGhostRow(title: event.title, color: displayColor, subtitle: timeText)
+            DragGhostRow(title: event.title, color: event.color, subtitle: timeText)
         }
     }
 }
@@ -1335,7 +1216,6 @@ struct TodoRowView: View {
     let todo: TodoItem
     let category: TodoCategory
     var isSelected: Bool = false
-    var isRescheduled: Bool = false   // Calen이 자동 재배치한 항목
     var onTap: () -> Void = {}
     let onToggle: () -> Void
 
@@ -1346,35 +1226,22 @@ struct TodoRowView: View {
                 .frame(width: 4)
 
             VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
-                    Text(todo.title)
-                        .font(.system(size: 14, weight: .medium))
-                        .strikethrough(todo.isCompleted)
-                        .foregroundStyle(todo.isCompleted ? .secondary : .primary)
+                Text(todo.title)
+                    .font(.system(size: 14, weight: .medium))
+                    .strikethrough(todo.isCompleted)
+                    .foregroundStyle(todo.isCompleted ? .secondary : .primary)
+                HStack(spacing: 4) {
                     if todo.source == .appleReminder {
-                        Text(String(localized: "detail.reminders"))
-                            .font(.system(size: 10))
-                            .padding(.horizontal, 5).padding(.vertical, 2)
-                            .background(RoundedRectangle(cornerRadius: 4).fill(Color.orange.opacity(0.15)))
-                            .foregroundStyle(.orange)
+                        Image(systemName: "bell.fill")
+                            .font(.system(size: 9)).foregroundStyle(.orange)
+                        Text(String(localized: "detail.reminders")).font(.system(size: 11)).foregroundStyle(.orange)
                     } else {
-                        Text(category.name)
-                            .font(.system(size: 10))
-                            .padding(.horizontal, 5).padding(.vertical, 2)
-                            .background(RoundedRectangle(cornerRadius: 4).fill(category.color.opacity(0.15)))
-                            .foregroundStyle(category.color)
+                        Text(category.name).font(.system(size: 11)).foregroundStyle(.secondary)
                     }
-                    // Calen 자동 재배치 인디케이터
-                    if isRescheduled && !todo.isCompleted {
-                        Image(systemName: "arrow.uturn.right")
-                            .font(.system(size: 9, weight: .semibold))
-                            .foregroundStyle(.purple.opacity(0.7))
-                            .help("Calen이 자동으로 재배치한 할 일입니다")
+                    if todo.isRepeating {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.system(size: 9)).foregroundStyle(.secondary)
                     }
-                }
-                if todo.isRepeating {
-                    Image(systemName: "arrow.triangle.2.circlepath")
-                        .font(.system(size: 9)).foregroundStyle(.secondary)
                 }
             }
 
@@ -1400,7 +1267,7 @@ struct TodoRowView: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color.platformControlBackground)
+                .fill(Color(nsColor: .controlBackgroundColor))
                 .shadow(color: .black.opacity(0.04), radius: 2, y: 1)
         )
         .contentShape(Rectangle())
@@ -1411,66 +1278,6 @@ struct TodoRowView: View {
                 color: todo.source == .appleReminder ? Color.orange : category.color,
                 subtitle: todo.source == .appleReminder ? String(localized: "detail.reminders") : category.name
             )
-        }
-    }
-}
-
-// MARK: - Week Density Bar
-
-/// 이번 주 7일의 일정 밀도를 미니 히트맵으로 표시.
-/// 바쁜 날: 빨강, 보통: 노랑, 여유: 초록, 오늘: 테두리 강조
-struct WeekDensityBar: View {
-    let events: [CalendarEvent]
-
-    private let scheduler = SmartSchedulerService()
-    private let calendar = Calendar.current
-
-    private var thisWeekDays: [Date] {
-        let today = calendar.startOfDay(for: Date())
-        let weekday = calendar.component(.weekday, from: today) - 1  // 0=일
-        let monday = calendar.date(byAdding: .day, value: -weekday, to: today)!
-        return (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: monday) }
-    }
-
-    var body: some View {
-        let days = thisWeekDays
-        let analyses = scheduler.analyzeDays(events: events, for: days)
-        let dayFmt: DateFormatter = {
-            let f = DateFormatter(); f.dateFormat = "E"
-            f.locale = Locale(identifier: "ko_KR"); return f
-        }()
-
-        HStack(spacing: 3) {
-            ForEach(Array(zip(days, analyses).enumerated()), id: \.offset) { _, pair in
-                let (date, analysis) = pair
-                let isToday = calendar.isDateInToday(date)
-                let barColor = densityColor(analysis.loadPercent)
-
-                VStack(spacing: 2) {
-                    // 밀도 바
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(barColor.opacity(0.75))
-                        .frame(height: 4)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 2)
-                                .stroke(isToday ? Color.primary.opacity(0.5) : Color.clear, lineWidth: 1)
-                        )
-                    // 요일 레이블 (오늘만 강조)
-                    Text(dayFmt.string(from: date))
-                        .font(.system(size: 8))
-                        .foregroundStyle(isToday ? .primary : .tertiary)
-                }
-                .frame(maxWidth: .infinity)
-                .help("\(dayFmt.string(from: date)): 일정 \(analysis.timedEvents.count)개, 여유 \(analysis.totalFreeMinutes / 60)h [\(analysis.loadLabel)]")
-            }
-        }
-    }
-
-    private func densityColor(_ percent: Int) -> Color {
-        switch percent {
-        case 0..<30:  return .green
-        case 30..<60: return .yellow
-        default:      return .red
         }
     }
 }
