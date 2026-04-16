@@ -416,3 +416,7 @@
 "settings.context.how.recommend.desc" = "Bruker innsamlet informasjon til å optimalisere agendaforslag, studieplaner og tidsfordeling";
 "settings.context.how.style" = "Læring av planleggingsstil";
 "settings.context.how.style.desc" = "Lærer om du skriver detaljerte eller kortfattede oppgaver for å gi skreddersydde forslag";
+
+/* ===== Update Banner ===== */
+"update.available" = "Oppdatering tilgjengelig";
+"update.tap.to.update" = "Klikk for å oppdatere til v%@";

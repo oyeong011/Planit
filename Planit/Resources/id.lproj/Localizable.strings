@@ -416,3 +416,7 @@
 "settings.context.how.recommend.desc" = "Menggunakan informasi yang dikumpulkan untuk mengoptimalkan saran jadwal, rencana belajar, dan alokasi waktu";
 "settings.context.how.style" = "Pembelajaran Gaya Perencanaan";
 "settings.context.how.style.desc" = "Mempelajari apakah Anda menulis tugas secara terperinci atau ringkas untuk membuat saran yang disesuaikan";
+
+/* ===== Update Banner ===== */
+"update.available" = "Pembaruan tersedia";
+"update.tap.to.update" = "Ketuk untuk memperbarui ke v%@";

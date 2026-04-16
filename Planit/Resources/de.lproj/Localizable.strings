@@ -416,3 +416,7 @@
 "settings.context.how.recommend.desc" = "Nutzt gesammelte Informationen zur Optimierung von Terminvorschlägen, Lernplänen und Zeiteinteilung";
 "settings.context.how.style" = "Planungsstil-Lernen";
 "settings.context.how.style.desc" = "Lernt, ob Sie detaillierte oder knappe Aufgaben schreiben, um maßgeschneiderte Vorschläge zu machen";
+
+/* ===== Update Banner ===== */
+"update.available" = "Update verfügbar";
+"update.tap.to.update" = "Klicken zum Update auf v%@";

@@ -408,3 +408,7 @@
 "settings.context.how.recommend.desc" = "Uses gathered info to optimize schedule suggestions, study plans, and time allocation";
 "settings.context.how.style" = "Planning Style Learning";
 "settings.context.how.style.desc" = "Learns whether you write detailed or concise todos to make tailored suggestions";
+
+/* ===== Update Banner ===== */
+"update.available" = "Update Available";
+"update.tap.to.update" = "Tap to update to v%@";

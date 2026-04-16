@@ -494,6 +494,7 @@ struct DailyDetailView: View {
     @Binding var newTodoTitle: String
     @Binding var showSettings: Bool
 
+    @StateObject private var updater = UpdateCheckerService.shared
     @State private var selectedCategoryID: UUID?
     @State private var isRepeating: Bool = false
     @State private var showCategoryManager = false
@@ -539,6 +540,30 @@ struct DailyDetailView: View {
                     Spacer()
 
                     HStack(spacing: 8) {
+                        // 업데이트 알림 배너
+                        if updater.updateAvailable, let latest = updater.latestVersion {
+                            Button {
+                                runBrewUpgradeAndRelaunch()
+                            } label: {
+                                HStack(spacing: 5) {
+                                    Image(systemName: "arrow.down.circle.fill")
+                                        .font(.system(size: 11))
+                                    Text("v\(latest)")
+                                        .font(.system(size: 11, weight: .semibold))
+                                    Text(String(localized: "update.available"))
+                                        .font(.system(size: 10))
+                                }
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 9)
+                                .padding(.vertical, 4)
+                                .background(Capsule().fill(Color.orange))
+                            }
+                            .buttonStyle(.plain)
+                            .contentShape(Capsule())
+                            .help(String(format: String(localized: "update.tap.to.update"), latest))
+                            .transition(.scale.combined(with: .opacity))
+                        }
+
                         Button {
                             showCategoryManager.toggle()
                         } label: {
@@ -554,11 +579,20 @@ struct DailyDetailView: View {
                         Button {
                             showSettings = true
                         } label: {
-                            Image(systemName: "gearshape")
-                                .font(.system(size: 16))
-                                .foregroundStyle(.secondary)
-                                .frame(width: 28, height: 28)
-                                .contentShape(Rectangle())
+                            ZStack(alignment: .topTrailing) {
+                                Image(systemName: "gearshape")
+                                    .font(.system(size: 16))
+                                    .foregroundStyle(.secondary)
+                                    .frame(width: 28, height: 28)
+                                // 업데이트 있으면 빨간 점 뱃지
+                                if updater.updateAvailable {
+                                    Circle()
+                                        .fill(Color.orange)
+                                        .frame(width: 7, height: 7)
+                                        .offset(x: 2, y: -2)
+                                }
+                            }
+                            .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
                         .help("설정")
@@ -683,6 +717,29 @@ struct DailyDetailView: View {
         .popover(isPresented: $showCategoryManager) {
             CategoryManagerView(viewModel: viewModel)
         }
+    }
+
+    /// 업데이트 배너 클릭 시 brew upgrade 실행 후 자동 재시작
+    private func runBrewUpgradeAndRelaunch() {
+        let appPath = Bundle.main.bundlePath
+        let brewPaths = ["/opt/homebrew/bin/brew", "/usr/local/bin/brew"]
+        let brew = brewPaths.first { FileManager.default.isExecutableFile(atPath: $0) } ?? "/opt/homebrew/bin/brew"
+        let script = "\(brew) upgrade --cask calen && sleep 0.5 && open '\(appPath)'"
+        let task = Process()
+        task.launchPath = "/bin/bash"
+        task.arguments = ["-c", script]
+        task.terminationHandler = { process in
+            DispatchQueue.main.async {
+                if process.terminationStatus == 0 {
+                    NSApp.terminate(nil)
+                } else {
+                    if let url = URL(string: "https://github.com/oyeong011/Planit/releases/latest") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }
+            }
+        }
+        try? task.run()
     }
 }
 

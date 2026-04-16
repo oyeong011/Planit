@@ -416,3 +416,7 @@
 "settings.context.how.recommend.desc" = "Använder insamlad information för att optimera schemaförslag, studieplaner och tidsallokering";
 "settings.context.how.style" = "Inlärning av planeringsstil";
 "settings.context.how.style.desc" = "Lär sig om du skriver detaljerade eller kortfattade uppgifter för att ge skräddarsydda förslag";
+
+/* ===== Update Banner ===== */
+"update.available" = "Uppdatering tillgänglig";
+"update.tap.to.update" = "Klicka för att uppdatera till v%@";

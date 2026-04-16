@@ -416,3 +416,7 @@
 "settings.context.how.recommend.desc" = "Używa zebranych informacji do optymalizacji sugestii harmonogramu, planów nauki i alokacji czasu";
 "settings.context.how.style" = "Nauka stylu planowania";
 "settings.context.how.style.desc" = "Poznaje, czy piszesz szczegółowe czy zwięzłe zadania, aby dawać dopasowane sugestie";
+
+/* ===== Update Banner ===== */
+"update.available" = "Dostępna aktualizacja";
+"update.tap.to.update" = "Kliknij, aby zaktualizować do v%@";

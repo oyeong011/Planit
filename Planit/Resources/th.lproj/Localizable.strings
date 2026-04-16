@@ -416,3 +416,7 @@
 "settings.context.how.recommend.desc" = "ใช้ข้อมูลที่รวบรวมเพื่อปรับแต่งคำแนะนำตารางเวลา แผนการเรียน และการจัดสรรเวลา";
 "settings.context.how.style" = "การเรียนรู้รูปแบบการวางแผน";
 "settings.context.how.style.desc" = "เรียนรู้ว่าคุณเขียนงานแบบละเอียดหรือกระชับเพื่อให้คำแนะนำที่เหมาะสม";
+
+/* ===== Update Banner ===== */
+"update.available" = "มีการอัปเดต";
+"update.tap.to.update" = "แตะเพื่ออัปเดตเป็น v%@";

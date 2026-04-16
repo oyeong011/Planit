@@ -416,3 +416,7 @@
 "settings.context.how.recommend.desc" = "Sử dụng thông tin đã thu thập để tối ưu hóa đề xuất lịch trình, kế hoạch học tập và phân bổ thời gian";
 "settings.context.how.style" = "Học phong cách lập kế hoạch";
 "settings.context.how.style.desc" = "Học xem bạn viết công việc chi tiết hay ngắn gọn để đưa ra đề xuất phù hợp";
+
+/* ===== Update Banner ===== */
+"update.available" = "Có bản cập nhật";
+"update.tap.to.update" = "Nhấp để cập nhật lên v%@";

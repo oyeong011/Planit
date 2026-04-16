@@ -416,3 +416,7 @@
 "settings.context.how.recommend.desc" = "Az összegyűjtött információkat felhasználva optimalizálja a menetrend-javaslatokat, tanulási terveket és az időbeosztást";
 "settings.context.how.style" = "Tervezési stílus tanulása";
 "settings.context.how.style.desc" = "Megtanulja, hogy részletes vagy tömör feladatokat ír-e, hogy személyre szabott javaslatokat tegyen";
+
+/* ===== Update Banner ===== */
+"update.available" = "Frissítés elérhető";
+"update.tap.to.update" = "Kattintson a v%@ verzióra frissítéshez";

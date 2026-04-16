@@ -416,3 +416,7 @@
 "settings.context.how.recommend.desc" = "Käyttää kerättyä tietoa aikatauluehdotusten, opiskelusuunnitelmien ja ajankäytön optimointiin";
 "settings.context.how.style" = "Suunnittelutyylioppi";
 "settings.context.how.style.desc" = "Oppii kirjoitatko yksityiskohtaisia vai ytimekkäitä tehtäviä räätälöityjen ehdotusten tekemiseksi";
+
+/* ===== Update Banner ===== */
+"update.available" = "Päivitys saatavilla";
+"update.tap.to.update" = "Päivitä versioon v%@ napsauttamalla";

@@ -416,3 +416,7 @@
 "settings.context.how.recommend.desc" = "Usa as informações coletadas para otimizar sugestões de agenda, planos de estudo e alocação de tempo";
 "settings.context.how.style" = "Aprendizado do estilo de planejamento";
 "settings.context.how.style.desc" = "Aprende se você escreve tarefas detalhadas ou concisas para fazer sugestões personalizadas";
+
+/* ===== Update Banner ===== */
+"update.available" = "Atualização disponível";
+"update.tap.to.update" = "Toque para atualizar para v%@";
