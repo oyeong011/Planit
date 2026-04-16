@@ -3,18 +3,22 @@ import SwiftUI
 // MARK: - Settings Section
 
 enum SettingsSection: String, CaseIterable {
-    case profile       = "프로필"
-    case schedule      = "스케줄"
-    case ai            = "AI 설정"
-    case integrations  = "연동"
-    case notifications = "알림"
-    case advanced      = "고급"
+    case profile       = "profile"
+    case schedule      = "schedule"
+    case ai            = "ai"
+    case context       = "context"
+    case integrations  = "integrations"
+    case notifications = "notifications"
+    case advanced      = "advanced"
+
+    var localizedTitle: String { NSLocalizedString("settings.section.\(rawValue)", comment: "") }
 
     var icon: String {
         switch self {
         case .profile:       return "person.circle"
         case .schedule:      return "clock"
         case .ai:            return "sparkles"
+        case .context:       return "brain.head.profile"
         case .integrations:  return "link"
         case .notifications: return "bell"
         case .advanced:      return "wrench.and.screwdriver"
@@ -29,17 +33,19 @@ struct SettingsView: View {
     @ObservedObject var authManager: GoogleAuthManager
     @ObservedObject var aiService: AIService
     @ObservedObject var viewModel: CalendarViewModel
+    @ObservedObject var userContextService: UserContextService
     var onDismiss: () -> Void
 
     @State private var selectedSection: SettingsSection = .profile
     @State private var profile: UserProfile
 
     init(goalService: GoalService, authManager: GoogleAuthManager, aiService: AIService,
-         viewModel: CalendarViewModel, onDismiss: @escaping () -> Void) {
+         viewModel: CalendarViewModel, userContextService: UserContextService, onDismiss: @escaping () -> Void) {
         self.goalService = goalService
         self.authManager = authManager
         self.aiService = aiService
         self.viewModel = viewModel
+        self.userContextService = userContextService
         self.onDismiss = onDismiss
         self._profile = State(initialValue: goalService.profile)
     }
@@ -51,7 +57,7 @@ struct SettingsView: View {
             contentArea.frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(width: 1150, height: 780)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .background(Color.platformWindowBackground)
     }
 
     // MARK: - Sidebar
@@ -59,7 +65,7 @@ struct SettingsView: View {
     private var sidebar: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("설정")
+                Text(String(localized: "settings.title"))
                     .font(.title2.bold())
                 Spacer()
                 Button { saveAndDismiss() } label: {
@@ -89,12 +95,12 @@ struct SettingsView: View {
 
             Spacer()
 
-            Text("변경사항 자동 저장")
+            Text(String(localized: "settings.autosave"))
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
                 .padding(.bottom, 16)
         }
-        .background(Color(nsColor: .controlBackgroundColor))
+        .background(Color.platformControlBackground)
     }
 
     private func sidebarItem(_ section: SettingsSection) -> some View {
@@ -103,7 +109,7 @@ struct SettingsView: View {
                 Image(systemName: section.icon)
                     .frame(width: 20)
                     .foregroundStyle(selectedSection == section ? .purple : .secondary)
-                Text(section.rawValue)
+                Text(section.localizedTitle)
                     .font(.system(size: 13, weight: selectedSection == section ? .semibold : .regular))
                     .foregroundStyle(selectedSection == section ? .primary : .secondary)
                 Spacer()
@@ -129,6 +135,7 @@ struct SettingsView: View {
                 case .profile:       profileSection
                 case .schedule:      scheduleSection
                 case .ai:            aiSection
+                case .context:       contextSection
                 case .integrations:  integrationsSection
                 case .notifications: notificationsSection
                 case .advanced:      advancedSection
@@ -142,11 +149,11 @@ struct SettingsView: View {
 
     private var profileSection: some View {
         VStack(alignment: .leading, spacing: 22) {
-            sectionHeader("프로필", subtitle: "개인 리듬과 일하는 방식을 설정합니다", icon: "person.circle")
+            sectionHeader(String(localized: "settings.section.profile"), subtitle: String(localized: "settings.profile.subtitle"), icon: "person.circle")
 
-            settingsCard("에너지 패턴") {
+            settingsCard(String(localized: "settings.energy.card")) {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("집중력이 가장 높은 시간대를 선택하세요. AI가 중요한 일을 해당 시간에 배치합니다.")
+                    Text(String(localized: "settings.energy.desc"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     HStack(spacing: 10) {
@@ -157,9 +164,9 @@ struct SettingsView: View {
                 }
             }
 
-            settingsCard("스케줄 페이스") {
+            settingsCard(String(localized: "settings.pace.card")) {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("AI가 일정을 제안할 때 얼마나 적극적으로 채울지 결정합니다.")
+                    Text(String(localized: "settings.pace.desc"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     VStack(spacing: 6) {
@@ -181,7 +188,7 @@ struct SettingsView: View {
                 Image(systemName: energyTypeIcon(type))
                     .font(.system(size: 18))
                     .foregroundStyle(profile.energyType == type ? .purple : .secondary)
-                Text(type.rawValue)
+                Text(type.localizedTitle)
                     .font(.system(size: 12, weight: profile.energyType == type ? .semibold : .regular))
                     .foregroundStyle(profile.energyType == type ? .primary : .secondary)
             }
@@ -189,7 +196,7 @@ struct SettingsView: View {
             .padding(.vertical, 12)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(profile.energyType == type ? Color.purple.opacity(0.12) : Color(nsColor: .controlColor))
+                    .fill(profile.energyType == type ? Color.purple.opacity(0.12) : Color.platformControl)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
@@ -218,7 +225,7 @@ struct SettingsView: View {
                     .foregroundStyle(profile.aggressiveness == mode ? .purple : .secondary)
                     .font(.system(size: 16))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(mode.rawValue)
+                    Text(mode.localizedTitle)
                         .font(.system(size: 13, weight: .medium))
                     Text(aggressivenessDesc(mode))
                         .font(.caption)
@@ -239,10 +246,10 @@ struct SettingsView: View {
 
     private func aggressivenessDesc(_ mode: Aggressiveness) -> String {
         switch mode {
-        case .manual:   return "모든 일정을 직접 관리합니다. AI는 조용합니다."
-        case .assist:   return "AI가 제안만 합니다. 수락은 직접 결정합니다."
-        case .semiAuto: return "승인된 제안을 자동으로 캘린더에 등록합니다."
-        case .auto:     return "AI가 자동으로 최적 일정을 생성하고 등록합니다."
+        case .manual:   return String(localized: "settings.aggressiveness.manual.desc")
+        case .assist:   return String(localized: "settings.aggressiveness.assist.desc")
+        case .semiAuto: return String(localized: "settings.aggressiveness.semiauto.desc")
+        case .auto:     return String(localized: "settings.aggressiveness.auto.desc")
         }
     }
 
@@ -250,16 +257,16 @@ struct SettingsView: View {
 
     private var scheduleSection: some View {
         VStack(alignment: .leading, spacing: 22) {
-            sectionHeader("스케줄", subtitle: "근무 시간과 일일 집중 가능 시간을 설정합니다", icon: "clock")
+            sectionHeader(String(localized: "settings.section.schedule"), subtitle: String(localized: "settings.schedule.subtitle"), icon: "clock")
 
-            settingsCard("근무 시간") {
+            settingsCard(String(localized: "settings.work.card")) {
                 VStack(spacing: 16) {
                     HStack(spacing: 24) {
-                        labeledHourPicker("출근", $profile.workStartHour, range: 5...12)
+                        labeledHourPicker(String(localized: "settings.work.start.label"), $profile.workStartHour, range: 5...12)
                         Text("→").foregroundStyle(.secondary)
-                        labeledHourPicker("퇴근", $profile.workEndHour, range: 14...23)
+                        labeledHourPicker(String(localized: "settings.work.end.label"), $profile.workEndHour, range: 14...23)
                         Spacer()
-                        Text("\(profile.workEndHour - profile.workStartHour)시간 근무")
+                        Text(verbatim: String(format: String(localized: "settings.work.hours.format"), profile.workEndHour - profile.workStartHour))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .padding(.horizontal, 10)
@@ -267,21 +274,21 @@ struct SettingsView: View {
                             .background(Capsule().fill(Color.secondary.opacity(0.1)))
                     }
                     HStack(spacing: 24) {
-                        labeledHourPicker("점심 시작", $profile.lunchStartHour, range: 11...14)
+                        labeledHourPicker(String(localized: "settings.lunch.start.label"), $profile.lunchStartHour, range: 11...14)
                         Text("→").foregroundStyle(.secondary)
-                        labeledHourPicker("점심 종료", $profile.lunchEndHour, range: 12...15)
+                        labeledHourPicker(String(localized: "settings.lunch.end.label"), $profile.lunchEndHour, range: 12...15)
                         Spacer()
                     }
                 }
             }
 
-            settingsCard("통근 시간") {
+            settingsCard(String(localized: "settings.commute.card")) {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text("편도 통근 시간")
+                        Text(String(localized: "settings.commute.label"))
                             .font(.system(size: 13))
                         Spacer()
-                        Text("\(profile.commuteMinutes)분")
+                        Text(verbatim: String(format: String(localized: "settings.commute.minutes.format"), profile.commuteMinutes))
                             .font(.system(size: 13, weight: .semibold, design: .monospaced))
                             .foregroundStyle(.purple)
                     }
@@ -290,17 +297,17 @@ struct SettingsView: View {
                         set: { profile.commuteMinutes = Int($0); autosave() }
                     ), in: 0...120, step: 5)
                     .accentColor(.purple)
-                    Text("왕복 \(profile.commuteMinutes * 2)분 · 하루 집중 시간에서 자동 제외됩니다")
+                    Text(verbatim: String(format: String(localized: "settings.commute.roundtrip.format"), profile.commuteMinutes * 2))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
 
-            settingsCard("하루 집중 가능 시간") {
+            settingsCard(String(localized: "settings.capacity.card")) {
                 VStack(spacing: 14) {
-                    capacityRow("평일", value: $profile.weekdayCapacityMinutes)
+                    capacityRow(String(localized: "settings.capacity.weekday"), value: $profile.weekdayCapacityMinutes)
                     Divider()
-                    capacityRow("주말", value: $profile.weekendCapacityMinutes)
+                    capacityRow(String(localized: "settings.capacity.weekend"), value: $profile.weekendCapacityMinutes)
                 }
             }
         }
@@ -314,7 +321,7 @@ struct SettingsView: View {
                 Spacer()
                 let h = value.wrappedValue / 60
                 let m = value.wrappedValue % 60
-                Text(m == 0 ? "\(h)시간" : "\(h)시간 \(m)분")
+                Text(verbatim: m == 0 ? String(format: String(localized: "settings.capacity.hours.format"), h) : String(format: String(localized: "settings.capacity.hours.minutes.format"), h, m))
                     .font(.system(size: 13, weight: .semibold, design: .monospaced))
                     .foregroundStyle(.purple)
             }
@@ -330,9 +337,9 @@ struct SettingsView: View {
 
     private var aiSection: some View {
         VStack(alignment: .leading, spacing: 22) {
-            sectionHeader("AI 설정", subtitle: "일정 분석과 계획에 사용할 AI를 선택합니다", icon: "sparkles")
+            sectionHeader(String(localized: "settings.section.ai"), subtitle: String(localized: "settings.ai.subtitle"), icon: "sparkles")
 
-            settingsCard("AI 엔진") {
+            settingsCard(String(localized: "settings.ai.engine.card")) {
                 VStack(alignment: .leading, spacing: 12) {
                     ForEach(AIProvider.allCases, id: \.self) { provider in
                         aiProviderRow(provider)
@@ -340,21 +347,21 @@ struct SettingsView: View {
                 }
             }
 
-            settingsCard("현재 상태") {
+            settingsCard(String(localized: "settings.ai.status.card")) {
                 VStack(spacing: 10) {
                     aiStatusRow("Claude CLI", available: aiService.claudeAvailable,
-                                detail: aiService.claudeAvailable ? "설치됨 — 강력한 자연어 이해" : "설치 필요: brew install claude")
+                                detail: aiService.claudeAvailable ? String(localized: "settings.ai.claude.installed.detail") : String(localized: "settings.ai.claude.install.hint"))
                     Divider()
                     aiStatusRow("Codex CLI", available: aiService.codexAvailable,
-                                detail: aiService.codexAvailable ? "설치됨 — 코드 최적화 특화" : "설치 필요: npm install -g @openai/codex")
+                                detail: aiService.codexAvailable ? String(localized: "settings.ai.codex.installed.detail") : String(localized: "settings.ai.codex.install.hint"))
                 }
             }
 
-            settingsCard("저장하기") {
+            settingsCard(String(localized: "settings.ai.save.card")) {
                 Button {
                     aiService.saveSettings()
                 } label: {
-                    Text("AI 설정 저장")
+                    Text(String(localized: "settings.ai.save.button"))
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
@@ -384,14 +391,14 @@ struct SettingsView: View {
                         Text(provider.rawValue)
                             .font(.system(size: 14, weight: .semibold))
                         if isAvailable {
-                            Text("설치됨")
+                            Text(String(localized: "settings.ai.installed.badge"))
                                 .font(.system(size: 10, weight: .medium))
                                 .foregroundStyle(.green)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
                                 .background(Capsule().fill(Color.green.opacity(0.12)))
                         } else {
-                            Text("미설치")
+                            Text(String(localized: "settings.ai.not.installed.badge"))
                                 .font(.system(size: 10, weight: .medium))
                                 .foregroundStyle(.orange)
                                 .padding(.horizontal, 6)
@@ -411,7 +418,7 @@ struct SettingsView: View {
             .padding(12)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(isSelected ? Color.purple.opacity(0.08) : Color(nsColor: .controlColor).opacity(0.5))
+                    .fill(isSelected ? Color.purple.opacity(0.08) : Color.platformControl.opacity(0.5))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
@@ -424,8 +431,8 @@ struct SettingsView: View {
 
     private func providerDesc(_ provider: AIProvider) -> String {
         switch provider {
-        case .claude: return "자연어 이해 능력이 뛰어납니다. 복잡한 일정 조정과 목표 분석에 적합합니다."
-        case .codex:  return "코드 기반 최적화에 특화되어 있습니다. 빠른 규칙 기반 계획 생성에 유용합니다."
+        case .claude: return String(localized: "settings.ai.claude.desc")
+        case .codex:  return String(localized: "settings.ai.codex.desc")
         }
     }
 
@@ -449,7 +456,7 @@ struct SettingsView: View {
 
     private var integrationsSection: some View {
         VStack(alignment: .leading, spacing: 22) {
-            sectionHeader("연동", subtitle: "외부 서비스와 캘린더 연결을 관리합니다", icon: "link")
+            sectionHeader(String(localized: "settings.section.integrations"), subtitle: String(localized: "settings.integrations.subtitle"), icon: "link")
 
             settingsCard("Google Calendar") {
                 VStack(spacing: 14) {
@@ -463,28 +470,28 @@ struct SettingsView: View {
                                 .foregroundStyle(authManager.isAuthenticated ? .green : .secondary)
                         }
                         VStack(alignment: .leading, spacing: 3) {
-                            Text(authManager.isAuthenticated ? "연결됨" : "연결되지 않음")
+                            Text(authManager.isAuthenticated ? String(localized: "settings.google.connected") : String(localized: "settings.google.not.connected"))
                                 .font(.system(size: 14, weight: .semibold))
                             if let email = authManager.userEmail {
                                 Text(email)
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             } else {
-                                Text(authManager.isAuthenticated ? "이메일 정보 없음" : "Google 계정을 연결하면 일정을 동기화합니다")
+                                Text(authManager.isAuthenticated ? String(localized: "settings.google.no.email") : String(localized: "settings.google.connect.hint"))
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
                         }
                         Spacer()
                         if authManager.isAuthenticated {
-                            Button("연결 해제") {
+                            Button(String(localized: "settings.google.disconnect.button")) {
                                 authManager.logout()
                             }
                             .buttonStyle(.bordered)
                             .controlSize(.small)
                             .foregroundStyle(.red)
                         } else {
-                            Button("Google 로그인") {
+                            Button(String(localized: "settings.google.login.button")) {
                                 Task { await authManager.startOAuthFlow() }
                             }
                             .buttonStyle(.borderedProminent)
@@ -498,20 +505,20 @@ struct SettingsView: View {
                         Image(systemName: "lock.shield")
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                        Text("캘린더 데이터는 기기에만 저장됩니다. AI는 이벤트 제목과 시간만 참조합니다.")
+                        Text(String(localized: "settings.google.privacy"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                 }
             }
 
-            settingsCard("Apple 연동") {
+            settingsCard(String(localized: "settings.apple.card")) {
                 VStack(spacing: 14) {
                     HStack {
                         VStack(alignment: .leading, spacing: 3) {
-                            Text("Apple 캘린더 동기화")
+                            Text(String(localized: "settings.apple.calendar.title"))
                                 .font(.system(size: 13, weight: .medium))
-                            Text("기기의 Apple 캘린더 이벤트를 함께 표시합니다")
+                            Text(String(localized: "settings.apple.calendar.desc"))
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                         Spacer()
@@ -527,9 +534,9 @@ struct SettingsView: View {
 
                     HStack {
                         VStack(alignment: .leading, spacing: 3) {
-                            Text("Apple 미리 알림 가져오기")
+                            Text(String(localized: "settings.apple.reminders.title"))
                                 .font(.system(size: 13, weight: .medium))
-                            Text("미리 알림 항목을 할 일로 가져옵니다")
+                            Text(String(localized: "settings.apple.reminders.desc"))
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                         Spacer()
@@ -543,12 +550,12 @@ struct SettingsView: View {
                 }
             }
 
-            settingsCard("Google 없이 사용") {
+            settingsCard(String(localized: "settings.google.skip.card")) {
                 HStack {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("Google 로그인 건너뛰기")
+                        Text(String(localized: "settings.google.skip.title"))
                             .font(.system(size: 13, weight: .medium))
-                        Text("Apple 캘린더나 캘린더 없이 AI 기능만 사용합니다")
+                        Text(String(localized: "settings.google.skip.desc"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -568,15 +575,15 @@ struct SettingsView: View {
 
     private var notificationsSection: some View {
         VStack(alignment: .leading, spacing: 22) {
-            sectionHeader("알림", subtitle: "아침 브리핑과 저녁 리뷰 알림 시간을 설정합니다", icon: "bell")
+            sectionHeader(String(localized: "settings.section.notifications"), subtitle: String(localized: "settings.notifications.subtitle"), icon: "bell")
 
-            settingsCard("아침 브리핑") {
+            settingsCard(String(localized: "settings.morning.card")) {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
                         VStack(alignment: .leading, spacing: 3) {
-                            Text("아침 브리핑 시간")
+                            Text(String(localized: "settings.morning.time.title"))
                                 .font(.system(size: 13, weight: .medium))
-                            Text("오늘 일정 요약과 목표 진행 상황을 알려드립니다")
+                            Text(String(localized: "settings.morning.time.desc"))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -586,13 +593,13 @@ struct SettingsView: View {
                 }
             }
 
-            settingsCard("저녁 리뷰") {
+            settingsCard(String(localized: "settings.evening.card")) {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
                         VStack(alignment: .leading, spacing: 3) {
-                            Text("저녁 리뷰 시간")
+                            Text(String(localized: "settings.evening.time.title"))
                                 .font(.system(size: 13, weight: .medium))
-                            Text("오늘 완료된 일정을 리뷰하고 내일 계획을 세웁니다")
+                            Text(String(localized: "settings.evening.time.desc"))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -602,21 +609,21 @@ struct SettingsView: View {
                 }
             }
 
-            settingsCard("알림 권한") {
+            settingsCard(String(localized: "settings.notifications.permission.card")) {
                 HStack(spacing: 12) {
                     Image(systemName: "bell.badge")
                         .font(.system(size: 20))
                         .foregroundStyle(.secondary)
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("시스템 알림 권한이 필요합니다")
+                        Text(String(localized: "settings.notifications.permission.title"))
                             .font(.system(size: 13, weight: .medium))
-                        Text("macOS 시스템 설정 → 알림 → Calen 에서 허용하세요")
+                        Text(String(localized: "settings.notifications.permission.desc"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Button("시스템 설정 열기") {
-                        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.notifications")!)
+                    Button(String(localized: "settings.notifications.open.system")) {
+                        openURL(URL(string: "x-apple.systempreferences:com.apple.preference.notifications")!)
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
@@ -627,21 +634,148 @@ struct SettingsView: View {
 
     // MARK: - Advanced Section
 
+    // MARK: - 사용자 컨텍스트 섹션
+
+    @State private var contextEditMode: Bool = false
+
+    private var contextSection: some View {
+        VStack(alignment: .leading, spacing: 22) {
+            sectionHeader("AI 초개인화 컨텍스트",
+                          subtitle: "AI가 당신에 대해 알고 있는 정보를 확인하고 관리하세요",
+                          icon: "brain.head.profile")
+
+            // 현재 파악된 정보 요약
+            settingsCard("AI가 파악한 내 정보") {
+                VStack(alignment: .leading, spacing: 12) {
+                    if userContextService.contextSummary.isEmpty {
+                        HStack(spacing: 8) {
+                            Image(systemName: "info.circle")
+                                .foregroundStyle(.secondary)
+                            Text("아직 대화를 충분히 나누지 않았어요.\nAI와 대화하면 자동으로 채워집니다.")
+                                .font(.system(size: 12))
+                                .foregroundStyle(.secondary)
+                        }
+                    } else {
+                        Text(userContextService.contextSummary)
+                            .font(.system(size: 12))
+                            .foregroundStyle(.primary)
+                            .lineLimit(8)
+                    }
+
+                    Divider()
+
+                    HStack(spacing: 12) {
+                        Button {
+                            openURL(URL(fileURLWithPath: userContextService.contextFilePath))
+                        } label: {
+                            Label("파일 열기", systemImage: "doc.text")
+                                .font(.system(size: 11, weight: .medium))
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+
+                        Button {
+                            // Finder에서 보기
+                            #if os(macOS)
+                            NSWorkspace.shared.selectFile(userContextService.contextFilePath, inFileViewerRootedAtPath: "")
+                            #endif
+                        } label: {
+                            Label("Finder에서 보기", systemImage: "folder")
+                                .font(.system(size: 11, weight: .medium))
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+
+                        Spacer()
+
+                        Text(userContextService.contextFilePath.components(separatedBy: "/").last ?? "")
+                            .font(.system(size: 10, design: .monospaced))
+                            .foregroundStyle(.tertiary)
+                            .lineLimit(1)
+                    }
+                }
+            }
+
+            // 외부 검색 지원 목록
+            settingsCard("지원하는 시험/자격증 자동 검색") {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("AI가 아래 키워드를 대화에서 감지하면 자동으로 외부 정보를 검색해 일정 추천에 활용합니다.")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+
+                    let exams = ["정보처리기사 (정처기)", "TOEIC (토익)", "TOEFL (토플)",
+                                 "공무원 시험", "한국사능력검정", "SQLD", "정보보안기사",
+                                 "리눅스마스터", "수능", "AWS 자격증", "CPA", "세무사"]
+
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 130))], spacing: 6) {
+                        ForEach(exams, id: \.self) { exam in
+                            HStack(spacing: 4) {
+                                Image(systemName: "magnifyingglass")
+                                    .font(.system(size: 9))
+                                    .foregroundStyle(.blue)
+                                Text(exam)
+                                    .font(.system(size: 11))
+                            }
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(RoundedRectangle(cornerRadius: 5).fill(Color.blue.opacity(0.06)))
+                        }
+                    }
+                }
+            }
+
+            // 작동 방식 안내
+            settingsCard("작동 방식") {
+                VStack(alignment: .leading, spacing: 8) {
+                    contextHowItWorksRow(icon: "message", color: .blue,
+                        title: "대화 분석",
+                        desc: "AI와 대화할 때마다 직업, 목표, 계획 스타일을 자동으로 파악합니다")
+                    contextHowItWorksRow(icon: "magnifyingglass.circle", color: .orange,
+                        title: "외부 정보 검색",
+                        desc: "시험 준비 중이라면 일정, 과목, 합격 기준을 자동으로 검색해 캐싱합니다")
+                    contextHowItWorksRow(icon: "brain", color: .purple,
+                        title: "초개인화 추천",
+                        desc: "파악된 정보를 바탕으로 일정 추천, 공부 계획, 시간 배분을 최적화합니다")
+                    contextHowItWorksRow(icon: "checkmark.square", color: .green,
+                        title: "계획 스타일 학습",
+                        desc: "할일을 세부적으로 작성하는지 간략히 쓰는지 파악해 맞춤 제안을 드립니다")
+                }
+            }
+        }
+        .padding(24)
+    }
+
+    private func contextHowItWorksRow(icon: String, color: Color, title: String, desc: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 14))
+                .foregroundStyle(color)
+                .frame(width: 24)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 12, weight: .semibold))
+                Text(desc)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
     private var advancedSection: some View {
         VStack(alignment: .leading, spacing: 22) {
-            sectionHeader("고급", subtitle: "데이터 관리 및 앱 초기화 옵션입니다", icon: "wrench.and.screwdriver")
+            sectionHeader(String(localized: "settings.section.advanced"), subtitle: String(localized: "settings.advanced.subtitle"), icon: "wrench.and.screwdriver")
 
-            settingsCard("온보딩") {
+            settingsCard(String(localized: "settings.onboarding.card")) {
                 HStack {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("온보딩 재시작")
+                        Text(String(localized: "settings.onboarding.restart.title"))
                             .font(.system(size: 13, weight: .medium))
-                        Text("목표 설정 화면을 처음부터 다시 진행합니다")
+                        Text(String(localized: "settings.onboarding.restart.desc"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Button("재시작") {
+                    Button(String(localized: "settings.onboarding.restart.button")) {
                         profile.onboardingDone = false
                         goalService.profile = profile
                         goalService.saveProfile()
@@ -652,12 +786,12 @@ struct SettingsView: View {
                 }
             }
 
-            settingsCard("데이터 초기화") {
+            settingsCard(String(localized: "settings.data.reset.card")) {
                 VStack(spacing: 14) {
                     dataResetRow(
-                        title: "완료 기록 초기화",
-                        detail: "모든 이벤트 완료/미완료 기록을 삭제합니다",
-                        buttonLabel: "초기화",
+                        title: String(localized: "settings.completions.reset.title"),
+                        detail: String(localized: "settings.completions.reset.desc"),
+                        buttonLabel: String(localized: "settings.completions.reset.button"),
                         action: {
                             goalService.completions = [:]
                             goalService.saveCompletions()
@@ -665,18 +799,18 @@ struct SettingsView: View {
                     )
                     Divider()
                     dataResetRow(
-                        title: "일일 리뷰 초기화",
-                        detail: "오늘 완료된 리뷰를 초기화해 다시 표시합니다",
-                        buttonLabel: "초기화",
+                        title: String(localized: "settings.review.reset.title"),
+                        detail: String(localized: "settings.review.reset.desc"),
+                        buttonLabel: String(localized: "settings.review.reset.button"),
                         action: {
                             UserDefaults.standard.removeObject(forKey: "calen.review.lastDailyKey")
                         }
                     )
                     Divider()
                     dataResetRow(
-                        title: "목표 전체 삭제",
-                        detail: "등록된 모든 목표를 삭제합니다. 되돌릴 수 없습니다.",
-                        buttonLabel: "삭제",
+                        title: String(localized: "settings.goals.delete.title"),
+                        detail: String(localized: "settings.goals.delete.desc"),
+                        buttonLabel: String(localized: "settings.goals.delete.button"),
                         isDestructive: true,
                         action: {
                             goalService.goals = []
@@ -686,16 +820,70 @@ struct SettingsView: View {
                 }
             }
 
-            settingsCard("앱 정보") {
+            languageCard
+
+            settingsCard(String(localized: "settings.app.info.card")) {
                 HStack {
                     VStack(alignment: .leading, spacing: 3) {
                         Text("Calen")
                             .font(.system(size: 14, weight: .semibold))
-                        Text("버전 1.0 · 개인 AI 캘린더 어시스턴트")
+                        Text(String(localized: "settings.app.version"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
+                }
+            }
+        }
+    }
+
+    // MARK: - Language Card
+
+    @ObservedObject private var languageManager = LanguageManager.shared
+
+    private var languageCard: some View {
+        settingsCard(String(localized: "settings.language.card")) {
+            VStack(alignment: .leading, spacing: 10) {
+                Text(String(localized: "settings.language.desc"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                let cols = [GridItem(.adaptive(minimum: 180), spacing: 8)]
+                LazyVGrid(columns: cols, spacing: 8) {
+                    ForEach(LanguageManager.supported) { lang in
+                        let isCurrent = languageManager.currentLanguageCode == lang.id
+                        Button {
+                            languageManager.setLanguage(lang.id)
+                        } label: {
+                            HStack(spacing: 8) {
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(lang.localName)
+                                        .font(.system(size: 12, weight: isCurrent ? .semibold : .regular))
+                                    Text(lang.displayName)
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                if isCurrent {
+                                    Image(systemName: "checkmark")
+                                        .font(.system(size: 10, weight: .semibold))
+                                        .foregroundStyle(.purple)
+                                }
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 7)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(isCurrent ? Color.purple.opacity(0.12) : Color.platformControl)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(isCurrent ? Color.purple.opacity(0.4) : Color.clear, lineWidth: 1.5)
+                            )
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
             }
         }
@@ -748,7 +936,7 @@ struct SettingsView: View {
                 .padding(16)
                 .background(
                     RoundedRectangle(cornerRadius: 12)
-                        .fill(Color(nsColor: .controlBackgroundColor))
+                        .fill(Color.platformControlBackground)
                 )
         }
     }
@@ -765,12 +953,12 @@ struct SettingsView: View {
     private func hourPicker(_ binding: Binding<Int>, range: ClosedRange<Int>) -> some View {
         Picker("", selection: binding) {
             ForEach(Array(range), id: \.self) { hour in
-                Text("\(hour)시").tag(hour)
+                Text(verbatim: String(format: String(localized: "settings.hour.format"), hour)).tag(hour)
             }
         }
         .pickerStyle(.menu)
         .frame(width: 76)
-        .onChange(of: binding.wrappedValue) { _ in autosave() }
+        .onChange(of: binding.wrappedValue) { autosave() }
     }
 
     private func autosave() {

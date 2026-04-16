@@ -65,6 +65,7 @@
 
 /* ===== Todo Detail Modal ===== */
 "todo.detail.title" = "Detail úkolu";
+"todo.source.local" = "App (Local)";
 
 /* ===== Inline Add Todo ===== */
 "todo.input.placeholder" = "Zadejte úkol";
@@ -223,3 +224,176 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "Denní";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "Ranní";
+"energy.type.evening" = "Večerní";
+"energy.type.balanced" = "Vyvážený";
+
+/* ===== Aggressiveness ===== */
+"aggressiveness.manual" = "Manuální";
+"aggressiveness.assist" = "Asistovaný";
+"aggressiveness.semiauto" = "Poloautomatický";
+"aggressiveness.auto" = "Automatický";
+
+/* ===== Settings View ===== */
+"settings.title" = "Nastavení";
+"settings.autosave" = "Změny se ukládají automaticky";
+"settings.section.profile" = "Profil";
+"settings.section.schedule" = "Rozvrh";
+"settings.section.ai" = "Nastavení AI";
+"settings.section.integrations" = "Integrace";
+"settings.section.notifications" = "Oznámení";
+"settings.section.advanced" = "Pokročilé";
+"settings.profile.subtitle" = "Nastavte svůj osobní rytmus a pracovní styl";
+"settings.energy.card" = "Vzorec energie";
+"settings.energy.desc" = "Vyberte dobu špičkové koncentrace. AI naplánuje důležité úkoly na toto období.";
+"settings.pace.card" = "Tempo rozvrhu";
+"settings.pace.desc" = "Určuje, jak agresivně AI plní rozvrh při vytváření návrhů.";
+"settings.schedule.subtitle" = "Nastavte pracovní dobu a denní kapacitu soustředění";
+"settings.work.card" = "Pracovní doba";
+"settings.work.start.label" = "Začátek";
+"settings.work.end.label" = "Konec";
+"settings.lunch.start.label" = "Začátek oběda";
+"settings.lunch.end.label" = "Konec oběda";
+"settings.work.hours.format" = "%d h práce";
+"settings.commute.card" = "Čas dojíždění";
+"settings.commute.label" = "Čas dojíždění jedním směrem";
+"settings.commute.minutes.format" = "%d min";
+"settings.commute.roundtrip.format" = "Tam a zpět %d min · Nezapočítáno do denní kapacity soustředění";
+"settings.capacity.card" = "Denní kapacita soustředění";
+"settings.capacity.weekday" = "Pracovní den";
+"settings.capacity.weekend" = "Víkend";
+"settings.capacity.hours.format" = "%d h";
+"settings.capacity.hours.minutes.format" = "%d h %d min";
+"settings.ai.subtitle" = "Vyberte AI pro analýzu a plánování rozvrhu";
+"settings.ai.engine.card" = "Motor AI";
+"settings.ai.status.card" = "Aktuální stav";
+"settings.ai.save.card" = "Uložit";
+"settings.ai.installed.badge" = "Nainstalováno";
+"settings.ai.not.installed.badge" = "Nenainstalováno";
+"settings.ai.claude.installed.detail" = "Nainstalováno — Výkonné porozumění přirozenému jazyku";
+"settings.ai.claude.install.hint" = "Vyžadováno: brew install claude";
+"settings.ai.codex.installed.detail" = "Nainstalováno — Optimalizováno pro kód";
+"settings.ai.codex.install.hint" = "Vyžadováno: npm install -g @openai/codex";
+"settings.ai.save.button" = "Uložit nastavení AI";
+"settings.ai.claude.desc" = "Výborné porozumění přirozenému jazyku. Ideální pro složité plánování a analýzu cílů.";
+"settings.ai.codex.desc" = "Specializovaný pro optimalizaci na základě kódu. Skvělý pro rychlé plánování podle pravidel.";
+"settings.aggressiveness.manual.desc" = "Spravujte všechny rozvrhy ručně. AI zůstává ticho.";
+"settings.aggressiveness.assist.desc" = "AI pouze navrhuje. Vy rozhodujete, zda přijmout.";
+"settings.aggressiveness.semiauto.desc" = "Automaticky registruje schválené návrhy do kalendáře.";
+"settings.aggressiveness.auto.desc" = "AI automaticky vytváří a registruje optimální rozvrhy.";
+"settings.integrations.subtitle" = "Správa připojení k externím službám a kalendářům";
+"settings.google.connected" = "Připojeno";
+"settings.google.not.connected" = "Nepřipojeno";
+"settings.google.no.email" = "Žádné informace o emailu";
+"settings.google.connect.hint" = "Připojte svůj účet Google pro synchronizaci rozvrhu";
+"settings.google.disconnect.button" = "Odpojit";
+"settings.google.login.button" = "Přihlásit se přes Google";
+"settings.google.privacy" = "Data kalendáře jsou uložena pouze v zařízení. AI používá pouze názvy a časy událostí.";
+"settings.apple.card" = "Integrace Apple";
+"settings.apple.calendar.title" = "Synchronizace s Apple Calendar";
+"settings.apple.calendar.desc" = "Zobrazuje události Apple Calendar na vašem zařízení";
+"settings.apple.reminders.title" = "Importovat připomínky Apple";
+"settings.apple.reminders.desc" = "Importuje připomínky jako úkoly";
+"settings.google.skip.card" = "Používat bez Google";
+"settings.google.skip.title" = "Přeskočit přihlášení přes Google";
+"settings.google.skip.desc" = "Používejte funkce AI bez Google Calendar";
+"settings.notifications.subtitle" = "Nastavte časy ranního přehledu a večerního hodnocení";
+"settings.morning.card" = "Ranní přehled";
+"settings.morning.time.title" = "Čas ranního přehledu";
+"settings.morning.time.desc" = "Upozorní na dnešní souhrn rozvrhu a průběh plnění cílů";
+"settings.evening.card" = "Večerní hodnocení";
+"settings.evening.time.title" = "Čas večerního hodnocení";
+"settings.evening.time.desc" = "Zkontroluje splněné úkoly a naplánuje na zítřek";
+"settings.notifications.permission.card" = "Oprávnění k oznámením";
+"settings.notifications.permission.title" = "Je vyžadováno systémové oprávnění k oznámením";
+"settings.notifications.permission.desc" = "Systémové předvolby macOS → Oznámení → Povolit Calen";
+"settings.notifications.open.system" = "Otevřít systémové předvolby";
+"settings.hour.format" = "%d:00";
+"settings.advanced.subtitle" = "Správa dat a možnosti resetování aplikace";
+"settings.onboarding.card" = "Onboarding";
+"settings.onboarding.restart.title" = "Restartovat onboarding";
+"settings.onboarding.restart.desc" = "Znovu projít nastavení cílů od začátku";
+"settings.onboarding.restart.button" = "Restartovat";
+"settings.data.reset.card" = "Reset dat";
+"settings.completions.reset.title" = "Resetovat historii splnění";
+"settings.completions.reset.desc" = "Odstraní všechny záznamy o splnění událostí";
+"settings.completions.reset.button" = "Resetovat";
+"settings.review.reset.title" = "Resetovat denní hodnocení";
+"settings.review.reset.desc" = "Resetuje dnešní dokončené hodnocení, aby se zobrazilo znovu";
+"settings.review.reset.button" = "Resetovat";
+"settings.goals.delete.title" = "Smazat všechny cíle";
+"settings.goals.delete.desc" = "Odstraní všechny zaregistrované cíle. Tuto akci nelze vrátit.";
+"settings.goals.delete.button" = "Smazat";
+"settings.language.card" = "Jazyk";
+"settings.language.desc" = "Vyberte jazyk. Aplikace se restartuje pro použití změny.";
+"settings.app.info.card" = "Informace o aplikaci";
+"settings.app.version" = "Verze 1.0 · Osobní AI asistent kalendáře";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "Plán na zítřek je připraven";
+"review.today.lookback" = "Přehled dnešního dne";
+"review.move.all" = "Přesunout vše na zítřek";
+"review.generating.button" = "Generuji plán...";
+"review.generate.tomorrow" = "Automaticky vygenerovat plán na zítřek";
+"review.no.past.events" = "Dnes žádné minulé události";
+"review.generate.now.hint" = "Plán na zítřek můžete vygenerovat nyní";
+"review.on.track" = "Vše jde hladce";
+"review.evening.auto.plan" = "Večer automaticky vygenerujeme plán na zítřek";
+"review.ok.button" = "OK";
+"review.close.button" = "Zavřít";
+"review.add.button" = "Přidat";
+"review.skip.button" = "Přeskočit";
+"review.period.week" = "Tento týden";
+"review.period.month" = "Tento měsíc";
+"review.period.year" = "Tento rok";
+"review.completion.rate" = "Míra splnění";
+"review.completion.count.format" = "%d / %d splněno";
+"review.no.todos" = "Žádné zaregistrované úkoly";
+"review.added.to.calendar" = "Přidáno do kalendáře";
+"review.tomorrow.sufficient" = "Zítřejší rozvrh je již plný";
+
+/* ===== MainView ===== */
+"event.category.label" = "Kategorie";
+"event.category.none" = "Žádná";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "Nový den";
+"rollover.notification.body" = "Zkontrolujte své úkoly na dnes";
+"rollover.moved.title" = "Úkoly přesunuty";
+"rollover.moved.body" = "%d nedokončený(-ch) úkol(-ů) přesunut(-o) na dnes";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "Klepněte na příklad níže pro začátek";
+"chat.quick.today" = "Co mám dnes v plánu?";
+"chat.quick.add.meeting" = "Přidat schůzku zítra ve 15:00";
+"chat.quick.free.time" = "Najít volný čas tento týden";
+"chat.quick.tomorrow.plan" = "Naplánovat zítřejší den";
+"chat.attach.pdf.hint" = "Attach PDF | Paste images with Cmd+V";
+"chat.attach.hint" = "Připojit obrázek nebo PDF (max 5, 20 MB)";
+"chat.attach.picker.message" = "Vyberte obrázky nebo PDF soubory k připojení";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "Vyžadováno nastavení";
+"setup.subtitle" = "Dokončete tyto kroky pro spuštění AI asistenta";
+"setup.step1.title" = "Instalace AI CLI";
+"setup.step2.title" = "Připojení Google Kalendáře";
+"setup.claude.desc" = "Nechte Claudea pomoci s plánováním vašeho dne";
+"setup.codex.desc" = "Používejte Codex pro chytrá doporučení";
+"setup.google.desc" = "Synchronizujte události kalendáře pro chytřejší plánování";
+"setup.google.connect.button" = "Připojit Google Kalendář";
+"setup.google.skip.hint" = "Připojit můžete později v Nastavení";
+"setup.google.connected" = "Připojeno";
+"setup.complete" = "Vše připraveno! Nyní můžete začít chatovat.";
+"setup.installed" = "Nainstalováno";
+"setup.copy.command" = "Kopírovat příkaz instalace";
+"review.today.todos" = "Today's Todos";
+"review.done.all" = "Mark All Done";
+"review.accept.all" = "Accept All";
+"review.todo.label" = "Todo";
+"review.plan.complete.title" = "Tomorrow's Plan Ready";
+"review.help.done" = "Done";
+"review.help.tomorrow" = "Move to Tomorrow";
+"review.help.skip" = "Skip";
+"settings.section.context" = "AI Context";

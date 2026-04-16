@@ -65,6 +65,7 @@
 
 /* ===== Todo Detail Modal ===== */
 "todo.detail.title" = "Todo Details";
+"todo.source.local" = "App (Local)";
 
 /* ===== Inline Add Todo ===== */
 "todo.input.placeholder" = "Enter a todo";
@@ -99,7 +100,8 @@
 "chat.action.create" = "Create";
 "chat.action.update" = "Update";
 "chat.action.delete" = "Delete";
-"chat.attach.hint" = "Attach image or PDF (max 5, 20MB)";
+"chat.attach.pdf.hint" = "Attach PDF | Paste images with Cmd+V";
+"chat.attach.hint" ="Attach image or PDF (max 5, 20MB)";
 "chat.attach.picker.message" = "Select images or PDFs to attach";
 
 /* ===== AI Settings ===== */
@@ -225,3 +227,165 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "Daily";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "Morning";
+"energy.type.evening" = "Evening";
+"energy.type.balanced" = "Balanced";
+
+/* ===== Aggressiveness ===== */
+
+/* ===== Settings View ===== */
+"settings.title" = "Settings";
+"settings.autosave" = "Changes saved automatically";
+"settings.section.profile" = "Profile";
+"settings.section.schedule" = "Schedule";
+"settings.section.ai" = "AI Settings";
+"settings.section.integrations" = "Integrations";
+"settings.section.notifications" = "Notifications";
+"settings.section.advanced" = "Advanced";
+"settings.profile.subtitle" = "Configure your personal rhythm and work style";
+"settings.energy.card" = "Energy Pattern";
+"settings.energy.desc" = "Select your peak focus time. AI will schedule important tasks during this period.";
+"settings.pace.card" = "Schedule Pace";
+"settings.pace.desc" = "Determines how aggressively AI fills your schedule when making suggestions.";
+"settings.schedule.subtitle" = "Set your work hours and daily focus capacity";
+"settings.work.card" = "Work Hours";
+"settings.work.start.label" = "Start";
+"settings.work.end.label" = "End";
+"settings.lunch.start.label" = "Lunch Start";
+"settings.lunch.end.label" = "Lunch End";
+"settings.work.hours.format" = "%d hrs work";
+"settings.commute.card" = "Commute Time";
+"settings.commute.label" = "One-way commute time";
+"settings.commute.minutes.format" = "%d min";
+"settings.commute.roundtrip.format" = "Round trip %d min · Excluded from daily focus time";
+"settings.capacity.card" = "Daily Focus Capacity";
+"settings.capacity.weekday" = "Weekday";
+"settings.capacity.weekend" = "Weekend";
+"settings.capacity.hours.format" = "%d h";
+"settings.capacity.hours.minutes.format" = "%d h %d min";
+"settings.ai.subtitle" = "Choose the AI for schedule analysis and planning";
+"settings.ai.engine.card" = "AI Engine";
+"settings.ai.status.card" = "Current Status";
+"settings.ai.save.card" = "Save";
+"settings.ai.installed.badge" = "Installed";
+"settings.ai.not.installed.badge" = "Not Installed";
+"settings.ai.claude.installed.detail" = "Installed — Powerful natural language understanding";
+"settings.ai.claude.install.hint" = "Required: brew install claude";
+"settings.ai.codex.installed.detail" = "Installed — Optimized for code";
+"settings.ai.codex.install.hint" = "Required: npm install -g @openai/codex";
+"settings.ai.save.button" = "Save AI Settings";
+"settings.ai.claude.desc" = "Excellent natural language understanding. Ideal for complex scheduling and goal analysis.";
+"settings.ai.codex.desc" = "Specialized for code-based optimization. Great for fast rule-based planning.";
+"settings.aggressiveness.manual.desc" = "Manage all schedules manually. AI stays quiet.";
+"settings.aggressiveness.assist.desc" = "AI suggests only. You decide to accept.";
+"settings.aggressiveness.semiauto.desc" = "Automatically registers approved suggestions to calendar.";
+"settings.aggressiveness.auto.desc" = "AI automatically creates and registers optimal schedules.";
+"settings.integrations.subtitle" = "Manage external service and calendar connections";
+"settings.google.connected" = "Connected";
+"settings.google.not.connected" = "Not Connected";
+"settings.google.no.email" = "No email info";
+"settings.google.connect.hint" = "Connect your Google account to sync your schedule";
+"settings.google.disconnect.button" = "Disconnect";
+"settings.google.login.button" = "Sign in with Google";
+"settings.google.privacy" = "Calendar data is stored on device only. AI references event titles and times only.";
+"settings.apple.card" = "Apple Integration";
+"settings.apple.calendar.title" = "Apple Calendar Sync";
+"settings.apple.calendar.desc" = "Shows Apple Calendar events on your device";
+"settings.apple.reminders.title" = "Import Apple Reminders";
+"settings.apple.reminders.desc" = "Imports reminders as todos";
+"settings.google.skip.card" = "Use Without Google";
+"settings.google.skip.title" = "Skip Google Sign-in";
+"settings.google.skip.desc" = "Use AI features without Google Calendar";
+"settings.notifications.subtitle" = "Set morning briefing and evening review notification times";
+"settings.morning.card" = "Morning Briefing";
+"settings.morning.time.title" = "Morning Briefing Time";
+"settings.morning.time.desc" = "Notifies you of today's schedule summary and goal progress";
+"settings.evening.card" = "Evening Review";
+"settings.evening.time.title" = "Evening Review Time";
+"settings.evening.time.desc" = "Reviews completed schedules and plans for tomorrow";
+"settings.notifications.permission.card" = "Notification Permission";
+"settings.notifications.permission.title" = "System notification permission required";
+"settings.notifications.permission.desc" = "macOS System Settings → Notifications → Allow Calen";
+"settings.notifications.open.system" = "Open System Settings";
+"settings.hour.format" = "%d:00";
+"settings.advanced.subtitle" = "Data management and app reset options";
+"settings.onboarding.card" = "Onboarding";
+"settings.onboarding.restart.title" = "Restart Onboarding";
+"settings.onboarding.restart.desc" = "Redo the goal setup screen from the beginning";
+"settings.onboarding.restart.button" = "Restart";
+"settings.data.reset.card" = "Reset Data";
+"settings.completions.reset.title" = "Reset Completion History";
+"settings.completions.reset.desc" = "Deletes all event completion records";
+"settings.completions.reset.button" = "Reset";
+"settings.review.reset.title" = "Reset Daily Review";
+"settings.review.reset.desc" = "Resets today's completed review to show it again";
+"settings.review.reset.button" = "Reset";
+"settings.goals.delete.title" = "Delete All Goals";
+"settings.goals.delete.desc" = "Deletes all registered goals. This cannot be undone.";
+"settings.goals.delete.button" = "Delete";
+"settings.language.card" = "Language";
+"settings.language.desc" = "Select a language. The app will restart to apply the change.";
+"settings.app.info.card" = "App Info";
+"settings.app.version" = "Version 1.0 · Personal AI Calendar Assistant";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "Tomorrow's Plan Ready";
+"review.today.lookback" = "Today's Review";
+"review.move.all" = "Move All to Tomorrow";
+"review.generating.button" = "Generating plan...";
+"review.generate.tomorrow" = "Auto-Generate Tomorrow's Plan";
+"review.no.past.events" = "No past events today";
+"review.generate.now.hint" = "You can generate tomorrow's plan now";
+"review.on.track" = "Going smoothly";
+"review.evening.auto.plan" = "We'll auto-generate tomorrow's plan in the evening";
+"review.ok.button" = "OK";
+"review.close.button" = "Close";
+"review.add.button" = "Add";
+"review.skip.button" = "Skip";
+"review.period.week" = "This Week";
+"review.period.month" = "This Month";
+"review.period.year" = "This Year";
+"review.completion.rate" = "Completion Rate";
+"review.completion.count.format" = "%d / %d completed";
+"review.no.todos" = "No todos registered";
+"review.added.to.calendar" = "Added to Calendar";
+"review.tomorrow.sufficient" = "Tomorrow's schedule is already full";
+
+/* ===== MainView ===== */
+"event.category.label" = "Category";
+"event.category.none" = "None";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "New Day";
+"rollover.notification.body" = "Tap to check your upcoming tasks";
+"rollover.moved.title" = "Tasks Moved";
+"rollover.moved.body" = "%d incomplete task(s) moved to today";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "Try one of the examples below";
+"chat.quick.today" = "What's on my schedule today?";
+"chat.quick.add.meeting" = "Add a meeting tomorrow at 3pm";
+"chat.quick.free.time" = "Find free time this week";
+"chat.quick.tomorrow.plan" = "Plan my day for tomorrow";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "Setup Required";
+"setup.subtitle" = "Complete these steps to start using the AI assistant";
+"setup.step1.title" = "Install AI CLI";
+"setup.step2.title" = "Connect Google Calendar";
+"setup.claude.desc" = "Ask Claude to help plan and organize your day";
+"setup.codex.desc" = "Use Codex to generate smart suggestions";
+"setup.google.desc" = "Sync your calendar events for smarter scheduling";
+"setup.google.connect.button" = "Connect Google Calendar";
+"setup.google.skip.hint" = "You can connect later in Settings";
+"setup.google.connected" = "Connected";
+"setup.complete" = "All set! You can start chatting now.";
+"setup.installed" = "Installed";
+"setup.copy.command" = "Copy install command";
+"review.today.todos" = "Today's Todos";
+"review.done.all" = "Mark All Done";
+"review.accept.all" = "Accept All";
+"review.todo.label" = "Todo";
+"settings.section.context" = "AI Context";

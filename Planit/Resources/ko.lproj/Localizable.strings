@@ -65,6 +65,7 @@
 
 /* ===== Todo Detail Modal ===== */
 "todo.detail.title" = "할 일 상세";
+"todo.source.local" = "앱 (로컬)";
 
 /* ===== Inline Add Todo ===== */
 "todo.input.placeholder" = "할 일을 입력하세요";
@@ -101,6 +102,7 @@
 "chat.action.delete" = "삭제";
 "chat.attach.hint" = "이미지 또는 PDF 첨부 (최대 5개, 20MB)";
 "chat.attach.picker.message" = "첨부할 이미지 또는 PDF를 선택하세요";
+"chat.attach.pdf.hint" = "PDF 첨부 | 이미지는 Cmd+V로 붙여넣기";
 
 /* ===== AI Settings ===== */
 "ai.settings.title" = "AI 설정";
@@ -225,3 +227,165 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "일상";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "아침형";
+"energy.type.evening" = "저녁형";
+"energy.type.balanced" = "균형형";
+
+/* ===== Aggressiveness ===== */
+
+/* ===== Settings View ===== */
+"settings.title" = "설정";
+"settings.autosave" = "변경사항 자동 저장";
+"settings.section.profile" = "프로필";
+"settings.section.schedule" = "스케줄";
+"settings.section.ai" = "AI 설정";
+"settings.section.integrations" = "연동";
+"settings.section.notifications" = "알림";
+"settings.section.advanced" = "고급";
+"settings.profile.subtitle" = "개인 리듬과 일하는 방식을 설정합니다";
+"settings.energy.card" = "에너지 패턴";
+"settings.energy.desc" = "집중력이 가장 높은 시간대를 선택하세요. AI가 중요한 일을 해당 시간에 배치합니다.";
+"settings.pace.card" = "스케줄 페이스";
+"settings.pace.desc" = "AI가 일정을 제안할 때 얼마나 적극적으로 채울지 결정합니다.";
+"settings.schedule.subtitle" = "근무 시간과 일일 집중 가능 시간을 설정합니다";
+"settings.work.card" = "근무 시간";
+"settings.work.start.label" = "출근";
+"settings.work.end.label" = "퇴근";
+"settings.lunch.start.label" = "점심 시작";
+"settings.lunch.end.label" = "점심 종료";
+"settings.work.hours.format" = "%d시간 근무";
+"settings.commute.card" = "통근 시간";
+"settings.commute.label" = "편도 통근 시간";
+"settings.commute.minutes.format" = "%d분";
+"settings.commute.roundtrip.format" = "왕복 %d분 · 하루 집중 시간에서 자동 제외됩니다";
+"settings.capacity.card" = "하루 집중 가능 시간";
+"settings.capacity.weekday" = "평일";
+"settings.capacity.weekend" = "주말";
+"settings.capacity.hours.format" = "%d시간";
+"settings.capacity.hours.minutes.format" = "%d시간 %d분";
+"settings.ai.subtitle" = "일정 분석과 계획에 사용할 AI를 선택합니다";
+"settings.ai.engine.card" = "AI 엔진";
+"settings.ai.status.card" = "현재 상태";
+"settings.ai.save.card" = "저장하기";
+"settings.ai.installed.badge" = "설치됨";
+"settings.ai.not.installed.badge" = "미설치";
+"settings.ai.claude.installed.detail" = "설치됨 — 강력한 자연어 이해";
+"settings.ai.claude.install.hint" = "설치 필요: brew install claude";
+"settings.ai.codex.installed.detail" = "설치됨 — 코드 최적화 특화";
+"settings.ai.codex.install.hint" = "설치 필요: npm install -g @openai/codex";
+"settings.ai.save.button" = "AI 설정 저장";
+"settings.ai.claude.desc" = "자연어 이해 능력이 뛰어납니다. 복잡한 일정 조정과 목표 분석에 적합합니다.";
+"settings.ai.codex.desc" = "코드 기반 최적화에 특화되어 있습니다. 빠른 규칙 기반 계획 생성에 유용합니다.";
+"settings.aggressiveness.manual.desc" = "모든 일정을 직접 관리합니다. AI는 조용합니다.";
+"settings.aggressiveness.assist.desc" = "AI가 제안만 합니다. 수락은 직접 결정합니다.";
+"settings.aggressiveness.semiauto.desc" = "승인된 제안을 자동으로 캘린더에 등록합니다.";
+"settings.aggressiveness.auto.desc" = "AI가 자동으로 최적 일정을 생성하고 등록합니다.";
+"settings.integrations.subtitle" = "외부 서비스와 캘린더 연결을 관리합니다";
+"settings.google.connected" = "연결됨";
+"settings.google.not.connected" = "연결되지 않음";
+"settings.google.no.email" = "이메일 정보 없음";
+"settings.google.connect.hint" = "Google 계정을 연결하면 일정을 동기화합니다";
+"settings.google.disconnect.button" = "연결 해제";
+"settings.google.login.button" = "Google 로그인";
+"settings.google.privacy" = "캘린더 데이터는 기기에만 저장됩니다. AI는 이벤트 제목과 시간만 참조합니다.";
+"settings.apple.card" = "Apple 연동";
+"settings.apple.calendar.title" = "Apple 캘린더 동기화";
+"settings.apple.calendar.desc" = "기기의 Apple 캘린더 이벤트를 함께 표시합니다";
+"settings.apple.reminders.title" = "Apple 미리 알림 가져오기";
+"settings.apple.reminders.desc" = "미리 알림 항목을 할 일로 가져옵니다";
+"settings.google.skip.card" = "Google 없이 사용";
+"settings.google.skip.title" = "Google 로그인 건너뛰기";
+"settings.google.skip.desc" = "Apple 캘린더나 캘린더 없이 AI 기능만 사용합니다";
+"settings.notifications.subtitle" = "아침 브리핑과 저녁 리뷰 알림 시간을 설정합니다";
+"settings.morning.card" = "아침 브리핑";
+"settings.morning.time.title" = "아침 브리핑 시간";
+"settings.morning.time.desc" = "오늘 일정 요약과 목표 진행 상황을 알려드립니다";
+"settings.evening.card" = "저녁 리뷰";
+"settings.evening.time.title" = "저녁 리뷰 시간";
+"settings.evening.time.desc" = "오늘 완료된 일정을 리뷰하고 내일 계획을 세웁니다";
+"settings.notifications.permission.card" = "알림 권한";
+"settings.notifications.permission.title" = "시스템 알림 권한이 필요합니다";
+"settings.notifications.permission.desc" = "macOS 시스템 설정 → 알림 → Calen 에서 허용하세요";
+"settings.notifications.open.system" = "시스템 설정 열기";
+"settings.hour.format" = "%d시";
+"settings.advanced.subtitle" = "데이터 관리 및 앱 초기화 옵션입니다";
+"settings.onboarding.card" = "온보딩";
+"settings.onboarding.restart.title" = "온보딩 재시작";
+"settings.onboarding.restart.desc" = "목표 설정 화면을 처음부터 다시 진행합니다";
+"settings.onboarding.restart.button" = "재시작";
+"settings.data.reset.card" = "데이터 초기화";
+"settings.completions.reset.title" = "완료 기록 초기화";
+"settings.completions.reset.desc" = "모든 이벤트 완료/미완료 기록을 삭제합니다";
+"settings.completions.reset.button" = "초기화";
+"settings.review.reset.title" = "일일 리뷰 초기화";
+"settings.review.reset.desc" = "오늘 완료된 리뷰를 초기화해 다시 표시합니다";
+"settings.review.reset.button" = "초기화";
+"settings.goals.delete.title" = "목표 전체 삭제";
+"settings.goals.delete.desc" = "등록된 모든 목표를 삭제합니다. 되돌릴 수 없습니다.";
+"settings.goals.delete.button" = "삭제";
+"settings.language.card" = "언어";
+"settings.language.desc" = "언어를 선택하면 앱이 재시작되어 적용됩니다.";
+"settings.app.info.card" = "앱 정보";
+"settings.app.version" = "버전 1.0 · 개인 AI 캘린더 어시스턴트";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "내일 계획 완성";
+"review.today.lookback" = "오늘 돌아보기";
+"review.move.all" = "모두 내일로";
+"review.generating.button" = "계획 생성 중...";
+"review.generate.tomorrow" = "내일 계획 자동 생성";
+"review.no.past.events" = "오늘 지난 일정이 없어요";
+"review.generate.now.hint" = "바로 내일 계획을 생성할 수 있어요";
+"review.on.track" = "순조롭게 진행 중이에요";
+"review.evening.auto.plan" = "저녁에 내일 계획을 자동으로 생성해 드려요";
+"review.ok.button" = "확인";
+"review.close.button" = "닫기";
+"review.add.button" = "추가";
+"review.skip.button" = "건너뜀";
+"review.period.week" = "이번주";
+"review.period.month" = "이번달";
+"review.period.year" = "올해";
+"review.completion.rate" = "할일 달성률";
+"review.completion.count.format" = "%d / %d 완료";
+"review.no.todos" = "등록된 할일이 없어요";
+"review.added.to.calendar" = "캘린더에 추가됨";
+"review.tomorrow.sufficient" = "내일 일정이 이미 충분해요";
+
+/* ===== MainView ===== */
+"event.category.label" = "카테고리";
+"event.category.none" = "없음";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "새로운 날";
+"rollover.notification.body" = "오늘의 할 일을 확인하세요";
+"rollover.moved.title" = "할 일 이동됨";
+"rollover.moved.body" = "%d개의 미완료 할 일을 오늘로 이동했습니다";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "아래 예시를 눌러 시작해보세요";
+"chat.quick.today" = "오늘 일정 알려줘";
+"chat.quick.add.meeting" = "내일 오후 3시에 회의 추가해줘";
+"chat.quick.free.time" = "이번 주 비어있는 시간 찾아줘";
+"chat.quick.tomorrow.plan" = "내일 일정 계획 세워줘";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "초기 설정 필요";
+"setup.subtitle" = "AI 어시스턴트를 사용하려면 아래 단계를 완료하세요";
+"setup.step1.title" = "AI CLI 설치";
+"setup.step2.title" = "Google 캘린더 연동";
+"setup.claude.desc" = "Claude로 하루 일정을 계획하고 정리해보세요";
+"setup.codex.desc" = "Codex로 스마트한 제안을 받아보세요";
+"setup.google.desc" = "캘린더 일정을 연동하면 더 스마트한 스케줄링이 가능합니다";
+"setup.google.connect.button" = "Google 캘린더 연동";
+"setup.google.skip.hint" = "나중에 설정에서 연동할 수 있습니다";
+"setup.google.connected" = "연동됨";
+"setup.complete" = "모두 완료! 이제 AI와 대화를 시작해보세요.";
+"setup.installed" = "설치됨";
+"setup.copy.command" = "설치 명령어 복사";
+"review.today.todos" = "오늘의 할 일";
+"review.done.all" = "전체 완료";
+"review.accept.all" = "전부 추가";
+"review.todo.label" = "할 일";
+"settings.section.context" = "AI 컨텍스트";

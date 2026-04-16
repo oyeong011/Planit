@@ -132,7 +132,22 @@ struct CalendarEvent: Identifiable, Hashable {
     var color: Color
     var isAllDay: Bool
     var calendarName: String = ""
+    var calendarID: String = ""   // 안정적인 식별자: "google:primary", "apple:<uuid>"
     var source: CalendarEventSource = .google
+    var categoryID: UUID? = nil   // 파생 상태 — 매핑 적용 후 채워짐
+}
+
+// MARK: - Event Category Mapping (이벤트별 독립 매핑)
+
+struct EventCategoryMapping: Codable, Hashable {
+    var eventID: String          // CalendarEvent.id (이벤트별 고유 키)
+    var eventTitle: String       // 표시용 스냅샷
+    var categoryID: UUID
+}
+
+struct EventCategoryMappingsStore: Codable {
+    var version: Int = 1
+    var mappings: [EventCategoryMapping] = []
 }
 
 // MARK: - Offline Cache Models
@@ -146,7 +161,21 @@ struct CachedCalendarEvent: Codable, Identifiable {
     var colorHex: String
     var isAllDay: Bool
     var calendarName: String
+    var calendarID: String       // 매핑 키 보존 (기존 캐시 호환: 없으면 "")
     var source: CalendarEventSource
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        title = try c.decode(String.self, forKey: .title)
+        startDate = try c.decode(Date.self, forKey: .startDate)
+        endDate = try c.decode(Date.self, forKey: .endDate)
+        colorHex = try c.decode(String.self, forKey: .colorHex)
+        isAllDay = try c.decode(Bool.self, forKey: .isAllDay)
+        calendarName = try c.decode(String.self, forKey: .calendarName)
+        calendarID = try c.decodeIfPresent(String.self, forKey: .calendarID) ?? ""
+        source = try c.decode(CalendarEventSource.self, forKey: .source)
+    }
 
     func toCalendarEvent() -> CalendarEvent {
         CalendarEvent(
@@ -157,6 +186,7 @@ struct CachedCalendarEvent: Codable, Identifiable {
             color: Color(hex: colorHex) ?? .blue,
             isAllDay: isAllDay,
             calendarName: calendarName,
+            calendarID: calendarID,
             source: source
         )
     }
@@ -170,8 +200,17 @@ struct CachedCalendarEvent: Codable, Identifiable {
             colorHex: event.color.toHex(),
             isAllDay: event.isAllDay,
             calendarName: event.calendarName,
+            calendarID: event.calendarID,
             source: event.source
         )
+    }
+
+    // 명시적 init (Codable init from decoder와 충돌 방지)
+    init(id: String, title: String, startDate: Date, endDate: Date, colorHex: String,
+         isAllDay: Bool, calendarName: String, calendarID: String, source: CalendarEventSource) {
+        self.id = id; self.title = title; self.startDate = startDate; self.endDate = endDate
+        self.colorHex = colorHex; self.isAllDay = isAllDay; self.calendarName = calendarName
+        self.calendarID = calendarID; self.source = source
     }
 }
 
@@ -199,14 +238,4 @@ struct PendingCalendarEdit: Codable, Identifiable {
     }
 }
 
-// MARK: - Color to Hex
-
-extension Color {
-    func toHex() -> String {
-        guard let components = NSColor(self).usingColorSpace(.sRGB) else { return "#6699FF" }
-        let r = Int(components.redComponent * 255)
-        let g = Int(components.greenComponent * 255)
-        let b = Int(components.blueComponent * 255)
-        return String(format: "#%02X%02X%02X", r, g, b)
-    }
-}
+// Color.toHex()는 PlatformShims.swift에 정의됨 (크로스플랫폼)

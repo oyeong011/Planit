@@ -74,8 +74,8 @@ final class GoalService: ObservableObject {
 
     // MARK: - Completion Tracking
 
-    func markCompletion(eventId: String, goalId: String?, status: CompletionStatus, plannedMinutes: Int) {
-        let record = CompletionRecord(eventId: eventId, goalId: goalId, date: Date(),
+    func markCompletion(eventId: String, eventTitle: String? = nil, goalId: String?, status: CompletionStatus, plannedMinutes: Int) {
+        let record = CompletionRecord(eventId: eventId, eventTitle: eventTitle, goalId: goalId, date: Date(),
                                        status: status, plannedMinutes: plannedMinutes)
         completions[eventId] = record
         saveCompletions()

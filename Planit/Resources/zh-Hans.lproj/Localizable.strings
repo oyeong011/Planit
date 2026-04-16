@@ -65,6 +65,7 @@
 
 /* ===== Todo Detail Modal ===== */
 "todo.detail.title" = "待办详情";
+"todo.source.local" = "App (Local)";
 
 /* ===== Inline Add Todo ===== */
 "todo.input.placeholder" = "输入待办事项";
@@ -223,3 +224,176 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "日常";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "早晨型";
+"energy.type.evening" = "夜晚型";
+"energy.type.balanced" = "均衡型";
+
+/* ===== Aggressiveness ===== */
+"aggressiveness.manual" = "手动";
+"aggressiveness.assist" = "辅助";
+"aggressiveness.semiauto" = "半自动";
+"aggressiveness.auto" = "自动";
+
+/* ===== Settings View ===== */
+"settings.title" = "设置";
+"settings.autosave" = "更改已自动保存";
+"settings.section.profile" = "个人资料";
+"settings.section.schedule" = "日程";
+"settings.section.ai" = "AI设置";
+"settings.section.integrations" = "集成";
+"settings.section.notifications" = "通知";
+"settings.section.advanced" = "高级";
+"settings.profile.subtitle" = "配置您的个人节奏和工作方式";
+"settings.energy.card" = "精力模式";
+"settings.energy.desc" = "选择您的专注高峰时段。AI将在此时段安排重要任务。";
+"settings.pace.card" = "日程节奏";
+"settings.pace.desc" = "决定AI在提供建议时填充日程的积极程度。";
+"settings.schedule.subtitle" = "设置您的工作时间和每日专注上限";
+"settings.work.card" = "工作时间";
+"settings.work.start.label" = "开始";
+"settings.work.end.label" = "结束";
+"settings.lunch.start.label" = "午餐开始";
+"settings.lunch.end.label" = "午餐结束";
+"settings.work.hours.format" = "%d小时工作";
+"settings.commute.card" = "通勤时间";
+"settings.commute.label" = "单程通勤时间";
+"settings.commute.minutes.format" = "%d分钟";
+"settings.commute.roundtrip.format" = "往返%d分钟 · 已从每日专注时间中扣除";
+"settings.capacity.card" = "每日专注上限";
+"settings.capacity.weekday" = "工作日";
+"settings.capacity.weekend" = "周末";
+"settings.capacity.hours.format" = "%d小时";
+"settings.capacity.hours.minutes.format" = "%d小时%d分钟";
+"settings.ai.subtitle" = "选择用于日程分析和规划的AI";
+"settings.ai.engine.card" = "AI引擎";
+"settings.ai.status.card" = "当前状态";
+"settings.ai.save.card" = "保存";
+"settings.ai.installed.badge" = "已安装";
+"settings.ai.not.installed.badge" = "未安装";
+"settings.ai.claude.installed.detail" = "已安装 — 强大的自然语言理解";
+"settings.ai.claude.install.hint" = "需要: brew install claude";
+"settings.ai.codex.installed.detail" = "已安装 — 针对代码优化";
+"settings.ai.codex.install.hint" = "需要: npm install -g @openai/codex";
+"settings.ai.save.button" = "保存AI设置";
+"settings.ai.claude.desc" = "出色的自然语言理解能力。非常适合复杂的日程安排和目标分析。";
+"settings.ai.codex.desc" = "专注于基于代码的优化。非常适合快速的规则式规划。";
+"settings.aggressiveness.manual.desc" = "手动管理所有日程。AI保持静默。";
+"settings.aggressiveness.assist.desc" = "AI仅提供建议。由您决定是否采纳。";
+"settings.aggressiveness.semiauto.desc" = "自动将已批准的建议添加到日历。";
+"settings.aggressiveness.auto.desc" = "AI自动创建并注册最优日程。";
+"settings.integrations.subtitle" = "管理外部服务和日历连接";
+"settings.google.connected" = "已连接";
+"settings.google.not.connected" = "未连接";
+"settings.google.no.email" = "无邮箱信息";
+"settings.google.connect.hint" = "连接您的Google账号以同步日程";
+"settings.google.disconnect.button" = "断开连接";
+"settings.google.login.button" = "使用Google登录";
+"settings.google.privacy" = "日历数据仅存储在设备上。AI仅参考事件标题和时间。";
+"settings.apple.card" = "Apple集成";
+"settings.apple.calendar.title" = "Apple日历同步";
+"settings.apple.calendar.desc" = "在设备上显示Apple日历事件";
+"settings.apple.reminders.title" = "导入Apple提醒事项";
+"settings.apple.reminders.desc" = "将提醒事项作为待办导入";
+"settings.google.skip.card" = "不使用Google";
+"settings.google.skip.title" = "跳过Google登录";
+"settings.google.skip.desc" = "无需Google日历即可使用AI功能";
+"settings.notifications.subtitle" = "设置晨间简报和晚间回顾的通知时间";
+"settings.morning.card" = "晨间简报";
+"settings.morning.time.title" = "晨间简报时间";
+"settings.morning.time.desc" = "通知您今日日程摘要和目标进度";
+"settings.evening.card" = "晚间回顾";
+"settings.evening.time.title" = "晚间回顾时间";
+"settings.evening.time.desc" = "回顾已完成的日程，规划明天";
+"settings.notifications.permission.card" = "通知权限";
+"settings.notifications.permission.title" = "需要系统通知权限";
+"settings.notifications.permission.desc" = "macOS系统设置 → 通知 → 允许Calen";
+"settings.notifications.open.system" = "打开系统设置";
+"settings.hour.format" = "%d时";
+"settings.advanced.subtitle" = "数据管理和应用重置选项";
+"settings.onboarding.card" = "引导设置";
+"settings.onboarding.restart.title" = "重新开始引导设置";
+"settings.onboarding.restart.desc" = "从头重做目标设置界面";
+"settings.onboarding.restart.button" = "重新开始";
+"settings.data.reset.card" = "重置数据";
+"settings.completions.reset.title" = "重置完成历史";
+"settings.completions.reset.desc" = "删除所有事件完成记录";
+"settings.completions.reset.button" = "重置";
+"settings.review.reset.title" = "重置每日回顾";
+"settings.review.reset.desc" = "将今天已完成的回顾重置以再次显示";
+"settings.review.reset.button" = "重置";
+"settings.goals.delete.title" = "删除所有目标";
+"settings.goals.delete.desc" = "删除所有已注册的目标。此操作无法撤销。";
+"settings.goals.delete.button" = "删除";
+"settings.language.card" = "语言";
+"settings.language.desc" = "选择语言。应用将重启以应用更改。";
+"settings.app.info.card" = "应用信息";
+"settings.app.version" = "版本 1.0 · 个人AI日历助手";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "明日计划已就绪";
+"review.today.lookback" = "今日回顾";
+"review.move.all" = "全部移到明天";
+"review.generating.button" = "正在生成计划...";
+"review.generate.tomorrow" = "自动生成明日计划";
+"review.no.past.events" = "今天没有过去的事件";
+"review.generate.now.hint" = "现在可以生成明日计划";
+"review.on.track" = "进展顺利";
+"review.evening.auto.plan" = "我们将在晚间自动生成明日计划";
+"review.ok.button" = "确定";
+"review.close.button" = "关闭";
+"review.add.button" = "添加";
+"review.skip.button" = "跳过";
+"review.period.week" = "本周";
+"review.period.month" = "本月";
+"review.period.year" = "今年";
+"review.completion.rate" = "完成率";
+"review.completion.count.format" = "%d / %d 已完成";
+"review.no.todos" = "暂无待办事项";
+"review.added.to.calendar" = "已添加到日历";
+"review.tomorrow.sufficient" = "明日日程已排满";
+
+/* ===== MainView ===== */
+"event.category.label" = "分类";
+"event.category.none" = "无";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "新的一天";
+"rollover.notification.body" = "查看今天的任务";
+"rollover.moved.title" = "任务已移动";
+"rollover.moved.body" = "已将 %d 个未完成任务移至今天";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "点击下方示例开始";
+"chat.quick.today" = "今天有什么日程？";
+"chat.quick.add.meeting" = "明天下午3点添加会议";
+"chat.quick.free.time" = "找出本周的空闲时间";
+"chat.quick.tomorrow.plan" = "帮我规划明天的日程";
+"chat.attach.pdf.hint" = "Attach PDF | Paste images with Cmd+V";
+"chat.attach.hint" = "附加图片或 PDF（最多 5 个，20 MB）";
+"chat.attach.picker.message" = "选择要附加的图片或 PDF";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "需要设置";
+"setup.subtitle" = "完成以下步骤以开始使用 AI 助手";
+"setup.step1.title" = "安装 AI CLI";
+"setup.step2.title" = "连接 Google 日历";
+"setup.claude.desc" = "让 Claude 帮助您规划和整理一天的日程";
+"setup.codex.desc" = "使用 Codex 获取智能建议";
+"setup.google.desc" = "同步日历事件以实现更智能的日程安排";
+"setup.google.connect.button" = "连接 Google 日历";
+"setup.google.skip.hint" = "您可以稍后在设置中连接";
+"setup.google.connected" = "已连接";
+"setup.complete" = "一切就绪！您可以立即开始聊天。";
+"setup.installed" = "已安装";
+"setup.copy.command" = "复制安装命令";
+"review.today.todos" = "Today's Todos";
+"review.done.all" = "Mark All Done";
+"review.accept.all" = "Accept All";
+"review.todo.label" = "Todo";
+"review.plan.complete.title" = "Tomorrow's Plan Ready";
+"review.help.done" = "Done";
+"review.help.tomorrow" = "Move to Tomorrow";
+"review.help.skip" = "Skip";
+"settings.section.context" = "AI Context";

@@ -1,6 +1,16 @@
 import Foundation
 import SwiftUI
 import CommonCrypto
+import os
+
+// double-close 방지용 경량 mutex
+private final class UnfairLock: @unchecked Sendable {
+    private let _lock = UnsafeMutablePointer<os_unfair_lock>.allocate(capacity: 1)
+    init() { _lock.initialize(to: os_unfair_lock()) }
+    deinit { _lock.deallocate() }
+    func lock()   { os_unfair_lock_lock(_lock) }
+    func unlock() { os_unfair_lock_unlock(_lock) }
+}
 
 enum AuthError: LocalizedError {
     case noCredentials
@@ -42,10 +52,8 @@ final class GoogleAuthManager: ObservableObject {
     private var refreshTask: Task<String, Error>?
 
     init() {
-        // Suppress SIGPIPE process-wide (socket writes to closed connections)
         signal(SIGPIPE, SIG_IGN)
-        // Migrate old file-based tokens to macOS Keychain (one-time)
-        KeychainHelper.migrateFromFileStorage()
+        KeychainHelper.migrateIfNeeded()
         loadCredentials()
         loadTokens()
     }
@@ -53,32 +61,29 @@ final class GoogleAuthManager: ObservableObject {
     // MARK: - Credentials
 
     private func loadCredentials() {
-        // 1. Try Keychain (preferred)
-        if let id = KeychainHelper.load(key: "planit.oauth.clientId"),
-           let secret = KeychainHelper.load(key: "planit.oauth.clientSecret") {
-            clientID = id
-            clientSecret = secret
+        // 1. Consolidated Keychain entry
+        if let creds = KeychainHelper.loadCredentials() {
+            clientID = creds.clientID
+            clientSecret = creds.clientSecret
             return
         }
 
-        // 2. Migrate from legacy plaintext file to Keychain
-        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        // 2. Legacy plaintext JSON file → migrate to Keychain
+        guard let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else { return }
         let legacyPath = support.appendingPathComponent("Planit/google_credentials.json")
         if let data = try? Data(contentsOf: legacyPath),
            let json = try? JSONSerialization.jsonObject(with: data) as? [String: String],
            let id = json["client_id"], let secret = json["client_secret"] {
             clientID = id
             clientSecret = secret
-            // Save to Keychain; only remove plaintext file if both writes succeed
-            let savedId = KeychainHelper.save(key: "planit.oauth.clientId", value: id)
-            let savedSecret = KeychainHelper.save(key: "planit.oauth.clientSecret", value: secret)
-            if savedId && savedSecret {
+            let creds = KeychainHelper.OAuthCredentials(clientID: id, clientSecret: secret)
+            if KeychainHelper.saveCredentials(creds) {
                 try? FileManager.default.removeItem(at: legacyPath)
             }
             return
         }
 
-        // 3. Check bundle (development only)
+        // 3. Bundle credentials (development only)
         #if DEBUG
         if let bundlePath = Bundle.main.path(forResource: "google_credentials", ofType: "json"),
            let data = try? Data(contentsOf: URL(fileURLWithPath: bundlePath)),
@@ -86,8 +91,7 @@ final class GoogleAuthManager: ObservableObject {
            let id = json["client_id"], let secret = json["client_secret"] {
             clientID = id
             clientSecret = secret
-            KeychainHelper.save(key: "planit.oauth.clientId", value: id)
-            KeychainHelper.save(key: "planit.oauth.clientSecret", value: secret)
+            KeychainHelper.saveCredentials(KeychainHelper.OAuthCredentials(clientID: id, clientSecret: secret))
         }
         #endif
     }
@@ -95,8 +99,7 @@ final class GoogleAuthManager: ObservableObject {
     func setupCredentials(clientID: String, clientSecret: String) {
         self.clientID = clientID
         self.clientSecret = clientSecret
-        KeychainHelper.save(key: "planit.oauth.clientId", value: clientID)
-        KeychainHelper.save(key: "planit.oauth.clientSecret", value: clientSecret)
+        KeychainHelper.saveCredentials(KeychainHelper.OAuthCredentials(clientID: clientID, clientSecret: clientSecret))
     }
 
     var hasCredentials: Bool { !clientID.isEmpty && !clientSecret.isEmpty }
@@ -104,22 +107,22 @@ final class GoogleAuthManager: ObservableObject {
     // MARK: - Token Management
 
     private func loadTokens() {
-        accessToken = KeychainHelper.load(key: "planit.accessToken")
-        refreshToken = KeychainHelper.load(key: "planit.refreshToken")
-        userEmail = KeychainHelper.load(key: "planit.userEmail")
-        if let s = KeychainHelper.load(key: "planit.tokenExpiry"), let t = Double(s) {
-            tokenExpiry = Date(timeIntervalSince1970: t)
-        }
+        let tokens = KeychainHelper.loadAuthTokens()
+        accessToken  = tokens.accessToken
+        refreshToken = tokens.refreshToken
+        userEmail    = tokens.userEmail
+        if let t = tokens.tokenExpiry { tokenExpiry = Date(timeIntervalSince1970: t) }
         isAuthenticated = refreshToken != nil
     }
 
     private func saveTokens() {
-        if let t = accessToken { KeychainHelper.save(key: "planit.accessToken", value: t) }
-        if let t = refreshToken { KeychainHelper.save(key: "planit.refreshToken", value: t) }
-        if let e = tokenExpiry {
-            KeychainHelper.save(key: "planit.tokenExpiry", value: "\(e.timeIntervalSince1970)")
-        }
-        if let email = userEmail { KeychainHelper.save(key: "planit.userEmail", value: email) }
+        let tokens = KeychainHelper.AuthTokens(
+            accessToken:  accessToken,
+            refreshToken: refreshToken,
+            tokenExpiry:  tokenExpiry.map { $0.timeIntervalSince1970 },
+            userEmail:    userEmail
+        )
+        KeychainHelper.saveAuthTokens(tokens)
     }
 
     func getValidToken() async throws -> String {
@@ -154,7 +157,7 @@ final class GoogleAuthManager: ObservableObject {
     private static func generateCodeChallenge(from verifier: String) -> String {
         let data = Data(verifier.utf8)
         var hash = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
-        data.withUnsafeBytes { CC_SHA256($0.baseAddress, CC_LONG(data.count), &hash) }
+        _ = data.withUnsafeBytes { CC_SHA256($0.baseAddress, CC_LONG(data.count), &hash) }
         return Data(hash).base64EncodedString()
             .replacingOccurrences(of: "+", with: "-")
             .replacingOccurrences(of: "/", with: "_")
@@ -185,7 +188,7 @@ final class GoogleAuthManager: ObservableObject {
                 URLQueryItem(name: "client_id", value: clientID),
                 URLQueryItem(name: "redirect_uri", value: redirectURI),
                 URLQueryItem(name: "response_type", value: "code"),
-                URLQueryItem(name: "scope", value: "https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/userinfo.email"),
+                URLQueryItem(name: "scope", value: "https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.calendarlist.readonly https://www.googleapis.com/auth/userinfo.email"),
                 URLQueryItem(name: "access_type", value: "offline"),
                 URLQueryItem(name: "prompt", value: "consent"),
                 URLQueryItem(name: "state", value: state),
@@ -194,7 +197,7 @@ final class GoogleAuthManager: ObservableObject {
             ]
 
             guard let authURL = components.url else { throw AuthError.serverFailed }
-            NSWorkspace.shared.open(authURL)
+            openURL(authURL)
 
             let code = try await waitForAuthCode(serverFd: serverFd, expectedState: state)
             // serverFd is closed inside waitForAuthCode
@@ -209,15 +212,15 @@ final class GoogleAuthManager: ObservableObject {
     }
 
     func logout() {
+        // 진행 중인 토큰 갱신 취소 — 갱신 완료 후 토큰이 재저장되는 것을 방지
+        refreshTask?.cancel()
+        refreshTask = nil
         accessToken = nil
         refreshToken = nil
         tokenExpiry = nil
         userEmail = nil
         isAuthenticated = false
-        KeychainHelper.delete(key: "planit.accessToken")
-        KeychainHelper.delete(key: "planit.refreshToken")
-        KeychainHelper.delete(key: "planit.tokenExpiry")
-        KeychainHelper.delete(key: "planit.userEmail")
+        KeychainHelper.deleteAuthTokens()
     }
 
     // MARK: - Loopback Server
@@ -261,14 +264,24 @@ final class GoogleAuthManager: ObservableObject {
     private func waitForAuthCode(serverFd: Int32, expectedState: String) async throws -> String {
         try await withCheckedThrowingContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
-                // Close serverFd after 5 minutes to unblock accept()
-                let timeoutItem = DispatchWorkItem { close(serverFd) }
-                DispatchQueue.global().asyncAfter(deadline: .now() + 300, execute: timeoutItem)
+                // atomic flag — 타임아웃과 defer 중 딱 한 번만 close()
+                let closed = UnfairLock()
+                var didClose = false
+                let safeClose = {
+                    closed.lock()
+                    defer { closed.unlock() }
+                    guard !didClose else { return }
+                    didClose = true
+                    close(serverFd)
+                }
+
+                // 90초 타임아웃으로 단축 (5분 → 90초)
+                let timeoutItem = DispatchWorkItem { safeClose() }
+                DispatchQueue.global().asyncAfter(deadline: .now() + 90, execute: timeoutItem)
 
                 defer {
                     timeoutItem.cancel()
-                    // Only close if timeout didn't already close it
-                    close(serverFd)
+                    safeClose()
                 }
 
                 var clientAddr = sockaddr_in()
@@ -321,7 +334,7 @@ final class GoogleAuthManager: ObservableObject {
         }
     }
 
-    private static func sendHTTPResponse(fd: Int32, body: String) {
+    nonisolated private static func sendHTTPResponse(fd: Int32, body: String) {
         let html = "<html><body style='font-family:system-ui;text-align:center;padding:60px'>\(body)</body></html>"
         let response = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: \(html.utf8.count)\r\nConnection: close\r\nCache-Control: no-store\r\nX-Content-Type-Options: nosniff\r\nX-Frame-Options: DENY\r\n\r\n\(html)"
         let bytes = Array(response.utf8)
@@ -400,14 +413,23 @@ final class GoogleAuthManager: ObservableObject {
         request.httpBody = body.data(using: .utf8)
 
         let (data, response) = try await URLSession.shared.data(for: request)
+        // 네트워크 응답 대기 중 logout()이 호출됐으면 토큰 저장을 중단
+        try Task.checkCancellation()
+
         if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
-            throw AuthError.tokenExchangeFailed("Refresh HTTP \((response as? HTTPURLResponse)?.statusCode ?? 0)")
+            // 401/403은 refresh token이 폐기/만료됨 → 자동 로그아웃
+            if httpResponse.statusCode == 401 || httpResponse.statusCode == 403 {
+                logout()
+            }
+            throw AuthError.tokenExchangeFailed("Refresh HTTP \(httpResponse.statusCode)")
         }
 
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw AuthError.tokenExchangeFailed("Refresh failed")
         }
         if let error = json["error"] as? String {
+            // invalid_grant도 refresh token 폐기를 의미
+            if error == "invalid_grant" { logout() }
             let desc = json["error_description"] as? String ?? error
             throw AuthError.tokenExchangeFailed("Refresh: \(desc)")
         }

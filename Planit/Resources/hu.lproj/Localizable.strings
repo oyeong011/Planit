@@ -65,6 +65,7 @@
 
 /* ===== Todo Detail Modal ===== */
 "todo.detail.title" = "Teendő részletei";
+"todo.source.local" = "App (Local)";
 
 /* ===== Inline Add Todo ===== */
 "todo.input.placeholder" = "Írd be a teendőt";
@@ -223,3 +224,176 @@
 
 /* ===== ViewModel ===== */
 "viewmodel.default.category" = "Napi";
+
+/* ===== Energy Type ===== */
+"energy.type.morning" = "Reggeli";
+"energy.type.evening" = "Esti";
+"energy.type.balanced" = "Kiegyensúlyozott";
+
+/* ===== Aggressiveness ===== */
+"aggressiveness.manual" = "Kézi";
+"aggressiveness.assist" = "Segített";
+"aggressiveness.semiauto" = "Félautomata";
+"aggressiveness.auto" = "Automata";
+
+/* ===== Settings View ===== */
+"settings.title" = "Beállítások";
+"settings.autosave" = "A módosítások automatikusan mentődnek";
+"settings.section.profile" = "Profil";
+"settings.section.schedule" = "Beosztás";
+"settings.section.ai" = "AI beállítások";
+"settings.section.integrations" = "Integrációk";
+"settings.section.notifications" = "Értesítések";
+"settings.section.advanced" = "Speciális";
+"settings.profile.subtitle" = "Állítsd be személyes ritmusodat és munkastílusodat";
+"settings.energy.card" = "Energiaminta";
+"settings.energy.desc" = "Válaszd ki a csúcskoncentráció időszakát. Az AI a fontos feladatokat erre az időre ütemezi.";
+"settings.pace.card" = "Beosztás üteme";
+"settings.pace.desc" = "Meghatározza, milyen agresszívan tölti fel az AI a beosztást javaslatok készítésekor.";
+"settings.schedule.subtitle" = "Állítsd be a munkaidőt és a napi koncentrációs kapacitást";
+"settings.work.card" = "Munkaidő";
+"settings.work.start.label" = "Kezdés";
+"settings.work.end.label" = "Befejezés";
+"settings.lunch.start.label" = "Ebédszünet kezdete";
+"settings.lunch.end.label" = "Ebédszünet vége";
+"settings.work.hours.format" = "%d óra munka";
+"settings.commute.card" = "Ingázási idő";
+"settings.commute.label" = "Egyirányú ingázási idő";
+"settings.commute.minutes.format" = "%d perc";
+"settings.commute.roundtrip.format" = "Oda-vissza %d perc · Nem számít bele a napi koncentrációs időbe";
+"settings.capacity.card" = "Napi koncentrációs kapacitás";
+"settings.capacity.weekday" = "Hétköznap";
+"settings.capacity.weekend" = "Hétvége";
+"settings.capacity.hours.format" = "%d ó";
+"settings.capacity.hours.minutes.format" = "%d ó %d perc";
+"settings.ai.subtitle" = "Válassz AI-t a beosztás elemzéséhez és tervezéséhez";
+"settings.ai.engine.card" = "AI motor";
+"settings.ai.status.card" = "Jelenlegi állapot";
+"settings.ai.save.card" = "Mentés";
+"settings.ai.installed.badge" = "Telepítve";
+"settings.ai.not.installed.badge" = "Nincs telepítve";
+"settings.ai.claude.installed.detail" = "Telepítve — Hatékony természetes nyelvértés";
+"settings.ai.claude.install.hint" = "Szükséges: brew install claude";
+"settings.ai.codex.installed.detail" = "Telepítve — Kódra optimalizálva";
+"settings.ai.codex.install.hint" = "Szükséges: npm install -g @openai/codex";
+"settings.ai.save.button" = "AI beállítások mentése";
+"settings.ai.claude.desc" = "Kiváló természetes nyelvértés. Ideális összetett ütemezéshez és célok elemzéséhez.";
+"settings.ai.codex.desc" = "Kódalapú optimalizálásra specializálva. Nagyszerű gyors, szabályalapú tervezéshez.";
+"settings.aggressiveness.manual.desc" = "Minden beosztást manuálisan kezelsz. Az AI csendben marad.";
+"settings.aggressiveness.assist.desc" = "Az AI csak javasol. Te döntöd el, elfogadod-e.";
+"settings.aggressiveness.semiauto.desc" = "Automatikusan rögzíti a jóváhagyott javaslatokat a naptárban.";
+"settings.aggressiveness.auto.desc" = "Az AI automatikusan létrehozza és rögzíti az optimális beosztásokat.";
+"settings.integrations.subtitle" = "Külső szolgáltatások és naptárak kapcsolatainak kezelése";
+"settings.google.connected" = "Csatlakozva";
+"settings.google.not.connected" = "Nincs csatlakozva";
+"settings.google.no.email" = "Nincs email információ";
+"settings.google.connect.hint" = "Csatlakoztasd Google fiókodat a beosztás szinkronizálásához";
+"settings.google.disconnect.button" = "Lecsatlakozás";
+"settings.google.login.button" = "Bejelentkezés Google-lal";
+"settings.google.privacy" = "A naptár adatai csak az eszközön tárolódnak. Az AI csak az esemény neveit és időpontjait használja.";
+"settings.apple.card" = "Apple integráció";
+"settings.apple.calendar.title" = "Apple Naptár szinkronizálás";
+"settings.apple.calendar.desc" = "Megjeleníti az Apple Naptár eseményeit az eszközödön";
+"settings.apple.reminders.title" = "Apple Emlékeztetők importálása";
+"settings.apple.reminders.desc" = "Emlékeztetőket importál teendőként";
+"settings.google.skip.card" = "Használat Google nélkül";
+"settings.google.skip.title" = "Google bejelentkezés kihagyása";
+"settings.google.skip.desc" = "Használd az AI funkciókat Google Calendar nélkül";
+"settings.notifications.subtitle" = "Állítsd be a reggeli összefoglaló és az esti áttekintés értesítési idejét";
+"settings.morning.card" = "Reggeli összefoglaló";
+"settings.morning.time.title" = "Reggeli összefoglaló ideje";
+"settings.morning.time.desc" = "Értesít a mai beosztás összefoglalójáról és a célok előrehaladásáról";
+"settings.evening.card" = "Esti áttekintés";
+"settings.evening.time.title" = "Esti áttekintés ideje";
+"settings.evening.time.desc" = "Áttekinti a befejezett feladatokat és tervez holnapra";
+"settings.notifications.permission.card" = "Értesítési engedély";
+"settings.notifications.permission.title" = "Rendszeres értesítési engedély szükséges";
+"settings.notifications.permission.desc" = "macOS Rendszerbeállítások → Értesítések → Calen engedélyezése";
+"settings.notifications.open.system" = "Rendszerbeállítások megnyitása";
+"settings.hour.format" = "%d:00";
+"settings.advanced.subtitle" = "Adatkezelés és alkalmazás visszaállítási lehetőségek";
+"settings.onboarding.card" = "Bevezetés";
+"settings.onboarding.restart.title" = "Bevezetés újraindítása";
+"settings.onboarding.restart.desc" = "Célbeállítási képernyő újrakezdése az elejéről";
+"settings.onboarding.restart.button" = "Újraindítás";
+"settings.data.reset.card" = "Adatok visszaállítása";
+"settings.completions.reset.title" = "Befejezési előzmények visszaállítása";
+"settings.completions.reset.desc" = "Törli az összes esemény-befejezési rekordot";
+"settings.completions.reset.button" = "Visszaállítás";
+"settings.review.reset.title" = "Napi áttekintés visszaállítása";
+"settings.review.reset.desc" = "Visszaállítja a mai befejezett áttekintést, hogy újra megjelenjen";
+"settings.review.reset.button" = "Visszaállítás";
+"settings.goals.delete.title" = "Összes cél törlése";
+"settings.goals.delete.desc" = "Törli az összes rögzített célt. Ez a művelet nem vonható vissza.";
+"settings.goals.delete.button" = "Törlés";
+"settings.language.card" = "Nyelv";
+"settings.language.desc" = "Válassz nyelvet. Az alkalmazás újraindul a módosítás alkalmazásához.";
+"settings.app.info.card" = "Alkalmazás információ";
+"settings.app.version" = "1.0-s verzió · Személyes AI naptárasszisztens";
+
+/* ===== Review View (additional) ===== */
+"review.plan.complete.title" = "A holnapi terv kész";
+"review.today.lookback" = "A mai nap áttekintése";
+"review.move.all" = "Mindent áthelyezés holnapra";
+"review.generating.button" = "Terv generálása...";
+"review.generate.tomorrow" = "Holnapi terv automatikus generálása";
+"review.no.past.events" = "Nincsenek múlt események ma";
+"review.generate.now.hint" = "Most generálhatod a holnapi tervet";
+"review.on.track" = "Simán halad";
+"review.evening.auto.plan" = "Este automatikusan generáljuk a holnapi tervet";
+"review.ok.button" = "OK";
+"review.close.button" = "Bezárás";
+"review.add.button" = "Hozzáadás";
+"review.skip.button" = "Kihagyás";
+"review.period.week" = "Ezen a héten";
+"review.period.month" = "Ebben a hónapban";
+"review.period.year" = "Ebben az évben";
+"review.completion.rate" = "Teljesítési arány";
+"review.completion.count.format" = "%d / %d befejezve";
+"review.no.todos" = "Nincsenek rögzített teendők";
+"review.added.to.calendar" = "Naptárhoz adva";
+"review.tomorrow.sufficient" = "A holnapi beosztás már tele van";
+
+/* ===== MainView ===== */
+"event.category.label" = "Kategória";
+"event.category.none" = "Nincs";
+
+/* ===== MidnightRollover ===== */
+"rollover.notification.title" = "Új nap";
+"rollover.notification.body" = "Ellenőrizze mai feladatait";
+"rollover.moved.title" = "Feladatok áthelyezve";
+"rollover.moved.body" = "%d befejezetlen feladat áthelyezve a mai napra";
+
+/* ===== Chat Quick Actions ===== */
+"chat.empty.subtitle" = "Érintsen meg egy példát alább a kezdéshez";
+"chat.quick.today" = "Mi van ma a programomban?";
+"chat.quick.add.meeting" = "Értekezlet hozzáadása holnap 15:00-kor";
+"chat.quick.free.time" = "Szabad idő keresése ezen a héten";
+"chat.quick.tomorrow.plan" = "Holnapi napom megtervezése";
+"chat.attach.pdf.hint" = "Attach PDF | Paste images with Cmd+V";
+"chat.attach.hint" = "Kép vagy PDF csatolása (max. 5, 20 MB)";
+"chat.attach.picker.message" = "Válassza ki a csatolandó képeket vagy PDF-eket";
+
+/* ===== Onboarding Setup ===== */
+"setup.title" = "Beállítás szükséges";
+"setup.subtitle" = "Végezd el ezeket a lépéseket az AI asszisztens használatához";
+"setup.step1.title" = "AI CLI telepítése";
+"setup.step2.title" = "Google Naptár csatlakoztatása";
+"setup.claude.desc" = "Kérd meg Claudet, hogy segítsen megtervezni a napodat";
+"setup.codex.desc" = "Használd a Codexet intelligens javaslatokhoz";
+"setup.google.desc" = "Szinkronizáld a naptáreseményeket az intelligensebb ütemezésért";
+"setup.google.connect.button" = "Google Naptár csatlakoztatása";
+"setup.google.skip.hint" = "Csatlakozhatsz később a Beállításokban";
+"setup.google.connected" = "Csatlakoztatva";
+"setup.complete" = "Minden kész! Most elkezdhetsz csevegni.";
+"setup.installed" = "Telepítve";
+"setup.copy.command" = "Telepítési parancs másolása";
+"review.today.todos" = "Today's Todos";
+"review.done.all" = "Mark All Done";
+"review.accept.all" = "Accept All";
+"review.todo.label" = "Todo";
+"review.plan.complete.title" = "Tomorrow's Plan Ready";
+"review.help.done" = "Done";
+"review.help.tomorrow" = "Move to Tomorrow";
+"review.help.skip" = "Skip";
+"settings.section.context" = "AI Context";
