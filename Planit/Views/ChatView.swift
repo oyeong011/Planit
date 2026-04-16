@@ -444,7 +444,8 @@ struct ChatView: View {
                 PasteAwareTextField(
                     text: $inputText,
                     placeholder: String(localized: "chat.input.placeholder"),
-                    onSubmit: sendMessage
+                    onSubmit: sendMessage,
+                    onPastePayload: handlePastePayload
                 )
                 .frame(height: 20)
 
@@ -630,6 +631,18 @@ struct ChatView: View {
         guard !attachments.contains(where: { $0.url == url }) else { return }
 
         attachments.append(ChatAttachment(url: url))
+    }
+
+    private func handlePastePayload(_ payload: ChatPasteboardReader.Payload) -> Bool {
+        switch payload {
+        case .files(let urls):
+            for url in urls {
+                addAttachment(url: url)
+            }
+            return true
+        case .text:
+            return false
+        }
     }
 
     // MARK: - Action Approval Card
@@ -975,13 +988,95 @@ struct ProviderRow: View {
 // MARK: - PasteAwareTextField
 
 #if os(macOS)
+struct ChatPasteboardReader {
+    enum Payload: Equatable {
+        case text(String)
+        case files([URL])
+    }
+
+    private static let supportedFileExtensions: Set<String> = [
+        "pdf", "png", "jpg", "jpeg", "gif", "webp", "tiff", "bmp", "heic"
+    ]
+
+    static func payload(from pasteboard: NSPasteboard) -> Payload? {
+        let fileURLs = attachmentFileURLs(from: pasteboard)
+        if !fileURLs.isEmpty {
+            return .files(fileURLs)
+        }
+
+        if let text = pasteboard.string(forType: .string), !text.isEmpty {
+            return .text(text)
+        }
+
+        return nil
+    }
+
+    private static func attachmentFileURLs(from pasteboard: NSPasteboard) -> [URL] {
+        var urls: [URL] = []
+
+        if let items = pasteboard.pasteboardItems {
+            for item in items {
+                if let fileURLString = item.string(forType: .fileURL),
+                   let url = URL(string: fileURLString) {
+                    urls.append(url)
+                }
+                if let urlString = item.string(forType: .URL),
+                   let url = URL(string: urlString),
+                   url.isFileURL {
+                    urls.append(url)
+                }
+            }
+        }
+
+        if let objects = pasteboard.readObjects(
+            forClasses: [NSURL.self],
+            options: [.urlReadingFileURLsOnly: true]
+        ) {
+            urls.append(contentsOf: objects.compactMap { object in
+                if let url = object as? URL {
+                    return url
+                }
+                if let nsurl = object as? NSURL {
+                    return nsurl as URL
+                }
+                return nil
+            })
+        }
+
+        var seen = Set<URL>()
+        return urls
+            .map { $0.standardizedFileURL }
+            .filter { url in
+                supportedFileExtensions.contains(url.pathExtension.lowercased())
+                    && seen.insert(url).inserted
+            }
+    }
+}
+
+final class PasteAwareNSTextField: NSTextField {
+    var onPastePayload: ((ChatPasteboardReader.Payload) -> Bool)?
+
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        if flags.contains(.command),
+           event.charactersIgnoringModifiers?.lowercased() == "v",
+           let payload = ChatPasteboardReader.payload(from: .general),
+           onPastePayload?(payload) == true {
+            return true
+        }
+        return super.performKeyEquivalent(with: event)
+    }
+}
+
 struct PasteAwareTextField: NSViewRepresentable {
     @Binding var text: String
     var placeholder: String
     var onSubmit: () -> Void
+    var onPastePayload: ((ChatPasteboardReader.Payload) -> Bool)? = nil
 
     func makeNSView(context: Context) -> NSTextField {
-        let field = NSTextField()
+        let field = PasteAwareNSTextField()
+        field.onPastePayload = onPastePayload
         field.placeholderString = placeholder
         field.font = .systemFont(ofSize: 12)
         field.isBordered = false
@@ -996,6 +1091,9 @@ struct PasteAwareTextField: NSViewRepresentable {
     func updateNSView(_ field: NSTextField, context: Context) {
         if field.stringValue != text { field.stringValue = text }
         field.placeholderString = placeholder
+        if let field = field as? PasteAwareNSTextField {
+            field.onPastePayload = onPastePayload
+        }
     }
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
@@ -1026,6 +1124,7 @@ struct PasteAwareTextField: View {
     @Binding var text: String
     var placeholder: String
     var onSubmit: () -> Void
+    var onPastePayload: Any? = nil
 
     var body: some View {
         TextField(placeholder, text: $text)
@@ -1033,4 +1132,3 @@ struct PasteAwareTextField: View {
     }
 }
 #endif
-
