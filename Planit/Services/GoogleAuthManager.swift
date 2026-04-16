@@ -43,8 +43,8 @@ final class GoogleAuthManager: ObservableObject {
     // Google Desktop OAuth credentials (non-confidential per Google's documentation).
     // Desktop app client_secrets are NOT treated as confidential by Google;
     // protection relies on PKCE + loopback redirect URI validation.
-    private var clientID: String = ""
-    private var clientSecret: String = ""
+    private var clientID: String = BundledCredentials.clientID
+    private var clientSecret: String = BundledCredentials.clientSecret
 
     private var accessToken: String?
     private var refreshToken: String?
