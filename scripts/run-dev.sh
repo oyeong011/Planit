@@ -23,8 +23,8 @@ mkdir -p "$APP/Contents/Resources"
 cp "$BUILD_DIR/Calen" "$APP/Contents/MacOS/Calen"
 chmod +x "$APP/Contents/MacOS/Calen"
 
-# lproj 파일을 Contents/Resources/ 루트에 복사 (Bundle.main이 직접 접근)
-for lproj in "$BUILD_DIR/Calen_Calen.bundle"/*.lproj; do
+# lproj를 소스에서 직접 복사 → Bundle.main이 찾을 수 있도록
+for lproj in "$PROJECT_DIR/Planit/Resources"/*.lproj; do
     [ -d "$lproj" ] && cp -R "$lproj" "$APP/Contents/Resources/"
 done
 
