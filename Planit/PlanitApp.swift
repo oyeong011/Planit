@@ -94,8 +94,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         if updater.updateAvailable, let latest = updater.latestVersion {
             let updateItem = NSMenuItem(
-                title: "새 버전 있음: v\(latest) → 업데이트",
-                action: #selector(openReleasePage),
+                title: "새 버전 있음: v\(latest) → 지금 업데이트",
+                action: #selector(runBrewUpgradeAndRelaunch),
                 keyEquivalent: ""
             )
             updateItem.target = self
@@ -108,6 +108,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         menu.addItem(.separator())
+
+        let relaunch = NSMenuItem(title: "재시작", action: #selector(relaunchApp), keyEquivalent: "r")
+        relaunch.target = self
+        relaunch.image = NSImage(systemSymbolName: "arrow.counterclockwise", accessibilityDescription: nil)
+        menu.addItem(relaunch)
+
         let quit = NSMenuItem(title: "Calen 종료", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         menu.addItem(quit)
 
@@ -116,10 +122,47 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.menu = nil  // 다음 좌클릭에 메뉴가 뜨지 않도록 초기화
     }
 
-    @objc private func openReleasePage() {
-        if let url = URL(string: "https://github.com/oyeong011/Planit/releases/latest") {
-            NSWorkspace.shared.open(url)
+    /// brew upgrade --cask calen 실행 후 완료되면 앱 재시작
+    @objc private func runBrewUpgradeAndRelaunch() {
+        // 알림: 업데이트 시작
+        let content = UNMutableNotificationContent()
+        content.title = "Calen 업데이트"
+        content.body = "brew upgrade 실행 중... 완료 후 자동 재시작됩니다."
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request, withCompletionHandler: nil)
+
+        let appPath = Bundle.main.bundlePath
+        // brew 경로 탐색 (Apple Silicon: /opt/homebrew, Intel: /usr/local)
+        let brewPaths = ["/opt/homebrew/bin/brew", "/usr/local/bin/brew"]
+        let brew = brewPaths.first { FileManager.default.isExecutableFile(atPath: $0) } ?? "/opt/homebrew/bin/brew"
+
+        let script = "\(brew) upgrade --cask calen && sleep 0.5 && open '\(appPath)'"
+        let task = Process()
+        task.launchPath = "/bin/bash"
+        task.arguments = ["-c", script]
+        task.terminationHandler = { process in
+            DispatchQueue.main.async {
+                if process.terminationStatus == 0 {
+                    NSApp.terminate(nil)  // 새 앱이 열린 후 기존 프로세스 종료
+                } else {
+                    // brew 실패 시 GitHub 릴리즈 페이지 열기
+                    if let url = URL(string: "https://github.com/oyeong011/Planit/releases/latest") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }
+            }
         }
+        try? task.run()
+    }
+
+    /// 앱 재시작 (업데이트 적용 또는 단순 재시작)
+    @objc private func relaunchApp() {
+        let appPath = Bundle.main.bundlePath
+        let task = Process()
+        task.launchPath = "/bin/bash"
+        task.arguments = ["-c", "sleep 0.3 && open '\(appPath)'"]
+        try? task.run()
+        NSApp.terminate(nil)
     }
 
     private func refreshStatusIcon() {
