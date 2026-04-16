@@ -68,7 +68,8 @@ struct MainCalendarView: View {
 
             Divider()
 
-            DailyDetailView(viewModel: viewModel, newTodoTitle: $newTodoTitle, showSettings: $showSettings)
+            DailyDetailView(viewModel: viewModel, newTodoTitle: $newTodoTitle, showSettings: $showSettings,
+                            isReviewing: leftPanelMode == .review)
                 .frame(width: 330)
         }
         .frame(width: showLeftPanel ? 1320 : 1040, height: 860)
@@ -493,6 +494,7 @@ struct DailyDetailView: View {
     @ObservedObject var viewModel: CalendarViewModel
     @Binding var newTodoTitle: String
     @Binding var showSettings: Bool
+    var isReviewing: Bool = false
 
     @StateObject private var updater = UpdateCheckerService.shared
     @State private var selectedCategoryID: UUID?
@@ -620,21 +622,24 @@ struct DailyDetailView: View {
                         }
 
                         let todos = viewModel.todosForDate(viewModel.selectedDate)
-                        ForEach(todos) { todo in
-                            let cat = viewModel.category(for: todo.categoryID)
-                            TodoRowView(
-                                todo: todo,
-                                category: cat,
-                                isRescheduled: viewModel.rescheduledTodoIDs.contains(todo.id),
-                                onTap: {
-                                    tappedTodo = todo
-                                    tappedEvent = nil
-                                },
-                                onToggle: { viewModel.toggleTodo(id: todo.id) }
-                            )
+                        // 리뷰 패널이 열려 있으면 할 일은 리뷰 패널에서 관리 → 여기서는 숨김
+                        if !isReviewing {
+                            ForEach(todos) { todo in
+                                let cat = viewModel.category(for: todo.categoryID)
+                                TodoRowView(
+                                    todo: todo,
+                                    category: cat,
+                                    isRescheduled: viewModel.rescheduledTodoIDs.contains(todo.id),
+                                    onTap: {
+                                        tappedTodo = todo
+                                        tappedEvent = nil
+                                    },
+                                    onToggle: { viewModel.toggleTodo(id: todo.id) }
+                                )
+                            }
                         }
 
-                        if events.isEmpty && todos.isEmpty && !showAddForm {
+                        if events.isEmpty && (isReviewing || todos.isEmpty) && !showAddForm {
                             Text(String(localized: "detail.no.events"))
                                 .font(.system(size: 13))
                                 .foregroundStyle(.tertiary)
