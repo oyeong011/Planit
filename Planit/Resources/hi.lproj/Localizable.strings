@@ -416,3 +416,7 @@
 "settings.context.how.recommend.desc" = "शेड्यूल सुझाव, अध्ययन योजनाएं और समय आवंटन को अनुकूलित करने के लिए एकत्रित जानकारी का उपयोग करता है";
 "settings.context.how.style" = "योजना शैली सीखना";
 "settings.context.how.style.desc" = "यह सीखता है कि आप विस्तृत या संक्षिप्त कार्य लिखते हैं ताकि अनुरूप सुझाव दिए जा सकें";
+
+/* ===== Update Banner ===== */
+"update.available" = "अपडेट उपलब्ध";
+"update.tap.to.update" = "v%@ में अपडेट करने के लिए टैप करें";

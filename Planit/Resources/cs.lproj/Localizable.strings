@@ -416,3 +416,7 @@
 "settings.context.how.recommend.desc" = "Používá shromážděné informace k optimalizaci návrhů harmonogramu, studijních plánů a rozdělení času";
 "settings.context.how.style" = "Učení se stylu plánování";
 "settings.context.how.style.desc" = "Učí se, zda píšete podrobné nebo stručné úkoly, aby mohlo dávat přizpůsobená doporučení";
+
+/* ===== Update Banner ===== */
+"update.available" = "Dostupná aktualizace";
+"update.tap.to.update" = "Kliknutím aktualizujte na v%@";

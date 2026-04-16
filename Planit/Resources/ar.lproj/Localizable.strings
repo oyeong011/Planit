@@ -416,3 +416,7 @@
 "settings.context.how.recommend.desc" = "يستخدم المعلومات المجمعة لتحسين اقتراحات الجدول الزمني وخطط الدراسة وتخصيص الوقت";
 "settings.context.how.style" = "تعلم أسلوب التخطيط";
 "settings.context.how.style.desc" = "يتعلم ما إذا كنت تكتب مهام مفصلة أو موجزة لتقديم اقتراحات مخصصة";
+
+/* ===== Update Banner ===== */
+"update.available" = "تحديث متاح";
+"update.tap.to.update" = "انقر للتحديث إلى v%@";

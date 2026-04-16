@@ -416,3 +416,7 @@
 "settings.context.how.recommend.desc" = "Gebruikt verzamelde informatie om agendavoorstellen, studieplannen en tijdverdeling te optimaliseren";
 "settings.context.how.style" = "Planningsstijl leren";
 "settings.context.how.style.desc" = "Leert of u gedetailleerde of beknopte taken schrijft om op maat gemaakte suggesties te doen";
+
+/* ===== Update Banner ===== */
+"update.available" = "Update beschikbaar";
+"update.tap.to.update" = "Klik om te updaten naar v%@";

@@ -416,3 +416,7 @@
 "settings.context.how.recommend.desc" = "משתמש במידע שנאסף לאופטימיזציה של הצעות לוח זמנים, תוכניות לימוד והקצאת זמן";
 "settings.context.how.style" = "למידת סגנון תכנון";
 "settings.context.how.style.desc" = "לומד אם אתה כותב משימות מפורטות או תמציתיות כדי להציע הצעות מותאמות";
+
+/* ===== Update Banner ===== */
+"update.available" = "עדכון זמין";
+"update.tap.to.update" = "לחץ לעדכון ל-v%@";

@@ -416,3 +416,7 @@
 "settings.context.how.recommend.desc" = "Folosește informațiile colectate pentru a optimiza sugestiile de program, planurile de studiu și alocarea timpului";
 "settings.context.how.style" = "Învățarea stilului de planificare";
 "settings.context.how.style.desc" = "Învață dacă scrieți sarcini detaliate sau concise pentru a face sugestii personalizate";
+
+/* ===== Update Banner ===== */
+"update.available" = "Actualizare disponibilă";
+"update.tap.to.update" = "Faceți clic pentru a actualiza la v%@";

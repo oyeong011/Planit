@@ -416,3 +416,7 @@
 "settings.context.how.recommend.desc" = "基于掌握的信息优化日程建议、学习计划和时间分配";
 "settings.context.how.style" = "计划风格学习";
 "settings.context.how.style.desc" = "了解您是详细还是简洁地记录待办事项，以提供定制化建议";
+
+/* ===== Update Banner ===== */
+"update.available" = "有更新";
+"update.tap.to.update" = "点击更新到 v%@";

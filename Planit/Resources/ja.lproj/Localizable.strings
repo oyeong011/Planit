@@ -416,3 +416,7 @@
 "settings.context.how.recommend.desc" = "把握した情報をもとにスケジュール提案・勉強計画・時間配分を最適化します";
 "settings.context.how.style" = "計画スタイルの学習";
 "settings.context.how.style.desc" = "タスクを詳細に書くか簡潔に書くかを把握して、カスタマイズした提案をします";
+
+/* ===== Update Banner ===== */
+"update.available" = "アップデートあり";
+"update.tap.to.update" = "v%@にアップデートするにはクリック";

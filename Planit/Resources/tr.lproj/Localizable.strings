@@ -416,3 +416,7 @@
 "settings.context.how.recommend.desc" = "Program önerileri, çalışma planları ve zaman tahsisini optimize etmek için toplanan bilgileri kullanır";
 "settings.context.how.style" = "Planlama Stili Öğrenimi";
 "settings.context.how.style.desc" = "Özel öneriler sunmak için ayrıntılı mı yoksa özlü görevler mi yazdığınızı öğrenir";
+
+/* ===== Update Banner ===== */
+"update.available" = "Güncelleme mevcut";
+"update.tap.to.update" = "v%@ sürümüne güncellemek için tıklayın";

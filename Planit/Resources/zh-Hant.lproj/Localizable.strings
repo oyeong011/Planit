@@ -416,3 +416,7 @@
 "settings.context.how.recommend.desc" = "基於掌握的資訊最佳化行程建議、學習計劃和時間分配";
 "settings.context.how.style" = "計劃風格學習";
 "settings.context.how.style.desc" = "了解您是詳細還是簡潔地記錄待辦事項，以提供客製化建議";
+
+/* ===== Update Banner ===== */
+"update.available" = "有更新";
+"update.tap.to.update" = "點擊更新到 v%@";
