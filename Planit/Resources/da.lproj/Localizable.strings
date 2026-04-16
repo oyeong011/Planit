@@ -397,3 +397,22 @@
 "review.help.tomorrow" = "Move to Tomorrow";
 "review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
+
+/* ===== AI Context Section ===== */
+"settings.context.title" = "AI Hyper-Personaliserings Kontekst";
+"settings.context.subtitle" = "Se og administrer, hvad AI ved om dig";
+"settings.context.card.my.info" = "Hvad AI ved om mig";
+"settings.context.empty.hint" = "Ikke nok samtaler endnu.\nChat med AI, og det udfyldes automatisk.";
+"settings.context.open.file" = "Åbn fil";
+"settings.context.show.finder" = "Vis i Finder";
+"settings.context.card.exams" = "Automatisk søgning efter understøttede eksamener / certificeringer";
+"settings.context.exams.hint" = "Når AI opdager nøgleordene nedenfor i samtalen, søger den automatisk efter ekstern information for at hjælpe med planlægning.";
+"settings.context.card.how" = "Sådan fungerer det";
+"settings.context.how.chat" = "Samtaleanalyse";
+"settings.context.how.chat.desc" = "Lærer automatisk dit job, mål og planlægningsstil fra hver AI-samtale";
+"settings.context.how.search" = "Søgning efter ekstern information";
+"settings.context.how.search.desc" = "Hvis du forbereder dig til en eksamen, søger den automatisk efter tidsplaner, fag og bestå-kriterier og cacher dem";
+"settings.context.how.recommend" = "Hyper-personaliserede anbefalinger";
+"settings.context.how.recommend.desc" = "Bruger indsamlet information til at optimere agendaforslag, studieplaner og tidsfordeling";
+"settings.context.how.style" = "Læring af planlægningsstil";
+"settings.context.how.style.desc" = "Lærer, om du skriver detaljerede eller kortfattede opgaver for at give skræddersyede forslag";

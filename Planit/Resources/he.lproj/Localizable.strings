@@ -397,3 +397,22 @@
 "review.help.tomorrow" = "Move to Tomorrow";
 "review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
+
+/* ===== AI Context Section ===== */
+"settings.context.title" = "הקשר של היפר-התאמה אישית ל-AI";
+"settings.context.subtitle" = "צפה ונהל את מה ש-AI יודע עליך";
+"settings.context.card.my.info" = "מה ה-AI יודע עלי";
+"settings.context.empty.hint" = "עדיין לא מספיק שיחות.\nשוחח עם ה-AI והוא יתמלא אוטומטית.";
+"settings.context.open.file" = "פתח קובץ";
+"settings.context.show.finder" = "הצג ב-Finder";
+"settings.context.card.exams" = "חיפוש אוטומטי של בחינות / הסמכות נתמכות";
+"settings.context.exams.hint" = "כאשר ה-AI מזהה את מילות המפתח הבאות בשיחה, הוא מחפש אוטומטית מידע חיצוני לסיוע בתזמון.";
+"settings.context.card.how" = "איך זה עובד";
+"settings.context.how.chat" = "ניתוח שיחה";
+"settings.context.how.chat.desc" = "לומד אוטומטית את עבודתך, מטרותיך וסגנון התכנון שלך מכל שיחה עם AI";
+"settings.context.how.search" = "חיפוש מידע חיצוני";
+"settings.context.how.search.desc" = "אם אתה מתכונן לבחינה, מחפש אוטומטית לוחות זמנים, נושאים וקריטריוני עמידה ושומר אותם במטמון";
+"settings.context.how.recommend" = "המלצות היפר-מותאמות אישית";
+"settings.context.how.recommend.desc" = "משתמש במידע שנאסף לאופטימיזציה של הצעות לוח זמנים, תוכניות לימוד והקצאת זמן";
+"settings.context.how.style" = "למידת סגנון תכנון";
+"settings.context.how.style.desc" = "לומד אם אתה כותב משימות מפורטות או תמציתיות כדי להציע הצעות מותאמות";

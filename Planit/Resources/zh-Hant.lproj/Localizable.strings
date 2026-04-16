@@ -397,3 +397,22 @@
 "review.help.tomorrow" = "Move to Tomorrow";
 "review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
+
+/* ===== AI Context Section ===== */
+"settings.context.title" = "AI 超個人化情境";
+"settings.context.subtitle" = "檢視並管理 AI 對您的了解";
+"settings.context.card.my.info" = "AI 掌握的我的資訊";
+"settings.context.empty.hint" = "對話還不夠充分。\n與 AI 對話後將自動填入。";
+"settings.context.open.file" = "開啟檔案";
+"settings.context.show.finder" = "在 Finder 中顯示";
+"settings.context.card.exams" = "支援的考試/證照自動搜尋";
+"settings.context.exams.hint" = "當 AI 在對話中偵測到以下關鍵字時，會自動搜尋外部資訊以輔助行程推薦。";
+"settings.context.card.how" = "運作方式";
+"settings.context.how.chat" = "對話分析";
+"settings.context.how.chat.desc" = "每次與 AI 對話時，自動掌握您的職業、目標和計劃風格";
+"settings.context.how.search" = "外部資訊搜尋";
+"settings.context.how.search.desc" = "如果您正在備考，自動搜尋日程、科目和合格標準並快取";
+"settings.context.how.recommend" = "超個人化推薦";
+"settings.context.how.recommend.desc" = "基於掌握的資訊最佳化行程建議、學習計劃和時間分配";
+"settings.context.how.style" = "計劃風格學習";
+"settings.context.how.style.desc" = "了解您是詳細還是簡潔地記錄待辦事項，以提供客製化建議";

@@ -397,3 +397,22 @@
 "review.help.tomorrow" = "Move to Tomorrow";
 "review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
+
+/* ===== AI Context Section ===== */
+"settings.context.title" = "AI超個人化コンテキスト";
+"settings.context.subtitle" = "AIがあなたについて知っている情報を確認・管理する";
+"settings.context.card.my.info" = "AIが把握した私の情報";
+"settings.context.empty.hint" = "まだ会話が十分ではありません。\nAIと会話すると自動的に入力されます。";
+"settings.context.open.file" = "ファイルを開く";
+"settings.context.show.finder" = "Finderで表示";
+"settings.context.card.exams" = "対応試験・資格の自動検索";
+"settings.context.exams.hint" = "AIが会話中に以下のキーワードを検出すると、自動的に外部情報を検索してスケジュール提案に活用します。";
+"settings.context.card.how" = "仕組み";
+"settings.context.how.chat" = "会話分析";
+"settings.context.how.chat.desc" = "AIとの会話のたびに、職業・目標・計画スタイルを自動的に把握します";
+"settings.context.how.search" = "外部情報検索";
+"settings.context.how.search.desc" = "試験準備中の場合、日程・科目・合格基準を自動検索してキャッシュします";
+"settings.context.how.recommend" = "超個人化推薦";
+"settings.context.how.recommend.desc" = "把握した情報をもとにスケジュール提案・勉強計画・時間配分を最適化します";
+"settings.context.how.style" = "計画スタイルの学習";
+"settings.context.how.style.desc" = "タスクを詳細に書くか簡潔に書くかを把握して、カスタマイズした提案をします";

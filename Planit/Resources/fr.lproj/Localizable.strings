@@ -397,3 +397,22 @@
 "review.help.tomorrow" = "Move to Tomorrow";
 "review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
+
+/* ===== AI Context Section ===== */
+"settings.context.title" = "Contexte d'hyper-personnalisation IA";
+"settings.context.subtitle" = "Consultez et gérez ce que l'IA sait sur vous";
+"settings.context.card.my.info" = "Ce que l'IA sait de moi";
+"settings.context.empty.hint" = "Pas encore assez de conversations.\nDiscutez avec l'IA et il se remplira automatiquement.";
+"settings.context.open.file" = "Ouvrir le fichier";
+"settings.context.show.finder" = "Afficher dans le Finder";
+"settings.context.card.exams" = "Recherche automatique d'examens / certifications pris en charge";
+"settings.context.exams.hint" = "Lorsque l'IA détecte les mots-clés ci-dessous dans la conversation, elle recherche automatiquement des informations externes pour aider à la planification.";
+"settings.context.card.how" = "Comment ça fonctionne";
+"settings.context.how.chat" = "Analyse des conversations";
+"settings.context.how.chat.desc" = "Apprend automatiquement votre métier, vos objectifs et votre style de planification à partir de chaque conversation IA";
+"settings.context.how.search" = "Recherche d'informations externes";
+"settings.context.how.search.desc" = "Si vous préparez un examen, il recherche automatiquement les calendriers, les matières et les critères de réussite et les met en cache";
+"settings.context.how.recommend" = "Recommandations hyper-personnalisées";
+"settings.context.how.recommend.desc" = "Utilise les informations recueillies pour optimiser les suggestions d'agenda, les plans d'études et la répartition du temps";
+"settings.context.how.style" = "Apprentissage du style de planification";
+"settings.context.how.style.desc" = "Apprend si vous rédigez des tâches détaillées ou concises pour faire des suggestions adaptées";

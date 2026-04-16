@@ -640,18 +640,18 @@ struct SettingsView: View {
 
     private var contextSection: some View {
         VStack(alignment: .leading, spacing: 22) {
-            sectionHeader("AI 초개인화 컨텍스트",
-                          subtitle: "AI가 당신에 대해 알고 있는 정보를 확인하고 관리하세요",
+            sectionHeader(String(localized: "settings.context.title"),
+                          subtitle: String(localized: "settings.context.subtitle"),
                           icon: "brain.head.profile")
 
             // 현재 파악된 정보 요약
-            settingsCard("AI가 파악한 내 정보") {
+            settingsCard(String(localized: "settings.context.card.my.info")) {
                 VStack(alignment: .leading, spacing: 12) {
                     if userContextService.contextSummary.isEmpty {
                         HStack(spacing: 8) {
                             Image(systemName: "info.circle")
                                 .foregroundStyle(.secondary)
-                            Text("아직 대화를 충분히 나누지 않았어요.\nAI와 대화하면 자동으로 채워집니다.")
+                            Text(String(localized: "settings.context.empty.hint"))
                                 .font(.system(size: 12))
                                 .foregroundStyle(.secondary)
                         }
@@ -668,19 +668,18 @@ struct SettingsView: View {
                         Button {
                             openURL(URL(fileURLWithPath: userContextService.contextFilePath))
                         } label: {
-                            Label("파일 열기", systemImage: "doc.text")
+                            Label(String(localized: "settings.context.open.file"), systemImage: "doc.text")
                                 .font(.system(size: 11, weight: .medium))
                         }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
 
                         Button {
-                            // Finder에서 보기
                             #if os(macOS)
                             NSWorkspace.shared.selectFile(userContextService.contextFilePath, inFileViewerRootedAtPath: "")
                             #endif
                         } label: {
-                            Label("Finder에서 보기", systemImage: "folder")
+                            Label(String(localized: "settings.context.show.finder"), systemImage: "folder")
                                 .font(.system(size: 11, weight: .medium))
                         }
                         .buttonStyle(.bordered)
@@ -697,15 +696,13 @@ struct SettingsView: View {
             }
 
             // 외부 검색 지원 목록
-            settingsCard("지원하는 시험/자격증 자동 검색") {
+            settingsCard(String(localized: "settings.context.card.exams")) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("AI가 아래 키워드를 대화에서 감지하면 자동으로 외부 정보를 검색해 일정 추천에 활용합니다.")
+                    Text(String(localized: "settings.context.exams.hint"))
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
 
-                    let exams = ["정보처리기사 (정처기)", "TOEIC (토익)", "TOEFL (토플)",
-                                 "공무원 시험", "한국사능력검정", "SQLD", "정보보안기사",
-                                 "리눅스마스터", "수능", "AWS 자격증", "CPA", "세무사"]
+                    let exams = localizedExamList()
 
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 130))], spacing: 6) {
                         ForEach(exams, id: \.self) { exam in
@@ -725,24 +722,44 @@ struct SettingsView: View {
             }
 
             // 작동 방식 안내
-            settingsCard("작동 방식") {
+            settingsCard(String(localized: "settings.context.card.how")) {
                 VStack(alignment: .leading, spacing: 8) {
                     contextHowItWorksRow(icon: "message", color: .blue,
-                        title: "대화 분석",
-                        desc: "AI와 대화할 때마다 직업, 목표, 계획 스타일을 자동으로 파악합니다")
+                        title: String(localized: "settings.context.how.chat"),
+                        desc: String(localized: "settings.context.how.chat.desc"))
                     contextHowItWorksRow(icon: "magnifyingglass.circle", color: .orange,
-                        title: "외부 정보 검색",
-                        desc: "시험 준비 중이라면 일정, 과목, 합격 기준을 자동으로 검색해 캐싱합니다")
+                        title: String(localized: "settings.context.how.search"),
+                        desc: String(localized: "settings.context.how.search.desc"))
                     contextHowItWorksRow(icon: "brain", color: .purple,
-                        title: "초개인화 추천",
-                        desc: "파악된 정보를 바탕으로 일정 추천, 공부 계획, 시간 배분을 최적화합니다")
+                        title: String(localized: "settings.context.how.recommend"),
+                        desc: String(localized: "settings.context.how.recommend.desc"))
                     contextHowItWorksRow(icon: "checkmark.square", color: .green,
-                        title: "계획 스타일 학습",
-                        desc: "할일을 세부적으로 작성하는지 간략히 쓰는지 파악해 맞춤 제안을 드립니다")
+                        title: String(localized: "settings.context.how.style"),
+                        desc: String(localized: "settings.context.how.style.desc"))
                 }
             }
         }
         .padding(24)
+    }
+
+    /// 현재 로케일에 맞는 시험/자격증 목록 반환
+    private func localizedExamList() -> [String] {
+        let lang = Locale.current.language.languageCode?.identifier ?? "en"
+        switch lang {
+        case "ko":
+            return ["정보처리기사 (정처기)", "TOEIC (토익)", "TOEFL (토플)",
+                    "공무원 시험", "한국사능력검정", "SQLD", "정보보안기사",
+                    "리눅스마스터", "수능", "AWS 자격증", "CPA", "세무사"]
+        case "ja":
+            return ["基本情報技術者", "TOEIC", "TOEFL", "AWS 資格",
+                    "情報処理安全確保支援士", "日商簿記", "FP技能士", "IELTS", "英検", "PMP"]
+        case "zh":
+            return ["TOEIC", "TOEFL", "IELTS", "AWS 認證", "PMP",
+                    "CPA", "雅思", "托福", "GRE", "CFA"]
+        default:
+            return ["TOEIC", "TOEFL", "IELTS", "AWS Certification", "PMP",
+                    "GRE", "GMAT", "CPA", "CFA", "CompTIA A+", "Scrum Master", "PMP"]
+        }
     }
 
     private func contextHowItWorksRow(icon: String, color: Color, title: String, desc: String) -> some View {

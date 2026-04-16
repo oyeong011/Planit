@@ -397,3 +397,22 @@
 "review.help.tomorrow" = "Move to Tomorrow";
 "review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
+
+/* ===== AI Context Section ===== */
+"settings.context.title" = "Contexto de Hiperpersonalização de IA";
+"settings.context.subtitle" = "Visualize e gerencie o que a IA sabe sobre você";
+"settings.context.card.my.info" = "O que a IA sabe sobre mim";
+"settings.context.empty.hint" = "Ainda não há conversas suficientes.\nConverse com a IA e será preenchido automaticamente.";
+"settings.context.open.file" = "Abrir arquivo";
+"settings.context.show.finder" = "Mostrar no Finder";
+"settings.context.card.exams" = "Pesquisa automática de exames / certificações suportados";
+"settings.context.exams.hint" = "Quando a IA detecta as palavras-chave abaixo na conversa, pesquisa automaticamente informações externas para ajudar no agendamento.";
+"settings.context.card.how" = "Como funciona";
+"settings.context.how.chat" = "Análise de conversa";
+"settings.context.how.chat.desc" = "Aprende automaticamente seu trabalho, objetivos e estilo de planejamento de cada conversa com a IA";
+"settings.context.how.search" = "Pesquisa de informações externas";
+"settings.context.how.search.desc" = "Se você está se preparando para um exame, pesquisa automaticamente cronogramas, disciplinas e critérios de aprovação e os armazena em cache";
+"settings.context.how.recommend" = "Recomendações hiperpersonalizadas";
+"settings.context.how.recommend.desc" = "Usa as informações coletadas para otimizar sugestões de agenda, planos de estudo e alocação de tempo";
+"settings.context.how.style" = "Aprendizado do estilo de planejamento";
+"settings.context.how.style.desc" = "Aprende se você escreve tarefas detalhadas ou concisas para fazer sugestões personalizadas";

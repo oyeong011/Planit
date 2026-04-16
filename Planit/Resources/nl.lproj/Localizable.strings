@@ -397,3 +397,22 @@
 "review.help.tomorrow" = "Move to Tomorrow";
 "review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
+
+/* ===== AI Context Section ===== */
+"settings.context.title" = "AI Hyper-Personalisatie Context";
+"settings.context.subtitle" = "Bekijk en beheer wat AI over u weet";
+"settings.context.card.my.info" = "Wat AI over mij weet";
+"settings.context.empty.hint" = "Nog niet genoeg gesprekken.\nChat met AI en het wordt automatisch ingevuld.";
+"settings.context.open.file" = "Bestand openen";
+"settings.context.show.finder" = "Tonen in Finder";
+"settings.context.card.exams" = "Automatisch zoeken naar ondersteunde examens / certificeringen";
+"settings.context.exams.hint" = "Wanneer AI de onderstaande trefwoorden in een gesprek detecteert, zoekt het automatisch naar externe informatie om te helpen bij het plannen.";
+"settings.context.card.how" = "Hoe het werkt";
+"settings.context.how.chat" = "Gespreksanalyse";
+"settings.context.how.chat.desc" = "Leert automatisch uw baan, doelen en planningsstijl uit elk AI-gesprek";
+"settings.context.how.search" = "Zoeken naar externe informatie";
+"settings.context.how.search.desc" = "Als u zich voorbereidt op een examen, zoekt het automatisch naar planningen, vakken en slaagcriteria en slaat ze op in de cache";
+"settings.context.how.recommend" = "Hyper-gepersonaliseerde aanbevelingen";
+"settings.context.how.recommend.desc" = "Gebruikt verzamelde informatie om agendavoorstellen, studieplannen en tijdverdeling te optimaliseren";
+"settings.context.how.style" = "Planningsstijl leren";
+"settings.context.how.style.desc" = "Leert of u gedetailleerde of beknopte taken schrijft om op maat gemaakte suggesties te doen";

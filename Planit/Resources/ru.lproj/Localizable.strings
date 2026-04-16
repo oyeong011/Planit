@@ -397,3 +397,22 @@
 "review.help.tomorrow" = "Move to Tomorrow";
 "review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
+
+/* ===== AI Context Section ===== */
+"settings.context.title" = "Контекст гиперперсонализации ИИ";
+"settings.context.subtitle" = "Просматривайте и управляйте тем, что ИИ знает о вас";
+"settings.context.card.my.info" = "Что ИИ знает обо мне";
+"settings.context.empty.hint" = "Пока недостаточно разговоров.\nОбщайтесь с ИИ, и данные заполнятся автоматически.";
+"settings.context.open.file" = "Открыть файл";
+"settings.context.show.finder" = "Показать в Finder";
+"settings.context.card.exams" = "Автопоиск поддерживаемых экзаменов / сертификатов";
+"settings.context.exams.hint" = "Когда ИИ обнаруживает ключевые слова ниже в разговоре, он автоматически ищет внешнюю информацию для помощи в планировании.";
+"settings.context.card.how" = "Как это работает";
+"settings.context.how.chat" = "Анализ разговора";
+"settings.context.how.chat.desc" = "Автоматически изучает вашу работу, цели и стиль планирования из каждого разговора с ИИ";
+"settings.context.how.search" = "Поиск внешней информации";
+"settings.context.how.search.desc" = "Если вы готовитесь к экзамену, автоматически ищет расписания, предметы и критерии сдачи и кэширует их";
+"settings.context.how.recommend" = "Гиперперсонализированные рекомендации";
+"settings.context.how.recommend.desc" = "Использует собранную информацию для оптимизации предложений по расписанию, планов обучения и распределения времени";
+"settings.context.how.style" = "Изучение стиля планирования";
+"settings.context.how.style.desc" = "Изучает, пишете ли вы подробные или краткие задачи, чтобы давать индивидуальные предложения";

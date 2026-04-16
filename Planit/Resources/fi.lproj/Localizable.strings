@@ -397,3 +397,22 @@
 "review.help.tomorrow" = "Move to Tomorrow";
 "review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
+
+/* ===== AI Context Section ===== */
+"settings.context.title" = "AI Hyper-Personointiympäristö";
+"settings.context.subtitle" = "Katso ja hallinnoi mitä AI tietää sinusta";
+"settings.context.card.my.info" = "Mitä AI tietää minusta";
+"settings.context.empty.hint" = "Ei vielä tarpeeksi keskusteluja.\nChattaa AI:n kanssa ja se täyttyy automaattisesti.";
+"settings.context.open.file" = "Avaa tiedosto";
+"settings.context.show.finder" = "Näytä Finderissa";
+"settings.context.card.exams" = "Tuettujen kokeiden / sertifiointien automaattihaku";
+"settings.context.exams.hint" = "Kun AI havaitsee alla olevat avainsanat keskustelussa, se hakee automaattisesti ulkoista tietoa aikataulutuksen avuksi.";
+"settings.context.card.how" = "Miten se toimii";
+"settings.context.how.chat" = "Keskusteluanalyysi";
+"settings.context.how.chat.desc" = "Oppii automaattisesti ammattisi, tavoitteesi ja suunnittelutyylisi jokaisesta AI-keskustelusta";
+"settings.context.how.search" = "Ulkoisen tiedon haku";
+"settings.context.how.search.desc" = "Jos valmistaudut kokeeseen, se hakee automaattisesti aikataulut, aiheet ja läpäisykriteerit ja tallentaa ne välimuistiin";
+"settings.context.how.recommend" = "Hyper-personoidut suositukset";
+"settings.context.how.recommend.desc" = "Käyttää kerättyä tietoa aikatauluehdotusten, opiskelusuunnitelmien ja ajankäytön optimointiin";
+"settings.context.how.style" = "Suunnittelutyylioppi";
+"settings.context.how.style.desc" = "Oppii kirjoitatko yksityiskohtaisia vai ytimekkäitä tehtäviä räätälöityjen ehdotusten tekemiseksi";

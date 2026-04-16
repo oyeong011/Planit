@@ -397,3 +397,22 @@
 "review.help.tomorrow" = "Move to Tomorrow";
 "review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
+
+/* ===== AI Context Section ===== */
+"settings.context.title" = "AI Hiper-Kişiselleştirme Bağlamı";
+"settings.context.subtitle" = "AI'ın sizin hakkınızda bildiklerini görüntüleyin ve yönetin";
+"settings.context.card.my.info" = "AI'ın Benim Hakkımda Bildikleri";
+"settings.context.empty.hint" = "Henüz yeterli konuşma yok.\nAI ile sohbet edin ve otomatik olarak dolacaktır.";
+"settings.context.open.file" = "Dosyayı Aç";
+"settings.context.show.finder" = "Finder'da Göster";
+"settings.context.card.exams" = "Desteklenen Sınavlar / Sertifikalar Otomatik Arama";
+"settings.context.exams.hint" = "AI, konuşmada aşağıdaki anahtar kelimeleri tespit ettiğinde, zamanlama konusunda yardımcı olmak için harici bilgileri otomatik olarak arar.";
+"settings.context.card.how" = "Nasıl Çalışır";
+"settings.context.how.chat" = "Konuşma Analizi";
+"settings.context.how.chat.desc" = "Her AI konuşmasından mesleğinizi, hedeflerinizi ve planlama stilinizi otomatik olarak öğrenir";
+"settings.context.how.search" = "Harici Bilgi Araması";
+"settings.context.how.search.desc" = "Bir sınava hazırlanıyorsanız, takvimleri, konuları ve geçme kriterlerini otomatik olarak arar ve önbelleğe alır";
+"settings.context.how.recommend" = "Hiper-Kişiselleştirilmiş Öneriler";
+"settings.context.how.recommend.desc" = "Program önerileri, çalışma planları ve zaman tahsisini optimize etmek için toplanan bilgileri kullanır";
+"settings.context.how.style" = "Planlama Stili Öğrenimi";
+"settings.context.how.style.desc" = "Özel öneriler sunmak için ayrıntılı mı yoksa özlü görevler mi yazdığınızı öğrenir";

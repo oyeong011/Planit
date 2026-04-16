@@ -397,3 +397,22 @@
 "review.help.tomorrow" = "Move to Tomorrow";
 "review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
+
+/* ===== AI Context Section ===== */
+"settings.context.title" = "AI Hiper-Személyre Szabási Kontextus";
+"settings.context.subtitle" = "Tekintse meg és kezelje, amit az AI tud önről";
+"settings.context.card.my.info" = "Amit az AI tud rólam";
+"settings.context.empty.hint" = "Még nem volt elég beszélgetés.\nCsetelj az AI-jal, és automatikusan kitöltődik.";
+"settings.context.open.file" = "Fájl megnyitása";
+"settings.context.show.finder" = "Megjelenítés a Finderben";
+"settings.context.card.exams" = "Támogatott vizsgák / minősítések automatikus keresése";
+"settings.context.exams.hint" = "Amikor az AI a következő kulcsszavakat érzékeli a beszélgetésben, automatikusan keres külső információkat az ütemezés segítéséhez.";
+"settings.context.card.how" = "Hogyan működik";
+"settings.context.how.chat" = "Beszélgetéselemzés";
+"settings.context.how.chat.desc" = "Automatikusan tanulja meg munkáját, céljait és tervezési stílusát minden AI-beszélgetésből";
+"settings.context.how.search" = "Külső információ keresése";
+"settings.context.how.search.desc" = "Ha vizsgára készül, automatikusan keresi az ütemterveket, tantárgyakat és a teljesítési feltételeket, és gyorsítótárazza azokat";
+"settings.context.how.recommend" = "Hiper-személyre Szabott Ajánlások";
+"settings.context.how.recommend.desc" = "Az összegyűjtött információkat felhasználva optimalizálja a menetrend-javaslatokat, tanulási terveket és az időbeosztást";
+"settings.context.how.style" = "Tervezési stílus tanulása";
+"settings.context.how.style.desc" = "Megtanulja, hogy részletes vagy tömör feladatokat ír-e, hogy személyre szabott javaslatokat tegyen";

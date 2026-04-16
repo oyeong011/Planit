@@ -397,3 +397,22 @@
 "review.help.tomorrow" = "Move to Tomorrow";
 "review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
+
+/* ===== AI Context Section ===== */
+"settings.context.title" = "AI Hyper-Personaliseringskontext";
+"settings.context.subtitle" = "Visa och hantera vad AI vet om dig";
+"settings.context.card.my.info" = "Vad AI vet om mig";
+"settings.context.empty.hint" = "Inte tillräckligt med konversationer ännu.\nChatta med AI och det fylls i automatiskt.";
+"settings.context.open.file" = "Öppna fil";
+"settings.context.show.finder" = "Visa i Finder";
+"settings.context.card.exams" = "Automatisk sökning efter stödda prov / certifieringar";
+"settings.context.exams.hint" = "När AI upptäcker nyckelorden nedan i konversationen söker den automatiskt efter extern information för att hjälpa till med schemaläggning.";
+"settings.context.card.how" = "Hur det fungerar";
+"settings.context.how.chat" = "Konversationsanalys";
+"settings.context.how.chat.desc" = "Lär sig automatiskt ditt jobb, mål och planeringsstil från varje AI-konversation";
+"settings.context.how.search" = "Sökning av extern information";
+"settings.context.how.search.desc" = "Om du förbereder dig för ett prov söker det automatiskt efter scheman, ämnen och godkännandekriterier och cachar dem";
+"settings.context.how.recommend" = "Hyper-personaliserade rekommendationer";
+"settings.context.how.recommend.desc" = "Använder insamlad information för att optimera schemaförslag, studieplaner och tidsallokering";
+"settings.context.how.style" = "Inlärning av planeringsstil";
+"settings.context.how.style.desc" = "Lär sig om du skriver detaljerade eller kortfattade uppgifter för att ge skräddarsydda förslag";

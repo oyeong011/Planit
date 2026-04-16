@@ -397,3 +397,22 @@
 "review.help.tomorrow" = "Move to Tomorrow";
 "review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
+
+/* ===== AI Context Section ===== */
+"settings.context.title" = "AI हाइपर-व्यक्तिगतकरण संदर्भ";
+"settings.context.subtitle" = "AI आपके बारे में क्या जानता है, यह देखें और प्रबंधित करें";
+"settings.context.card.my.info" = "AI मेरे बारे में क्या जानता है";
+"settings.context.empty.hint" = "अभी पर्याप्त बातचीत नहीं हुई है।\nAI से बात करें और यह अपने आप भर जाएगा।";
+"settings.context.open.file" = "फ़ाइल खोलें";
+"settings.context.show.finder" = "Finder में दिखाएं";
+"settings.context.card.exams" = "समर्थित परीक्षाएं / प्रमाणपत्र ऑटो-खोज";
+"settings.context.exams.hint" = "जब AI बातचीत में नीचे दिए गए कीवर्ड्स का पता लगाता है, तो यह शेड्यूलिंग में मदद के लिए स्वचालित रूप से बाहरी जानकारी खोजता है।";
+"settings.context.card.how" = "यह कैसे काम करता है";
+"settings.context.how.chat" = "बातचीत विश्लेषण";
+"settings.context.how.chat.desc" = "हर AI बातचीत से आपकी नौकरी, लक्ष्य और योजना शैली स्वचालित रूप से सीखता है";
+"settings.context.how.search" = "बाहरी जानकारी खोज";
+"settings.context.how.search.desc" = "यदि आप किसी परीक्षा की तैयारी कर रहे हैं, तो यह स्वचालित रूप से कार्यक्रम, विषय और उत्तीर्ण मानदंड खोजता है और उन्हें कैश करता है";
+"settings.context.how.recommend" = "हाइपर-व्यक्तिगत सिफारिशें";
+"settings.context.how.recommend.desc" = "शेड्यूल सुझाव, अध्ययन योजनाएं और समय आवंटन को अनुकूलित करने के लिए एकत्रित जानकारी का उपयोग करता है";
+"settings.context.how.style" = "योजना शैली सीखना";
+"settings.context.how.style.desc" = "यह सीखता है कि आप विस्तृत या संक्षिप्त कार्य लिखते हैं ताकि अनुरूप सुझाव दिए जा सकें";

@@ -397,3 +397,22 @@
 "review.help.tomorrow" = "Move to Tomorrow";
 "review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
+
+/* ===== AI Context Section ===== */
+"settings.context.title" = "Контекст гіперперсоналізації ШІ";
+"settings.context.subtitle" = "Переглядайте та керуйте тим, що ШІ знає про вас";
+"settings.context.card.my.info" = "Що ШІ знає про мене";
+"settings.context.empty.hint" = "Поки недостатньо розмов.\nСпілкуйтеся зі ШІ, і дані заповняться автоматично.";
+"settings.context.open.file" = "Відкрити файл";
+"settings.context.show.finder" = "Показати у Finder";
+"settings.context.card.exams" = "Автопошук підтримуваних іспитів / сертифікатів";
+"settings.context.exams.hint" = "Коли ШІ виявляє ключові слова нижче в розмові, він автоматично шукає зовнішню інформацію для допомоги у плануванні.";
+"settings.context.card.how" = "Як це працює";
+"settings.context.how.chat" = "Аналіз розмови";
+"settings.context.how.chat.desc" = "Автоматично вивчає вашу роботу, цілі та стиль планування з кожної розмови зі ШІ";
+"settings.context.how.search" = "Пошук зовнішньої інформації";
+"settings.context.how.search.desc" = "Якщо ви готуєтеся до іспиту, автоматично шукає розклади, предмети та критерії складання і кешує їх";
+"settings.context.how.recommend" = "Гіперперсоналізовані рекомендації";
+"settings.context.how.recommend.desc" = "Використовує зібрану інформацію для оптимізації пропозицій щодо розкладу, навчальних планів та розподілу часу";
+"settings.context.how.style" = "Вивчення стилю планування";
+"settings.context.how.style.desc" = "Вивчає, чи пишете ви докладні або короткі завдання, щоб давати індивідуальні пропозиції";
