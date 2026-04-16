@@ -177,7 +177,7 @@ final class GoogleAuthManager: ObservableObject {
         do {
             serverFd = try createLoopbackSocket()
             let port = try getSocketPort(serverFd)
-            let redirectURI = "http://localhost:\(port)"
+            let redirectURI = "http://127.0.0.1:\(port)"
 
             let state = UUID().uuidString
             let codeVerifier = Self.generateCodeVerifier()

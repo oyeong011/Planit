@@ -93,7 +93,7 @@
 "chat.redetect" = "重新检测";
 "chat.select.other.ai" = "选择其他AI";
 "chat.assistant.title" = "日历AI助手";
-"chat.examples" = ""明天下午3点添加会议"\n"显示本周日程"\n"删除考试日程"";
+"chat.examples" = "\'明天下午3点添加会议\'\n\'显示本周日程\'\n\'删除考试日程\'";
 "chat.thinking" = "思考中...";
 "chat.input.placeholder" = "输入消息...";
 "chat.action.confirm.title" = "确认日程更改";
@@ -127,7 +127,7 @@
 "ai.no.response" = "未收到响应。";
 "ai.claude.not.found" = "未安装Claude Code。请检查/opt/homebrew/bin或~/.local/bin中是否存在claude。";
 "ai.codex.not.found" = "未安装Codex CLI。请检查/opt/homebrew/bin或~/.local/bin中是否存在codex。";
-"ai.pending.confirm" = "⚠️ 是否执行以下操作？\n%@\n\n输入"确认"或"执行"以继续。";
+"ai.pending.confirm" = "⚠️ 是否执行以下操作？\n%@\n\n输入\'确认\'或\'执行\'以继续。";
 
 /* ===== Notifications ===== */
 "notification.daily.title" = "今日日程";

@@ -127,7 +127,7 @@
 "ai.no.response" = "Keine Antwort erhalten.";
 "ai.claude.not.found" = "Claude Code ist nicht installiert. Prüfe, ob claude in /opt/homebrew/bin oder ~/.local/bin vorhanden ist.";
 "ai.codex.not.found" = "Codex CLI ist nicht installiert. Prüfe, ob codex in /opt/homebrew/bin oder ~/.local/bin vorhanden ist.";
-"ai.pending.confirm" = "⚠️ Folgende Aktionen ausführen?\n%@\n\nGib „bestätigen" oder „ausführen" ein, um fortzufahren.";
+"ai.pending.confirm" = "⚠️ Folgende Aktionen ausführen?\n%@\n\nGib \'bestätigen\' oder \'ausführen\' ein, um fortzufahren.";
 
 /* ===== Notifications ===== */
 "notification.daily.title" = "Heutiger Terminplan";
