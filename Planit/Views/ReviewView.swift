@@ -207,40 +207,15 @@ struct ReviewView: View {
                             .animation(.easeInOut(duration: 0.4), value: rate)
                     }
 
-                    // 그라데이션 바 — 전체 스펙트럼(빨→노→연두)을 배경에 깔고
-                    // 흰 마스크로 미완성 영역을 덮어 "서서히 변하는" 색감 표현
+                    // 단색 진행 바 — 진행률에 따라 색이 빨강→노랑→연두로 변함
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {
-                            // 전체 스펙트럼 배경 (항상 빨→노→연두 그라데이션)
+                            // 배경 트랙
                             RoundedRectangle(cornerRadius: 6)
-                                .fill(
-                                    LinearGradient(
-                                        stops: [
-                                            .init(color: progressColor(for: 0.0),  location: 0.0),
-                                            .init(color: progressColor(for: 0.25), location: 0.25),
-                                            .init(color: progressColor(for: 0.5),  location: 0.5),
-                                            .init(color: progressColor(for: 0.75), location: 0.75),
-                                            .init(color: progressColor(for: 1.0),  location: 1.0),
-                                        ],
-                                        startPoint: .leading, endPoint: .trailing
-                                    )
-                                )
-                                .opacity(0.22)  // 미완성 영역: 흐릿하게
-
-                            // 완성된 영역 — 동일 그라데이션이지만 진하게
+                                .fill(Color.secondary.opacity(0.12))
+                            // 진행된 영역 — 단색 (rate에 따라 색 자체가 변함)
                             RoundedRectangle(cornerRadius: 6)
-                                .fill(
-                                    LinearGradient(
-                                        stops: [
-                                            .init(color: progressColor(for: 0.0),  location: 0.0),
-                                            .init(color: progressColor(for: 0.25), location: 0.25),
-                                            .init(color: progressColor(for: 0.5),  location: 0.5),
-                                            .init(color: progressColor(for: 0.75), location: 0.75),
-                                            .init(color: progressColor(for: 1.0),  location: 1.0),
-                                        ],
-                                        startPoint: .leading, endPoint: .trailing
-                                    )
-                                )
+                                .fill(barColor)
                                 .frame(width: max(geo.size.width * CGFloat(rate), rate > 0 ? 8 : 0))
                                 .animation(.spring(duration: 0.5), value: rate)
                         }
