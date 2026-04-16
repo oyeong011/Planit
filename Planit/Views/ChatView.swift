@@ -5,48 +5,68 @@ import PDFKit
 struct ChatView: View {
     @ObservedObject var aiService: AIService
     @ObservedObject var viewModel: CalendarViewModel
-    @Binding var pendingPasteImage: NSImage?
-    @Binding var pendingPasteURLs: [URL]
     @State private var messages: [ChatMessage] = []
     @State private var inputText: String = ""
     @State private var attachments: [ChatAttachment] = []
-    @State private var isDragOver: Bool = false
 
     /// 허용하는 파일 타입
-    private static let allowedTypes: [UTType] = [.image, .png, .jpeg, .gif, .webP, .tiff, .bmp, .pdf]
+    private static let allowedTypes: [UTType] = [.pdf]
     private static let maxAttachments = 5
     private static let maxFileSize: Int = 20_971_520  // 20MB
 
     var body: some View {
         VStack(spacing: 0) {
             // Header
-            HStack {
+            HStack(spacing: 8) {
                 Image(systemName: "sparkles")
-                    .font(.system(size: 14))
+                    .font(.system(size: 13))
                     .foregroundStyle(.purple)
                 Text("AI")
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.system(size: 13, weight: .bold))
 
-                // Provider picker
-                Picker("", selection: $aiService.provider) {
+                // Provider 세그먼트 칩
+                HStack(spacing: 2) {
                     ForEach(AIProvider.allCases, id: \.self) { p in
-                        HStack(spacing: 4) {
-                            Image(systemName: p.icon)
-                            Text(p.rawValue)
+                        let isSelected = aiService.provider == p
+                        Button {
+                            aiService.provider = p
+                            aiService.saveSettings()
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: p.icon).font(.system(size: 10))
+                                Text(p.rawValue.components(separatedBy: " ").first ?? p.rawValue)
+                                    .font(.system(size: 11, weight: isSelected ? .semibold : .regular))
+                            }
+                            .padding(.horizontal, 8).padding(.vertical, 4)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(isSelected ? Color.purple.opacity(0.18) : Color.clear)
+                            )
+                            .foregroundStyle(isSelected ? Color.purple : Color.secondary)
                         }
-                        .tag(p)
+                        .buttonStyle(.plain)
                     }
                 }
-                .pickerStyle(.menu)
-                .labelsHidden()
-                .frame(width: 100)
-                .font(.system(size: 11))
-                .onChange(of: aiService.provider) { _ in aiService.saveSettings() }
+                .padding(2)
+                .background(RoundedRectangle(cornerRadius: 8).fill(Color.platformControlBackground))
 
                 Spacer()
+
+                // 채팅 지우기 버튼
+                if !messages.isEmpty {
+                    Button {
+                        messages = []
+                    } label: {
+                        Image(systemName: "trash")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .help("채팅 기록 지우기")
+                }
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 10)
+            .padding(.vertical, 8)
 
             Divider()
 
@@ -56,77 +76,250 @@ struct ChatView: View {
                 chatContent
             }
         }
-        .background(Color(nsColor: .windowBackgroundColor))
-        .onChange(of: pendingPasteImage) { image in
-            guard let image else { return }
-            pasteImageFromClipboard(image)
-            pendingPasteImage = nil
-        }
-        .onChange(of: pendingPasteURLs) { urls in
-            guard !urls.isEmpty else { return }
-            for url in urls { addAttachment(url: url) }
-            pendingPasteURLs = []
+        .background(Color.platformWindowBackground)
+    }
+
+    // MARK: - Setup Guide (CLI 미설치 시)
+
+    private var unconfiguredView: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                // 헤더
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "wand.and.stars")
+                            .foregroundStyle(.purple)
+                        Text(String(localized: "setup.title"))
+                            .font(.system(size: 14, weight: .bold))
+                    }
+                    Text(String(localized: "setup.subtitle"))
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.top, 4)
+
+                Divider()
+
+                // Step 1 — AI 설치
+                setupStep(
+                    number: 1,
+                    icon: "terminal.fill",
+                    color: .purple,
+                    title: String(localized: "setup.step1.title"),
+                    done: aiService.claudeAvailable || aiService.codexAvailable
+                ) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        // Claude Code
+                        installOption(
+                            name: "Claude Code",
+                            description: String(localized: "setup.claude.desc"),
+                            commands: ["npm install -g @anthropic-ai/claude-code", "claude --version"],
+                            isInstalled: aiService.claudeAvailable,
+                            badgeColor: .purple
+                        )
+
+                        // Codex
+                        installOption(
+                            name: "Codex",
+                            description: String(localized: "setup.codex.desc"),
+                            commands: ["npm install -g @openai/codex", "codex --version"],
+                            isInstalled: aiService.codexAvailable,
+                            badgeColor: .green
+                        )
+
+                        // 재감지 버튼
+                        Button {
+                            aiService.recheckCLI()
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "arrow.clockwise")
+                                    .font(.system(size: 10))
+                                Text(String(localized: "chat.redetect"))
+                                    .font(.system(size: 11, weight: .medium))
+                            }
+                            .foregroundStyle(.purple)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(RoundedRectangle(cornerRadius: 6).stroke(Color.purple.opacity(0.4)))
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.top, 2)
+                    }
+                }
+
+                // Step 2 — Google Calendar 연결
+                setupStep(
+                    number: 2,
+                    icon: "calendar.badge.checkmark",
+                    color: .blue,
+                    title: String(localized: "setup.step2.title"),
+                    done: viewModel.authManager.isAuthenticated
+                ) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        if viewModel.authManager.isAuthenticated {
+                            HStack(spacing: 6) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundStyle(.green)
+                                Text(viewModel.authManager.userEmail ?? String(localized: "setup.google.connected"))
+                                    .font(.system(size: 11))
+                            }
+                        } else {
+                            Text(String(localized: "setup.google.desc"))
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+
+                            Button {
+                                Task { await viewModel.authManager.startOAuthFlow() }
+                            } label: {
+                                HStack(spacing: 5) {
+                                    Image(systemName: "person.badge.plus")
+                                        .font(.system(size: 11))
+                                    Text(String(localized: "setup.google.connect.button"))
+                                        .font(.system(size: 11, weight: .semibold))
+                                }
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 6)
+                                .background(RoundedRectangle(cornerRadius: 7).fill(.blue))
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+
+                            Text(String(localized: "setup.google.skip.hint"))
+                                .font(.system(size: 10))
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                }
+
+                // 완료 상태
+                if (aiService.claudeAvailable || aiService.codexAvailable) && viewModel.authManager.isAuthenticated {
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                        Text(String(localized: "setup.complete"))
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(.green)
+                    }
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(RoundedRectangle(cornerRadius: 8).fill(Color.green.opacity(0.06)))
+                }
+            }
+            .padding(12)
         }
     }
 
-    // MARK: - Unconfigured
-
-    private var unconfiguredView: some View {
-        VStack(spacing: 12) {
-            Spacer()
-
-            switch aiService.provider {
-            case .claude:
-                Image(systemName: "terminal")
-                    .font(.system(size: 28))
-                    .foregroundStyle(.secondary)
-                Text(String(localized: "chat.claude.not.installed"))
-                    .font(.system(size: 13, weight: .medium))
-                Text(String(localized: "chat.claude.install.hint"))
-                    .font(.system(size: 10))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .textSelection(.enabled)
-
-            case .codex:
-                Image(systemName: "terminal")
-                    .font(.system(size: 28))
-                    .foregroundStyle(.secondary)
-                Text(String(localized: "chat.codex.not.installed"))
-                    .font(.system(size: 13, weight: .medium))
-                Text(String(localized: "chat.codex.install.hint"))
-                    .font(.system(size: 10))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .textSelection(.enabled)
-            }
-
-            HStack(spacing: 12) {
-                Button {
-                    aiService.recheckCLI()
-                } label: {
-                    Text(String(localized: "chat.redetect"))
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.blue)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-
-                Picker(String(localized: "chat.select.other.ai"), selection: $aiService.provider) {
-                    ForEach(AIProvider.allCases, id: \.self) { p in
-                        Text(p.rawValue).tag(p)
+    private func setupStep(
+        number: Int,
+        icon: String,
+        color: Color,
+        title: String,
+        done: Bool,
+        @ViewBuilder content: () -> some View
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                ZStack {
+                    Circle()
+                        .fill(done ? Color.green : color.opacity(0.15))
+                        .frame(width: 24, height: 24)
+                    if done {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.white)
+                    } else {
+                        Text("\(number)")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(color)
                     }
                 }
-                .labelsHidden()
-                .frame(width: 90)
-                .font(.system(size: 11))
+                Text(title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(done ? .secondary : .primary)
+                if done {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.green)
+                }
             }
 
-            Spacer()
+            if !done {
+                content()
+                    .padding(.leading, 32)
+            }
         }
-        .frame(maxWidth: .infinity)
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(done ? Color.green.opacity(0.04) : Color.platformControlBackground)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(done ? Color.green.opacity(0.2) : Color.clear, lineWidth: 1)
+        )
+    }
+
+    private func installOption(
+        name: String,
+        description: String,
+        commands: [String],
+        isInstalled: Bool,
+        badgeColor: Color
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            HStack(spacing: 6) {
+                Text(name)
+                    .font(.system(size: 11, weight: .semibold))
+                if isInstalled {
+                    Text(String(localized: "setup.installed"))
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(badgeColor)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 1)
+                        .background(Capsule().fill(badgeColor.opacity(0.12)))
+                }
+            }
+            Text(description)
+                .font(.system(size: 10))
+                .foregroundStyle(.secondary)
+
+            if !isInstalled {
+                ForEach(commands, id: \.self) { cmd in
+                    HStack(spacing: 6) {
+                        Text(cmd)
+                            .font(.system(size: 10, design: .monospaced))
+                            .foregroundStyle(.primary)
+                            .textSelection(.enabled)
+                            .lineLimit(1)
+                        Spacer(minLength: 0)
+                        Button {
+                            #if os(macOS)
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(cmd, forType: .string)
+                            #else
+                            UIPasteboard.general.string = cmd
+                            #endif
+                        } label: {
+                            Image(systemName: "doc.on.doc")
+                                .font(.system(size: 10))
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .help(String(localized: "setup.copy.command"))
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(RoundedRectangle(cornerRadius: 5).fill(Color.secondary.opacity(0.08)))
+                }
+            }
+        }
+        .padding(8)
+        .background(
+            RoundedRectangle(cornerRadius: 7)
+                .fill(isInstalled ? badgeColor.opacity(0.05) : Color.clear)
+        )
     }
 
     // MARK: - Chat Content
@@ -137,17 +330,7 @@ struct ChatView: View {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 8) {
                         if messages.isEmpty {
-                            VStack(spacing: 8) {
-                                Text(String(localized: "chat.assistant.title"))
-                                    .font(.system(size: 12, weight: .semibold))
-                                    .foregroundStyle(.secondary)
-                                Text(String(localized: "chat.examples"))
-                                    .font(.system(size: 11))
-                                    .foregroundStyle(.tertiary)
-                                    .multilineTextAlignment(.center)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.top, 40)
+                            emptyStateView
                         }
 
                         ForEach(messages) { msg in
@@ -176,7 +359,7 @@ struct ChatView: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 8)
                 }
-                .onChange(of: messages.count) { _ in
+                .onChange(of: messages.count) {
                     if let lastId = messages.last?.id {
                         withAnimation { proxy.scrollTo(lastId, anchor: .bottom) }
                     }
@@ -192,16 +375,16 @@ struct ChatView: View {
 
             // Input
             HStack(spacing: 6) {
-                // 첨부 버튼
+                // PDF 첨부 버튼
                 Button { openFilePicker() } label: {
-                    Image(systemName: "paperclip")
+                    Image(systemName: "doc.fill")
                         .font(.system(size: 14))
                         .foregroundStyle(.secondary)
                         .frame(width: 28, height: 28)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .help(String(localized: "chat.attach.hint"))
+                .help(String(localized: "chat.attach.pdf.hint"))
 
                 PasteAwareTextField(
                     text: $inputText,
@@ -223,26 +406,91 @@ struct ChatView: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
         }
-        .onAppear {
-            // 앱 시작 시 이전 세션의 paste 임시 파일 정리
-            let tmpPasteDir = FileManager.default.temporaryDirectory.appendingPathComponent("calen-paste")
-            try? FileManager.default.removeItem(at: tmpPasteDir)
-        }
-        .onDrop(of: [.fileURL], isTargeted: $isDragOver) { providers in
-            handleDrop(providers)
-        }
-        .overlay {
-            if isDragOver {
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.purple, style: StrokeStyle(lineWidth: 2, dash: [6]))
-                    .background(Color.purple.opacity(0.05))
-                    .allowsHitTesting(false)
-            }
-        }
     }
 
     private var canSend: Bool {
         (!inputText.isEmpty || !attachments.isEmpty) && !aiService.isLoading
+    }
+
+    // MARK: - Empty State
+
+    private var emptyStateView: some View {
+        VStack(spacing: 16) {
+            Spacer().frame(height: 20)
+
+            VStack(spacing: 4) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 24))
+                    .foregroundStyle(.purple)
+                Text(String(localized: "chat.assistant.title"))
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.primary)
+                Text(String(localized: "chat.empty.subtitle"))
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            VStack(spacing: 6) {
+                ForEach(quickActions, id: \.self) { action in
+                    Button {
+                        inputText = action
+                        sendMessage()
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: quickActionIcon(action))
+                                .font(.system(size: 10))
+                                .foregroundStyle(.purple)
+                                .frame(width: 14)
+                            Text(action)
+                                .font(.system(size: 11))
+                                .foregroundStyle(.primary)
+                                .lineLimit(1)
+                            Spacer()
+                            Image(systemName: "arrow.up.right")
+                                .font(.system(size: 9))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color.platformControlBackground)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.purple.opacity(0.15), lineWidth: 1)
+                        )
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 4)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 12)
+    }
+
+    private var quickActions: [String] {
+        [
+            String(localized: "chat.quick.today"),
+            String(localized: "chat.quick.add.meeting"),
+            String(localized: "chat.quick.free.time"),
+            String(localized: "chat.quick.tomorrow.plan"),
+        ]
+    }
+
+    private func quickActionIcon(_ action: String) -> String {
+        let today = String(localized: "chat.quick.today")
+        let meeting = String(localized: "chat.quick.add.meeting")
+        let free = String(localized: "chat.quick.free.time")
+        switch action {
+        case today:   return "calendar"
+        case meeting: return "plus.circle"
+        case free:    return "clock"
+        default:      return "wand.and.stars"
+        }
     }
 
     // MARK: - Attachment Preview Strip
@@ -254,7 +502,7 @@ struct ChatView: View {
                     ZStack(alignment: .topTrailing) {
                         VStack(spacing: 2) {
                             if let thumb = att.thumbnail {
-                                Image(nsImage: thumb)
+                                Image(decorative: thumb, scale: 1)
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
                                     .frame(width: 44, height: 44)
@@ -296,6 +544,7 @@ struct ChatView: View {
     // MARK: - File Picker
 
     private func openFilePicker() {
+        #if os(macOS)
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = false
@@ -307,21 +556,8 @@ struct ChatView: View {
         for url in panel.urls {
             addAttachment(url: url)
         }
-    }
-
-    // MARK: - Drag & Drop
-
-    private func handleDrop(_ providers: [NSItemProvider]) -> Bool {
-        for provider in providers {
-            provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { data, _ in
-                guard let data = data as? Data,
-                      let url = URL(dataRepresentation: data, relativeTo: nil) else { return }
-                DispatchQueue.main.async {
-                    addAttachment(url: url)
-                }
-            }
-        }
-        return true
+        #endif
+        // iOS: PhotosPicker / UIDocumentPickerViewController (향후 구현)
     }
 
     private func addAttachment(url: URL) {
@@ -341,51 +577,42 @@ struct ChatView: View {
         attachments.append(ChatAttachment(url: url))
     }
 
-    // MARK: - Clipboard Paste
-
-    private func pasteImageFromClipboard(_ image: NSImage) {
-        guard attachments.count < Self.maxAttachments else { return }
-
-        // 클립보드 이미지를 임시 파일로 저장
-        let tmpDir = FileManager.default.temporaryDirectory.appendingPathComponent("calen-paste", isDirectory: true)
-        try? FileManager.default.createDirectory(at: tmpDir, withIntermediateDirectories: true)
-        let fileName = "paste-\(UUID().uuidString.prefix(8)).png"
-        let fileURL = tmpDir.appendingPathComponent(fileName)
-
-        guard let tiff = image.tiffRepresentation,
-              let rep = NSBitmapImageRep(data: tiff),
-              let pngData = rep.representation(using: .png, properties: [:]) else { return }
-
-        guard pngData.count <= Self.maxFileSize else { return }
-
-        do {
-            try pngData.write(to: fileURL, options: .atomic)
-            attachments.append(ChatAttachment(url: fileURL))
-        } catch {}
-    }
-
-
     // MARK: - Action Approval Card
 
     private var actionApprovalCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 4) {
-                Image(systemName: "exclamationmark.shield.fill")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.orange)
+        let hasDelete = aiService.pendingActions.contains { $0.action == "delete" }
+        let accentColor: Color = hasDelete ? .red : .orange
+
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: hasDelete ? "trash.fill" : "pencil.circle.fill")
+                    .font(.system(size: 12))
+                    .foregroundStyle(accentColor)
                 Text(String(localized: "chat.action.confirm.title"))
                     .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(accentColor)
+                Spacer()
+                Text("\(aiService.pendingActions.count)")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(accentColor)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Capsule().fill(accentColor.opacity(0.12)))
             }
 
             ForEach(Array(aiService.pendingActions.enumerated()), id: \.offset) { _, action in
-                HStack(spacing: 6) {
-                    Image(systemName: action.action == "create" ? "plus.circle.fill" :
-                            action.action == "update" ? "pencil.circle.fill" : "trash.circle.fill")
-                        .font(.system(size: 10))
-                        .foregroundStyle(action.action == "delete" ? .red : .blue)
-                    Text("\(actionLabel(action.action)): \(action.title ?? "?")")
-                        .font(.system(size: 10))
-                        .lineLimit(1)
+                HStack(spacing: 8) {
+                    Image(systemName: action.action == "update" ? "pencil.circle.fill" : "trash.circle.fill")
+                        .font(.system(size: 13))
+                        .foregroundStyle(action.action == "delete" ? .red : .orange)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(action.title ?? "?")
+                            .font(.system(size: 11, weight: .medium))
+                            .lineLimit(1)
+                        Text(actionLabel(action.action))
+                            .font(.system(size: 9))
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
 
@@ -397,7 +624,7 @@ struct ChatView: View {
                         viewModel.refreshEvents()
                     }
                 } label: {
-                    HStack(spacing: 3) {
+                    HStack(spacing: 4) {
                         Image(systemName: "checkmark")
                             .font(.system(size: 9, weight: .bold))
                         Text(String(localized: "common.execute"))
@@ -406,7 +633,7 @@ struct ChatView: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 5)
-                    .background(RoundedRectangle(cornerRadius: 5).fill(.purple))
+                    .background(RoundedRectangle(cornerRadius: 6).fill(accentColor))
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -420,7 +647,7 @@ struct ChatView: View {
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
-                        .background(RoundedRectangle(cornerRadius: 5).stroke(Color.secondary.opacity(0.3)))
+                        .background(RoundedRectangle(cornerRadius: 6).stroke(Color.secondary.opacity(0.3)))
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -448,6 +675,19 @@ struct ChatView: View {
         let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty || !attachments.isEmpty else { return }
 
+        // ViewModel의 캐시 이벤트 + 카테고리를 AIService에 주입
+        aiService.cachedCalendarEvents = viewModel.calendarEvents
+        aiService.cachedCategories = viewModel.categories
+
+        // 할일 생성 콜백 연결 (AIService → ViewModel)
+        aiService.onTodoCreate = { title, categoryID, date in
+            viewModel.addTodo(title: title, categoryID: categoryID, date: date)
+        }
+        // 이벤트 카테고리 설정 콜백 연결
+        aiService.onEventCategorySet = { eventID, eventTitle, categoryID in
+            viewModel.setEventCategory(eventID: eventID, eventTitle: eventTitle, categoryID: categoryID)
+        }
+
         let currentAttachments = attachments
         let displayText = text.isEmpty
             ? currentAttachments.map { "[\($0.fileName)]" }.joined(separator: " ")
@@ -456,14 +696,6 @@ struct ChatView: View {
         messages.append(ChatMessage(role: .user, content: displayText, attachments: currentAttachments))
         inputText = ""
         attachments = []
-
-        // 전송 후 임시 paste 파일 정리
-        let tmpPasteDir = FileManager.default.temporaryDirectory.appendingPathComponent("calen-paste")
-        for att in currentAttachments {
-            if att.url.path.hasPrefix(tmpPasteDir.path) {
-                try? FileManager.default.removeItem(at: att.url)
-            }
-        }
 
         Task {
             let response = await aiService.sendMessage(text, attachments: currentAttachments, history: Array(messages.dropLast()))
@@ -477,6 +709,11 @@ struct ChatView: View {
 
 struct ChatBubble: View {
     let message: ChatMessage
+
+    /// Markdown 문자열을 AttributedString으로 변환 (실패 시 plain text fallback)
+    static func markdownText(_ raw: String) -> AttributedString {
+        (try? AttributedString(markdown: raw, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))) ?? AttributedString(raw)
+    }
 
     var body: some View {
         HStack {
@@ -501,7 +738,7 @@ struct ChatBubble: View {
                             HStack(spacing: 4) {
                                 ForEach(message.attachments) { att in
                                     if let thumb = att.thumbnail {
-                                        Image(nsImage: thumb)
+                                        Image(decorative: thumb, scale: 1)
                                             .resizable()
                                             .aspectRatio(contentMode: .fill)
                                             .frame(width: 60, height: 60)
@@ -522,9 +759,9 @@ struct ChatBubble: View {
                             }
                         }
 
-                        // 텍스트
+                        // 텍스트 (Markdown 렌더링)
                         if !message.content.isEmpty {
-                            Text(message.content)
+                            Text(message.role == .assistant ? Self.markdownText(message.content) : AttributedString(message.content))
                                 .font(.system(size: 12))
                                 .textSelection(.enabled)
                         }
@@ -535,7 +772,7 @@ struct ChatBubble: View {
                         RoundedRectangle(cornerRadius: 12)
                             .fill(message.role == .user
                                   ? Color.purple.opacity(0.2)
-                                  : Color(nsColor: .controlBackgroundColor))
+                                  : Color.platformControlBackground)
                     )
                 }
             }
@@ -650,17 +887,15 @@ struct ProviderRow: View {
 }
 
 // MARK: - PasteAwareTextField
-// 일반 텍스트 입력용 NSTextField 래퍼 (이미지 paste는 PasteInterceptingController에서 처리)
 
-class _PasteAwareNSTextField: NSTextField {}
-
+#if os(macOS)
 struct PasteAwareTextField: NSViewRepresentable {
     @Binding var text: String
     var placeholder: String
     var onSubmit: () -> Void
 
-    func makeNSView(context: Context) -> _PasteAwareNSTextField {
-        let field = _PasteAwareNSTextField()
+    func makeNSView(context: Context) -> NSTextField {
+        let field = NSTextField()
         field.placeholderString = placeholder
         field.font = .systemFont(ofSize: 12)
         field.isBordered = false
@@ -672,7 +907,7 @@ struct PasteAwareTextField: NSViewRepresentable {
         return field
     }
 
-    func updateNSView(_ field: _PasteAwareNSTextField, context: Context) {
+    func updateNSView(_ field: NSTextField, context: Context) {
         if field.stringValue != text { field.stringValue = text }
         field.placeholderString = placeholder
     }
@@ -699,4 +934,17 @@ struct PasteAwareTextField: NSViewRepresentable {
         }
     }
 }
+#else
+/// iOS에서는 SwiftUI 기본 TextField 사용 (UIViewRepresentable 불필요)
+struct PasteAwareTextField: View {
+    @Binding var text: String
+    var placeholder: String
+    var onSubmit: () -> Void
+
+    var body: some View {
+        TextField(placeholder, text: $text)
+            .onSubmit { onSubmit() }
+    }
+}
+#endif
 
