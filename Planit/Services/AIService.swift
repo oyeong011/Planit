@@ -134,6 +134,8 @@ final class AIService: ObservableObject {
     /// Pending actions awaiting user approval before execution
     @Published var pendingActions: [CalendarAction] = []
     @Published var pendingMessage: String?
+    /// 채팅 히스토리 — 탭 전환 후에도 유지
+    @Published var chatMessages: [ChatMessage] = []
 
     private let authManager: GoogleAuthManager
     private let calendarService: GoogleCalendarService?

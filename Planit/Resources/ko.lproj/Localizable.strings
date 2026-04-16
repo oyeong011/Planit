@@ -437,3 +437,51 @@
 "review.category.primary" = "기본 캘린더";
 "review.weekly.chart.title" = "7일 달성 현황";
 "review.day.today.short" = "오늘";
+"goal.section.title" = "장기 목표";
+"goal.section.subtitle" = "채팅에서 감지됨";
+"goal.no.activity" = "이번달 관련 활동 없음";
+"goal.delete" = "목표 삭제";
+"goal.detected.notice" = "목표 저장됨: %@";
+"goal.timeline.month" = "이번달";
+"goal.timeline.quarter" = "이번 분기";
+"goal.timeline.year" = "올해";
+"goal.timeline.longterm" = "장기";
+
+/* Goal CRUD */
+"goal.empty.hint" = "채팅에서 목표를 말하면 여기에 저장돼요";
+"goal.add.title" = "목표 추가";
+"goal.edit.title" = "목표 수정";
+"goal.field.name" = "목표 이름";
+"goal.field.name.placeholder" = "예: 대기업 IT 취업";
+"goal.field.targets" = "타깃 (쉼표로 구분)";
+"goal.field.targets.placeholder" = "예: 삼성전자, SK하이닉스, 카카오";
+"goal.field.timeline" = "기간";
+"goal.cancel" = "취소";
+"goal.save" = "저장";
+
+/* Habit Heatmap */
+"habit.heatmap.title" = "습관 완수율";
+"habit.avg.rate" = "평균 %d%%";
+"habit.streak.days" = "%d일 연속 달성 🔥";
+"habit.streak.none" = "오늘부터 연속 달성을 시작하세요";
+"habit.legend.low" = "낮음";
+"habit.legend.high" = "높음";
+
+/* My Habits Section */
+"habit.section.title" = "내 습관";
+"habit.empty.hint" = "+ 버튼으로 첫 번째 습관을 추가해보세요";
+"habit.add.title" = "습관 추가";
+"habit.edit" = "습관 수정";
+"habit.delete" = "습관 삭제";
+"habit.field.name" = "습관 이름";
+"habit.field.name.placeholder" = "예: 운동, 일찍 일어나기";
+"habit.field.emoji" = "아이콘";
+"habit.field.color" = "색상";
+"habit.field.weekly" = "주간 목표 (회)";
+"habit.detected.notice" = "습관 추가됨: %@";
+"habit.graph.title" = "습관 달성률";
+"habit.graph.thisweek" = "이번 주";
+"habit.graph.lastweek" = "지난주";
+"habit.graph.2weeksago" = "2주 전";
+"habit.graph.3weeksago" = "3주 전";
+"habit.graph.4weeksago" = "4주 전";

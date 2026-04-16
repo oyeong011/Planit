@@ -445,3 +445,51 @@
 "review.category.primary" = "主日历";
 "review.weekly.chart.title" = "7天完成情况";
 "review.day.today.short" = "今天";
+"goal.section.title" = "长期目标";
+"goal.section.subtitle" = "从聊天中检测";
+"goal.no.activity" = "本月无相关活动";
+"goal.delete" = "删除目标";
+"goal.detected.notice" = "目标已保存: %@";
+"goal.timeline.month" = "本月";
+"goal.timeline.quarter" = "本季度";
+"goal.timeline.year" = "今年";
+"goal.timeline.longterm" = "长期";
+
+/* Goal CRUD */
+"goal.empty.hint" = "在聊天中说出你的目标，它们会显示在这里";
+"goal.add.title" = "添加目标";
+"goal.edit.title" = "编辑目标";
+"goal.field.name" = "目标名称";
+"goal.field.name.placeholder" = "例如：进入大厂";
+"goal.field.targets" = "目标公司（逗号分隔）";
+"goal.field.targets.placeholder" = "例如：阿里巴巴, 腾讯, 字节跳动";
+"goal.field.timeline" = "时间段";
+"goal.cancel" = "取消";
+"goal.save" = "保存";
+
+/* Habit Heatmap */
+"habit.heatmap.title" = "习惯完成率";
+"habit.avg.rate" = "平均%d%%";
+"habit.streak.days" = "连续%d天 🔥";
+"habit.streak.none" = "今天开始你的连击吧";
+"habit.legend.low" = "少";
+"habit.legend.high" = "多";
+
+/* My Habits Section */
+"habit.section.title" = "My Habits";
+"habit.empty.hint" = "Tap + to add your first habit";
+"habit.add.title" = "Add Habit";
+"habit.edit" = "Edit Habit";
+"habit.delete" = "Delete Habit";
+"habit.field.name" = "Habit Name";
+"habit.field.name.placeholder" = "e.g. Exercise, Wake up early";
+"habit.field.emoji" = "Icon";
+"habit.field.color" = "Color";
+"habit.field.weekly" = "Weekly Goal (times)";
+"habit.detected.notice" = "Habit added: %@";
+"habit.graph.title" = "习惯达成率";
+"habit.graph.thisweek" = "本周";
+"habit.graph.lastweek" = "上周";
+"habit.graph.2weeksago" = "2周前";
+"habit.graph.3weeksago" = "3周前";
+"habit.graph.4weeksago" = "4周前";

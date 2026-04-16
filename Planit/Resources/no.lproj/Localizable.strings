@@ -445,3 +445,51 @@
 "review.category.primary" = "Primary";
 "review.weekly.chart.title" = "7-Day Progress";
 "review.day.today.short" = "Today";
+"goal.section.title" = "Long-term Goals";
+"goal.section.subtitle" = "Detected from chat";
+"goal.no.activity" = "No related activity this month";
+"goal.delete" = "Delete Goal";
+"goal.detected.notice" = "Goal saved: %@";
+"goal.timeline.month" = "This Month";
+"goal.timeline.quarter" = "This Quarter";
+"goal.timeline.year" = "This Year";
+"goal.timeline.longterm" = "Long-term";
+
+/* Goal CRUD */
+"goal.empty.hint" = "Snakk om målene dine i chatten, og de vises her";
+"goal.add.title" = "Legg til mål";
+"goal.edit.title" = "Rediger mål";
+"goal.field.name" = "Målnavn";
+"goal.field.name.placeholder" = "f.eks. Få jobb i tech";
+"goal.field.targets" = "Mål (kommaseparert)";
+"goal.field.targets.placeholder" = "f.eks. Google, Apple, Meta";
+"goal.field.timeline" = "Tidsramme";
+"goal.cancel" = "Avbryt";
+"goal.save" = "Lagre";
+
+/* Habit Heatmap */
+"habit.heatmap.title" = "Vanefrekvens";
+"habit.avg.rate" = "Snitt %d%%";
+"habit.streak.days" = "%d dager på rad 🔥";
+"habit.streak.none" = "Start serien din i dag";
+"habit.legend.low" = "Lite";
+"habit.legend.high" = "Mye";
+
+/* My Habits Section */
+"habit.section.title" = "My Habits";
+"habit.empty.hint" = "Tap + to add your first habit";
+"habit.add.title" = "Add Habit";
+"habit.edit" = "Edit Habit";
+"habit.delete" = "Delete Habit";
+"habit.field.name" = "Habit Name";
+"habit.field.name.placeholder" = "e.g. Exercise, Wake up early";
+"habit.field.emoji" = "Icon";
+"habit.field.color" = "Color";
+"habit.field.weekly" = "Weekly Goal (times)";
+"habit.detected.notice" = "Habit added: %@";
+"habit.graph.title" = "Habit Adherence";
+"habit.graph.thisweek" = "This Wk";
+"habit.graph.lastweek" = "Last Wk";
+"habit.graph.2weeksago" = "2 Wks";
+"habit.graph.3weeksago" = "3 Wks";
+"habit.graph.4weeksago" = "4 Wks";

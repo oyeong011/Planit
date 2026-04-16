@@ -445,3 +445,51 @@
 "review.category.primary" = "Primary";
 "review.weekly.chart.title" = "7-Day Progress";
 "review.day.today.short" = "Today";
+"goal.section.title" = "Long-term Goals";
+"goal.section.subtitle" = "Detected from chat";
+"goal.no.activity" = "No related activity this month";
+"goal.delete" = "Delete Goal";
+"goal.detected.notice" = "Goal saved: %@";
+"goal.timeline.month" = "This Month";
+"goal.timeline.quarter" = "This Quarter";
+"goal.timeline.year" = "This Year";
+"goal.timeline.longterm" = "Long-term";
+
+/* Goal CRUD */
+"goal.empty.hint" = "تحدث عن أهدافك في الدردشة وستظهر هنا";
+"goal.add.title" = "إضافة هدف";
+"goal.edit.title" = "تعديل الهدف";
+"goal.field.name" = "اسم الهدف";
+"goal.field.name.placeholder" = "مثال: الحصول على وظيفة تقنية";
+"goal.field.targets" = "الشركات المستهدفة (مفصولة بفاصلة)";
+"goal.field.targets.placeholder" = "مثال: Google, Apple, Meta";
+"goal.field.timeline" = "الإطار الزمني";
+"goal.cancel" = "إلغاء";
+"goal.save" = "حفظ";
+
+/* Habit Heatmap */
+"habit.heatmap.title" = "معدل العادات";
+"habit.avg.rate" = "متوسط %d%%";
+"habit.streak.days" = "%d أيام متتالية 🔥";
+"habit.streak.none" = "ابدأ سلسلتك اليوم";
+"habit.legend.low" = "قليل";
+"habit.legend.high" = "كثير";
+
+/* My Habits Section */
+"habit.section.title" = "My Habits";
+"habit.empty.hint" = "Tap + to add your first habit";
+"habit.add.title" = "Add Habit";
+"habit.edit" = "Edit Habit";
+"habit.delete" = "Delete Habit";
+"habit.field.name" = "Habit Name";
+"habit.field.name.placeholder" = "e.g. Exercise, Wake up early";
+"habit.field.emoji" = "Icon";
+"habit.field.color" = "Color";
+"habit.field.weekly" = "Weekly Goal (times)";
+"habit.detected.notice" = "Habit added: %@";
+"habit.graph.title" = "Habit Adherence";
+"habit.graph.thisweek" = "This Wk";
+"habit.graph.lastweek" = "Last Wk";
+"habit.graph.2weeksago" = "2 Wks";
+"habit.graph.3weeksago" = "3 Wks";
+"habit.graph.4weeksago" = "4 Wks";

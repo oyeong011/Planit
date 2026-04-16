@@ -445,3 +445,51 @@
 "review.category.primary" = "Primary";
 "review.weekly.chart.title" = "7-Day Progress";
 "review.day.today.short" = "Today";
+"goal.section.title" = "Long-term Goals";
+"goal.section.subtitle" = "Detected from chat";
+"goal.no.activity" = "No related activity this month";
+"goal.delete" = "Delete Goal";
+"goal.detected.notice" = "Goal saved: %@";
+"goal.timeline.month" = "This Month";
+"goal.timeline.quarter" = "This Quarter";
+"goal.timeline.year" = "This Year";
+"goal.timeline.longterm" = "Long-term";
+
+/* Goal CRUD */
+"goal.empty.hint" = "Porozmawiaj o celach na czacie, a pojawią się tutaj";
+"goal.add.title" = "Dodaj cel";
+"goal.edit.title" = "Edytuj cel";
+"goal.field.name" = "Nazwa celu";
+"goal.field.name.placeholder" = "np. Znaleźć pracę w IT";
+"goal.field.targets" = "Cele (oddzielone przecinkami)";
+"goal.field.targets.placeholder" = "np. Google, Allegro, CD Projekt";
+"goal.field.timeline" = "Horyzont czasowy";
+"goal.cancel" = "Anuluj";
+"goal.save" = "Zapisz";
+
+/* Habit Heatmap */
+"habit.heatmap.title" = "Realizacja nawyków";
+"habit.avg.rate" = "Śr. %d%%";
+"habit.streak.days" = "%d dni z rzędu 🔥";
+"habit.streak.none" = "Zacznij serię dziś";
+"habit.legend.low" = "Mało";
+"habit.legend.high" = "Dużo";
+
+/* My Habits Section */
+"habit.section.title" = "My Habits";
+"habit.empty.hint" = "Tap + to add your first habit";
+"habit.add.title" = "Add Habit";
+"habit.edit" = "Edit Habit";
+"habit.delete" = "Delete Habit";
+"habit.field.name" = "Habit Name";
+"habit.field.name.placeholder" = "e.g. Exercise, Wake up early";
+"habit.field.emoji" = "Icon";
+"habit.field.color" = "Color";
+"habit.field.weekly" = "Weekly Goal (times)";
+"habit.detected.notice" = "Habit added: %@";
+"habit.graph.title" = "Habit Adherence";
+"habit.graph.thisweek" = "This Wk";
+"habit.graph.lastweek" = "Last Wk";
+"habit.graph.2weeksago" = "2 Wks";
+"habit.graph.3weeksago" = "3 Wks";
+"habit.graph.4weeksago" = "4 Wks";
