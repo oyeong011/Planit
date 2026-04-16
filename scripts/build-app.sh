@@ -49,12 +49,37 @@ for lproj in "$PROJECT_DIR/Planit/Resources"/*.lproj; do
     [ -d "$lproj" ] && cp -R "$lproj" "$APP_BUNDLE/Contents/Resources/"
 done
 
+# Sparkle.framework 번들링 (자동 업데이트)
+SPARKLE_SRC="$PROJECT_DIR/.build/artifacts/sparkle/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework"
+if [ -d "$SPARKLE_SRC" ]; then
+    echo "→ Embedding Sparkle.framework..."
+    mkdir -p "$APP_BUNDLE/Contents/Frameworks"
+    rm -rf "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
+    ditto "$SPARKLE_SRC" "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
+else
+    echo "⚠️  Sparkle.framework 아티팩트 없음 — swift build 먼저 실행하세요"
+fi
+
 echo "→ .app bundle created at: $APP_BUNDLE"
 
-# 3. 코드 서명
+# 3. 코드 서명 (Sparkle은 inside-out 순서 필수)
 if [ -n "$SIGN" ]; then
     echo "→ Code signing with: $SIGN"
-    # 리소스 먼저 서명, 메인 번들 마지막
+    SPARKLE_FW="$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
+    if [ -d "$SPARKLE_FW" ]; then
+        # XPC services → Autoupdate → Updater.app → framework 순서
+        for xpc in "$SPARKLE_FW/Versions/B/XPCServices"/*.xpc; do
+            [ -d "$xpc" ] && codesign --force --options runtime --timestamp \
+                --preserve-metadata=identifier,entitlements,flags \
+                --sign "$SIGN" "$xpc"
+        done
+        codesign --force --options runtime --timestamp --sign "$SIGN" \
+            "$SPARKLE_FW/Versions/B/Autoupdate"
+        codesign --force --options runtime --timestamp --sign "$SIGN" \
+            "$SPARKLE_FW/Versions/B/Updater.app"
+        codesign --force --options runtime --timestamp --sign "$SIGN" "$SPARKLE_FW"
+    fi
+    # 메인 앱 마지막
     codesign --force --options runtime \
         --entitlements "$PROJECT_DIR/Planit/Planit.entitlements" \
         --sign "$SIGN" \
