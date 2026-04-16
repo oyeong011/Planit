@@ -50,7 +50,22 @@ jobs:
           echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
 
       - name: Build universal binary
-        run: swift build -c release --arch arm64 --arch x86_64
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+        run: |
+          # BundledCredentials.local.swift를 CI Secret으로 생성
+          cat > Planit/Services/BundledCredentials.local.swift << 'SWIFT'
+          extension BundledCredentials {
+              static let _localClientID = "$(echo $GOOGLE_CLIENT_ID)"
+              static let _localClientSecret = "$(echo $GOOGLE_CLIENT_SECRET)"
+          }
+          SWIFT
+          # 실제 값 치환
+          sed -i '' "s|\$(echo \$GOOGLE_CLIENT_ID)|${GOOGLE_CLIENT_ID}|g" Planit/Services/BundledCredentials.local.swift
+          sed -i '' "s|\$(echo \$GOOGLE_CLIENT_SECRET)|${GOOGLE_CLIENT_SECRET}|g" Planit/Services/BundledCredentials.local.swift
+
+          swift build -c release --arch arm64 --arch x86_64
 
       - name: Create .app bundle
         env:

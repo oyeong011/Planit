@@ -7,3 +7,4 @@ DerivedData/
 google_credentials.json
 *credentials*.json
 .omx/
+Planit/Services/BundledCredentials.local.swift
