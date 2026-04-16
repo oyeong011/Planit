@@ -333,9 +333,9 @@
 /* ===== Review View (additional) ===== */
 "review.plan.complete.title" = "내일 계획 완성";
 "review.today.lookback" = "오늘 돌아보기";
-"review.move.all" = "모두 내일로";
-"review.generating.button" = "계획 생성 중...";
-"review.generate.tomorrow" = "내일 계획 자동 생성";
+"review.move.all" = "내일로";
+"review.generating.button" = "생성 중...";
+"review.generate.tomorrow" = "AI 계획";
 "review.no.past.events" = "오늘 지난 일정이 없어요";
 "review.generate.now.hint" = "바로 내일 계획을 생성할 수 있어요";
 "review.on.track" = "순조롭게 진행 중이에요";

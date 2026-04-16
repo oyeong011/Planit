@@ -334,9 +334,9 @@
 /* ===== Review View (additional) ===== */
 "review.plan.complete.title" = "План на завтра готовий";
 "review.today.lookback" = "Огляд сьогоднішнього дня";
-"review.move.all" = "Перенести все на завтра";
-"review.generating.button" = "Складання плану...";
-"review.generate.tomorrow" = "Автоматично згенерувати план на завтра";
+"review.move.all" = "Tomorrow";
+"review.generating.button" = "Generating...";
+"review.generate.tomorrow" = "AI Plan";
 "review.no.past.events" = "Немає минулих подій сьогодні";
 "review.generate.now.hint" = "Ви можете згенерувати план на завтра зараз";
 "review.on.track" = "Все йде за планом";
@@ -389,7 +389,7 @@
 "setup.installed" = "Встановлено";
 "setup.copy.command" = "Копіювати команду встановлення";
 "review.today.todos" = "Today's Todos";
-"review.done.all" = "Mark All Done";
+"review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
 "review.plan.complete.title" = "Tomorrow's Plan Ready";

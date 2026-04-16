@@ -334,9 +334,9 @@
 /* ===== Review View (additional) ===== */
 "review.plan.complete.title" = "Yarının Planı Hazır";
 "review.today.lookback" = "Bugünün İncelemesi";
-"review.move.all" = "Tümünü Yarına Taşı";
-"review.generating.button" = "Plan oluşturuluyor...";
-"review.generate.tomorrow" = "Yarının Planını Otomatik Oluştur";
+"review.move.all" = "Tomorrow";
+"review.generating.button" = "Generating...";
+"review.generate.tomorrow" = "AI Plan";
 "review.no.past.events" = "Bugün geçmiş etkinlik yok";
 "review.generate.now.hint" = "Yarının planını şimdi oluşturabilirsiniz";
 "review.on.track" = "Sorunsuz gidiyor";
@@ -389,7 +389,7 @@
 "setup.installed" = "Kuruldu";
 "setup.copy.command" = "Kurulum komutunu kopyala";
 "review.today.todos" = "Today's Todos";
-"review.done.all" = "Mark All Done";
+"review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
 "review.plan.complete.title" = "Tomorrow's Plan Ready";

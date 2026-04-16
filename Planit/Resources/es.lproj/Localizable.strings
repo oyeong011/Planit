@@ -334,9 +334,9 @@
 /* ===== Review View (additional) ===== */
 "review.plan.complete.title" = "Plan de mañana listo";
 "review.today.lookback" = "Revisión de hoy";
-"review.move.all" = "Mover todo a mañana";
-"review.generating.button" = "Generando plan...";
-"review.generate.tomorrow" = "Generar automáticamente el plan de mañana";
+"review.move.all" = "Tomorrow";
+"review.generating.button" = "Generating...";
+"review.generate.tomorrow" = "AI Plan";
 "review.no.past.events" = "Sin eventos pasados hoy";
 "review.generate.now.hint" = "Puedes generar el plan de mañana ahora";
 "review.on.track" = "Todo va bien";
@@ -389,7 +389,7 @@
 "setup.installed" = "Instalado";
 "setup.copy.command" = "Copiar comando de instalación";
 "review.today.todos" = "Today's Todos";
-"review.done.all" = "Mark All Done";
+"review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
 "review.plan.complete.title" = "Tomorrow's Plan Ready";

@@ -334,9 +334,9 @@
 /* ===== Review View (additional) ===== */
 "review.plan.complete.title" = "План на завтра готов";
 "review.today.lookback" = "Обзор сегодняшнего дня";
-"review.move.all" = "Перенести всё на завтра";
-"review.generating.button" = "Составление плана...";
-"review.generate.tomorrow" = "Автоматически сгенерировать план на завтра";
+"review.move.all" = "Tomorrow";
+"review.generating.button" = "Generating...";
+"review.generate.tomorrow" = "AI Plan";
 "review.no.past.events" = "Нет прошедших событий сегодня";
 "review.generate.now.hint" = "Вы можете сгенерировать план на завтра сейчас";
 "review.on.track" = "Всё идёт по плану";
@@ -389,7 +389,7 @@
 "setup.installed" = "Установлено";
 "setup.copy.command" = "Копировать команду установки";
 "review.today.todos" = "Today's Todos";
-"review.done.all" = "Mark All Done";
+"review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
 "review.plan.complete.title" = "Tomorrow's Plan Ready";

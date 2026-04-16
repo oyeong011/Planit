@@ -334,9 +334,9 @@
 /* ===== Review View (additional) ===== */
 "review.plan.complete.title" = "Plán na zítřek je připraven";
 "review.today.lookback" = "Přehled dnešního dne";
-"review.move.all" = "Přesunout vše na zítřek";
-"review.generating.button" = "Generuji plán...";
-"review.generate.tomorrow" = "Automaticky vygenerovat plán na zítřek";
+"review.move.all" = "Tomorrow";
+"review.generating.button" = "Generating...";
+"review.generate.tomorrow" = "AI Plan";
 "review.no.past.events" = "Dnes žádné minulé události";
 "review.generate.now.hint" = "Plán na zítřek můžete vygenerovat nyní";
 "review.on.track" = "Vše jde hladce";
@@ -389,7 +389,7 @@
 "setup.installed" = "Nainstalováno";
 "setup.copy.command" = "Kopírovat příkaz instalace";
 "review.today.todos" = "Today's Todos";
-"review.done.all" = "Mark All Done";
+"review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
 "review.plan.complete.title" = "Tomorrow's Plan Ready";

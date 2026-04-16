@@ -334,9 +334,9 @@
 /* ===== Review View (additional) ===== */
 "review.plan.complete.title" = "明日の計画が完成しました";
 "review.today.lookback" = "今日の振り返り";
-"review.move.all" = "すべて明日に移動";
-"review.generating.button" = "計画を作成中...";
-"review.generate.tomorrow" = "明日の計画を自動生成";
+"review.move.all" = "明日へ";
+"review.generating.button" = "生成中...";
+"review.generate.tomorrow" = "AI計画";
 "review.no.past.events" = "今日の過去の予定はありません";
 "review.generate.now.hint" = "今すぐ明日の計画を生成できます";
 "review.on.track" = "順調に進んでいます";
@@ -389,7 +389,7 @@
 "setup.installed" = "インストール済み";
 "setup.copy.command" = "インストールコマンドをコピー";
 "review.today.todos" = "Today's Todos";
-"review.done.all" = "Mark All Done";
+"review.done.all" = "完了";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
 "review.plan.complete.title" = "Tomorrow's Plan Ready";

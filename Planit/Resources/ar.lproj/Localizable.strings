@@ -334,9 +334,9 @@
 /* ===== Review View (additional) ===== */
 "review.plan.complete.title" = "خطة الغد جاهزة";
 "review.today.lookback" = "مراجعة اليوم";
-"review.move.all" = "نقل الكل إلى الغد";
-"review.generating.button" = "جارٍ إنشاء الخطة...";
-"review.generate.tomorrow" = "إنشاء خطة الغد تلقائياً";
+"review.move.all" = "Tomorrow";
+"review.generating.button" = "Generating...";
+"review.generate.tomorrow" = "AI Plan";
 "review.no.past.events" = "لا توجد أحداث سابقة اليوم";
 "review.generate.now.hint" = "يمكنك إنشاء خطة الغد الآن";
 "review.on.track" = "يسير بسلاسة";
@@ -389,7 +389,7 @@
 "setup.installed" = "مثبّت";
 "setup.copy.command" = "نسخ أمر التثبيت";
 "review.today.todos" = "Today's Todos";
-"review.done.all" = "Mark All Done";
+"review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
 "review.plan.complete.title" = "Tomorrow's Plan Ready";

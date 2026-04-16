@@ -334,9 +334,9 @@
 /* ===== Review View (additional) ===== */
 "review.plan.complete.title" = "Morgondagens plan klar";
 "review.today.lookback" = "Tillbaka på idag";
-"review.move.all" = "Flytta allt till imorgon";
-"review.generating.button" = "Genererar plan...";
-"review.generate.tomorrow" = "Generera morgondagens plan automatiskt";
+"review.move.all" = "Tomorrow";
+"review.generating.button" = "Generating...";
+"review.generate.tomorrow" = "AI Plan";
 "review.no.past.events" = "Inga tidigare händelser idag";
 "review.generate.now.hint" = "Du kan generera morgondagens plan nu";
 "review.on.track" = "Går smidigt";
@@ -389,7 +389,7 @@
 "setup.installed" = "Installerad";
 "setup.copy.command" = "Kopiera installationskommando";
 "review.today.todos" = "Today's Todos";
-"review.done.all" = "Mark All Done";
+"review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
 "review.plan.complete.title" = "Tomorrow's Plan Ready";
