@@ -59,5 +59,17 @@
     <string>Calen needs access to your calendars to display events.</string>
     <key>NSRemindersUsageDescription</key>
     <string>Calen needs access to reminders to manage your tasks.</string>
+
+    <!-- Sparkle 자동 업데이트 -->
+    <key>SUFeedURL</key>
+    <string>https://oyeong011.github.io/Planit/appcast.xml</string>
+    <key>SUPublicEDKey</key>
+    <string>REPLACE_WITH_GENERATED_PUBLIC_KEY</string>
+    <key>SUEnableAutomaticChecks</key>
+    <true/>
+    <key>SUScheduledCheckInterval</key>
+    <integer>86400</integer>
+    <key>SUAutomaticallyUpdate</key>
+    <false/>
 </dict>
 </plist>
