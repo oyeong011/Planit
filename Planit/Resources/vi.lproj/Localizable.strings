@@ -334,9 +334,9 @@
 /* ===== Review View (additional) ===== */
 "review.plan.complete.title" = "Kế hoạch ngày mai đã sẵn sàng";
 "review.today.lookback" = "Nhìn lại hôm nay";
-"review.move.all" = "Chuyển tất cả sang ngày mai";
-"review.generating.button" = "Đang tạo kế hoạch...";
-"review.generate.tomorrow" = "Tự động tạo kế hoạch ngày mai";
+"review.move.all" = "Tomorrow";
+"review.generating.button" = "Generating...";
+"review.generate.tomorrow" = "AI Plan";
 "review.no.past.events" = "Không có sự kiện nào hôm nay";
 "review.generate.now.hint" = "Bạn có thể tạo kế hoạch ngày mai ngay bây giờ";
 "review.on.track" = "Đang tiến triển tốt";
@@ -389,7 +389,7 @@
 "setup.installed" = "Đã cài đặt";
 "setup.copy.command" = "Sao chép lệnh cài đặt";
 "review.today.todos" = "Today's Todos";
-"review.done.all" = "Mark All Done";
+"review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
 "review.plan.complete.title" = "Tomorrow's Plan Ready";

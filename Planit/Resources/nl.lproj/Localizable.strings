@@ -334,9 +334,9 @@
 /* ===== Review View (additional) ===== */
 "review.plan.complete.title" = "Plan voor morgen klaar";
 "review.today.lookback" = "Terugblik op vandaag";
-"review.move.all" = "Alles verplaatsen naar morgen";
-"review.generating.button" = "Plan genereren...";
-"review.generate.tomorrow" = "Plan voor morgen automatisch genereren";
+"review.move.all" = "Tomorrow";
+"review.generating.button" = "Generating...";
+"review.generate.tomorrow" = "AI Plan";
 "review.no.past.events" = "Geen afgelopen afspraken vandaag";
 "review.generate.now.hint" = "Je kunt nu het plan voor morgen genereren";
 "review.on.track" = "Gaat goed";
@@ -389,7 +389,7 @@
 "setup.installed" = "Geïnstalleerd";
 "setup.copy.command" = "Installatieopdracht kopiëren";
 "review.today.todos" = "Today's Todos";
-"review.done.all" = "Mark All Done";
+"review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
 "review.plan.complete.title" = "Tomorrow's Plan Ready";

@@ -334,9 +334,9 @@
 /* ===== Review View (additional) ===== */
 "review.plan.complete.title" = "Το Πλάνο Αύριο Είναι Έτοιμο";
 "review.today.lookback" = "Ανασκόπηση Σήμερα";
-"review.move.all" = "Μεταφορά Όλων για Αύριο";
-"review.generating.button" = "Δημιουργία πλάνου...";
-"review.generate.tomorrow" = "Αυτόματη Δημιουργία Πλάνου Αύριο";
+"review.move.all" = "Tomorrow";
+"review.generating.button" = "Generating...";
+"review.generate.tomorrow" = "AI Plan";
 "review.no.past.events" = "Δεν υπάρχουν παρελθοντικά συμβάντα σήμερα";
 "review.generate.now.hint" = "Μπορείτε να δημιουργήσετε το πλάνο αύριο τώρα";
 "review.on.track" = "Πηγαίνει ομαλά";
@@ -389,7 +389,7 @@
 "setup.installed" = "Εγκατεστημένο";
 "setup.copy.command" = "Αντιγραφή εντολής εγκατάστασης";
 "review.today.todos" = "Today's Todos";
-"review.done.all" = "Mark All Done";
+"review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
 "review.plan.complete.title" = "Tomorrow's Plan Ready";

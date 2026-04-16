@@ -334,9 +334,9 @@
 /* ===== Review View (additional) ===== */
 "review.plan.complete.title" = "Huomisen suunnitelma valmis";
 "review.today.lookback" = "Tänään takautuvasti";
-"review.move.all" = "Siirrä kaikki huomiselle";
-"review.generating.button" = "Luodaan suunnitelmaa...";
-"review.generate.tomorrow" = "Luo huomisen suunnitelma automaattisesti";
+"review.move.all" = "Tomorrow";
+"review.generating.button" = "Generating...";
+"review.generate.tomorrow" = "AI Plan";
 "review.no.past.events" = "Ei aiempia tapahtumia tänään";
 "review.generate.now.hint" = "Voit luoda huomisen suunnitelman nyt";
 "review.on.track" = "Menee sujuvasti";
@@ -389,7 +389,7 @@
 "setup.installed" = "Asennettu";
 "setup.copy.command" = "Kopioi asennuskomento";
 "review.today.todos" = "Today's Todos";
-"review.done.all" = "Mark All Done";
+"review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
 "review.plan.complete.title" = "Tomorrow's Plan Ready";

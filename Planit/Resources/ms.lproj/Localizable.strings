@@ -334,9 +334,9 @@
 /* ===== Review View (additional) ===== */
 "review.plan.complete.title" = "Rancangan Esok Sedia";
 "review.today.lookback" = "Tinjauan Hari Ini";
-"review.move.all" = "Pindahkan Semua ke Esok";
-"review.generating.button" = "Menjana rancangan...";
-"review.generate.tomorrow" = "Jana Rancangan Esok Secara Automatik";
+"review.move.all" = "Tomorrow";
+"review.generating.button" = "Generating...";
+"review.generate.tomorrow" = "AI Plan";
 "review.no.past.events" = "Tiada acara lepas hari ini";
 "review.generate.now.hint" = "Anda boleh menjana rancangan esok sekarang";
 "review.on.track" = "Berjalan lancar";
@@ -389,7 +389,7 @@
 "setup.installed" = "Dipasang";
 "setup.copy.command" = "Salin arahan pemasangan";
 "review.today.todos" = "Today's Todos";
-"review.done.all" = "Mark All Done";
+"review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
 "review.plan.complete.title" = "Tomorrow's Plan Ready";

@@ -334,9 +334,9 @@
 /* ===== Review View (additional) ===== */
 "review.plan.complete.title" = "A holnapi terv kész";
 "review.today.lookback" = "A mai nap áttekintése";
-"review.move.all" = "Mindent áthelyezés holnapra";
-"review.generating.button" = "Terv generálása...";
-"review.generate.tomorrow" = "Holnapi terv automatikus generálása";
+"review.move.all" = "Tomorrow";
+"review.generating.button" = "Generating...";
+"review.generate.tomorrow" = "AI Plan";
 "review.no.past.events" = "Nincsenek múlt események ma";
 "review.generate.now.hint" = "Most generálhatod a holnapi tervet";
 "review.on.track" = "Simán halad";
@@ -389,7 +389,7 @@
 "setup.installed" = "Telepítve";
 "setup.copy.command" = "Telepítési parancs másolása";
 "review.today.todos" = "Today's Todos";
-"review.done.all" = "Mark All Done";
+"review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
 "review.plan.complete.title" = "Tomorrow's Plan Ready";

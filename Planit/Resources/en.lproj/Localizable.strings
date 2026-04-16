@@ -333,9 +333,9 @@
 /* ===== Review View (additional) ===== */
 "review.plan.complete.title" = "Tomorrow's Plan Ready";
 "review.today.lookback" = "Today's Review";
-"review.move.all" = "Move All to Tomorrow";
-"review.generating.button" = "Generating plan...";
-"review.generate.tomorrow" = "Auto-Generate Tomorrow's Plan";
+"review.move.all" = "Tomorrow";
+"review.generating.button" = "Generating...";
+"review.generate.tomorrow" = "AI Plan";
 "review.no.past.events" = "No past events today";
 "review.generate.now.hint" = "You can generate tomorrow's plan now";
 "review.on.track" = "Going smoothly";
@@ -385,7 +385,7 @@
 "setup.installed" = "Installed";
 "setup.copy.command" = "Copy install command";
 "review.today.todos" = "Today's Todos";
-"review.done.all" = "Mark All Done";
+"review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
 "settings.section.context" = "AI Context";

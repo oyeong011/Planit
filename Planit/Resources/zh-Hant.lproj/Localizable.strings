@@ -334,9 +334,9 @@
 /* ===== Review View (additional) ===== */
 "review.plan.complete.title" = "明日計畫已就緒";
 "review.today.lookback" = "今日回顧";
-"review.move.all" = "全部移到明天";
-"review.generating.button" = "正在生成計畫...";
-"review.generate.tomorrow" = "自動生成明日計畫";
+"review.move.all" = "推至明天";
+"review.generating.button" = "生成中...";
+"review.generate.tomorrow" = "AI計畫";
 "review.no.past.events" = "今天沒有過去的事件";
 "review.generate.now.hint" = "現在可以生成明日計畫";
 "review.on.track" = "進展順利";
@@ -389,7 +389,7 @@
 "setup.installed" = "已安裝";
 "setup.copy.command" = "複製安裝命令";
 "review.today.todos" = "Today's Todos";
-"review.done.all" = "Mark All Done";
+"review.done.all" = "全部完成";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
 "review.plan.complete.title" = "Tomorrow's Plan Ready";

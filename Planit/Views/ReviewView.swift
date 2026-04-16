@@ -478,64 +478,67 @@ struct ReviewView: View {
 
             Divider()
 
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
                 if eveningHasContent {
-                    // 전체 완료
+                    // Button 1: 완료
                     Button { markAllDone() } label: {
-                        HStack(spacing: 4) {
+                        VStack(spacing: 3) {
                             Image(systemName: "checkmark.square.fill")
-                                .font(.system(size: 10))
+                                .font(.system(size: 14))
                             Text(String(localized: "review.done.all"))
-                                .font(.system(size: 11))
+                                .font(.system(size: 10, weight: .medium))
+                                .lineLimit(1)
                         }
                         .foregroundStyle(.green)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(RoundedRectangle(cornerRadius: 6).stroke(Color.green.opacity(0.5), lineWidth: 1))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 7)
+                        .background(RoundedRectangle(cornerRadius: 8).stroke(Color.green.opacity(0.5), lineWidth: 1))
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
 
-                    // 전체 내일로
+                    // Button 2: 내일로
                     Button { moveAllToTomorrow() } label: {
-                        HStack(spacing: 4) {
+                        VStack(spacing: 3) {
                             Image(systemName: "arrow.right.to.line")
-                                .font(.system(size: 10))
+                                .font(.system(size: 14))
                             Text(String(localized: "review.move.all"))
-                                .font(.system(size: 11))
+                                .font(.system(size: 10, weight: .medium))
+                                .lineLimit(1)
                         }
                         .foregroundStyle(.orange)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(RoundedRectangle(cornerRadius: 6).stroke(Color.orange.opacity(0.5), lineWidth: 1))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 7)
+                        .background(RoundedRectangle(cornerRadius: 8).stroke(Color.orange.opacity(0.5), lineWidth: 1))
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
 
-                Spacer()
-
+                // Button 3: AI 계획 (always shown, fills remaining space)
                 Button { generatePlan() } label: {
                     if isGenerating {
-                        HStack(spacing: 6) {
+                        VStack(spacing: 3) {
                             ProgressView().controlSize(.small).tint(.white)
                             Text(String(localized: "review.generating.button"))
-                                .font(.system(size: 11, weight: .semibold))
+                                .font(.system(size: 10, weight: .semibold))
                                 .foregroundStyle(.white)
+                                .lineLimit(1)
                         }
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 6)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 7)
                         .background(RoundedRectangle(cornerRadius: 8).fill(.indigo))
                     } else {
-                        HStack(spacing: 5) {
+                        VStack(spacing: 3) {
                             Image(systemName: "wand.and.stars")
-                                .font(.system(size: 11))
+                                .font(.system(size: 14))
                             Text(String(localized: "review.generate.tomorrow"))
-                                .font(.system(size: 11, weight: .semibold))
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .lineLimit(1)
                         }
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 6)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 7)
                         .background(RoundedRectangle(cornerRadius: 8).fill(.indigo))
                     }
                 }

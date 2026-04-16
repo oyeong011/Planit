@@ -334,9 +334,9 @@
 /* ===== Review View (additional) ===== */
 "review.plan.complete.title" = "Planul de mâine este gata";
 "review.today.lookback" = "Recenzia zilei de astăzi";
-"review.move.all" = "Mută totul pe mâine";
-"review.generating.button" = "Se generează planul...";
-"review.generate.tomorrow" = "Generează automat planul de mâine";
+"review.move.all" = "Tomorrow";
+"review.generating.button" = "Generating...";
+"review.generate.tomorrow" = "AI Plan";
 "review.no.past.events" = "Niciun eveniment trecut astăzi";
 "review.generate.now.hint" = "Poți genera planul de mâine acum";
 "review.on.track" = "Merge bine";
@@ -389,7 +389,7 @@
 "setup.installed" = "Instalat";
 "setup.copy.command" = "Copiază comanda de instalare";
 "review.today.todos" = "Today's Todos";
-"review.done.all" = "Mark All Done";
+"review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
 "review.plan.complete.title" = "Tomorrow's Plan Ready";

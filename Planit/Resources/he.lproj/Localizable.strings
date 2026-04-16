@@ -334,9 +334,9 @@
 /* ===== Review View (additional) ===== */
 "review.plan.complete.title" = "תוכנית מחר מוכנה";
 "review.today.lookback" = "סקירת היום";
-"review.move.all" = "העבר הכל למחר";
-"review.generating.button" = "מייצר תוכנית...";
-"review.generate.tomorrow" = "ייצר תוכנית מחר אוטומטית";
+"review.move.all" = "Tomorrow";
+"review.generating.button" = "Generating...";
+"review.generate.tomorrow" = "AI Plan";
 "review.no.past.events" = "אין אירועים עבר היום";
 "review.generate.now.hint" = "ניתן לייצר תוכנית מחר עכשיו";
 "review.on.track" = "מתנהל בצורה חלקה";
@@ -389,7 +389,7 @@
 "setup.installed" = "מותקן";
 "setup.copy.command" = "העתק פקודת התקנה";
 "review.today.todos" = "Today's Todos";
-"review.done.all" = "Mark All Done";
+"review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
 "review.plan.complete.title" = "Tomorrow's Plan Ready";

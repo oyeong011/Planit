@@ -334,9 +334,9 @@
 /* ===== Review View (additional) ===== */
 "review.plan.complete.title" = "कल की योजना तैयार है";
 "review.today.lookback" = "आज की समीक्षा";
-"review.move.all" = "सभी कल पर ले जाएँ";
-"review.generating.button" = "योजना बना रहे हैं...";
-"review.generate.tomorrow" = "कल की योजना स्वतः बनाएँ";
+"review.move.all" = "Tomorrow";
+"review.generating.button" = "Generating...";
+"review.generate.tomorrow" = "AI Plan";
 "review.no.past.events" = "आज कोई पुराने इवेंट नहीं";
 "review.generate.now.hint" = "आप अभी कल की योजना बना सकते हैं";
 "review.on.track" = "सुचारू रूप से चल रहा है";
@@ -389,7 +389,7 @@
 "setup.installed" = "इंस्टॉल किया";
 "setup.copy.command" = "इंस्टॉल कमांड कॉपी करें";
 "review.today.todos" = "Today's Todos";
-"review.done.all" = "Mark All Done";
+"review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
 "review.plan.complete.title" = "Tomorrow's Plan Ready";

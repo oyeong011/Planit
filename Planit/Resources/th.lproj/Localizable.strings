@@ -334,9 +334,9 @@
 /* ===== Review View (additional) ===== */
 "review.plan.complete.title" = "แผนพรุ่งนี้พร้อมแล้ว";
 "review.today.lookback" = "ทบทวนวันนี้";
-"review.move.all" = "ย้ายทั้งหมดไปพรุ่งนี้";
-"review.generating.button" = "กำลังสร้างแผน...";
-"review.generate.tomorrow" = "สร้างแผนพรุ่งนี้อัตโนมัติ";
+"review.move.all" = "Tomorrow";
+"review.generating.button" = "Generating...";
+"review.generate.tomorrow" = "AI Plan";
 "review.no.past.events" = "ไม่มีกิจกรรมที่ผ่านมาวันนี้";
 "review.generate.now.hint" = "คุณสามารถสร้างแผนพรุ่งนี้ได้เดี๋ยวนี้";
 "review.on.track" = "กำลังดำเนินไปอย่างราบรื่น";
@@ -389,7 +389,7 @@
 "setup.installed" = "ติดตั้งแล้ว";
 "setup.copy.command" = "คัดลอกคำสั่งติดตั้ง";
 "review.today.todos" = "Today's Todos";
-"review.done.all" = "Mark All Done";
+"review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
 "review.plan.complete.title" = "Tomorrow's Plan Ready";
