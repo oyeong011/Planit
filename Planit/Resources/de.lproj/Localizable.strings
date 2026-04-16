@@ -437,3 +437,8 @@
 "auth.error.not.authenticated" = "Nicht bei Google angemeldet.";
 "auth.error.state.mismatch" = "Authentifizierungsstatus-Abweichung (CSRF-Schutz).";
 "auth.error.timeout" = "Authentifizierung abgelaufen. Bitte erneut versuchen.";
+"review.tab.title" = "Review";
+"review.category.title" = "By Calendar";
+"review.category.other" = "Other";
+"review.tomorrow.empty" = "No events scheduled for tomorrow";
+"review.tomorrow.more" = "+%d more";

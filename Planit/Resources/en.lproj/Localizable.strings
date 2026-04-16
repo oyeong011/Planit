@@ -429,3 +429,8 @@
 "auth.error.not.authenticated" = "Not signed in to Google.";
 "auth.error.state.mismatch" = "Auth state mismatch (CSRF protection triggered).";
 "auth.error.timeout" = "Authentication timed out. Please try again.";
+"review.tab.title" = "Review";
+"review.category.title" = "By Calendar";
+"review.category.other" = "Other";
+"review.tomorrow.empty" = "No events scheduled for tomorrow";
+"review.tomorrow.more" = "+%d more";

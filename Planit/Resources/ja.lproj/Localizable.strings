@@ -437,3 +437,8 @@
 "auth.error.not.authenticated" = "Googleにサインインしていません。";
 "auth.error.state.mismatch" = "認証状態の不一致（CSRF保護）。";
 "auth.error.timeout" = "認証がタイムアウトしました。再試行してください。";
+"review.tab.title" = "レビュー";
+"review.category.title" = "カレンダー別達成率";
+"review.category.other" = "その他";
+"review.tomorrow.empty" = "明日の予定はありません";
+"review.tomorrow.more" = "+%d件";

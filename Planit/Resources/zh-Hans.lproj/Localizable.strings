@@ -437,3 +437,8 @@
 "auth.error.not.authenticated" = "未登录 Google 账户。";
 "auth.error.state.mismatch" = "认证状态不匹配（CSRF 保护）。";
 "auth.error.timeout" = "认证超时，请重试。";
+"review.tab.title" = "回顾";
+"review.category.title" = "按日历统计";
+"review.category.other" = "其他";
+"review.tomorrow.empty" = "明天没有安排";
+"review.tomorrow.more" = "+%d个";
