@@ -3,15 +3,12 @@
 <plist version="1.0">
 <dict>
     <!-- 개발용: 샌드박스 비활성 → 기존 데이터 경로(~/Library/Application Support/Planit/) 유지 -->
+    <!-- network.client/server, files.user-selected는 비샌드박스에서 불필요 → Photos/Music 권한 오요청 방지 -->
     <key>com.apple.security.app-sandbox</key>
     <false/>
-    <key>com.apple.security.network.client</key>
-    <true/>
     <key>com.apple.security.personal-information.calendars</key>
     <true/>
     <key>com.apple.security.personal-information.reminders</key>
-    <true/>
-    <key>com.apple.security.files.user-selected.read-write</key>
     <true/>
 </dict>
 </plist>
