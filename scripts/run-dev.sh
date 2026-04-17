@@ -33,6 +33,16 @@ cp "$BUILD_DIR/Calen_Calen.bundle/AppIcon.icns" "$APP/Contents/Resources/" 2>/de
 cp "$BUILD_DIR/Calen_Calen.bundle/PrivacyInfo.xcprivacy" "$APP/Contents/Resources/" 2>/dev/null || true
 cp "$PROJECT_DIR/Planit/Planit.entitlements" "$APP/Contents/Resources/" 2>/dev/null || true
 
+# Sparkle.framework 임베드 (없으면 @rpath 로드 실패로 런타임 크래시)
+SPARKLE_SRC="$PROJECT_DIR/.build/artifacts/sparkle/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework"
+if [ -d "$SPARKLE_SRC" ]; then
+    mkdir -p "$APP/Contents/Frameworks"
+    rm -rf "$APP/Contents/Frameworks/Sparkle.framework"
+    ditto "$SPARKLE_SRC" "$APP/Contents/Frameworks/Sparkle.framework"
+    # SPM 기본 rpath에는 @executable_path/../Frameworks가 없음 — 추가해야 dyld가 임베드된 Sparkle을 찾는다
+    install_name_tool -add_rpath @executable_path/../Frameworks "$APP/Contents/MacOS/Calen" 2>/dev/null || true
+fi
+
 # Info.plist 생성
 cat > "$APP/Contents/Info.plist" << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -64,6 +74,20 @@ EOF
 DEV_SIGN="${DEVELOPER_ID:-$(security find-identity -v -p codesigning 2>/dev/null | grep 'Developer ID Application' | head -1 | sed 's/.*"\(.*\)"/\1/')}"
 if [ -n "$DEV_SIGN" ]; then
     echo "✍️  Signing with: $DEV_SIGN"
+    SPARKLE_FW="$APP/Contents/Frameworks/Sparkle.framework"
+    if [ -d "$SPARKLE_FW" ]; then
+        # inside-out: XPC → Autoupdate → Updater.app → framework → main app
+        for xpc in "$SPARKLE_FW/Versions/B/XPCServices"/*.xpc; do
+            [ -d "$xpc" ] && codesign --force --options runtime \
+                --preserve-metadata=identifier,entitlements,flags \
+                --sign "$DEV_SIGN" "$xpc" 2>/dev/null || true
+        done
+        codesign --force --options runtime --sign "$DEV_SIGN" \
+            "$SPARKLE_FW/Versions/B/Autoupdate" 2>/dev/null || true
+        codesign --force --options runtime --sign "$DEV_SIGN" \
+            "$SPARKLE_FW/Versions/B/Updater.app" 2>/dev/null || true
+        codesign --force --options runtime --sign "$DEV_SIGN" "$SPARKLE_FW" 2>/dev/null || true
+    fi
     codesign --force --options runtime \
         --entitlements "$PROJECT_DIR/Planit/Planit-dev.entitlements" \
         --sign "$DEV_SIGN" \
