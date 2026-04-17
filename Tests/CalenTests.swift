@@ -925,6 +925,23 @@ struct TestAIResponse: Codable {
     #expect(fmt.date(from: "") == nil)
 }
 
+@Test func googleCalendarPathSegmentEncoding_escapesSlashAndAtSign() {
+    let encoded = GoogleCalendarService.percentEncodedPathSegment("work/team@example.com")
+    #expect(encoded == "work%2Fteam%40example.com")
+}
+
+@Test func googleCalendarPathSegmentEncoding_keepsUnreservedCharacters() {
+    let encoded = GoogleCalendarService.percentEncodedPathSegment("event-1._~")
+    #expect(encoded == "event-1._~")
+}
+
+@Test func googleCalendarDateParsing_rejectsInvalidExternalDates() {
+    #expect(GoogleCalendarService.parseGoogleAllDayDate("2026-04-15") != nil)
+    #expect(GoogleCalendarService.parseGoogleAllDayDate("2026/04/15") == nil)
+    #expect(GoogleCalendarService.parseGoogleDateTime("2026-04-15T15:00:00+09:00") != nil)
+    #expect(GoogleCalendarService.parseGoogleDateTime("not-a-date") == nil)
+}
+
 // ============================================================================
 // MARK: - TC-19: ANSI 이스케이프 시퀀스 제거
 // ============================================================================

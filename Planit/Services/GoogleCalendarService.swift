@@ -195,7 +195,7 @@ final class GoogleCalendarService {
     }
 
     private func fetchEventsForCalendar(calInfo: GoogleCalendarInfo, token: String, timeMin: String, timeMax: String) async throws -> [CalendarEvent] {
-        guard let encoded = calInfo.id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else { return [] }
+        guard let encoded = Self.percentEncodedPathSegment(calInfo.id) else { return [] }
 
         var allItems: [[String: Any]] = []
         var pageToken: String? = nil
@@ -275,8 +275,8 @@ final class GoogleCalendarService {
     func patchEventTitle(eventID: String, calendarID: String = "primary", title: String) async throws -> Bool {
         let token = try await auth.getValidToken()
         let rawCalID = rawGoogleCalendarID(from: calendarID)
-        guard let encCal = rawCalID.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
-              let encEv = eventID.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
+        guard let encCal = Self.percentEncodedPathSegment(rawCalID),
+              let encEv = Self.percentEncodedPathSegment(eventID),
               let url = URL(string: "\(baseURL)/calendars/\(encCal)/events/\(encEv)") else { return false }
         var request = URLRequest(url: url)
         request.httpMethod = "PATCH"
@@ -290,8 +290,8 @@ final class GoogleCalendarService {
     func updateEvent(eventID: String, calendarID: String = "primary", title: String?, startDate: Date, endDate: Date, isAllDay: Bool) async throws -> Bool {
         let token = try await auth.getValidToken()
         let rawCalID = rawGoogleCalendarID(from: calendarID)
-        guard let encCal = rawCalID.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
-              let encEv = eventID.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
+        guard let encCal = Self.percentEncodedPathSegment(rawCalID),
+              let encEv = Self.percentEncodedPathSegment(eventID),
               let url = URL(string: "\(baseURL)/calendars/\(encCal)/events/\(encEv)") else { return false }
 
         var request = URLRequest(url: url)
@@ -323,8 +323,8 @@ final class GoogleCalendarService {
     func deleteEvent(eventID: String, calendarID: String = "primary") async throws -> Bool {
         let token = try await auth.getValidToken()
         let rawCalID = rawGoogleCalendarID(from: calendarID)
-        guard let encCal = rawCalID.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
-              let encEv = eventID.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
+        guard let encCal = Self.percentEncodedPathSegment(rawCalID),
+              let encEv = Self.percentEncodedPathSegment(eventID),
               let url = URL(string: "\(baseURL)/calendars/\(encCal)/events/\(encEv)") else { return false }
 
         var request = URLRequest(url: url)
@@ -346,6 +346,12 @@ final class GoogleCalendarService {
         return calendarID.isEmpty ? "primary" : calendarID
     }
 
+    nonisolated static func percentEncodedPathSegment(_ value: String) -> String? {
+        var allowed = CharacterSet.alphanumerics
+        allowed.insert(charactersIn: "-._~")
+        return value.addingPercentEncoding(withAllowedCharacters: allowed)
+    }
+
     // MARK: - Parse
 
     private func parseEvent(_ json: [String: Any], calInfo: GoogleCalendarInfo?) -> CalendarEvent? {
@@ -360,21 +366,19 @@ final class GoogleCalendarService {
         let endDate: Date
 
         if isAllDay {
-            let fmt = DateFormatter()
-            fmt.dateFormat = "yyyy-MM-dd"
-            fmt.timeZone = TimeZone.current
-            startDate = fmt.date(from: start["date"] as? String ?? "") ?? Date()
-            endDate = fmt.date(from: end["date"] as? String ?? "") ?? Date()
+            guard let parsedStart = Self.parseGoogleAllDayDate(start["date"] as? String),
+                  let parsedEnd = Self.parseGoogleAllDayDate(end["date"] as? String) else {
+                return nil
+            }
+            startDate = parsedStart
+            endDate = parsedEnd
         } else {
-            let fmt = ISO8601DateFormatter()
-            fmt.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-            let fmtBasic = ISO8601DateFormatter()
-            fmtBasic.formatOptions = [.withInternetDateTime]
-
-            let startStr = start["dateTime"] as? String ?? ""
-            let endStr = end["dateTime"] as? String ?? ""
-            startDate = fmt.date(from: startStr) ?? fmtBasic.date(from: startStr) ?? Date()
-            endDate = fmt.date(from: endStr) ?? fmtBasic.date(from: endStr) ?? Date()
+            guard let parsedStart = Self.parseGoogleDateTime(start["dateTime"] as? String),
+                  let parsedEnd = Self.parseGoogleDateTime(end["dateTime"] as? String) else {
+                return nil
+            }
+            startDate = parsedStart
+            endDate = parsedEnd
         }
 
         // 이벤트 자체의 colorId 우선, 없으면 캘린더 색상, 없으면 기본
@@ -394,5 +398,27 @@ final class GoogleCalendarService {
             calendarName: calName,
             calendarID: calID
         )
+    }
+
+    nonisolated static func parseGoogleAllDayDate(_ raw: String?) -> Date? {
+        guard let raw else { return nil }
+        guard raw.range(of: #"^\d{4}-\d{2}-\d{2}$"#, options: .regularExpression) != nil else {
+            return nil
+        }
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM-dd"
+        fmt.timeZone = TimeZone.current
+        fmt.locale = Locale(identifier: "en_US_POSIX")
+        fmt.isLenient = false
+        return fmt.date(from: raw)
+    }
+
+    nonisolated static func parseGoogleDateTime(_ raw: String?) -> Date? {
+        guard let raw else { return nil }
+        let fractional = ISO8601DateFormatter()
+        fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let basic = ISO8601DateFormatter()
+        basic.formatOptions = [.withInternetDateTime]
+        return fractional.date(from: raw) ?? basic.date(from: raw)
     }
 }
