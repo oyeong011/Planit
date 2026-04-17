@@ -32,6 +32,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         _ = NotificationService()
 
+        AppearanceService.shared.bootstrap()
         NSApp.setActivationPolicy(.accessory)
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
