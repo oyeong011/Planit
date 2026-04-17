@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Sparkle
 import UserNotifications
@@ -31,6 +32,9 @@ final class UpdaterService: NSObject, ObservableObject {
 
     /// 사용자 수동 체크 — Sparkle 다이얼로그 표시
     func checkForUpdates() {
+        // LSUIElement(.accessory) 앱은 기본적으로 비활성 상태이므로
+        // Sparkle 윈도우가 생성돼도 앞에 나타나지 않는다. 먼저 앱을 활성화.
+        NSApp.activate(ignoringOtherApps: true)
         controller.checkForUpdates(nil)
     }
 
