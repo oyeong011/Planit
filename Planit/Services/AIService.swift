@@ -274,26 +274,128 @@ final class AIService: ObservableObject {
         return runCLIDirect(executablePath: claudePath, args: args, input: prompt, isCodex: false)
     }
 
-    /// Resolve absolute path for a command without login shell.
-    /// Searches known directories in priority order (system-managed first).
+    /// Resolve absolute path for a command.
+    /// 1) User-configured override (Planit/ai/<cmd>Path), if executable.
+    /// 2) Fast path: check a curated set of directories (system + common user tooling dirs).
+    /// 3) Fallback: run the user's login shell to inherit nvm/volta/asdf/direnv PATH.
     nonisolated private static func resolvePath(_ cmd: String) -> String? {
         guard cmd == "claude" || cmd == "codex" else { return nil }
 
-        // 시스템 관리 경로만 허용 — 사용자 쓰기가능 경로(~/.local/bin 등)는 악성 바이너리 주입 위험
-        let searchPaths = [
+        if let override = loadPathOverride(cmd: cmd),
+           FileManager.default.isExecutableFile(atPath: override) {
+            return override
+        }
+
+        let home = NSHomeDirectory()
+        // 시스템 경로 우선, 이어서 개별 사용자가 흔히 설치하는 툴체인별 bin 경로.
+        // 사용자 홈 기반 경로는 동일 사용자 권한이라 추가 공격 표면이 아님 —
+        // 공격자가 홈에 쓸 수 있으면 이미 코드 실행 가능한 상황.
+        var searchDirs: [String] = [
             "/opt/homebrew/bin",
             "/usr/local/bin",
             "/usr/bin",
+            "\(home)/.local/bin",
+            "\(home)/bin",
+            "\(home)/.npm-global/bin",
+            "\(home)/.volta/bin",
+            "\(home)/.bun/bin",
+            "\(home)/.cargo/bin",
+            "\(home)/.asdf/shims",
         ]
+        // nvm: ~/.nvm/versions/node/*/bin — 설치된 모든 node 버전 탐색
+        let nvmRoot = "\(home)/.nvm/versions/node"
+        if let entries = try? FileManager.default.contentsOfDirectory(atPath: nvmRoot) {
+            for v in entries.sorted().reversed() {
+                searchDirs.append("\(nvmRoot)/\(v)/bin")
+            }
+        }
 
-        for dir in searchPaths {
+        for dir in searchDirs {
             let full = "\(dir)/\(cmd)"
             if FileManager.default.isExecutableFile(atPath: full) {
                 return full
             }
         }
 
-        return nil
+        return loginShellWhich(cmd: cmd)
+    }
+
+    /// 설정 화면에서 사용자가 직접 지정한 경로를 읽음.
+    nonisolated private static func loadPathOverride(cmd: String) -> String? {
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+        guard let url = support?.appendingPathComponent("Planit/ai/\(cmd)Path") else { return nil }
+        guard let data = try? Data(contentsOf: url),
+              let raw = String(data: data, encoding: .utf8) else { return nil }
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
+    /// 사용자가 Planit.app/ai 설정에서 경로를 저장/삭제할 때 사용.
+    nonisolated static func savePathOverride(cmd: String, path: String?) {
+        guard cmd == "claude" || cmd == "codex" else { return }
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+        guard let dir = support?.appendingPathComponent("Planit/ai", isDirectory: true) else { return }
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true,
+                                                  attributes: [.posixPermissions: 0o700])
+        let file = dir.appendingPathComponent("\(cmd)Path")
+        if let path, !path.trimmingCharacters(in: .whitespaces).isEmpty {
+            try? path.data(using: .utf8)?.write(to: file, options: .atomic)
+        } else {
+            try? FileManager.default.removeItem(at: file)
+        }
+    }
+
+    /// Login shell을 1회 실행해 `command -v <cmd>` 결과를 가져온다.
+    /// nvm/volta/asdf/direnv 등 사용자 쉘 설정까지 상속받기 위한 최후 수단.
+    /// 출력이 사용자 HOME 경로 혹은 알려진 시스템 경로로 시작하지 않으면 거부.
+    nonisolated private static func loginShellWhich(cmd: String) -> String? {
+        let shellPath = ProcessInfo.processInfo.environment["SHELL"] ?? "/bin/zsh"
+        // Sandboxed shell 경로만 허용 — 악의적 SHELL env 방어.
+        let allowedShells: Set<String> = ["/bin/zsh", "/bin/bash", "/bin/sh", "/usr/bin/zsh", "/usr/bin/bash"]
+        let shell = allowedShells.contains(shellPath) ? shellPath : "/bin/zsh"
+
+        let proc = Process()
+        proc.executableURL = URL(fileURLWithPath: shell)
+        proc.arguments = ["-l", "-c", "command -v \(cmd)"]
+        // 최소 PATH만 명시 — 사용자 dotfiles이 PATH를 확장하면 거기서 찾음
+        proc.environment = [
+            "HOME": NSHomeDirectory(),
+            "PATH": "/usr/bin:/bin",
+            "SHELL": shell,
+            "LANG": "en_US.UTF-8",
+        ]
+        let pipe = Pipe()
+        proc.standardOutput = pipe
+        proc.standardError = Pipe()
+
+        do {
+            try proc.run()
+            // 5초 타임아웃 방어
+            let deadline = Date().addingTimeInterval(5)
+            while proc.isRunning && Date() < deadline {
+                Thread.sleep(forTimeInterval: 0.05)
+            }
+            if proc.isRunning {
+                proc.terminate()
+                return nil
+            }
+        } catch {
+            return nil
+        }
+
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        guard let raw = String(data: data, encoding: .utf8) else { return nil }
+        let path = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !path.isEmpty, path.hasPrefix("/"),
+              FileManager.default.isExecutableFile(atPath: path) else { return nil }
+
+        let home = NSHomeDirectory()
+        let allowedPrefixes = [
+            "/opt/homebrew/", "/usr/local/", "/usr/bin/", "/bin/",
+            "\(home)/",  // 사용자 홈 내부면 허용 (nvm, asdf, cargo 등 모두 여기로 수렴)
+        ]
+        guard allowedPrefixes.contains(where: { path.hasPrefix($0) }) else { return nil }
+        return path
     }
 
     // MARK: - Settings

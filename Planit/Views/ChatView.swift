@@ -21,6 +21,14 @@ struct ChatView: View {
     private static let maxAttachments = 5
     private static let maxFileSize: Int = AttachmentSecurity.maxAttachmentBytes
 
+    /// 초기 설정 체크리스트가 "현재 선택된 provider"를 기준으로 판정하도록.
+    private var selectedProviderAvailable: Bool {
+        switch aiService.provider {
+        case .claude: return aiService.claudeAvailable
+        case .codex:  return aiService.codexAvailable
+        }
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -148,13 +156,13 @@ struct ChatView: View {
 
                 Divider()
 
-                // Step 1 — AI 설치
+                // Step 1 — AI 설치 (선택된 provider 기준으로만 체크)
                 setupStep(
                     number: 1,
                     icon: "terminal.fill",
                     color: .purple,
                     title: String(localized: "setup.step1.title"),
-                    done: aiService.claudeAvailable || aiService.codexAvailable
+                    done: selectedProviderAvailable
                 ) {
                     VStack(alignment: .leading, spacing: 8) {
                         // Claude Code
@@ -248,8 +256,8 @@ struct ChatView: View {
                     }
                 }
 
-                // 완료 상태
-                if (aiService.claudeAvailable || aiService.codexAvailable) && viewModel.authManager.isAuthenticated {
+                // 완료 상태 — 선택된 provider의 CLI가 감지된 경우만
+                if selectedProviderAvailable && viewModel.authManager.isAuthenticated {
                     HStack(spacing: 8) {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundStyle(.green)
