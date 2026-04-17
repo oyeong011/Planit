@@ -673,29 +673,9 @@ struct DailyDetailView: View {
                     Spacer()
 
                     HStack(spacing: 8) {
-                        // 업데이트 알림 배너
-                        if updater.updateAvailable, let latest = updater.latestVersion {
-                            Button {
-                                updater.checkForUpdates()
-                            } label: {
-                                HStack(spacing: 5) {
-                                    Image(systemName: "arrow.down.circle.fill")
-                                        .font(.system(size: 11))
-                                    Text("v\(latest)")
-                                        .font(.system(size: 11, weight: .semibold))
-                                    Text(String(localized: "update.available"))
-                                        .font(.system(size: 10))
-                                }
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 9)
-                                .padding(.vertical, 4)
-                                .background(Capsule().fill(Color.orange))
-                            }
-                            .buttonStyle(.plain)
-                            .contentShape(Capsule())
-                            .help(String(format: String(localized: "update.tap.to.update"), latest))
-                            .transition(.scale.combined(with: .opacity))
-                        }
+                        // 업데이트 알림은 팝오버 하단 UpdateAvailableBanner가 담당 —
+                        // 여기 헤더의 capsule 배지는 폭이 좁은 DailyDetailView에서
+                        // 텍스트가 세로로 쥐어지는 레이아웃 깨짐 때문에 제거.
 
                         Button {
                             showCategoryManager.toggle()
