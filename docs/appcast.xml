@@ -345,5 +345,18 @@ brew install --cask oyeong011/calen/calen-ai
 ### 직접 다운로드
 아래 Assets에서 DMG 파일을 받아 설치하세요.]]></description>
     </item>
+            <item>
+        <title>v0.2.16</title>
+        <sparkle:version>216</sparkle:version>
+        <sparkle:shortVersionString>0.2.16</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 13:14:00 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.16/Calen-0.2.16-universal.zip"
+            sparkle:edSignature="xbkS2oEN/wA0NHdCuxeG4BtnccIKAVAHqTFSDj2IOAxy3d1qS0AD03f3Omvvc+YRS6MIBWNA2gBo9K46YDi7CQ=="
+            length="5666137"
+            type="application/octet-stream" />
+        <description><![CDATA[릴리스 v0.2.16]]></description>
+    </item>
     </channel>
 </rss>
