@@ -1245,6 +1245,9 @@ struct ReviewView: View {
         let events = viewModel.calendarEvents.map {
             (id: $0.id, title: $0.title, startDate: $0.startDate)
         }
+        let todos = viewModel.todos.map {
+            (id: $0.id.uuidString, title: $0.title, date: $0.date, isCompleted: $0.isCompleted)
+        }
         let completedIDs = viewModel.completedEventIDs
 
         return VStack(alignment: .leading, spacing: 8) {
@@ -1280,6 +1283,20 @@ struct ReviewView: View {
         }
         .padding(12)
         .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground))
+        .task(id: refreshMatchKey(events: events, todos: todos)) {
+            await goalMemoryService.refreshMatches(events: events, todos: todos)
+        }
+    }
+
+    /// goals/events/todos 중 하나라도 바뀌면 분류 재실행 (task의 id 값).
+    private func refreshMatchKey(
+        events: [(id: String, title: String, startDate: Date)],
+        todos: [(id: String, title: String, date: Date, isCompleted: Bool)]
+    ) -> String {
+        let goalPart = goalMemoryService.goals.map(\.id.uuidString).sorted().joined(separator: ",")
+        let eventPart = "\(events.count)-\(events.last?.id ?? "")"
+        let todoPart = "\(todos.count)-\(todos.filter { $0.isCompleted }.count)"
+        return "\(goalPart)|\(eventPart)|\(todoPart)"
     }
 
     private func goalEditSheet(editing goal: ChatGoal?) -> some View {
@@ -1449,7 +1466,8 @@ struct ReviewView: View {
         let rate = goalMemoryService.progressRate(for: goal, events: events, completedIDs: completedIDs)
         let trend = goalMemoryService.trend(for: goal)
         let barColor = progressColor(for: rate)
-        let hasActivity = goal.weeklyActivity.reduce(0, +) > 0
+        let matches = goalMemoryService.monthlyMatches[goal.id] ?? []
+        let hasActivity = !matches.isEmpty || goal.weeklyActivity.reduce(0, +) > 0
         let accentColor = goalAccentColor(for: goal.timeline)
         let isHovered = hoveredGoalID == goal.id
         let isTapped = tappedGoalID == goal.id
@@ -1606,6 +1624,11 @@ struct ReviewView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
+
+                    // 매칭된 활동 리스트 (최대 3개, 더 있으면 "+N")
+                    if !matches.isEmpty {
+                        matchedActivitiesRow(matches: matches, events: events, todos: viewModel.todos, accent: accentColor)
+                    }
                 }
             }
             .padding(.horizontal, 10).padding(.vertical, 9)
@@ -1641,6 +1664,54 @@ struct ReviewView: View {
             } label: {
                 Label(String(localized: "goal.delete"), systemImage: "trash")
             }
+        }
+    }
+
+    /// 목표 카드 하단에 매칭된 활동 3개까지 pill로 표시.
+    /// 🤖 뱃지는 AI가 분류한 활동(키워드 매칭이 아닌 경우)에 붙는다.
+    @ViewBuilder
+    private func matchedActivitiesRow(
+        matches: [GoalActivityClassifier.Match],
+        events: [(id: String, title: String, startDate: Date)],
+        todos: [TodoItem],
+        accent: Color
+    ) -> some View {
+        let titleByID: [String: (title: String, isAI: Bool)] = {
+            var map: [String: (title: String, isAI: Bool)] = [:]
+            for m in matches {
+                let isAI = m.source == .ai
+                if let ev = events.first(where: { $0.id == m.activityID }) {
+                    map[m.activityID] = (ev.title, isAI)
+                } else if let todo = todos.first(where: { $0.id.uuidString == m.activityID }) {
+                    map[m.activityID] = (todo.title, isAI)
+                }
+            }
+            return map
+        }()
+
+        let visible = matches.prefix(3).compactMap { titleByID[$0.activityID] }
+        let hidden = max(matches.count - visible.count, 0)
+
+        HStack(spacing: 4) {
+            ForEach(Array(visible.enumerated()), id: \.offset) { _, item in
+                HStack(spacing: 3) {
+                    if item.isAI {
+                        Text("🤖").font(.system(size: 9))
+                    }
+                    Text(item.title)
+                        .font(.system(size: 10))
+                        .lineLimit(1)
+                }
+                .padding(.horizontal, 6).padding(.vertical, 2)
+                .background(Capsule().fill(accent.opacity(0.12)))
+                .foregroundStyle(accent.opacity(0.9))
+            }
+            if hidden > 0 {
+                Text("+\(hidden)")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
         }
     }
 
