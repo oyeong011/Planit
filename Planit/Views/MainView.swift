@@ -783,10 +783,11 @@ struct DailyDetailView: View {
     }
 
     /// 통합 재배치 제스처 — 이벤트와 할일을 하나의 풀에서 재배치.
+    /// coordinateSpace: .global — 행이 .offset으로 움직여도 translation이 절대 좌표 기준이므로 lag 없음.
     private func itemReorderGesture(
         for id: String, allItems: [CalendarViewModel.DayItem]
     ) -> AnyGesture<DragGesture.Value> {
-        AnyGesture(DragGesture(minimumDistance: 0)
+        AnyGesture(DragGesture(minimumDistance: 0, coordinateSpace: .global)
             .onChanged { value in
                 if draggingItemID != id {
                     withAnimation(.spring(response: 0.22, dampingFraction: 0.8)) {
