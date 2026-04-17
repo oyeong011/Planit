@@ -1289,14 +1289,17 @@ struct ReviewView: View {
     }
 
     /// goals/events/todos 중 하나라도 바뀌면 분류 재실행 (task의 id 값).
+    /// **순서 무관** — Set으로 정렬된 ID만 비교해 정렬만 바뀌는 경우
+    /// classify(Claude CLI) 재실행을 피한다 (CPU 과부하 원인이었음).
     private func refreshMatchKey(
         events: [(id: String, title: String, startDate: Date)],
         todos: [(id: String, title: String, date: Date, isCompleted: Bool)]
     ) -> String {
         let goalPart = goalMemoryService.goals.map(\.id.uuidString).sorted().joined(separator: ",")
-        let eventPart = "\(events.count)-\(events.last?.id ?? "")"
-        let todoPart = "\(todos.count)-\(todos.filter { $0.isCompleted }.count)"
-        return "\(goalPart)|\(eventPart)|\(todoPart)"
+        let eventIDs = events.map(\.id).sorted().joined(separator: ",")
+        // 완료 상태 변화만 재분류 유발. 단순 순서/제목 변경은 무시.
+        let todoIDs = todos.filter { !$0.isCompleted }.map(\.id).sorted().joined(separator: ",")
+        return "\(goalPart)|\(eventIDs)|\(todoIDs)"
     }
 
     private func goalEditSheet(editing goal: ChatGoal?) -> some View {
