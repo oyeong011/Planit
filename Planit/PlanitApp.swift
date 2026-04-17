@@ -133,8 +133,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func relaunchApp() {
         let appPath = Bundle.main.bundlePath
         let task = Process()
-        task.launchPath = "/bin/bash"
-        task.arguments = ["-c", "sleep 0.3 && open '\(appPath)'"]
+        task.executableURL = URL(fileURLWithPath: "/usr/bin/open")
+        task.arguments = ["-n", appPath]
         try? task.run()
         NSApp.terminate(nil)
     }

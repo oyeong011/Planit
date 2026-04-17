@@ -24,6 +24,11 @@ ZIP_PATH="$BUILD_DIR/$ZIP_NAME"
 SPARKLE_BIN="$PROJECT_DIR/.build/artifacts/sparkle/Sparkle/bin"
 APPCAST="$PROJECT_DIR/docs/appcast.xml"
 
+if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "✗ VERSION must be X.Y.Z (got: $VERSION)" >&2
+    exit 1
+fi
+
 # 1) 빌드
 bash "$PROJECT_DIR/scripts/build-app.sh" "$VERSION"
 
@@ -49,6 +54,7 @@ if [ -f "$NOTES_INPUT" ]; then
 else
     NOTES="$NOTES_INPUT"
 fi
+NOTES_CDATA="${NOTES//]]>/]]]]><![CDATA[>}"
 
 # 고정폭 단조 증가 빌드 번호 (major*10000 + minor*100 + patch)
 # 예: 0.1.26 → 126, 1.0.0 → 10000, 1.2.3 → 10203 — Sparkle 버전 비교가 항상 올바름
@@ -71,7 +77,7 @@ awk -v item="\
                 sparkle:edSignature=\"${ED_SIG}\"\n\
                 length=\"${LENGTH}\"\n\
                 type=\"application/octet-stream\" />\n\
-            <description><![CDATA[${NOTES}]]></description>\n\
+            <description><![CDATA[${NOTES_CDATA}]]></description>\n\
         </item>" \
     '
         /<\/channel>/ && !done { printf "%s\n", item; done=1 }

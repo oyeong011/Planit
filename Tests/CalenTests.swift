@@ -925,6 +925,44 @@ struct TestAIResponse: Codable {
     #expect(fmt.date(from: "") == nil)
 }
 
+@Test func googleCalendarPathSegmentEncoding_escapesSlashAndAtSign() {
+    let encoded = GoogleCalendarService.percentEncodedPathSegment("work/team@example.com")
+    #expect(encoded == "work%2Fteam%40example.com")
+}
+
+@Test func googleCalendarPathSegmentEncoding_keepsUnreservedCharacters() {
+    let encoded = GoogleCalendarService.percentEncodedPathSegment("event-1._~")
+    #expect(encoded == "event-1._~")
+}
+
+@Test func googleCalendarDateParsing_rejectsInvalidExternalDates() {
+    #expect(GoogleCalendarService.parseGoogleAllDayDate("2026-04-15") != nil)
+    #expect(GoogleCalendarService.parseGoogleAllDayDate("2026/04/15") == nil)
+    #expect(GoogleCalendarService.parseGoogleDateTime("2026-04-15T15:00:00+09:00") != nil)
+    #expect(GoogleCalendarService.parseGoogleDateTime("not-a-date") == nil)
+}
+
+@Test func aiActionDurationValidation_rejectsNonPositiveAndExcessiveValues() {
+    #expect(AIService.validatedActionDuration(nil) == 60)
+    #expect(AIService.validatedActionDuration(1) == 1)
+    #expect(AIService.validatedActionDuration(0) == nil)
+    #expect(AIService.validatedActionDuration(-30) == nil)
+    #expect(AIService.validatedActionDuration(AIService.maxActionDurationMinutes + 1) == nil)
+}
+
+@Test func aiActionIntervalValidation_requiresEndAfterStart() {
+    let start = Date(timeIntervalSince1970: 1_800_000_000)
+    #expect(AIService.isPositiveActionInterval(start: start, end: start.addingTimeInterval(60)))
+    #expect(!AIService.isPositiveActionInterval(start: start, end: start))
+    #expect(!AIService.isPositiveActionInterval(start: start, end: start.addingTimeInterval(-60)))
+}
+
+@Test func aiActionDayParsing_rejectsLenientFormats() {
+    #expect(AIService.parseActionDay("2026-04-15") != nil)
+    #expect(AIService.parseActionDay("2026/04/15") == nil)
+    #expect(AIService.parseActionDay("not-a-date") == nil)
+}
+
 // ============================================================================
 // MARK: - TC-19: ANSI 이스케이프 시퀀스 제거
 // ============================================================================
@@ -1430,6 +1468,15 @@ func cleanCodexOutput(_ raw: String) -> String {
     }
 }
 
+@Test func googleMutationQueuePolicy_retriesOnlyTransientFailures() {
+    #expect(CalendarViewModel.shouldQueueGoogleMutation(after: URLError(.notConnectedToInternet)))
+    #expect(CalendarViewModel.shouldQueueGoogleMutation(after: GoogleCalendarError.httpStatus(500)))
+    #expect(CalendarViewModel.shouldQueueGoogleMutation(after: GoogleCalendarError.httpStatus(429)))
+    #expect(!CalendarViewModel.shouldQueueGoogleMutation(after: GoogleCalendarError.httpStatus(400)))
+    #expect(!CalendarViewModel.shouldQueueGoogleMutation(after: GoogleCalendarError.httpStatus(401)))
+    #expect(!CalendarViewModel.shouldQueueGoogleMutation(after: URLError(.badURL)))
+}
+
 // ============================================================================
 // MARK: - TC-30: Google Calendar 색상 매핑
 // ============================================================================
@@ -1463,18 +1510,25 @@ func cleanCodexOutput(_ raw: String) -> String {
 // ============================================================================
 
 @Test func cliEnvironment_minimalKeys() {
-    let envKeys = ["PATH", "HOME", "NO_COLOR", "TERM", "LANG"]
-    #expect(envKeys.count == 5, "CLI에 전달하는 환경변수는 5개만이어야 함")
+    let envKeys = ["PATH", "HOME", "TMPDIR", "NO_COLOR", "TERM", "LANG"]
+    #expect(envKeys.count == 6, "CLI에 전달하는 환경변수는 최소 allowlist만 포함해야 함")
     #expect(envKeys.contains("NO_COLOR"), "ANSI 색상 비활성화 필수")
     #expect(envKeys.contains("TERM"), "TERM=dumb 설정 필수")
 }
 
 @Test func cliEnvironment_noSensitiveVars() {
-    let envKeys = Set(["PATH", "HOME", "NO_COLOR", "TERM", "LANG"])
+    let envKeys = Set(["PATH", "HOME", "TMPDIR", "NO_COLOR", "TERM", "LANG"])
     let sensitiveVars = ["API_KEY", "SECRET", "TOKEN", "PASSWORD", "AWS_ACCESS_KEY"]
     for sensitive in sensitiveVars {
         #expect(!envKeys.contains(sensitive), "민감한 환경변수 \(sensitive)이 포함되면 안 됨")
     }
+}
+
+@Test func userContextClaudeEnvironment_usesRestrictedAllowlist() {
+    let env = UserContextService.restrictedCLIEnvironment()
+    #expect(Set(env.keys) == Set(["PATH", "HOME", "TMPDIR", "NO_COLOR", "TERM", "LANG"]))
+    #expect(env["TERM"] == "dumb")
+    #expect(env["NO_COLOR"] == "1")
 }
 
 // ============================================================================
