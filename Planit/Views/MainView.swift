@@ -511,16 +511,12 @@ struct DailyDetailView: View {
     @State private var addCategoryID: UUID?
     @State private var addType: TodoType = .normal
 
-    // 할일 드래그 재배치 상태 (리뷰페이지 스타일)
-    @State private var draggingTodoID: UUID? = nil
+    // 통합 드래그 재배치 상태 (events + todos 한 리스트)
+    @State private var draggingItemID: String? = nil
     @State private var dragOffset: CGFloat = 0
-    @State private var pendingTodoOrder: [UUID] = []
-    // 이벤트 드래그 재배치 상태 (todo와 독립)
-    @State private var draggingEventID: String? = nil
-    @State private var eventDragOffset: CGFloat = 0
-    @State private var pendingEventOrder: [String] = []
-    /// 각 행의 예상 높이 — 행 콘텐츠(패딩 포함) + 행 간 간격 8pt
-    private let todoRowSlotHeight: CGFloat = 62
+    @State private var pendingItemOrder: [String] = []
+    /// 각 행의 예상 높이 — 행 콘텐츠(패딩 포함) + 행 간 간격
+    private let rowSlotHeight: CGFloat = 58
 
     private var dDayText: String {
         let diff = viewModel.daysSinceToday(viewModel.selectedDate)
@@ -624,53 +620,51 @@ struct DailyDetailView: View {
                     // 행 사이 gap(spacing) 대신 각 행의 vertical padding으로 처리 —
                     // 이래야 드롭 타겟 사이 "dead zone"이 생기지 않는다.
                     VStack(alignment: .leading, spacing: 0) {
-                        let events = viewModel.eventsForDate(viewModel.selectedDate)
-                        ForEach(events) { event in
-                            let isDragging = draggingEventID == event.id
-                            let offset = isDragging ? eventDragOffset : eventDisplacement(for: event.id, in: events)
-                            EventRowView(
-                                event: event,
-                                category: viewModel.categoryForEvent(event),
-                                isCompleted: viewModel.isEventCompleted(event.id),
-                                onTap: {
-                                    tappedEvent = event
-                                    tappedTodo = nil
-                                },
-                                onToggle: { viewModel.toggleEventCompleted(event.id, title: event.title) },
-                                isDragging: isDragging,
-                                yOffset: offset,
-                                handleDragGesture: eventReorderGesture(for: event, allEvents: events)
-                            )
-                            .padding(.vertical, 4)
+                        let items = viewModel.itemsForDate(viewModel.selectedDate)
+                        ForEach(items) { item in
+                            let isDragging = draggingItemID == item.id
+                            let offset = isDragging ? dragOffset : itemDisplacement(for: item.id, in: items)
+                            switch item {
+                            case .event(let event):
+                                EventRowView(
+                                    event: event,
+                                    category: viewModel.categoryForEvent(event),
+                                    isCompleted: viewModel.isEventCompleted(event.id),
+                                    onTap: {
+                                        tappedEvent = event
+                                        tappedTodo = nil
+                                    },
+                                    onToggle: { viewModel.toggleEventCompleted(event.id, title: event.title) },
+                                    isDragging: isDragging,
+                                    yOffset: offset,
+                                    handleDragGesture: itemReorderGesture(for: item.id, allItems: items)
+                                )
+                                .padding(.vertical, 4)
+                            case .todo(let todo):
+                                let cat = viewModel.category(for: todo.categoryID)
+                                TodoRowView(
+                                    todo: todo,
+                                    category: cat,
+                                    isRescheduled: viewModel.rescheduledTodoIDs.contains(todo.id),
+                                    onTap: {
+                                        tappedTodo = todo
+                                        tappedEvent = nil
+                                    },
+                                    onToggle: { viewModel.toggleTodo(id: todo.id) },
+                                    isDragging: isDragging,
+                                    yOffset: offset,
+                                    handleDragGesture: todo.source == .local
+                                        ? itemReorderGesture(for: item.id, allItems: items)
+                                        : nil
+                                )
+                                .transition(.asymmetric(
+                                    insertion: .opacity.combined(with: .scale(scale: 0.96)),
+                                    removal: .opacity
+                                ))
+                            }
                         }
 
-                        let todos = viewModel.todosForDate(viewModel.selectedDate)
-                        ForEach(todos) { todo in
-                            let cat = viewModel.category(for: todo.categoryID)
-                            let isDragging = draggingTodoID == todo.id
-                            let offset = isDragging ? dragOffset : todoDisplacement(for: todo.id, in: todos)
-                            TodoRowView(
-                                todo: todo,
-                                category: cat,
-                                isRescheduled: viewModel.rescheduledTodoIDs.contains(todo.id),
-                                onTap: {
-                                    tappedTodo = todo
-                                    tappedEvent = nil
-                                },
-                                onToggle: { viewModel.toggleTodo(id: todo.id) },
-                                isDragging: isDragging,
-                                yOffset: offset,
-                                handleDragGesture: todo.source == .local
-                                    ? todoReorderGesture(for: todo, allTodos: todos)
-                                    : nil
-                            )
-                            .transition(.asymmetric(
-                                insertion: .opacity.combined(with: .scale(scale: 0.96)),
-                                removal: .opacity
-                            ))
-                        }
-
-                        if events.isEmpty && todos.isEmpty && !showAddForm {
+                        if items.isEmpty && !showAddForm {
                             Text(String(localized: "detail.no.events"))
                                 .font(.system(size: 13))
                                 .foregroundStyle(.tertiary)
@@ -755,22 +749,31 @@ struct DailyDetailView: View {
         }
     }
 
-    // MARK: - Event Reorder Drag
+    // MARK: - Unified Item Reorder Drag (events + todos, 리뷰페이지 스타일)
 
-    private func eventDisplacement(for id: String, in events: [CalendarEvent]) -> CGFloat {
-        guard let dID = draggingEventID, dID != id,
-              let origIdx = events.firstIndex(where: { $0.id == id }),
-              let pendIdx = pendingEventOrder.firstIndex(of: id),
+    /// 드래그 중이 아닐 때 다른 행이 비켜야 할 y 변위. pendingOrder 기준.
+    /// Apple Reminder는 재배치 대상이 아니므로 displacement 계산에서 제외.
+    private func itemDisplacement(for id: String, in items: [CalendarViewModel.DayItem]) -> CGFloat {
+        guard let dID = draggingItemID, dID != id else { return 0 }
+        let reorderable = items.filter { !isReminder($0) }.map(\.id)
+        guard let origIdx = reorderable.firstIndex(of: id),
+              let pendIdx = pendingItemOrder.firstIndex(of: id),
               origIdx != pendIdx else { return 0 }
-        return CGFloat(pendIdx - origIdx) * todoRowSlotHeight
+        return CGFloat(pendIdx - origIdx) * rowSlotHeight
     }
 
-    private func computePendingEventOrder(
-        dragging id: String, offset: CGFloat, allEvents: [CalendarEvent]
+    private func isReminder(_ item: CalendarViewModel.DayItem) -> Bool {
+        if case .todo(let t) = item, t.source == .appleReminder { return true }
+        return false
+    }
+
+    /// 현재 드래그 offset으로 통합 예상 순서를 계산.
+    private func computePendingItemOrder(
+        dragging id: String, offset: CGFloat, allItems: [CalendarViewModel.DayItem]
     ) -> [String] {
-        let ids = allEvents.map(\.id)
+        let ids = allItems.filter { !isReminder($0) }.map(\.id)
         guard let fromIdx = ids.firstIndex(of: id) else { return ids }
-        let steps = Int((offset / todoRowSlotHeight).rounded())
+        let steps = Int((offset / rowSlotHeight).rounded())
         let toIdx = max(0, min(ids.count - 1, fromIdx + steps))
         guard toIdx != fromIdx else { return ids }
         var result = ids
@@ -779,99 +782,36 @@ struct DailyDetailView: View {
         return result
     }
 
-    private func eventReorderGesture(
-        for event: CalendarEvent, allEvents: [CalendarEvent]
+    /// 통합 재배치 제스처 — 이벤트와 할일을 하나의 풀에서 재배치.
+    private func itemReorderGesture(
+        for id: String, allItems: [CalendarViewModel.DayItem]
     ) -> AnyGesture<DragGesture.Value> {
         AnyGesture(DragGesture(minimumDistance: 0)
             .onChanged { value in
-                if draggingEventID != event.id {
+                if draggingItemID != id {
                     withAnimation(.spring(response: 0.22, dampingFraction: 0.8)) {
-                        draggingEventID = event.id
-                        pendingEventOrder = allEvents.map(\.id)
-                    }
-                }
-                eventDragOffset = value.translation.height
-                let newPending = computePendingEventOrder(
-                    dragging: event.id,
-                    offset: eventDragOffset,
-                    allEvents: allEvents
-                )
-                if newPending != pendingEventOrder {
-                    withAnimation(.spring(response: 0.32, dampingFraction: 0.72)) {
-                        pendingEventOrder = newPending
-                    }
-                }
-            }
-            .onEnded { _ in
-                if !pendingEventOrder.isEmpty {
-                    viewModel.setEventOrder(pendingEventOrder, on: viewModel.selectedDate)
-                }
-                withAnimation(.spring(response: 0.38, dampingFraction: 0.72)) {
-                    draggingEventID = nil
-                    eventDragOffset = 0
-                    pendingEventOrder = []
-                }
-            })
-    }
-
-    // MARK: - Todo Reorder Drag (리뷰페이지 스타일)
-
-    /// 드래그 중이 아닐 때 다른 행이 비켜야 할 y 변위.
-    /// pendingOrder 기준 예상 인덱스 - 현재 인덱스 * slot 높이.
-    private func todoDisplacement(for id: UUID, in todos: [TodoItem]) -> CGFloat {
-        guard let dID = draggingTodoID, dID != id,
-              let origIdx = todos.firstIndex(where: { $0.id == id }),
-              let pendIdx = pendingTodoOrder.firstIndex(of: id),
-              origIdx != pendIdx else { return 0 }
-        return CGFloat(pendIdx - origIdx) * todoRowSlotHeight
-    }
-
-    /// 현재 드래그 offset으로 예상 순서를 계산.
-    private func computePendingTodoOrder(
-        dragging id: UUID, offset: CGFloat, allTodos: [TodoItem]
-    ) -> [UUID] {
-        let localIDs = allTodos.filter { $0.source == .local }.map(\.id)
-        guard let fromIdx = localIDs.firstIndex(of: id) else { return localIDs }
-        let steps = Int((offset / todoRowSlotHeight).rounded())
-        let toIdx = max(0, min(localIDs.count - 1, fromIdx + steps))
-        guard toIdx != fromIdx else { return localIDs }
-        var result = localIDs
-        result.move(fromOffsets: IndexSet(integer: fromIdx),
-                    toOffset: toIdx > fromIdx ? toIdx + 1 : toIdx)
-        return result
-    }
-
-    /// 드래그 핸들에만 부착되는 재배치 제스처.
-    /// 핸들 위에서 시작한 드래그만 여기로 옴 → .draggable(크로스뷰)와 공간적으로 분리.
-    private func todoReorderGesture(for todo: TodoItem, allTodos: [TodoItem]) -> AnyGesture<DragGesture.Value> {
-        AnyGesture(DragGesture(minimumDistance: 0)
-            .onChanged { value in
-                if draggingTodoID != todo.id {
-                    withAnimation(.spring(response: 0.22, dampingFraction: 0.8)) {
-                        draggingTodoID = todo.id
-                        pendingTodoOrder = allTodos.filter { $0.source == .local }.map(\.id)
+                        draggingItemID = id
+                        pendingItemOrder = allItems.filter { !isReminder($0) }.map(\.id)
                     }
                 }
                 dragOffset = value.translation.height
-                let newPending = computePendingTodoOrder(
-                    dragging: todo.id,
-                    offset: dragOffset,
-                    allTodos: allTodos
+                let newPending = computePendingItemOrder(
+                    dragging: id, offset: dragOffset, allItems: allItems
                 )
-                if newPending != pendingTodoOrder {
+                if newPending != pendingItemOrder {
                     withAnimation(.spring(response: 0.32, dampingFraction: 0.72)) {
-                        pendingTodoOrder = newPending
+                        pendingItemOrder = newPending
                     }
                 }
             }
             .onEnded { _ in
-                if !pendingTodoOrder.isEmpty {
-                    viewModel.setLocalTodoOrder(pendingTodoOrder, on: viewModel.selectedDate)
+                if !pendingItemOrder.isEmpty {
+                    viewModel.setDayItemOrder(pendingItemOrder, on: viewModel.selectedDate)
                 }
                 withAnimation(.spring(response: 0.38, dampingFraction: 0.72)) {
-                    draggingTodoID = nil
+                    draggingItemID = nil
                     dragOffset = 0
-                    pendingTodoOrder = []
+                    pendingItemOrder = []
                 }
             })
     }

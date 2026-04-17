@@ -96,7 +96,7 @@ final class CalendarViewModel: ObservableObject {
         loadCategories()
         loadTodos()
         loadTodoOrder()
-        loadEventOrder()
+        loadDayItemOrder()
         loadCompletedEvents()
         loadPendingEdits()
         loadEventCategoryMappings()
@@ -703,7 +703,7 @@ final class CalendarViewModel: ObservableObject {
         let dayStart = calendar.startOfDay(for: date)
         let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart)!
 
-        let filtered = calendarEvents.filter { event in
+        return calendarEvents.filter { event in
             guard !todoEventIds.contains(event.id) else { return false }
             if event.isAllDay {
                 let eventStart = calendar.startOfDay(for: event.startDate)
@@ -712,14 +712,6 @@ final class CalendarViewModel: ObservableObject {
             } else {
                 return event.startDate < dayEnd && event.endDate > dayStart
             }
-        }
-        // 수동 정렬: eventOrder에 있는 순서 우선, 없는 건 startDate 오름차순 fallback
-        let order = eventOrder[dateKey(date)] ?? []
-        return filtered.sorted { a, b in
-            let ai = order.firstIndex(of: a.id) ?? Int.max
-            let bi = order.firstIndex(of: b.id) ?? Int.max
-            if ai != bi { return ai < bi }
-            return a.startDate < b.startDate
         }
     }
 
@@ -737,33 +729,72 @@ final class CalendarViewModel: ObservableObject {
         return ordered + reminders
     }
 
-    // MARK: - Manual Ordering (per-date, todos + events)
+    // MARK: - Manual Ordering (per-date, 통합 events + todos)
 
-    /// date("yyyy-MM-dd") → [UUID] 순서. 없는 날짜는 생성 순서 기본.
+    /// 이벤트와 할일을 함께 재배치할 수 있는 통합 아이템 타입.
+    enum DayItem: Identifiable {
+        case event(CalendarEvent)
+        case todo(TodoItem)
+        var id: String {
+            switch self {
+            case .event(let e): return "event:\(e.id)"
+            case .todo(let t):  return "todo:\(t.id.uuidString)"
+            }
+        }
+        var sortDate: Date {
+            switch self {
+            case .event(let e): return e.startDate
+            case .todo(let t):  return t.date
+            }
+        }
+    }
+
+    /// date("yyyy-MM-dd") → [itemID] 순서 (이벤트와 할일이 섞인 통합 순서)
+    @Published private var dayItemOrder: [String: [String]] = [:]
+    private let dayItemOrderKey = "planit.dayItemOrder.v1"
+
+    /// (하위 호환) todosForDate가 참조하던 per-type 순서 — 이제 dayItemOrder에서 파생
     @Published private var todoOrder: [String: [UUID]] = [:]
     private let todoOrderKey = "planit.todoOrder.v1"
 
-    /// date("yyyy-MM-dd") → [EventID] 순서. 없는 날짜는 startDate 기본.
-    @Published private var eventOrder: [String: [String]] = [:]
-    private let eventOrderKey = "planit.eventOrder.v1"
+    /// 특정 날짜의 통합 아이템 목록. dayItemOrder 있으면 그 순서,
+    /// 없으면 이벤트 먼저(시간순) + 할일(date순) 기본 정렬.
+    /// Apple Reminder는 외부 관리라 항상 맨 뒤에 분리 배치.
+    func itemsForDate(_ date: Date) -> [DayItem] {
+        let events = eventsForDate(date).map { DayItem.event($0) }
+        let localTodos = todos
+            .filter { calendar.isDate($0.date, inSameDayAs: date) && $0.source == .local }
+            .map { DayItem.todo($0) }
+        let reminders = appleRemindersForDate(date).map { DayItem.todo($0) }
 
-    /// 특정 날짜의 이벤트 순서를 통째로 설정
-    func setEventOrder(_ ids: [String], on date: Date) {
-        guard !ids.isEmpty else { return }
-        eventOrder[dateKey(date)] = ids
-        saveEventOrder()
+        let unified = events + localTodos
+        let order = dayItemOrder[dateKey(date)] ?? []
+        let sorted = unified.sorted { a, b in
+            let ai = order.firstIndex(of: a.id) ?? Int.max
+            let bi = order.firstIndex(of: b.id) ?? Int.max
+            if ai != bi { return ai < bi }
+            return a.sortDate < b.sortDate
+        }
+        return sorted + reminders
     }
 
-    func loadEventOrder() {
-        guard let data = UserDefaults.standard.data(forKey: eventOrderKey),
+    /// 드래그 완료 시 통합 순서를 통째로 저장. Apple Reminder는 입력에서 제외됨.
+    func setDayItemOrder(_ ids: [String], on date: Date) {
+        guard !ids.isEmpty else { return }
+        dayItemOrder[dateKey(date)] = ids
+        saveDayItemOrder()
+    }
+
+    func loadDayItemOrder() {
+        guard let data = UserDefaults.standard.data(forKey: dayItemOrderKey),
               let decoded = try? JSONDecoder().decode([String: [String]].self, from: data)
         else { return }
-        eventOrder = decoded
+        dayItemOrder = decoded
     }
 
-    private func saveEventOrder() {
-        if let data = try? JSONEncoder().encode(eventOrder) {
-            UserDefaults.standard.set(data, forKey: eventOrderKey)
+    private func saveDayItemOrder() {
+        if let data = try? JSONEncoder().encode(dayItemOrder) {
+            UserDefaults.standard.set(data, forKey: dayItemOrderKey)
         }
     }
 
