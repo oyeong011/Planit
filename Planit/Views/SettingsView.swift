@@ -902,6 +902,21 @@ struct SettingsView: View {
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
+                    Button {
+                        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
+                        let osVersion = ProcessInfo.processInfo.operatingSystemVersionString
+                        let subject = "Calen v\(version) 피드백"
+                        let body = "\n\n---\n앱 버전: \(version)\nmacOS: \(osVersion)"
+                        let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+                        let encodedBody = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+                        if let url = URL(string: "mailto:oyeong011@gmail.com?subject=\(encodedSubject)&body=\(encodedBody)") {
+                            NSWorkspace.shared.open(url)
+                        }
+                    } label: {
+                        Label("피드백 보내기", systemImage: "envelope")
+                            .font(.system(size: 12))
+                    }
+                    .buttonStyle(.bordered)
                 }
             }
         }
