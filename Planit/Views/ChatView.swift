@@ -19,7 +19,7 @@ struct ChatView: View {
     /// 허용하는 파일 타입
     private static let allowedTypes: [UTType] = [.pdf]
     private static let maxAttachments = 5
-    private static let maxFileSize: Int = 20_971_520  // 20MB
+    private static let maxFileSize: Int = AttachmentSecurity.maxAttachmentBytes
 
     var body: some View {
         VStack(spacing: 0) {
@@ -624,13 +624,7 @@ struct ChatView: View {
     private func addAttachment(url: URL) {
         guard attachments.count < Self.maxAttachments else { return }
 
-        let ext = url.pathExtension.lowercased()
-        let imageExts = ["png", "jpg", "jpeg", "gif", "webp", "tiff", "bmp", "heic"]
-        guard imageExts.contains(ext) || ext == "pdf" else { return }
-
-        // 파일 크기 제한
-        if let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
-           let size = attrs[.size] as? Int, size > Self.maxFileSize { return }
+        guard AttachmentSecurity.validateFile(url: url, maxBytes: Self.maxFileSize) != nil else { return }
 
         // 중복 방지
         guard !attachments.contains(where: { $0.url == url }) else { return }

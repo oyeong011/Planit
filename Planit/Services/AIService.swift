@@ -41,28 +41,38 @@ struct ChatAttachment: Identifiable {
     var thumbnail: CGImage?
 
     init(url: URL) {
-        self.url = url
+        let resolved = url.resolvingSymlinksInPath()
+        self.url = resolved
         self.fileName = url.lastPathComponent
-        let ext = url.pathExtension.lowercased()
-        if ext == "pdf" {
+        if AttachmentSecurity.validateFile(url: resolved) == .pdf {
             self.type = .pdf
-            self.thumbnail = Self.pdfThumbnail(url: url)
+            self.thumbnail = Self.pdfThumbnail(url: resolved)
         } else {
             self.type = .image
-            self.thumbnail = Self.imageThumbnail(url: url)
+            self.thumbnail = Self.imageThumbnail(url: resolved)
         }
     }
 
     /// 이미지 파일에서 CGImage 로드
     private static func imageThumbnail(url: URL) -> CGImage? {
-        guard let src = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
-        return CGImageSourceCreateImageAtIndex(src, 0, nil)
+        guard AttachmentSecurity.validateFile(url: url) == .image else { return nil }
+        let options: [CFString: Any] = [
+            kCGImageSourceShouldCache: false,
+            kCGImageSourceCreateThumbnailFromImageIfAbsent: true,
+            kCGImageSourceThumbnailMaxPixelSize: 160,
+        ]
+        guard let src = CGImageSourceCreateWithURL(url as CFURL, [kCGImageSourceShouldCache: false] as CFDictionary) else {
+            return nil
+        }
+        return CGImageSourceCreateThumbnailAtIndex(src, 0, options as CFDictionary)
     }
 
     /// PDF 첫 페이지를 CGImage 썸네일로 렌더 (크로스플랫폼)
     private static func pdfThumbnail(url: URL, size: CGFloat = 80) -> CGImage? {
+        guard AttachmentSecurity.validateFile(url: url) == .pdf else { return nil }
         guard let doc = PDFDocument(url: url), let page = doc.page(at: 0) else { return nil }
         let bounds = page.bounds(for: .mediaBox)
+        guard bounds.width > 0, bounds.height > 0 else { return nil }
         let scale = min(size / bounds.width, size / bounds.height)
         let w = Int(bounds.width * scale)
         let h = Int(bounds.height * scale)
@@ -1264,6 +1274,7 @@ final class AIService: ObservableObject {
     // MARK: - PDF 텍스트 추출
 
     nonisolated private static func extractPDFText(url: URL, maxPages: Int = 20) -> String? {
+        guard AttachmentSecurity.validateFile(url: url) == .pdf else { return nil }
         guard let doc = PDFDocument(url: url) else { return nil }
         let pageCount = min(doc.pageCount, maxPages)
         var text = "[\(url.lastPathComponent) — \(doc.pageCount)페이지]\n"
