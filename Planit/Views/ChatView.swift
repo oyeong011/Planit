@@ -146,7 +146,7 @@ struct ChatView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 6) {
                         Image(systemName: "wand.and.stars")
-                            .foregroundStyle(.purple)
+                            .foregroundStyle(themeService.current.accent)
                         Text(String(localized: "setup.title"))
                             .font(.system(size: 14, weight: .bold))
                     }
@@ -162,7 +162,7 @@ struct ChatView: View {
                 setupStep(
                     number: 1,
                     icon: "terminal.fill",
-                    color: .purple,
+                    color: themeService.current.accent,
                     title: String(localized: "setup.step1.title"),
                     done: selectedProviderAvailable
                 ) {
@@ -177,7 +177,7 @@ struct ChatView: View {
                                 "claude --version"
                             ],
                             isInstalled: aiService.claudeAvailable,
-                            badgeColor: .purple
+                            badgeColor: themeService.current.accent
                         )
 
                         // Codex
@@ -202,10 +202,10 @@ struct ChatView: View {
                                 Text(String(localized: "chat.redetect"))
                                     .font(.system(size: 11, weight: .medium))
                             }
-                            .foregroundStyle(.purple)
+                            .foregroundStyle(themeService.current.accent)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 5)
-                            .background(RoundedRectangle(cornerRadius: 6).stroke(Color.purple.opacity(0.4)))
+                            .background(RoundedRectangle(cornerRadius: 6).stroke(themeService.current.accent.opacity(0.4)))
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
@@ -467,7 +467,7 @@ struct ChatView: View {
                 Button { sendMessage() } label: {
                     Image(systemName: "arrow.up.circle.fill")
                         .font(.system(size: 20))
-                        .foregroundStyle(canSend ? Color.purple : Color.secondary)
+                        .foregroundStyle(canSend ? themeService.current.accent : Color.secondary)
                         .frame(width: 28, height: 28)
                         .contentShape(Rectangle())
                 }
@@ -492,7 +492,7 @@ struct ChatView: View {
             VStack(spacing: 4) {
                 Image(systemName: "sparkles")
                     .font(.system(size: 24))
-                    .foregroundStyle(.purple)
+                    .foregroundStyle(themeService.current.accent)
                 Text(String(localized: "chat.assistant.title"))
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(.primary)
@@ -511,7 +511,7 @@ struct ChatView: View {
                         HStack(spacing: 6) {
                             Image(systemName: quickActionIcon(action))
                                 .font(.system(size: 10))
-                                .foregroundStyle(.purple)
+                                .foregroundStyle(themeService.current.accent)
                                 .frame(width: 14)
                             Text(action)
                                 .font(.system(size: 11))
@@ -530,7 +530,7 @@ struct ChatView: View {
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.purple.opacity(0.15), lineWidth: 1)
+                                .stroke(themeService.current.accent.opacity(0.18), lineWidth: 1)
                         )
                         .contentShape(Rectangle())
                     }
@@ -892,6 +892,7 @@ struct ChatView: View {
 
 struct ChatBubble: View {
     let message: ChatMessage
+    @ObservedObject private var themeService = CalendarThemeService.shared
 
     /// Markdown 문자열을 AttributedString으로 변환 (실패 시 plain text fallback)
     static func markdownText(_ raw: String) -> AttributedString {
@@ -954,7 +955,7 @@ struct ChatBubble: View {
                     .background(
                         RoundedRectangle(cornerRadius: 12)
                             .fill(message.role == .user
-                                  ? Color.purple.opacity(0.2)
+                                  ? themeService.current.accent.opacity(0.2)
                                   : Color.platformControlBackground)
                     )
                 }
@@ -969,6 +970,7 @@ struct ChatBubble: View {
 
 struct AISettingsPopover: View {
     @ObservedObject var aiService: AIService
+    @ObservedObject private var themeService = CalendarThemeService.shared
     @State private var tempProvider: AIProvider = .claude
 
     var body: some View {
@@ -999,7 +1001,7 @@ struct AISettingsPopover: View {
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 6)
-                    .background(RoundedRectangle(cornerRadius: 6).fill(Color.purple))
+                    .background(RoundedRectangle(cornerRadius: 6).fill(themeService.current.accent))
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -1018,6 +1020,7 @@ struct ProviderRow: View {
     let provider: AIProvider
     let isSelected: Bool
     let aiService: AIService
+    @ObservedObject private var themeService = CalendarThemeService.shared
 
     private var isAvailable: Bool {
         switch provider {
@@ -1037,7 +1040,7 @@ struct ProviderRow: View {
         HStack(spacing: 8) {
             Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                 .font(.system(size: 14))
-                .foregroundStyle(isSelected ? .purple : .secondary)
+                .foregroundStyle(isSelected ? themeService.current.accent : .secondary)
 
             VStack(alignment: .leading, spacing: 1) {
                 HStack(spacing: 4) {
@@ -1059,11 +1062,11 @@ struct ProviderRow: View {
         .padding(8)
         .background(
             RoundedRectangle(cornerRadius: 6)
-                .fill(isSelected ? Color.purple.opacity(0.08) : Color.clear)
+                .fill(isSelected ? themeService.current.accent.opacity(0.08) : Color.clear)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 6)
-                .stroke(isSelected ? Color.purple.opacity(0.3) : Color.secondary.opacity(0.15), lineWidth: 1)
+                .stroke(isSelected ? themeService.current.accent.opacity(0.3) : Color.secondary.opacity(0.15), lineWidth: 1)
         )
         .contentShape(Rectangle())
     }
