@@ -176,5 +176,31 @@
             type="application/octet-stream" />
         <description><![CDATA[릴리스 v0.2.11]]></description>
     </item>
+            <item>
+        <title>v0.2.11</title>
+        <sparkle:version>211</sparkle:version>
+        <sparkle:shortVersionString>0.2.11</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 12:08:36 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.11/Calen-0.2.11-universal.zip"
+            sparkle:edSignature="hEL0m0YlElyuAKyN5jSpwtxZGeJiJEqxRJvy3P42UpTTYdppYznJ+iThfhJw9zAfQgxBZOpetskFTxFJVdSDBg=="
+            length="5645760"
+            type="application/octet-stream" />
+        <description><![CDATA[## Calen v0.2.11
+
+### 설치 방법 (Homebrew, 권장)
+```bash
+brew install --cask oyeong011/calen/calen-ai
+```
+
+> 기존 `brew install --cask calen` 은 homebrew/cask의 동명 cask와 충돌해 구버전이 설치될 수 있습니다. 유니크한 `calen-ai` 를 사용하세요.
+
+### 기존 사용자 업그레이드
+이미 `calen` cask로 설치했다면 그대로 `brew upgrade --cask calen` 로도 갱신됩니다 (하위 호환 유지).
+
+### 직접 다운로드
+아래 Assets에서 DMG 파일을 받아 설치하세요.]]></description>
+    </item>
     </channel>
 </rss>
