@@ -636,7 +636,15 @@ struct DailyDetailView: View {
                                     tappedTodo = todo
                                     tappedEvent = nil
                                 },
-                                onToggle: { viewModel.toggleTodo(id: todo.id) }
+                                onToggle: { viewModel.toggleTodo(id: todo.id) },
+                                // Apple Reminder(외부)는 재배치 미지원
+                                onTodoDrop: todo.source == .local ? { draggedID in
+                                    viewModel.reorderLocalTodo(
+                                        draggedID: draggedID,
+                                        droppedOnTargetID: todo.id,
+                                        on: viewModel.selectedDate
+                                    )
+                                } : nil
                             )
                         }
 
@@ -1387,6 +1395,11 @@ struct TodoRowView: View {
     var isRescheduled: Bool = false   // Calen이 자동 재배치한 항목
     var onTap: () -> Void = {}
     let onToggle: () -> Void
+    /// 다른 todo가 이 row에 드롭됐을 때 호출. payload는 드래그 중인 todo UUID.
+    /// nil이면 드롭 타겟 비활성화 (Apple Reminder 등).
+    var onTodoDrop: ((UUID) -> Void)? = nil
+
+    @State private var isDropTargeted: Bool = false
 
     var body: some View {
         HStack(spacing: 10) {
@@ -1452,6 +1465,11 @@ struct TodoRowView: View {
                 .fill(Color.platformControlBackground)
                 .shadow(color: .black.opacity(0.04), radius: 2, y: 1)
         )
+        .overlay(
+            // 드롭 타겟 강조 — 위쪽 경계선
+            RoundedRectangle(cornerRadius: 10)
+                .strokeBorder(isDropTargeted ? Color.accentColor : .clear, lineWidth: 2)
+        )
         .contentShape(Rectangle())
         .onTapGesture { onTap() }
         .draggable("todo:\(todo.id.uuidString)") {
@@ -1460,6 +1478,19 @@ struct TodoRowView: View {
                 color: todo.source == .appleReminder ? Color.orange : category.color,
                 subtitle: todo.source == .appleReminder ? String(localized: "detail.reminders") : category.name
             )
+        }
+        .dropDestination(for: String.self) { items, _ in
+            guard let reorder = onTodoDrop,
+                  let payload = items.first,
+                  payload.hasPrefix("todo:"),
+                  let draggedID = UUID(uuidString: String(payload.dropFirst(5))),
+                  draggedID != todo.id
+            else { return false }
+            reorder(draggedID)
+            return true
+        } isTargeted: { targeted in
+            // Apple Reminder row는 onTodoDrop=nil이라 타겟 표시도 생략
+            isDropTargeted = targeted && onTodoDrop != nil
         }
     }
 }
