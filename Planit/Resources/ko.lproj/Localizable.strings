@@ -100,6 +100,7 @@
 "chat.action.create" = "추가";
 "chat.action.update" = "수정";
 "chat.action.delete" = "삭제";
+"chat.action.unknown" = "(알 수 없는 일정)";
 "chat.attach.hint" = "이미지 또는 PDF 첨부 (최대 5개, 20MB)";
 "chat.attach.picker.message" = "첨부할 이미지 또는 PDF를 선택하세요";
 "chat.attach.pdf.hint" = "PDF 첨부 | 이미지는 Cmd+V로 붙여넣기";
@@ -128,8 +129,8 @@
 "ai.output.truncated" = "... (출력이 잘렸습니다)";
 "ai.error.prefix" = "오류: %@";
 "ai.no.response" = "응답을 받지 못했습니다.";
-"ai.claude.not.found" = "Claude Code가 설치되지 않았습니다. /opt/homebrew/bin 또는 ~/.local/bin에 claude가 있는지 확인하세요.";
-"ai.codex.not.found" = "Codex CLI가 설치되지 않았습니다. /opt/homebrew/bin 또는 ~/.local/bin에 codex가 있는지 확인하세요.";
+"ai.claude.not.found" = "Claude Code가 설치되지 않았습니다. Homebrew로 설치해주세요: brew install claude-code";
+"ai.codex.not.found" = "Codex CLI가 설치되지 않았습니다. Homebrew 또는 npm 글로벌로 설치해주세요.";
 "ai.pending.confirm" = "⚠️ 아래 작업을 실행할까요?\n%@\n\n확인하려면 '확인' 또는 '실행'을 입력하세요.";
 
 /* ===== Notifications ===== */

@@ -222,13 +222,11 @@ final class AIService: ObservableObject {
     nonisolated private static func resolvePath(_ cmd: String) -> String? {
         guard cmd == "claude" || cmd == "codex" else { return nil }
 
+        // 시스템 관리 경로만 허용 — 사용자 쓰기가능 경로(~/.local/bin 등)는 악성 바이너리 주입 위험
         let searchPaths = [
             "/opt/homebrew/bin",
             "/usr/local/bin",
             "/usr/bin",
-            NSHomeDirectory() + "/.local/bin",
-            NSHomeDirectory() + "/.npm-global/bin",
-            NSHomeDirectory() + "/.nvm/current/bin",
         ]
 
         for dir in searchPaths {
@@ -422,7 +420,12 @@ final class AIService: ObservableObject {
         - 일정 목록에 없는 eventId는 절대 사용하지 마. 목록에 없으면 "해당 일정을 찾을 수 없습니다. 일정을 새로고침해주세요."로 응답
         - 여러 일정 중 애매하면 어떤 일정인지 되물어
         - "취소해줘", "지워줘" → delete / "바꿔줘", "옮겨줘", "시간 변경" → update
-        - "전부 삭제", "다 지워" 같은 일괄 삭제 요청 → 거부하고 "하나씩 지정해주세요" 안내
+        - 범위/조건이 명시된 일괄 삭제("18일~27일 7시 일정 모두", "이번 주 OO 일정 전부")는 해당 조건에 맞는 eventId 각각에 대해 delete 액션을 생성해
+        - 조건 없이 "전부 삭제", "다 지워"처럼 막연한 경우만 거부하고 범위를 되물어
+        - **중요**: 액션은 사용자의 "실행" 버튼 클릭 후에만 수행됨. message는 반드시 미래 시제 / 확인형으로 작성할 것
+          - 옳음: "삭제할게요", "추가할게요", "아래 10개를 삭제합니다. 확인 후 실행해주세요"
+          - 틀림: "삭제했어요", "추가했어요" (아직 실행되지 않았으므로 거짓말)
+        - delete 액션에도 title 필드에 해당 일정의 제목을 반드시 포함 (사용자가 무엇을 삭제하는지 확인 가능하게)
         - 삭제/수정 전 message에 대상 일정 제목과 시간을 명시해서 사용자가 확인할 수 있게
         - 일정 시간을 옮길 때는 기존 duration을 유지해 startDate와 endDate를 모두 출력해
         - 명시 날짜가 과거로 해석되는 생성 요청은 바로 생성하지 말고 "혹시 과거 날짜인데 맞나요?" 확인
@@ -441,7 +444,7 @@ final class AIService: ObservableObject {
         캘린더 작업이 필요하면 반드시 아래 JSON 형식으로 응답. 아래는 형식 예시이며, 실제 응답 시에는 사용자 요청에 맞는 내용으로 채워야 함. 예시 값을 그대로 복사하지 말 것.
         ```json
         {
-          "message": "4월 25일에 도랑 캐치테이블 예약 일정을 추가했어요.",
+          "message": "4월 25일에 도랑 캐치테이블 예약 일정을 추가할게요. 확인 후 실행해주세요.",
           "actions": [
             {
               "action": "create",
@@ -516,10 +519,23 @@ final class AIService: ObservableObject {
         var results: [ChatMessage] = []
         let service = calendarService  // optional — nil이면 Google 관련 action만 실패
 
-        // 일괄 삭제 방지: 2개 이상 delete 요청 시 거부
+        // 일괄 작업 안전장치: UI 확정(실행 버튼) 이후 호출되는 경로이므로 AI 단독 폭주는 막힌다.
+        // 한 번에 50건 이상은 실수/프롬프트 인젝션 가능성 → 거부.
         let deleteCount = actions.filter { $0.action == "delete" }.count
-        if deleteCount >= 2 {
-            return [ChatMessage(role: .toolCall, content: "일괄 삭제(\(deleteCount)건)는 안전을 위해 거부되었습니다. 하나씩 삭제해주세요.")]
+        if deleteCount >= 50 {
+            return [ChatMessage(role: .toolCall, content: "한 번에 50건 이상 삭제는 안전을 위해 거부되었습니다. 범위를 줄여 재시도해주세요.")]
+        }
+        // create/createTodo + findFreeSlot/blockTime은 모두 calendar/todo 를 생성하므로 동일 하드캡 적용
+        let createCount = actions.filter {
+            ["create", "createTodo", "findFreeSlot", "blockTime"].contains($0.action)
+        }.count
+        if createCount >= 50 {
+            return [ChatMessage(role: .toolCall, content: "한 번에 50건 이상 생성은 안전을 위해 거부되었습니다. 범위를 줄여 재시도해주세요.")]
+        }
+        // update도 동일 적용
+        let updateCount = actions.filter { $0.action == "update" }.count
+        if updateCount >= 50 {
+            return [ChatMessage(role: .toolCall, content: "한 번에 50건 이상 수정은 안전을 위해 거부되었습니다. 범위를 줄여 재시도해주세요.")]
         }
         let fmt = ISO8601DateFormatter()
         fmt.formatOptions = [.withInternetDateTime]
@@ -927,7 +943,7 @@ final class AIService: ObservableObject {
         let rawResponse: String
         switch provider {
         case .claude:
-            guard let path = claudePath else { return [ChatMessage(role: .assistant, content: "Claude Code가 설치되지 않았습니다. /opt/homebrew/bin 또는 ~/.local/bin에 claude가 있는지 확인하세요.")] }
+            guard let path = claudePath else { return [ChatMessage(role: .assistant, content: "Claude Code가 설치되지 않았습니다. Homebrew(/opt/homebrew/bin)로 설치해주세요: brew install claude-code")] }
             // --system-prompt: 시스템 프롬프트 분리, --no-session-persistence: 세션 파일 충돌 방지
             // --image: 이미지 파일 직접 전달 (비전 분석)
             // claude-haiku-4-5 는 응답이 훨씬 빠름 (단순 질의에 적합)
@@ -944,7 +960,7 @@ final class AIService: ObservableObject {
             rawResponse = await sendCLI(executablePath: path, args: claudeArgs,
                                          system: "", userMessage: augmentedMessage, history: history)
         case .codex:
-            guard let path = codexPath else { return [ChatMessage(role: .assistant, content: "Codex CLI가 설치되지 않았습니다. /opt/homebrew/bin 또는 ~/.local/bin에 codex가 있는지 확인하세요.")] }
+            guard let path = codexPath else { return [ChatMessage(role: .assistant, content: "Codex CLI가 설치되지 않았습니다. Homebrew(/opt/homebrew/bin) 또는 npm 글로벌(/usr/local/bin)로 설치해주세요.")] }
             // gpt-4.1-mini + reasoning low → 응답 속도 우선
             // config.toml의 xhigh reasoning을 앱 내에서 low로 오버라이드
             var codexArgs = ["exec",

@@ -100,6 +100,7 @@
 "chat.action.create" = "Create";
 "chat.action.update" = "Update";
 "chat.action.delete" = "Delete";
+"chat.action.unknown" = "(unknown event)";
 "chat.attach.pdf.hint" = "Attach PDF | Paste images with Cmd+V";
 "chat.attach.hint" ="Attach image or PDF (max 5, 20MB)";
 "chat.attach.picker.message" = "Select images or PDFs to attach";
@@ -128,8 +129,8 @@
 "ai.output.truncated" = "... (output truncated)";
 "ai.error.prefix" = "Error: %@";
 "ai.no.response" = "No response received.";
-"ai.claude.not.found" = "Claude Code is not installed. Check if claude exists in /opt/homebrew/bin or ~/.local/bin.";
-"ai.codex.not.found" = "Codex CLI is not installed. Check if codex exists in /opt/homebrew/bin or ~/.local/bin.";
+"ai.claude.not.found" = "Claude Code is not installed. Please install via Homebrew: brew install claude-code";
+"ai.codex.not.found" = "Codex CLI is not installed. Please install via Homebrew or npm global.";
 "ai.pending.confirm" = "⚠️ Execute the following actions?\n%@\n\nType 'confirm' or 'execute' to proceed.";
 
 /* ===== Notifications ===== */

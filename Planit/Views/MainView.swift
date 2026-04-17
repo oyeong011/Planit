@@ -511,6 +511,13 @@ struct DailyDetailView: View {
     @State private var addCategoryID: UUID?
     @State private var addType: TodoType = .normal
 
+    // 통합 드래그 재배치 상태 (events + todos 한 리스트)
+    @State private var draggingItemID: String? = nil
+    @State private var dragOffset: CGFloat = 0
+    @State private var pendingItemOrder: [String] = []
+    /// 각 행의 예상 높이 — 행 콘텐츠(패딩 포함) + 행 간 간격
+    private let rowSlotHeight: CGFloat = 58
+
     private var dDayText: String {
         let diff = viewModel.daysSinceToday(viewModel.selectedDate)
         if diff == 0 { return String(localized: "detail.dday.today") }
@@ -610,37 +617,54 @@ struct DailyDetailView: View {
 
                 // Events & Todos list
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 8) {
-                        let events = viewModel.eventsForDate(viewModel.selectedDate)
-                        ForEach(events) { event in
-                            EventRowView(
-                                event: event,
-                                category: viewModel.categoryForEvent(event),
-                                isCompleted: viewModel.isEventCompleted(event.id),
-                                onTap: {
-                                    tappedEvent = event
-                                    tappedTodo = nil
-                                },
-                                onToggle: { viewModel.toggleEventCompleted(event.id, title: event.title) }
-                            )
+                    // 행 사이 gap(spacing) 대신 각 행의 vertical padding으로 처리 —
+                    // 이래야 드롭 타겟 사이 "dead zone"이 생기지 않는다.
+                    VStack(alignment: .leading, spacing: 0) {
+                        let items = viewModel.itemsForDate(viewModel.selectedDate)
+                        ForEach(items) { item in
+                            let isDragging = draggingItemID == item.id
+                            let offset = isDragging ? dragOffset : itemDisplacement(for: item.id, in: items)
+                            switch item {
+                            case .event(let event):
+                                EventRowView(
+                                    event: event,
+                                    category: viewModel.categoryForEvent(event),
+                                    isCompleted: viewModel.isEventCompleted(event.id),
+                                    onTap: {
+                                        tappedEvent = event
+                                        tappedTodo = nil
+                                    },
+                                    onToggle: { viewModel.toggleEventCompleted(event.id, title: event.title) },
+                                    isDragging: isDragging,
+                                    yOffset: offset,
+                                    handleDragGesture: itemReorderGesture(for: item.id, allItems: items)
+                                )
+                                .padding(.vertical, 4)
+                            case .todo(let todo):
+                                let cat = viewModel.category(for: todo.categoryID)
+                                TodoRowView(
+                                    todo: todo,
+                                    category: cat,
+                                    isRescheduled: viewModel.rescheduledTodoIDs.contains(todo.id),
+                                    onTap: {
+                                        tappedTodo = todo
+                                        tappedEvent = nil
+                                    },
+                                    onToggle: { viewModel.toggleTodo(id: todo.id) },
+                                    isDragging: isDragging,
+                                    yOffset: offset,
+                                    handleDragGesture: todo.source == .local
+                                        ? itemReorderGesture(for: item.id, allItems: items)
+                                        : nil
+                                )
+                                .transition(.asymmetric(
+                                    insertion: .opacity.combined(with: .scale(scale: 0.96)),
+                                    removal: .opacity
+                                ))
+                            }
                         }
 
-                        let todos = viewModel.todosForDate(viewModel.selectedDate)
-                        ForEach(todos) { todo in
-                            let cat = viewModel.category(for: todo.categoryID)
-                            TodoRowView(
-                                todo: todo,
-                                category: cat,
-                                isRescheduled: viewModel.rescheduledTodoIDs.contains(todo.id),
-                                onTap: {
-                                    tappedTodo = todo
-                                    tappedEvent = nil
-                                },
-                                onToggle: { viewModel.toggleTodo(id: todo.id) }
-                            )
-                        }
-
-                        if events.isEmpty && todos.isEmpty && !showAddForm {
+                        if items.isEmpty && !showAddForm {
                             Text(String(localized: "detail.no.events"))
                                 .font(.system(size: 13))
                                 .foregroundStyle(.tertiary)
@@ -725,6 +749,73 @@ struct DailyDetailView: View {
         }
     }
 
+    // MARK: - Unified Item Reorder Drag (events + todos, 리뷰페이지 스타일)
+
+    /// 드래그 중이 아닐 때 다른 행이 비켜야 할 y 변위. pendingOrder 기준.
+    /// Apple Reminder는 재배치 대상이 아니므로 displacement 계산에서 제외.
+    private func itemDisplacement(for id: String, in items: [CalendarViewModel.DayItem]) -> CGFloat {
+        guard let dID = draggingItemID, dID != id else { return 0 }
+        let reorderable = items.filter { !isReminder($0) }.map(\.id)
+        guard let origIdx = reorderable.firstIndex(of: id),
+              let pendIdx = pendingItemOrder.firstIndex(of: id),
+              origIdx != pendIdx else { return 0 }
+        return CGFloat(pendIdx - origIdx) * rowSlotHeight
+    }
+
+    private func isReminder(_ item: CalendarViewModel.DayItem) -> Bool {
+        if case .todo(let t) = item, t.source == .appleReminder { return true }
+        return false
+    }
+
+    /// 현재 드래그 offset으로 통합 예상 순서를 계산.
+    private func computePendingItemOrder(
+        dragging id: String, offset: CGFloat, allItems: [CalendarViewModel.DayItem]
+    ) -> [String] {
+        let ids = allItems.filter { !isReminder($0) }.map(\.id)
+        guard let fromIdx = ids.firstIndex(of: id) else { return ids }
+        let steps = Int((offset / rowSlotHeight).rounded())
+        let toIdx = max(0, min(ids.count - 1, fromIdx + steps))
+        guard toIdx != fromIdx else { return ids }
+        var result = ids
+        result.move(fromOffsets: IndexSet(integer: fromIdx),
+                    toOffset: toIdx > fromIdx ? toIdx + 1 : toIdx)
+        return result
+    }
+
+    /// 통합 재배치 제스처 — 이벤트와 할일을 하나의 풀에서 재배치.
+    /// coordinateSpace: .global — 행이 .offset으로 움직여도 translation이 절대 좌표 기준이므로 lag 없음.
+    private func itemReorderGesture(
+        for id: String, allItems: [CalendarViewModel.DayItem]
+    ) -> AnyGesture<DragGesture.Value> {
+        AnyGesture(DragGesture(minimumDistance: 0, coordinateSpace: .global)
+            .onChanged { value in
+                if draggingItemID != id {
+                    withAnimation(.spring(response: 0.22, dampingFraction: 0.8)) {
+                        draggingItemID = id
+                        pendingItemOrder = allItems.filter { !isReminder($0) }.map(\.id)
+                    }
+                }
+                dragOffset = value.translation.height
+                let newPending = computePendingItemOrder(
+                    dragging: id, offset: dragOffset, allItems: allItems
+                )
+                if newPending != pendingItemOrder {
+                    withAnimation(.spring(response: 0.32, dampingFraction: 0.72)) {
+                        pendingItemOrder = newPending
+                    }
+                }
+            }
+            .onEnded { _ in
+                if !pendingItemOrder.isEmpty {
+                    viewModel.setDayItemOrder(pendingItemOrder, on: viewModel.selectedDate)
+                }
+                withAnimation(.spring(response: 0.38, dampingFraction: 0.72)) {
+                    draggingItemID = nil
+                    dragOffset = 0
+                    pendingItemOrder = []
+                }
+            })
+    }
 }
 
 // MARK: - Category Manager (Popover)
@@ -1314,6 +1405,13 @@ struct EventRowView: View {
     var isCompleted: Bool = false
     var onTap: () -> Void = {}
     var onToggle: (() -> Void)? = nil
+    /// 리뷰페이지 스타일 드래그 재배치 지원용 상태 (부모가 주입)
+    var isDragging: Bool = false
+    var yOffset: CGFloat = 0
+    /// 드래그 핸들 영역에만 부착할 제스처. nil이면 핸들 숨김.
+    var handleDragGesture: AnyGesture<DragGesture.Value>? = nil
+
+    @State private var isHandleHover: Bool = false
 
     private var displayColor: Color { category?.color ?? event.color }
 
@@ -1327,6 +1425,18 @@ struct EventRowView: View {
 
     var body: some View {
         HStack(spacing: 10) {
+            // 드래그 핸들 — 리오더 전용
+            if let reorderGesture = handleDragGesture {
+                Image(systemName: "line.3.horizontal")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(isHandleHover || isDragging ? .primary : Color.secondary.opacity(0.5))
+                    .frame(width: 20, height: 32)
+                    .contentShape(Rectangle())
+                    .onHover { isHandleHover = $0 }
+                    .help("드래그해서 순서 변경")
+                    .highPriorityGesture(reorderGesture)
+            }
+
             RoundedRectangle(cornerRadius: 2).fill(displayColor).frame(width: 4)
 
             VStack(alignment: .leading, spacing: 2) {
@@ -1368,10 +1478,17 @@ struct EventRowView: View {
         .background(
             RoundedRectangle(cornerRadius: 10)
                 .fill(Color.platformControlBackground)
-                .shadow(color: .black.opacity(0.04), radius: 2, y: 1)
+                .shadow(color: .black.opacity(isDragging ? 0.22 : 0.04),
+                        radius: isDragging ? 14 : 2,
+                        y: isDragging ? 6 : 1)
         )
         .contentShape(Rectangle())
         .onTapGesture { onTap() }
+        .scaleEffect(isDragging ? 1.025 : 1.0, anchor: .center)
+        .offset(y: yOffset)
+        .zIndex(isDragging ? 100 : 0)
+        .animation(isDragging ? nil : .spring(response: 0.32, dampingFraction: 0.72),
+                   value: yOffset)
         .draggable("event:\(event.id)") {
             DragGhostRow(title: event.title, color: displayColor, subtitle: timeText)
         }
@@ -1387,9 +1504,30 @@ struct TodoRowView: View {
     var isRescheduled: Bool = false   // Calen이 자동 재배치한 항목
     var onTap: () -> Void = {}
     let onToggle: () -> Void
+    /// 리뷰페이지 스타일 드래그 재배치 지원용 상태 (부모가 주입)
+    var isDragging: Bool = false
+    var yOffset: CGFloat = 0
+    /// 리오더 모드 진입됨 — 드래그 핸들을 잡았을 때 true.
+    var isReorderMode: Bool = false
+    /// 드래그 핸들 영역에만 부착할 제스처. nil이면 핸들 숨김 (재배치 불가).
+    var handleDragGesture: AnyGesture<DragGesture.Value>? = nil
+
+    @State private var isHandleHover: Bool = false
 
     var body: some View {
         HStack(spacing: 10) {
+            // 드래그 핸들 — 리오더 전용 hit 영역. highPriorityGesture로 .draggable보다 우선.
+            if let reorderGesture = handleDragGesture {
+                Image(systemName: "line.3.horizontal")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(isHandleHover || isDragging ? .primary : Color.secondary.opacity(0.5))
+                    .frame(width: 20, height: 32)
+                    .contentShape(Rectangle())
+                    .onHover { isHandleHover = $0 }
+                    .help("드래그해서 순서 변경")
+                    .highPriorityGesture(reorderGesture)
+            }
+
             RoundedRectangle(cornerRadius: 2)
                 .fill(todo.source == .appleReminder ? Color.orange : category.color)
                 .frame(width: 4)
@@ -1450,10 +1588,18 @@ struct TodoRowView: View {
         .background(
             RoundedRectangle(cornerRadius: 10)
                 .fill(Color.platformControlBackground)
-                .shadow(color: .black.opacity(0.04), radius: 2, y: 1)
+                .shadow(color: .black.opacity(isDragging ? 0.22 : 0.04),
+                        radius: isDragging ? 14 : 2,
+                        y: isDragging ? 6 : 1)
         )
         .contentShape(Rectangle())
         .onTapGesture { onTap() }
+        .scaleEffect(isDragging ? 1.025 : 1.0, anchor: .center)
+        .offset(y: yOffset)
+        .zIndex(isDragging ? 100 : 0)
+        .animation(isDragging ? nil : .spring(response: 0.32, dampingFraction: 0.72),
+                   value: yOffset)
+        // 전체 행에 .draggable — 핸들 위에서 시작한 드래그는 highPriorityGesture가 가로채므로 안전
         .draggable("todo:\(todo.id.uuidString)") {
             DragGhostRow(
                 title: todo.title,

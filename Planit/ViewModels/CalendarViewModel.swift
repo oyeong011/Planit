@@ -95,6 +95,8 @@ final class CalendarViewModel: ObservableObject {
         self.authManager = authManager
         loadCategories()
         loadTodos()
+        loadTodoOrder()
+        loadDayItemOrder()
         loadCompletedEvents()
         loadPendingEdits()
         loadEventCategoryMappings()
@@ -704,12 +706,10 @@ final class CalendarViewModel: ObservableObject {
         return calendarEvents.filter { event in
             guard !todoEventIds.contains(event.id) else { return false }
             if event.isAllDay {
-                // All-day: [start, end) 반개구간 — Google은 end가 exclusive
                 let eventStart = calendar.startOfDay(for: event.startDate)
                 let eventEnd = calendar.startOfDay(for: event.endDate)
                 return dayStart >= eventStart && dayStart < eventEnd
             } else {
-                // Timed: 구간 겹침 [start, end) vs [dayStart, dayEnd)
                 return event.startDate < dayEnd && event.endDate > dayStart
             }
         }
@@ -718,7 +718,134 @@ final class CalendarViewModel: ObservableObject {
     func todosForDate(_ date: Date) -> [TodoItem] {
         let localTodos = todos.filter { calendar.isDate($0.date, inSameDayAs: date) }
         let reminders = appleRemindersForDate(date)
-        return localTodos + reminders
+        // 수동 정렬: todoOrder에 있는 순서 우선, 없는 건 date 순으로 뒤에
+        let order = todoOrder[dateKey(date)] ?? []
+        let ordered = localTodos.sorted { a, b in
+            let ai = order.firstIndex(of: a.id) ?? Int.max
+            let bi = order.firstIndex(of: b.id) ?? Int.max
+            if ai != bi { return ai < bi }
+            return a.date < b.date
+        }
+        return ordered + reminders
+    }
+
+    // MARK: - Manual Ordering (per-date, 통합 events + todos)
+
+    /// 이벤트와 할일을 함께 재배치할 수 있는 통합 아이템 타입.
+    enum DayItem: Identifiable {
+        case event(CalendarEvent)
+        case todo(TodoItem)
+        var id: String {
+            switch self {
+            case .event(let e): return "event:\(e.id)"
+            case .todo(let t):  return "todo:\(t.id.uuidString)"
+            }
+        }
+        var sortDate: Date {
+            switch self {
+            case .event(let e): return e.startDate
+            case .todo(let t):  return t.date
+            }
+        }
+    }
+
+    /// date("yyyy-MM-dd") → [itemID] 순서 (이벤트와 할일이 섞인 통합 순서)
+    @Published private var dayItemOrder: [String: [String]] = [:]
+    private let dayItemOrderKey = "planit.dayItemOrder.v1"
+
+    /// (하위 호환) todosForDate가 참조하던 per-type 순서 — 이제 dayItemOrder에서 파생
+    @Published private var todoOrder: [String: [UUID]] = [:]
+    private let todoOrderKey = "planit.todoOrder.v1"
+
+    /// 특정 날짜의 통합 아이템 목록. dayItemOrder 있으면 그 순서,
+    /// 없으면 이벤트 먼저(시간순) + 할일(date순) 기본 정렬.
+    /// Apple Reminder는 외부 관리라 항상 맨 뒤에 분리 배치.
+    func itemsForDate(_ date: Date) -> [DayItem] {
+        let events = eventsForDate(date).map { DayItem.event($0) }
+        let localTodos = todos
+            .filter { calendar.isDate($0.date, inSameDayAs: date) && $0.source == .local }
+            .map { DayItem.todo($0) }
+        let reminders = appleRemindersForDate(date).map { DayItem.todo($0) }
+
+        let unified = events + localTodos
+        let order = dayItemOrder[dateKey(date)] ?? []
+        let sorted = unified.sorted { a, b in
+            let ai = order.firstIndex(of: a.id) ?? Int.max
+            let bi = order.firstIndex(of: b.id) ?? Int.max
+            if ai != bi { return ai < bi }
+            return a.sortDate < b.sortDate
+        }
+        return sorted + reminders
+    }
+
+    /// 드래그 완료 시 통합 순서를 통째로 저장. Apple Reminder는 입력에서 제외됨.
+    func setDayItemOrder(_ ids: [String], on date: Date) {
+        guard !ids.isEmpty else { return }
+        dayItemOrder[dateKey(date)] = ids
+        saveDayItemOrder()
+    }
+
+    func loadDayItemOrder() {
+        guard let data = UserDefaults.standard.data(forKey: dayItemOrderKey),
+              let decoded = try? JSONDecoder().decode([String: [String]].self, from: data)
+        else { return }
+        dayItemOrder = decoded
+    }
+
+    private func saveDayItemOrder() {
+        if let data = try? JSONEncoder().encode(dayItemOrder) {
+            UserDefaults.standard.set(data, forKey: dayItemOrderKey)
+        }
+    }
+
+    private func dateKey(_ date: Date) -> String {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM-dd"
+        fmt.calendar = calendar
+        return fmt.string(from: date)
+    }
+
+    /// 특정 날짜의 local todo 순서를 통째로 설정. Apple Reminder는 영향 없음.
+    func setLocalTodoOrder(_ ids: [UUID], on date: Date) {
+        let localIDs = Set(todos.filter { calendar.isDate($0.date, inSameDayAs: date) && $0.source == .local }.map(\.id))
+        let filtered = ids.filter(localIDs.contains)
+        guard !filtered.isEmpty else { return }
+        todoOrder[dateKey(date)] = filtered
+        saveTodoOrder()
+    }
+
+    /// 드래그된 todo를 타겟 todo 위치로 이동. 같은 날짜 안에서만 동작.
+    /// Apple Reminder(외부 관리)는 재배치 대상에서 제외.
+    func reorderLocalTodo(draggedID: UUID, droppedOnTargetID targetID: UUID, on date: Date) {
+        guard draggedID != targetID else { return }
+        let localIDs = todos.filter { calendar.isDate($0.date, inSameDayAs: date) }.map(\.id)
+        guard localIDs.contains(draggedID), localIDs.contains(targetID) else { return }
+
+        let key = dateKey(date)
+        var order = todoOrder[key] ?? []
+        for id in localIDs where !order.contains(id) { order.append(id) }
+        order = order.filter(localIDs.contains)
+
+        guard let from = order.firstIndex(of: draggedID),
+              let to   = order.firstIndex(of: targetID) else { return }
+        let item = order.remove(at: from)
+        let insertAt = from < to ? to - 1 : to
+        order.insert(item, at: insertAt)
+        todoOrder[key] = order
+        saveTodoOrder()
+    }
+
+    func loadTodoOrder() {
+        guard let data = UserDefaults.standard.data(forKey: todoOrderKey),
+              let decoded = try? JSONDecoder().decode([String: [UUID]].self, from: data)
+        else { return }
+        todoOrder = decoded
+    }
+
+    private func saveTodoOrder() {
+        if let data = try? JSONEncoder().encode(todoOrder) {
+            UserDefaults.standard.set(data, forKey: todoOrderKey)
+        }
     }
 
     // MARK: - Todo Bulk Sync
