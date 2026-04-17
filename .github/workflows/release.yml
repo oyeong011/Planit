@@ -279,11 +279,15 @@ jobs:
             --title "Calen v${VERSION}" \
             --notes "## Calen v${VERSION}
 
-          ### 설치 방법 (Homebrew)
+          ### 설치 방법 (Homebrew, 권장)
           \`\`\`bash
-          brew tap oyeong011/calen
-          brew install --cask calen
+          brew install --cask oyeong011/calen/calen-ai
           \`\`\`
+
+          > 기존 \`brew install --cask calen\` 은 homebrew/cask의 동명 cask와 충돌해 구버전이 설치될 수 있습니다. 유니크한 \`calen-ai\` 를 사용하세요.
+
+          ### 기존 사용자 업그레이드
+          이미 \`calen\` cask로 설치했다면 그대로 \`brew upgrade --cask calen\` 로도 갱신됩니다 (하위 호환 유지).
 
           ### 직접 다운로드
           아래 Assets에서 DMG 파일을 받아 설치하세요." \
@@ -303,7 +307,9 @@ jobs:
           import os
           version = os.environ["VERSION"]
           sha256  = os.environ["ZIP_SHA"]
-          content = f'''cask "calen" do
+          # 공통 cask 본문
+          def cask_body(token):
+              return f'''cask "{token}" do
             version "{version}"
             sha256 "{sha256}"
 
@@ -324,14 +330,18 @@ jobs:
             ]
           end
           '''
+          # 신규 공식 이름: calen-ai (homebrew/cask의 기본 calen과 충돌 방지)
+          with open("Casks/calen-ai.rb", "w") as f:
+              f.write(cask_body("calen-ai"))
+          # 하위 호환: 기존 'calen' cask는 유지 (기존 사용자 업데이트 경로)
           with open("Casks/calen.rb", "w") as f:
-              f.write(content)
+              f.write(cask_body("calen"))
           PYEOF
 
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
-          git add Casks/calen.rb
-          git commit -m "chore: update calen cask to v${VERSION}"
+          git add Casks/calen-ai.rb Casks/calen.rb
+          git commit -m "chore: update calen-ai + calen cask to v${VERSION}"
           git push
 
       - name: Cleanup keychain
