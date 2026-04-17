@@ -942,6 +942,27 @@ struct TestAIResponse: Codable {
     #expect(GoogleCalendarService.parseGoogleDateTime("not-a-date") == nil)
 }
 
+@Test func aiActionDurationValidation_rejectsNonPositiveAndExcessiveValues() {
+    #expect(AIService.validatedActionDuration(nil) == 60)
+    #expect(AIService.validatedActionDuration(1) == 1)
+    #expect(AIService.validatedActionDuration(0) == nil)
+    #expect(AIService.validatedActionDuration(-30) == nil)
+    #expect(AIService.validatedActionDuration(AIService.maxActionDurationMinutes + 1) == nil)
+}
+
+@Test func aiActionIntervalValidation_requiresEndAfterStart() {
+    let start = Date(timeIntervalSince1970: 1_800_000_000)
+    #expect(AIService.isPositiveActionInterval(start: start, end: start.addingTimeInterval(60)))
+    #expect(!AIService.isPositiveActionInterval(start: start, end: start))
+    #expect(!AIService.isPositiveActionInterval(start: start, end: start.addingTimeInterval(-60)))
+}
+
+@Test func aiActionDayParsing_rejectsLenientFormats() {
+    #expect(AIService.parseActionDay("2026-04-15") != nil)
+    #expect(AIService.parseActionDay("2026/04/15") == nil)
+    #expect(AIService.parseActionDay("not-a-date") == nil)
+}
+
 // ============================================================================
 // MARK: - TC-19: ANSI 이스케이프 시퀀스 제거
 // ============================================================================

@@ -222,6 +222,7 @@ final class AIService: ObservableObject {
     nonisolated private static let cliTimeout: TimeInterval = 90
     nonisolated private static let maxOutputBytes = 1_048_576  // 1 MB
     private static let externalContextConsentKey = "planit.aiExternalContextConsentGranted.v1"
+    nonisolated static let maxActionDurationMinutes = 24 * 60
 
     var isConfigured: Bool {
         switch provider {
@@ -657,15 +658,15 @@ final class AIService: ObservableObject {
                     results.append(ChatMessage(role: .toolCall, content: "\(action.action) 실패: 제목 없음"))
                     continue
                 }
-                let durationMins = action.durationMinutes ?? 60
+                guard let durationMins = Self.validatedActionDuration(action.durationMinutes) else {
+                    results.append(ChatMessage(role: .toolCall, content: "\(action.action) 실패: 유효하지 않은 소요 시간"))
+                    continue
+                }
 
                 // 선호 날짜 파싱
                 var preferredDate: Date? = nil
                 if let dateStr = action.date {
-                    let df = DateFormatter()
-                    df.dateFormat = "yyyy-MM-dd"
-                    df.timeZone = TimeZone.current
-                    preferredDate = df.date(from: dateStr)
+                    preferredDate = Self.parseActionDay(dateStr)
                 }
 
                 // 스케줄러로 최적 슬롯 탐색
@@ -737,10 +738,7 @@ final class AIService: ObservableObject {
                 // date 파싱 (yyyy-MM-dd), 없으면 오늘로 기본 설정 / 잘못된 형식이면 실패
                 var todoDate: Date = Calendar.current.startOfDay(for: Date())
                 if let dateStr = action.date {
-                    let df = DateFormatter()
-                    df.dateFormat = "yyyy-MM-dd"
-                    df.timeZone = TimeZone.current
-                    guard let parsed = df.date(from: dateStr) else {
+                    guard let parsed = Self.parseActionDay(dateStr) else {
                         results.append(ChatMessage(role: .toolCall, content: "할일 생성 실패: 잘못된 날짜 형식 (\(dateStr))"))
                         continue
                     }
@@ -768,6 +766,10 @@ final class AIService: ObservableObject {
                       let start = parseDate(startStr),
                       let end = parseDate(endStr) else {
                     results.append(ChatMessage(role: .toolCall, content: "생성 실패: 잘못된 파라미터"))
+                    continue
+                }
+                guard Self.isPositiveActionInterval(start: start, end: end) else {
+                    results.append(ChatMessage(role: .toolCall, content: "생성 실패: 종료 시간이 시작 시간보다 늦어야 합니다"))
                     continue
                 }
                 guard let svc = service else {
@@ -846,6 +848,10 @@ final class AIService: ObservableObject {
                     results.append(ChatMessage(role: .toolCall, content: "수정 실패: 날짜 정보 없음"))
                     continue
                 }
+                guard Self.isPositiveActionInterval(start: startDate, end: endDate) else {
+                    results.append(ChatMessage(role: .toolCall, content: "수정 실패: 종료 시간이 시작 시간보다 늦어야 합니다"))
+                    continue
+                }
                 do {
                     let ok = try await svc.updateEvent(eventID: eventId, title: updateTitle, startDate: startDate, endDate: endDate, isAllDay: action.isAllDay ?? false)
                     results.append(ChatMessage(role: .toolCall, content: ok ? "수정 완료" : "수정 실패"))
@@ -859,6 +865,28 @@ final class AIService: ObservableObject {
             }
         }
         return results
+    }
+
+    nonisolated static func validatedActionDuration(_ minutes: Int?) -> Int? {
+        let value = minutes ?? 60
+        guard (1...maxActionDurationMinutes).contains(value) else { return nil }
+        return value
+    }
+
+    nonisolated static func isPositiveActionInterval(start: Date, end: Date) -> Bool {
+        end > start
+    }
+
+    nonisolated static func parseActionDay(_ raw: String) -> Date? {
+        guard raw.range(of: #"^\d{4}-\d{2}-\d{2}$"#, options: .regularExpression) != nil else {
+            return nil
+        }
+        let df = DateFormatter()
+        df.dateFormat = "yyyy-MM-dd"
+        df.timeZone = TimeZone.current
+        df.locale = Locale(identifier: "en_US_POSIX")
+        df.isLenient = false
+        return df.date(from: raw)
     }
 
     // MARK: - Error Message
