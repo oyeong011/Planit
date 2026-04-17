@@ -84,18 +84,14 @@ struct MainCalendarView: View {
             // 초개인화: aiService에 컨텍스트 서비스 주입
             aiService.userContextService = userContextService
             aiService.userProfileProvider = { goalService.profile }
-            // 할일 패턴으로 계획 스타일 분석
-            let todoTitles = viewModel.todos.map(\.title)
-            let eventTitles = viewModel.calendarEvents.prefix(30).map(\.title)
-            userContextService.analyzePlanningStyle(todos: todoTitles, events: Array(eventTitles))
+            refreshUserContextAnalysis()
         }
         .onChange(of: viewModel.calendarEvents) {
             updateEventReminders()
+            refreshUserContextAnalysis()
         }
         .onChange(of: viewModel.todos.count) {
-            // 할일 패턴 변화 시 계획 스타일 재분석
-            let todoTitles = viewModel.todos.map(\.title)
-            userContextService.analyzePlanningStyle(todos: todoTitles, events: [])
+            refreshUserContextAnalysis()
         }
         .sheet(isPresented: $showSettings) {
             SettingsView(
@@ -111,6 +107,19 @@ struct MainCalendarView: View {
         .onReceive(NotificationCenter.default.publisher(for: .calenPopoverDidClose)) { _ in
             showSettings = false
         }
+    }
+
+    private func refreshUserContextAnalysis() {
+        let todoTitles = viewModel.todos.map(\.title)
+        let eventTitles = viewModel.calendarEvents.prefix(30).map(\.title)
+        userContextService.analyzePlanningStyle(todos: todoTitles, events: Array(eventTitles))
+        userContextService.analyzePersonalContext(
+            todos: viewModel.todos,
+            events: viewModel.calendarEvents,
+            categories: viewModel.categories,
+            goals: goalService.goals,
+            completions: goalService.completions
+        )
     }
 
     // MARK: - Left Panel

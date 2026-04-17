@@ -25,11 +25,27 @@ final class UserContextService: ObservableObject {
 
     // 섹션 헤더 상수
     private enum Section {
-        static let profile    = "## 👤 사용자 프로필"
-        static let focus      = "## 🎯 현재 집중 영역"
-        static let style      = "## 📋 계획 스타일"
-        static let external   = "## 🌐 외부 정보 캐시"
-        static let log        = "## 📝 관찰 기록"
+        static let profile       = "## 👤 사용자 프로필"
+        static let focus         = "## 🎯 현재 집중 영역"
+        static let style         = "## 📋 계획 스타일"
+        static let current       = "## 📌 현재 분석"
+        static let timePatterns  = "## ⏰ 시간 패턴"
+        static let taskTendency  = "## ✅ 작업 경향"
+        static let goalStatus    = "## 📈 목표 상태"
+        static let external      = "## 🌐 외부 정보 캐시"
+        static let log           = "## 📝 관찰 기록"
+
+        static let ordered = [
+            profile,
+            focus,
+            style,
+            current,
+            timePatterns,
+            taskTendency,
+            goalStatus,
+            external,
+            log
+        ]
     }
 
     init() {
@@ -39,6 +55,7 @@ final class UserContextService: ObservableObject {
         try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
         contextFileURL = dir.appendingPathComponent("user_context.md")
         ensureFileExists()
+        ensureKnownSections()
         loadSummary()
     }
 
@@ -57,7 +74,8 @@ final class UserContextService: ObservableObject {
         var inLog = false
 
         for line in lines {
-            if line.hasPrefix("## 📝") { inLog = true }
+            if line.hasPrefix("## ") && !line.hasPrefix(Section.log) { inLog = false }
+            if line.hasPrefix(Section.log) { inLog = true }
             if inLog {
                 if line.hasPrefix("- ") { logCount += 1 }
                 if logCount > 10 { continue }  // 오래된 로그 생략
@@ -65,11 +83,12 @@ final class UserContextService: ObservableObject {
             trimmed.append(line)
         }
 
-        // 전체 컨텍스트 최대 8000자 제한 (토큰 스터핑 방지)
-        let body = String(trimmed.joined(separator: "\n").prefix(8000))
+        // 전체 컨텍스트 최대 12000자 제한 (토큰 스터핑 방지)
+        let body = String(trimmed.joined(separator: "\n").prefix(12_000))
         return """
         ## 🧠 사용자 개인 컨텍스트 (초개인화)
         > 아래는 이 사용자에 대해 누적된 개인 정보입니다. 일정 추천 시 반드시 참고하세요.
+        > 특히 현재 분석, 시간 패턴, 작업 경향, 목표 상태 섹션을 사용해 시간대/분량/우선순위를 조정하세요.
 
         \(body)
         ---
@@ -327,6 +346,175 @@ final class UserContextService: ObservableObject {
         }
     }
 
+    /// 캘린더/할일/목표 데이터를 종합해 AI가 바로 활용할 수 있는 분석 섹션을 갱신합니다.
+    func analyzePersonalContext(
+        todos: [TodoItem],
+        events: [CalendarEvent],
+        categories: [TodoCategory],
+        goals: [Goal],
+        completions: [String: CompletionRecord],
+        now: Date = Date()
+    ) {
+        guard !todos.isEmpty || !events.isEmpty || !goals.isEmpty || !completions.isEmpty else { return }
+
+        let time = Self.buildTimePatternAnalysis(events: events, now: now)
+        let task = Self.buildTaskTendencyAnalysis(todos: todos, categories: categories, now: now)
+        let goal = Self.buildGoalStatusAnalysis(goals: goals, completions: completions, now: now)
+
+        updateSection(Section.current, body: Self.buildCurrentAnalysisSummary(time: time, task: task, goal: goal))
+        if !time.isEmpty { updateSection(Section.timePatterns, body: time) }
+        if !task.isEmpty { updateSection(Section.taskTendency, body: task) }
+        if !goal.isEmpty { updateSection(Section.goalStatus, body: goal) }
+        loadSummary()
+    }
+
+    nonisolated static func buildTimePatternAnalysis(events: [CalendarEvent], now: Date) -> String {
+        let timedEvents = events.filter { !$0.isAllDay && $0.endDate > $0.startDate }
+        guard !timedEvents.isEmpty else {
+            return """
+            - signal: insufficient timed calendar data
+            - AI prompt use: Ask one clarifying question before assuming preferred focus windows.
+            """
+        }
+
+        let calendar = Calendar(identifier: .gregorian)
+        let periods: [(key: String, range: Range<Int>)] = [
+            ("late-night", 0..<6),
+            ("morning", 6..<12),
+            ("afternoon", 12..<18),
+            ("evening", 18..<24)
+        ]
+        var minutesByPeriod = Dictionary(uniqueKeysWithValues: periods.map { ($0.key, 0) })
+        var minutesByWeekday: [String: Int] = [:]
+
+        for event in timedEvents {
+            let hour = calendar.component(.hour, from: event.startDate)
+            let minutes = max(1, Int(event.endDate.timeIntervalSince(event.startDate) / 60))
+            let period = periods.first { $0.range.contains(hour) }?.key ?? "unknown"
+            minutesByPeriod[period, default: 0] += minutes
+            let weekday = weekdayLabel(calendar.component(.weekday, from: event.startDate))
+            minutesByWeekday[weekday, default: 0] += minutes
+        }
+
+        let peakPeriod = minutesByPeriod.max { $0.value < $1.value } ?? ("unknown", 0)
+        let lightPeriod = minutesByPeriod
+            .filter { $0.value == 0 }
+            .map(\.key)
+            .sorted()
+            .first ?? (minutesByPeriod.min { $0.value < $1.value }?.key ?? "unknown")
+        let peakWeekday = minutesByWeekday.max { $0.value < $1.value } ?? ("unknown", 0)
+        let avgDuration = timedEvents.reduce(0) {
+            $0 + Int($1.endDate.timeIntervalSince($1.startDate) / 60)
+        } / max(timedEvents.count, 1)
+        let shortEventRatio = percent(
+            timedEvents.filter { $0.endDate.timeIntervalSince($0.startDate) <= 45 * 60 }.count,
+            of: timedEvents.count
+        )
+        let tightGaps = tightGapCount(events: timedEvents, calendar: calendar)
+        let fragmentation = tightGaps > 0 || shortEventRatio >= 50 ? "fragmentation risk: high" : "fragmentation risk: low"
+
+        return """
+        - peak busy window: \(peakPeriod.key) (\(formatHours(peakPeriod.value)))
+        - lightest observed window: \(lightPeriod)
+        - busiest weekday: \(peakWeekday.key) (\(formatHours(peakWeekday.value)))
+        - average event duration: \(avgDuration) min
+        - short-event share: \(shortEventRatio)%
+        - \(fragmentation) (\(tightGaps) tight gaps under 60 min)
+        - AI prompt use: Prefer \(lightPeriod) for flexible focus blocks; avoid adding fragmented work near the \(peakPeriod.key) cluster unless urgent.
+        """
+    }
+
+    nonisolated static func buildTaskTendencyAnalysis(todos: [TodoItem], categories: [TodoCategory], now: Date) -> String {
+        guard !todos.isEmpty else {
+            return """
+            - signal: insufficient todo data
+            - AI prompt use: Suggest lightweight capture before optimizing task sequencing.
+            """
+        }
+
+        let calendar = Calendar(identifier: .gregorian)
+        let today = calendar.startOfDay(for: now)
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) ?? today
+        let completionRate = percent(todos.filter(\.isCompleted).count, of: todos.count)
+        let openTodos = todos.filter { !$0.isCompleted }
+        let overdue = openTodos.filter { calendar.startOfDay(for: $0.date) < today }.count
+        let dueToday = openTodos.filter {
+            let day = calendar.startOfDay(for: $0.date)
+            return day >= today && day < tomorrow
+        }.count
+        let repeating = todos.filter(\.isRepeating).count
+
+        let categoryNames = Dictionary(uniqueKeysWithValues: categories.map { ($0.id, $0.name) })
+        var categoryCounts: [String: Int] = [:]
+        for todo in todos {
+            let name = categoryNames[todo.categoryID] ?? "uncategorized"
+            categoryCounts[name, default: 0] += 1
+        }
+        let topCategory = categoryCounts.max { $0.value < $1.value } ?? ("uncategorized", 0)
+        let avgTitleLength = todos.reduce(0) { $0 + $1.title.count } / max(todos.count, 1)
+        let vagueTasks = todos.filter { $0.title.count < 8 }.count
+
+        return """
+        - completion rate: \(completionRate)%
+        - open tasks: \(openTodos.count)
+        - overdue open tasks: \(overdue)
+        - due today open tasks: \(dueToday)
+        - repeating task share: \(percent(repeating, of: todos.count))%
+        - top category: \(topCategory.key) (\(topCategory.value) tasks)
+        - average task title length: \(avgTitleLength) chars
+        - vague task count: \(vagueTasks)
+        - AI prompt use: When overdue or vague tasks are high, break recommendations into smaller next actions and prioritize \(topCategory.key) if the user asks what to do next.
+        """
+    }
+
+    nonisolated static func buildGoalStatusAnalysis(
+        goals: [Goal],
+        completions: [String: CompletionRecord],
+        now: Date
+    ) -> String {
+        let activeGoals = goals.filter { $0.status == .active }
+        let records = Array(completions.values)
+        guard !activeGoals.isEmpty || !records.isEmpty else {
+            return """
+            - signal: insufficient goal data
+            - AI prompt use: Ask what outcome the schedule should protect before optimizing.
+            """
+        }
+
+        let done = records.filter { $0.status == .done }.count
+        let movedOrSkipped = records.filter { $0.status == .moved || $0.status == .skipped }.count
+        let movedSkippedRate = percent(movedOrSkipped, of: records.count)
+        let completionRate = percent(done, of: records.count)
+        let actualMinutes = records.compactMap(\.actualMinutes).reduce(0, +)
+        let plannedMinutes = records.reduce(0) { $0 + $1.plannedMinutes }
+
+        let atRisk = activeGoals.filter { goal in
+            let daysLeft = Calendar(identifier: .gregorian).dateComponents([.day], from: now, to: goal.dueDate).day ?? 0
+            let goalRecords = records.filter { $0.goalId == goal.id }
+            let goalDoneRate = percent(goalRecords.filter { $0.status == .done }.count, of: goalRecords.count)
+            return daysLeft <= 7 && (goalRecords.isEmpty || goalDoneRate < 60 || movedSkippedRate >= 40)
+        }
+        let atRiskTitles = atRisk.map(\.title).prefix(3).joined(separator: ", ")
+        let nextDeadline = activeGoals.min { $0.dueDate < $1.dueDate }
+        let nextDeadlineText: String
+        if let nextDeadline {
+            let daysLeft = Calendar(identifier: .gregorian).dateComponents([.day], from: now, to: nextDeadline.dueDate).day ?? 0
+            nextDeadlineText = "\(nextDeadline.title) in \(daysLeft) days"
+        } else {
+            nextDeadlineText = "none"
+        }
+
+        return """
+        - active goals: \(activeGoals.count)
+        - completion rate: \(completionRate)%
+        - moved/skipped rate: \(movedSkippedRate)%
+        - planned vs actual focus: \(formatHours(plannedMinutes)) planned / \(formatHours(actualMinutes)) actual
+        - next deadline: \(nextDeadlineText)
+        - at-risk goals: \(atRiskTitles.isEmpty ? "none" : atRiskTitles)
+        - AI prompt use: Protect time for at-risk goals before low-impact tasks; if moved/skipped rate is high, propose smaller sessions or a lighter plan.
+        """
+    }
+
     // MARK: - 파일 파싱 유틸
 
     private func ensureFileExists() {
@@ -334,6 +522,60 @@ final class UserContextService: ObservableObject {
 
         // 파일 초기 내용은 언어 무관 — 섹션 헤더는 파싱 키이므로 고정
         try? Self.initialContextDocument.write(to: contextFileURL, atomically: true, encoding: .utf8)
+    }
+
+    private func ensureKnownSections() {
+        var content = (try? String(contentsOf: contextFileURL, encoding: .utf8)) ?? ""
+        var changed = false
+
+        for header in Section.ordered where !content.contains(header) {
+            let block = "\n\n\(header)\n\(placeholder(for: header))"
+            if let insertAt = insertionPoint(for: header, in: content) {
+                content.insert(contentsOf: block, at: insertAt)
+            } else {
+                content += block
+            }
+            changed = true
+        }
+
+        if changed {
+            try? content.write(to: contextFileURL, atomically: true, encoding: .utf8)
+        }
+    }
+
+    private func insertionPoint(for header: String, in content: String) -> String.Index? {
+        guard let targetIndex = Section.ordered.firstIndex(of: header) else { return nil }
+        for nextHeader in Section.ordered.dropFirst(targetIndex + 1) {
+            if let range = content.range(of: "\n\(nextHeader)") {
+                return range.lowerBound
+            }
+        }
+        return nil
+    }
+
+    private func placeholder(for header: String) -> String {
+        switch header {
+        case Section.profile:
+            return "_[auto-filled from conversations]_"
+        case Section.focus:
+            return "_[current focus area — exams, projects, topics]_"
+        case Section.style:
+            return "_[auto-detected from your todo/event patterns]_"
+        case Section.current:
+            return "_[auto-generated high-level behavioral summary]_"
+        case Section.timePatterns:
+            return "_[auto-detected busy windows, light windows, and schedule fragmentation]_"
+        case Section.taskTendency:
+            return "_[auto-detected task completion, categories, and overdue patterns]_"
+        case Section.goalStatus:
+            return "_[auto-detected goal progress, risk, and execution trend]_"
+        case Section.external:
+            return "_[external info cached from web searches]_"
+        case Section.log:
+            return "_[observations noted from your conversations]_"
+        default:
+            return ""
+        }
     }
 
     private func loadSummary() {
@@ -344,12 +586,13 @@ final class UserContextService: ObservableObject {
         }
         let profile = extractSection(Section.profile, from: content)
         let focus = extractSection(Section.focus, from: content)
+        let current = extractSection(Section.current, from: content)
         // placeholder 줄 제거: 언더스코어 italics(_[...]_) 또는 괄호로만 이루어진 줄
         let isPlaceholder: (String) -> Bool = { text in
             let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
             return t.isEmpty || t.hasPrefix("_[") || (t.hasPrefix("(") && t.hasSuffix(")"))
         }
-        let cleaned = [profile, focus].filter { !isPlaceholder($0) }
+        let cleaned = [profile, focus, current].filter { !isPlaceholder($0) }
         contextSummary = cleaned.joined(separator: "\n")
     }
 
@@ -358,7 +601,7 @@ final class UserContextService: ObservableObject {
         if !Self.isValidContextDocument(content) {
             content = Self.initialContextDocument
         }
-        let allHeaders = [Section.profile, Section.focus, Section.style, Section.external, Section.log]
+        let allHeaders = Section.ordered
 
         if content.contains(header) {
             // 섹션 찾아서 교체
@@ -383,7 +626,7 @@ final class UserContextService: ObservableObject {
 
     private func extractSection(_ header: String, from content: String) -> String {
         guard let start = content.range(of: header + "\n") else { return "" }
-        let allHeaders = [Section.profile, Section.focus, Section.style, Section.external, Section.log]
+        let allHeaders = Section.ordered
         var endIdx = content.endIndex
 
         for h in allHeaders where h != header {
@@ -414,8 +657,83 @@ final class UserContextService: ObservableObject {
         return result
     }
 
+    nonisolated private static func buildCurrentAnalysisSummary(time: String, task: String, goal: String) -> String {
+        let focusWindow = value(after: "lightest observed window:", in: time) ?? "unknown"
+        let completionRate = value(after: "completion rate:", in: task) ?? value(after: "completion rate:", in: goal) ?? "unknown"
+        let atRiskGoals = value(after: "at-risk goals:", in: goal) ?? "unknown"
+        let fragmentation = line(containing: "fragmentation risk:", in: time) ?? "fragmentation risk: unknown"
+
+        return """
+        - best scheduling hint: use \(focusWindow) for flexible focus work when possible
+        - execution health: task completion \(completionRate)
+        - risk focus: \(atRiskGoals)
+        - schedule shape: \(fragmentation)
+        - AI prompt use: Start recommendations from current risk and available energy windows, then fit low-priority tasks around them.
+        """
+    }
+
+    nonisolated private static func value(after marker: String, in text: String) -> String? {
+        for line in text.components(separatedBy: "\n") {
+            guard let range = line.range(of: marker) else { continue }
+            return String(line[range.upperBound...]).trimmingCharacters(in: .whitespaces)
+        }
+        return nil
+    }
+
+    nonisolated private static func line(containing marker: String, in text: String) -> String? {
+        text.components(separatedBy: "\n").first { $0.contains(marker) }?
+            .trimmingCharacters(in: .whitespaces)
+    }
+
+    nonisolated private static func percent(_ count: Int, of total: Int) -> Int {
+        guard total > 0 else { return 0 }
+        return Int((Double(count) / Double(total) * 100).rounded())
+    }
+
+    nonisolated private static func formatHours(_ minutes: Int) -> String {
+        let hours = Double(minutes) / 60.0
+        if minutes % 60 == 0 {
+            return "\(Int(hours))h"
+        }
+        return String(format: "%.1fh", hours)
+    }
+
+    nonisolated private static func weekdayLabel(_ weekday: Int) -> String {
+        switch weekday {
+        case 1: return "Sunday"
+        case 2: return "Monday"
+        case 3: return "Tuesday"
+        case 4: return "Wednesday"
+        case 5: return "Thursday"
+        case 6: return "Friday"
+        case 7: return "Saturday"
+        default: return "unknown"
+        }
+    }
+
+    nonisolated private static func tightGapCount(events: [CalendarEvent], calendar: Calendar) -> Int {
+        let grouped = Dictionary(grouping: events) { event in
+            calendar.startOfDay(for: event.startDate)
+        }
+
+        return grouped.values.reduce(0) { total, dayEvents in
+            let sorted = dayEvents.sorted { $0.startDate < $1.startDate }
+            guard sorted.count > 1 else { return total }
+            var tight = 0
+            for index in 1..<sorted.count {
+                let gap = sorted[index].startDate.timeIntervalSince(sorted[index - 1].endDate)
+                if gap >= 0 && gap <= 60 * 60 {
+                    tight += 1
+                }
+            }
+            return total + tight
+        }
+    }
+
+    // MARK: - Document integrity / initial template (from security branch)
+
     private static func isValidContextDocument(_ content: String) -> Bool {
-        guard content.utf8.count <= 128_000 else { return false }
+        guard content.utf8.count <= 256_000 else { return false }
         let required = [
             Section.profile,
             Section.focus,
@@ -436,6 +754,7 @@ final class UserContextService: ObservableObject {
         } && !lowered.contains("```json")
     }
 
+    /// 초기 템플릿 — context 심화 PR의 확장 섹션을 포함
     private static var initialContextDocument: String {
         """
         # 🧠 Calen User Context
@@ -450,6 +769,18 @@ final class UserContextService: ObservableObject {
 
         \(Section.style)
         _[auto-detected from your todo/event patterns]_
+
+        \(Section.current)
+        _[auto-generated high-level behavioral summary]_
+
+        \(Section.timePatterns)
+        _[auto-detected busy windows, light windows, and schedule fragmentation]_
+
+        \(Section.taskTendency)
+        _[auto-detected task completion, categories, and overdue patterns]_
+
+        \(Section.goalStatus)
+        _[auto-detected goal progress, risk, and execution trend]_
 
         \(Section.external)
         _[external info cached from web searches]_
