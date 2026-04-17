@@ -1060,6 +1060,51 @@ struct TestCachedEventFull: Codable, Identifiable {
     #expect(decoded.isAllDay == true)
 }
 
+@Test func appleCalendarLifecycle_disableDropsOnlyAppleEvents() {
+    let start = Date(timeIntervalSince1970: 0)
+    let end = Date(timeIntervalSince1970: 3600)
+    let events = [
+        CalendarEvent(
+            id: "google-1",
+            title: "Google",
+            startDate: start,
+            endDate: end,
+            color: .blue,
+            isAllDay: false,
+            calendarName: "primary",
+            calendarID: "google:primary",
+            source: .google
+        ),
+        CalendarEvent(
+            id: "apple-1",
+            title: "Apple",
+            startDate: start,
+            endDate: end,
+            color: .red,
+            isAllDay: false,
+            calendarName: "Home",
+            calendarID: "apple:home",
+            source: .apple
+        ),
+        CalendarEvent(
+            id: "local-1",
+            title: "Local",
+            startDate: start,
+            endDate: end,
+            color: .green,
+            isAllDay: false,
+            calendarName: "Local",
+            calendarID: "apple:local",
+            source: .local
+        ),
+    ]
+
+    let filtered = CalendarViewModel.eventsExcludingAppleCalendar(events)
+
+    #expect(filtered.map(\.id) == ["google-1", "local-1"])
+    #expect(!filtered.contains { $0.source == .apple })
+}
+
 // ============================================================================
 // MARK: - TC-22: 파일 보안 — 디렉토리/파일 권한
 // ============================================================================
