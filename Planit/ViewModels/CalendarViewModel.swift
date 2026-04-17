@@ -1288,6 +1288,13 @@ final class CalendarViewModel: ObservableObject {
     }
 
     func deleteTodo(id: UUID) {
+        // Apple Reminder인 경우 EventKit으로 삭제
+        if let reminderItem = appleReminders.first(where: { $0.id == id }),
+           let identifier = reminderItem.appleReminderIdentifier {
+            deleteAppleReminder(identifier: identifier)
+            return
+        }
+
         if let todo = todos.first(where: { $0.id == id }) {
             // 완료 기록 정리
             goalService?.removeCompletion(eventId: "todo:\(id.uuidString)")
@@ -1309,6 +1316,13 @@ final class CalendarViewModel: ObservableObject {
     }
 
     func updateTodo(id: UUID, title: String, categoryID: UUID, date: Date? = nil) {
+        // Apple Reminder인 경우 EventKit으로 업데이트
+        if let reminderItem = appleReminders.first(where: { $0.id == id }),
+           let identifier = reminderItem.appleReminderIdentifier {
+            updateAppleReminder(identifier: identifier, title: title, date: date)
+            return
+        }
+
         guard let index = todos.firstIndex(where: { $0.id == id }) else { return }
         todos[index].title = title
         todos[index].categoryID = categoryID
@@ -1330,6 +1344,44 @@ final class CalendarViewModel: ObservableObject {
                 }
                 self.refreshEvents()
             }
+        }
+    }
+
+    /// Apple Reminder를 EventKit에서 직접 삭제
+    func deleteAppleReminder(identifier: String) {
+        guard let reminder = eventStore.calendarItem(withIdentifier: identifier) as? EKReminder else {
+            recordCRUDFailure(operation: .delete, source: .apple, eventID: identifier)
+            return
+        }
+        // 완료 기록 정리 (id가 appleReminderIdentifier로도 추적되는 경우)
+        goalService?.removeCompletion(eventId: identifier)
+        do {
+            try eventStore.remove(reminder, commit: true)
+            appleReminders.removeAll { $0.appleReminderIdentifier == identifier }
+        } catch {
+            recordCRUDFailure(operation: .delete, source: .apple, eventID: identifier, error: error)
+        }
+    }
+
+    /// Apple Reminder의 제목/날짜를 EventKit에서 업데이트
+    func updateAppleReminder(identifier: String, title: String, date: Date? = nil) {
+        guard let reminder = eventStore.calendarItem(withIdentifier: identifier) as? EKReminder else {
+            recordCRUDFailure(operation: .update, source: .apple, eventID: identifier)
+            return
+        }
+        reminder.title = title
+        if let newDate = date {
+            let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: newDate)
+            reminder.dueDateComponents = components
+        }
+        do {
+            try eventStore.save(reminder, commit: true)
+            if let idx = appleReminders.firstIndex(where: { $0.appleReminderIdentifier == identifier }) {
+                appleReminders[idx].title = title
+                if let newDate = date { appleReminders[idx].date = newDate }
+            }
+        } catch {
+            recordCRUDFailure(operation: .update, source: .apple, eventID: identifier, error: error)
         }
     }
 
