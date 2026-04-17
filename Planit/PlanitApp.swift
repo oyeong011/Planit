@@ -68,6 +68,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .sink { [weak self] _ in self?.refreshStatusIcon() }
             .store(in: &cancellables)
 
+        // appearance 변경 시 NSApp + popover 양쪽 모두 즉시 반영
+        AppearanceService.shared.$mode
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] mode in
+                switch mode {
+                case .system: NSApp.appearance = nil
+                case .light:  NSApp.appearance = NSAppearance(named: .aqua)
+                case .dark:   NSApp.appearance = NSAppearance(named: .darkAqua)
+                }
+                self?.popover.appearance = NSApp.appearance
+            }
+            .store(in: &cancellables)
+
         // 앱이 메뉴바에 조용히 떠 있어도 새 버전을 자동 감지해 알림으로 알리도록 주기 폴링 시작.
         // (Sparkle의 accessory 앱 UI가 안 뜨는 환경에서도 배너 + 시스템 알림 동작)
         updater.startPeriodicAppcastPolling()
