@@ -203,8 +203,12 @@ struct LocalKeywordGoalDetector: GoalDetector, Sendable {
 final class GoalMemoryService: ObservableObject {
 
     @Published private(set) var goals: [ChatGoal] = []
+    /// goalID → 해당 목표에 매칭된 활동 ID 집합 (이번 달 기준).
+    /// refreshMatches(...) 이후 채워지며 ReviewView가 관련 활동 리스트를 그린다.
+    @Published private(set) var monthlyMatches: [UUID: [GoalActivityClassifier.Match]] = [:]
 
     private var detector: any GoalDetector = LocalKeywordGoalDetector()
+    private let classifier = GoalActivityClassifier()
     private let storageKey = "planit.chatGoals.v1"
 
     init() {
@@ -250,9 +254,47 @@ final class GoalMemoryService: ObservableObject {
 
     // MARK: - 활동 트래킹 (캘린더 데이터 기반)
 
-    func updateWeeklyActivity(events: [Any], completedIDs: Set<String>) {
-        // events: CalendarEvent 배열을 Any로 받아 리플렉션 없이 처리
-        // 실제 연결은 ReviewView에서 타입 안전하게 호출
+    /// 이번 달 이벤트/할일을 GoalActivityClassifier에 넘겨 각 목표별 매칭 활동을 갱신한다.
+    /// 키워드 매칭은 즉시, 나머지는 AI(Claude)로 분류 — 캐시 적용.
+    /// - Parameters:
+    ///   - events: 캘린더 이벤트 (id, title, startDate)
+    ///   - todos: 할일 (id, title, dueDate, isCompleted)
+    func refreshMatches(
+        events: [(id: String, title: String, startDate: Date)],
+        todos: [(id: String, title: String, date: Date, isCompleted: Bool)]
+    ) async {
+        guard !goals.isEmpty else {
+            monthlyMatches = [:]
+            return
+        }
+        let cal = Calendar.current
+        guard let month = cal.dateInterval(of: .month, for: Date()) else { return }
+
+        var activities: [GoalActivityClassifier.Activity] = []
+        for ev in events where ev.startDate >= month.start && ev.startDate < month.end {
+            activities.append(.init(
+                id: ev.id, title: ev.title, date: ev.startDate,
+                kind: .event, isCompleted: false
+            ))
+        }
+        for todo in todos where todo.date >= month.start && todo.date < month.end {
+            activities.append(.init(
+                id: todo.id, title: todo.title, date: todo.date,
+                kind: .todo, isCompleted: todo.isCompleted
+            ))
+        }
+
+        let matches = await classifier.classify(activities, against: goals)
+        var grouped: [UUID: [GoalActivityClassifier.Match]] = [:]
+        for match in matches where match.goalID != nil {
+            grouped[match.goalID!, default: []].append(match)
+        }
+        monthlyMatches = grouped
+    }
+
+    /// 특정 목표에 매칭된 이번 달 활동 수
+    func matchCount(for goal: ChatGoal) -> Int {
+        monthlyMatches[goal.id]?.count ?? 0
     }
 
     /// CalendarEvent 배열로 주별 활동 업데이트
