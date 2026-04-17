@@ -1142,28 +1142,32 @@ struct TestCachedEventFull: Codable, Identifiable {
 // ============================================================================
 
 @Test func aiProvider_claude_properties() {
-    let raw = "Claude Code"
-    #expect(raw == "Claude Code")
-    // icon / defaultModel은 enum이므로 테스트 가능
-    let icon = "c.circle.fill"
-    let model = "claude-sonnet-4-20250514"
-    #expect(!icon.isEmpty)
-    #expect(model.contains("claude"))
+    #expect(AIProvider.claude.rawValue == "Claude Code")
+    #expect(AIProvider.claude.icon == "c.circle.fill")
+    #expect(AIProvider.claude.defaultModel.contains("claude"))
+    #expect(AIProvider.claude.cliName == "claude")
+    #expect(AIProvider.claude.isStateful == false)
 }
 
 @Test func aiProvider_codex_properties() {
-    let raw = "Codex"
-    #expect(raw == "Codex")
-    let icon = "o.circle.fill"
-    let model = "gpt-5.4"
-    #expect(!icon.isEmpty)
-    #expect(model.contains("gpt"))
+    #expect(AIProvider.codex.rawValue == "Codex")
+    #expect(AIProvider.codex.icon == "o.circle.fill")
+    #expect(AIProvider.codex.defaultModel.contains("gpt"))
+    #expect(AIProvider.codex.cliName == "codex")
+    #expect(AIProvider.codex.isStateful == false)
 }
 
-@Test func aiProvider_allCases_hasTwo() {
-    // CaseIterable → 2개 프로바이더
-    let providers = ["Claude Code", "Codex"]
-    #expect(providers.count == 2)
+@Test func aiProvider_hermes_properties() {
+    #expect(AIProvider.hermes.rawValue == "Hermes")
+    #expect(AIProvider.hermes.icon == "h.circle.fill")
+    #expect(AIProvider.hermes.defaultModel == "provider:model")
+    #expect(AIProvider.hermes.cliName == "hermes")
+    #expect(AIProvider.hermes.isStateful == true)
+}
+
+@Test func aiProvider_allCases_hasThree() {
+    let providers = AIProvider.allCases.map(\.rawValue)
+    #expect(providers == ["Claude Code", "Codex", "Hermes"])
 }
 
 @Test func aiTone_promptInstructions_areDistinct() {

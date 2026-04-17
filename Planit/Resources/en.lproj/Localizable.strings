@@ -286,9 +286,12 @@
 "settings.ai.claude.install.hint" = "Required: brew install claude-code";
 "settings.ai.codex.installed.detail" = "Installed — Optimized for code";
 "settings.ai.codex.install.hint" = "Required: npm install -g @openai/codex";
+"settings.ai.hermes.installed.detail" = "Installed — available after integration is implemented";
+"settings.ai.hermes.install.hint" = "Install Hermes later, then re-detect the CLI";
 "settings.ai.save.button" = "Save AI Settings";
 "settings.ai.claude.desc" = "Excellent natural language understanding. Ideal for complex scheduling and goal analysis.";
 "settings.ai.codex.desc" = "Specialized for code-based optimization. Great for fast rule-based planning.";
+"settings.ai.hermes.desc" = "Stateful gateway-based agent. Prepared for future use after Hermes is installed.";
 "settings.aggressiveness.manual.desc" = "Manage all schedules manually. AI stays quiet.";
 "settings.aggressiveness.assist.desc" = "AI suggests only. You decide to accept.";
 "settings.aggressiveness.semiauto.desc" = "Automatically registers approved suggestions to calendar.";
@@ -388,6 +391,8 @@
 "setup.step2.title" = "Connect Google Calendar";
 "setup.claude.desc" = "Ask Claude to help plan and organize your day";
 "setup.codex.desc" = "Use Codex to generate smart suggestions";
+"setup.hermes.desc" = "Use Hermes after installing the stateful gateway agent";
+"setup.hermes.install.after" = "Install Hermes when you are ready to enable this provider";
 "setup.google.desc" = "Sync your calendar events for smarter scheduling";
 "setup.google.connect.button" = "Connect Google Calendar";
 "setup.google.skip.hint" = "You can connect later in Settings";
