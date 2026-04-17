@@ -81,6 +81,13 @@ else
     echo "⚠️  Sparkle.framework 아티팩트 없음 — swift build 먼저 실행하세요"
 fi
 
+# SwiftPM 기본 rpath는 @executable_path/../lib 뿐이라 Contents/Frameworks에 둔 Sparkle을
+# dyld가 찾지 못해 크래시함. 서명 전에 Frameworks rpath를 추가해야 함.
+echo "→ Adding @executable_path/../Frameworks rpath..."
+if ! otool -l "$APP_BUNDLE/Contents/MacOS/Calen" | grep -q "@executable_path/../Frameworks"; then
+    install_name_tool -add_rpath @executable_path/../Frameworks "$APP_BUNDLE/Contents/MacOS/Calen"
+fi
+
 echo "→ .app bundle created at: $APP_BUNDLE"
 
 # 3. 코드 서명 (Sparkle은 inside-out 순서 필수)

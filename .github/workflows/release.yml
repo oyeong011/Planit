@@ -105,6 +105,14 @@ jobs:
             exit 1
           fi
 
+          # SwiftPM 기본 rpath는 @executable_path/../lib 뿐이라
+          # Contents/Frameworks에 둔 Sparkle을 dyld가 찾지 못해 크래시함.
+          # 서명 전에 Frameworks rpath를 추가해야 함 (0.2.3 회귀 방지).
+          if ! otool -l "$APP_BUNDLE/Contents/MacOS/Calen" | grep -q "@executable_path/../Frameworks"; then
+            install_name_tool -add_rpath @executable_path/../Frameworks "$APP_BUNDLE/Contents/MacOS/Calen"
+            echo "✓ Added @executable_path/../Frameworks rpath"
+          fi
+
           echo "APP_BUNDLE=$APP_BUNDLE" >> "$GITHUB_ENV"
           echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$GITHUB_ENV"
 
@@ -321,6 +329,12 @@ jobs:
             depends_on macos: ">= :sonoma"
 
             app "Calen.app"
+
+            # Menu-bar apps (LSUIElement) 는 Dock 아이콘이 없어 사용자가 '앱이 설치됐는지' 확인 못 하는
+            # 혼란이 흔함. postflight에서 자동 실행해 메뉴바 아이콘이 바로 보이도록 한다.
+            postflight do
+              system "/usr/bin/open", "-a", "Calen"
+            end
 
             zap trash: [
               "~/Library/Application Support/Calen",
