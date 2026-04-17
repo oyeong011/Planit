@@ -43,31 +43,12 @@ if [ -d "$SPARKLE_SRC" ]; then
     install_name_tool -add_rpath @executable_path/../Frameworks "$APP/Contents/MacOS/Calen" 2>/dev/null || true
 fi
 
-# Info.plist 생성
-cat > "$APP/Contents/Info.plist" << 'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>CFBundleIdentifier</key>
-    <string>com.oy.planit</string>
-    <key>CFBundleName</key>
-    <string>Calen</string>
-    <key>CFBundleVersion</key>
-    <string>1.0</string>
-    <key>CFBundleShortVersionString</key>
-    <string>1.0</string>
-    <key>CFBundleExecutable</key>
-    <string>Calen</string>
-    <key>LSUIElement</key>
-    <true/>
-    <key>NSPrincipalClass</key>
-    <string>NSApplication</string>
-    <key>CFBundleIconFile</key>
-    <string>AppIcon</string>
-</dict>
-</plist>
-EOF
+# Info.plist — 실제 Planit/Info.plist 사용해 dev 빌드도 올바른 버전을 표시
+# 하드코딩 1.0 대신 소스의 CFBundleShortVersionString 를 그대로 반영
+cp "$PROJECT_DIR/Planit/Info.plist" "$APP/Contents/Info.plist"
+# dev 빌드 식별용 suffix (CFBundleVersion 뒤에 -dev 붙이지 않음 — Sparkle 비교 정확성 유지)
+DEV_VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP/Contents/Info.plist" 2>/dev/null || echo "unknown")
+echo "   Info.plist version: $DEV_VERSION"
 
 # 개발 빌드 서명 (키체인 프롬프트 방지)
 # DEVELOPER_ID 환경변수 없으면 로컬 키체인에서 자동 감지

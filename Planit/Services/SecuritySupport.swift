@@ -85,7 +85,12 @@ enum FileIntegrity {
     }
 
     static func verify(_ payload: Data, signature expectedSignature: String, key: Data) -> Bool {
-        signature(for: payload, key: key) == expectedSignature
+        guard let expectedCode = Data(base64Encoded: expectedSignature) else { return false }
+        return HMAC<SHA256>.isValidAuthenticationCode(
+            expectedCode,
+            authenticating: payload,
+            using: SymmetricKey(data: key)
+        )
     }
 }
 

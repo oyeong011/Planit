@@ -925,6 +925,44 @@ struct TestAIResponse: Codable {
     #expect(fmt.date(from: "") == nil)
 }
 
+@Test func googleCalendarPathSegmentEncoding_escapesSlashAndAtSign() {
+    let encoded = GoogleCalendarService.percentEncodedPathSegment("work/team@example.com")
+    #expect(encoded == "work%2Fteam%40example.com")
+}
+
+@Test func googleCalendarPathSegmentEncoding_keepsUnreservedCharacters() {
+    let encoded = GoogleCalendarService.percentEncodedPathSegment("event-1._~")
+    #expect(encoded == "event-1._~")
+}
+
+@Test func googleCalendarDateParsing_rejectsInvalidExternalDates() {
+    #expect(GoogleCalendarService.parseGoogleAllDayDate("2026-04-15") != nil)
+    #expect(GoogleCalendarService.parseGoogleAllDayDate("2026/04/15") == nil)
+    #expect(GoogleCalendarService.parseGoogleDateTime("2026-04-15T15:00:00+09:00") != nil)
+    #expect(GoogleCalendarService.parseGoogleDateTime("not-a-date") == nil)
+}
+
+@Test func aiActionDurationValidation_rejectsNonPositiveAndExcessiveValues() {
+    #expect(AIService.validatedActionDuration(nil) == 60)
+    #expect(AIService.validatedActionDuration(1) == 1)
+    #expect(AIService.validatedActionDuration(0) == nil)
+    #expect(AIService.validatedActionDuration(-30) == nil)
+    #expect(AIService.validatedActionDuration(AIService.maxActionDurationMinutes + 1) == nil)
+}
+
+@Test func aiActionIntervalValidation_requiresEndAfterStart() {
+    let start = Date(timeIntervalSince1970: 1_800_000_000)
+    #expect(AIService.isPositiveActionInterval(start: start, end: start.addingTimeInterval(60)))
+    #expect(!AIService.isPositiveActionInterval(start: start, end: start))
+    #expect(!AIService.isPositiveActionInterval(start: start, end: start.addingTimeInterval(-60)))
+}
+
+@Test func aiActionDayParsing_rejectsLenientFormats() {
+    #expect(AIService.parseActionDay("2026-04-15") != nil)
+    #expect(AIService.parseActionDay("2026/04/15") == nil)
+    #expect(AIService.parseActionDay("not-a-date") == nil)
+}
+
 // ============================================================================
 // MARK: - TC-19: ANSI 이스케이프 시퀀스 제거
 // ============================================================================
@@ -1058,6 +1096,345 @@ struct TestCachedEventFull: Codable, Identifiable {
     let decoded = try JSONDecoder().decode(TestCachedEventFull.self, from: data)
     #expect(decoded.source == "local")
     #expect(decoded.isAllDay == true)
+}
+
+@Test func appleCalendarLifecycle_disableDropsOnlyAppleEvents() {
+    let start = Date(timeIntervalSince1970: 0)
+    let end = Date(timeIntervalSince1970: 3600)
+    let events = [
+        CalendarEvent(
+            id: "google-1",
+            title: "Google",
+            startDate: start,
+            endDate: end,
+            color: .blue,
+            isAllDay: false,
+            calendarName: "primary",
+            calendarID: "google:primary",
+            source: .google
+        ),
+        CalendarEvent(
+            id: "apple-1",
+            title: "Apple",
+            startDate: start,
+            endDate: end,
+            color: .red,
+            isAllDay: false,
+            calendarName: "Home",
+            calendarID: "apple:home",
+            source: .apple
+        ),
+        CalendarEvent(
+            id: "local-1",
+            title: "Local",
+            startDate: start,
+            endDate: end,
+            color: .green,
+            isAllDay: false,
+            calendarName: "Local",
+            calendarID: "apple:local",
+            source: .local
+        ),
+    ]
+
+    let filtered = CalendarViewModel.eventsExcludingAppleCalendar(events)
+
+    #expect(filtered.map(\.id) == ["google-1", "local-1"])
+    #expect(!filtered.contains { $0.source == .apple })
+}
+
+@Test func calendarCrudRouting_prefersLoadedAppleSourceWhenGoogleAuthenticated() {
+    let start = Date(timeIntervalSince1970: 0)
+    let event = CalendarEvent(
+        id: "apple-EK-123",
+        title: "Apple",
+        startDate: start,
+        endDate: start.addingTimeInterval(3600),
+        color: .red,
+        isAllDay: false,
+        calendarName: "Home",
+        calendarID: "apple:home",
+        source: .apple
+    )
+
+    let source = CalendarViewModel.inferredEventSource(
+        eventID: "apple-EK-123",
+        calendarID: "google:primary",
+        events: [event],
+        googleAuthenticated: true
+    )
+
+    #expect(source == .apple)
+    #expect(CalendarViewModel.eventKitLookupIdentifier(for: "apple-EK-123") == "EK-123")
+}
+
+@Test func calendarCrudRouting_usesCalendarIDAndIDPrefixesWhenSourceMissing() {
+    #expect(CalendarViewModel.inferredEventSource(
+        eventID: "raw-ek-id",
+        calendarID: "apple:home",
+        events: [],
+        googleAuthenticated: true
+    ) == .apple)
+    #expect(CalendarViewModel.inferredEventSource(
+        eventID: "apple-raw-ek-id",
+        calendarID: "",
+        events: [],
+        googleAuthenticated: true
+    ) == .apple)
+    #expect(CalendarViewModel.inferredEventSource(
+        eventID: "pending-temp-id",
+        calendarID: "",
+        events: [],
+        googleAuthenticated: true
+    ) == .google)
+    #expect(CalendarViewModel.inferredEventSource(
+        eventID: "google-id",
+        calendarID: "google:primary",
+        events: [],
+        googleAuthenticated: false
+    ) == .google)
+}
+
+@Test func calendarEventDedupe_removesTodoBackedGoogleEvents() {
+    let start = Date(timeIntervalSince1970: 0)
+    let todoEvent = CalendarEvent(
+        id: "google-todo-1",
+        title: "Todo mirror",
+        startDate: start,
+        endDate: start.addingTimeInterval(86400),
+        color: .blue,
+        isAllDay: true,
+        calendarName: "primary",
+        calendarID: "google:primary",
+        source: .google
+    )
+    let normalEvent = CalendarEvent(
+        id: "google-normal-1",
+        title: "Normal",
+        startDate: start,
+        endDate: start.addingTimeInterval(3600),
+        color: .blue,
+        isAllDay: false,
+        calendarName: "primary",
+        calendarID: "google:primary",
+        source: .google
+    )
+
+    let deduped = CalendarViewModel.deduplicatedCalendarEvents(
+        [todoEvent, normalEvent],
+        todoGoogleEventIDs: ["google-todo-1"]
+    )
+
+    #expect(deduped.map(\.id) == ["google-normal-1"])
+}
+
+@Test func calendarEventDedupe_prefersGoogleOverAppleForSameEventFingerprint() {
+    let start = Date(timeIntervalSince1970: 0)
+    let google = CalendarEvent(
+        id: "google-1",
+        title: "Same event",
+        startDate: start,
+        endDate: start.addingTimeInterval(3600),
+        color: .blue,
+        isAllDay: false,
+        calendarName: "primary",
+        calendarID: "google:primary",
+        source: .google
+    )
+    let apple = CalendarEvent(
+        id: "apple-EK-1",
+        title: "Same event",
+        startDate: start,
+        endDate: start.addingTimeInterval(3600),
+        color: .red,
+        isAllDay: false,
+        calendarName: "Google",
+        calendarID: "apple:caldav",
+        source: .apple
+    )
+
+    let deduped = CalendarViewModel.deduplicatedCalendarEvents([apple, google], todoGoogleEventIDs: [])
+
+    #expect(deduped.map(\.id) == ["google-1"])
+}
+
+@Test func appleMirrorFilterStats_countsFilteredMirrorsWithoutExposingTitles() {
+    let start = Date(timeIntervalSince1970: 0)
+    let google = CalendarEvent(
+        id: "google-1",
+        title: "Shared standup",
+        startDate: start,
+        endDate: start.addingTimeInterval(1800),
+        color: .blue,
+        isAllDay: false,
+        calendarName: "primary",
+        calendarID: "google:primary",
+        source: .google
+    )
+    let extMirror = CalendarEvent(
+        id: "apple-ext",
+        title: "Private ext title",
+        startDate: start.addingTimeInterval(3600),
+        endDate: start.addingTimeInterval(5400),
+        color: .red,
+        isAllDay: false,
+        calendarName: "Apple",
+        calendarID: "apple:calendar",
+        source: .apple,
+        externalID: "google-1"
+    )
+    let fingerprintMirror = CalendarEvent(
+        id: "apple-fingerprint",
+        title: "Shared standup",
+        startDate: start,
+        endDate: start.addingTimeInterval(1800),
+        color: .red,
+        isAllDay: false,
+        calendarName: "Apple",
+        calendarID: "apple:calendar",
+        source: .apple
+    )
+    let suppressedMirror = CalendarEvent(
+        id: "apple-suppress",
+        title: "Recently moved",
+        startDate: start.addingTimeInterval(7200),
+        endDate: start.addingTimeInterval(9000),
+        color: .red,
+        isAllDay: false,
+        calendarName: "Apple",
+        calendarID: "apple:calendar",
+        source: .apple
+    )
+    let kept = CalendarEvent(
+        id: "apple-kept",
+        title: "Apple only",
+        startDate: start.addingTimeInterval(10800),
+        endDate: start.addingTimeInterval(12600),
+        color: .red,
+        isAllDay: false,
+        calendarName: "Apple",
+        calendarID: "apple:calendar",
+        source: .apple
+    )
+
+    let result = CalendarViewModel.filteredAppleMirrorEvents(
+        [extMirror, fingerprintMirror, suppressedMirror, kept],
+        googleEvents: [google],
+        suppressedTitles: ["Recently moved"],
+        updatedAt: start
+    )
+
+    #expect(result.events.map(\.id) == ["apple-kept"])
+    #expect(result.stats.extCount == 1)
+    #expect(result.stats.fingerprintCount == 1)
+    #expect(result.stats.suppressCount == 1)
+    #expect(result.stats.lastUpdated == start)
+}
+
+@Test func calendarEventDedupe_replacesPendingMirrorWithFetchedGoogleEvent() {
+    let start = Date(timeIntervalSince1970: 0)
+    let pending = CalendarEvent(
+        id: "pending-temp",
+        title: "Created offline",
+        startDate: start,
+        endDate: start.addingTimeInterval(3600),
+        color: .blue,
+        isAllDay: false,
+        calendarName: "Google",
+        calendarID: "google:primary",
+        source: .google
+    )
+    let fetched = CalendarEvent(
+        id: "google-created",
+        title: "Created offline",
+        startDate: start,
+        endDate: start.addingTimeInterval(3600),
+        color: .blue,
+        isAllDay: false,
+        calendarName: "primary",
+        calendarID: "google:primary",
+        source: .google
+    )
+
+    let deduped = CalendarViewModel.deduplicatedCalendarEvents([pending, fetched], todoGoogleEventIDs: [])
+
+    #expect(deduped.map(\.id) == ["google-created"])
+}
+
+@Test func moveTodo_dropsStaleGoogleMirrorFromOldDate() {
+    let oldStart = Date(timeIntervalSince1970: 1_700_000_000)
+    let staleGoogleMirror = CalendarEvent(
+        id: "google-todo-mirror",
+        title: "Moved todo",
+        startDate: oldStart,
+        endDate: oldStart.addingTimeInterval(86_400),
+        color: .blue,
+        isAllDay: true,
+        calendarName: "Google",
+        calendarID: "google:primary",
+        source: .google
+    )
+
+    let deduped = CalendarViewModel.deduplicatedCalendarEvents(
+        [staleGoogleMirror],
+        todoGoogleEventIDs: ["google-todo-mirror"]
+    )
+
+    #expect(deduped.isEmpty)
+}
+
+@Test func moveCalendarEvent_googleReplacesOldDateForSameEventID() {
+    let oldStart = Date(timeIntervalSince1970: 1_700_000_000)
+    let newStart = oldStart.addingTimeInterval(86_400)
+    let oldEvent = CalendarEvent(
+        id: "google-move-1",
+        title: "Move me",
+        startDate: oldStart,
+        endDate: oldStart.addingTimeInterval(3_600),
+        color: .blue,
+        isAllDay: false,
+        calendarName: "Google",
+        calendarID: "google:primary",
+        source: .google
+    )
+    var movedEvent = oldEvent
+    movedEvent.startDate = newStart
+    movedEvent.endDate = newStart.addingTimeInterval(3_600)
+
+    let deduped = CalendarViewModel.deduplicatedCalendarEvents(
+        [oldEvent, movedEvent],
+        todoGoogleEventIDs: []
+    )
+
+    #expect(deduped.count == 1)
+    #expect(deduped.first?.startDate == newStart)
+}
+
+@Test func moveCalendarEvent_appleReplacesOldDateForSameEventID() {
+    let oldStart = Date(timeIntervalSince1970: 1_700_000_000)
+    let newStart = oldStart.addingTimeInterval(86_400)
+    let oldEvent = CalendarEvent(
+        id: "apple-EK-move-1",
+        title: "Move me",
+        startDate: oldStart,
+        endDate: oldStart.addingTimeInterval(3_600),
+        color: .red,
+        isAllDay: false,
+        calendarName: "Home",
+        calendarID: "apple:home",
+        source: .apple
+    )
+    var movedEvent = oldEvent
+    movedEvent.startDate = newStart
+    movedEvent.endDate = newStart.addingTimeInterval(3_600)
+
+    let deduped = CalendarViewModel.deduplicatedCalendarEvents(
+        [oldEvent, movedEvent],
+        todoGoogleEventIDs: []
+    )
+
+    #expect(deduped.count == 1)
+    #expect(deduped.first?.startDate == newStart)
 }
 
 // ============================================================================
@@ -1385,6 +1762,15 @@ func cleanCodexOutput(_ raw: String) -> String {
     }
 }
 
+@Test func googleMutationQueuePolicy_retriesOnlyTransientFailures() {
+    #expect(CalendarViewModel.shouldQueueGoogleMutation(after: URLError(.notConnectedToInternet)))
+    #expect(CalendarViewModel.shouldQueueGoogleMutation(after: GoogleCalendarError.httpStatus(500)))
+    #expect(CalendarViewModel.shouldQueueGoogleMutation(after: GoogleCalendarError.httpStatus(429)))
+    #expect(!CalendarViewModel.shouldQueueGoogleMutation(after: GoogleCalendarError.httpStatus(400)))
+    #expect(!CalendarViewModel.shouldQueueGoogleMutation(after: GoogleCalendarError.httpStatus(401)))
+    #expect(!CalendarViewModel.shouldQueueGoogleMutation(after: URLError(.badURL)))
+}
+
 // ============================================================================
 // MARK: - TC-30: Google Calendar 색상 매핑
 // ============================================================================
@@ -1418,18 +1804,25 @@ func cleanCodexOutput(_ raw: String) -> String {
 // ============================================================================
 
 @Test func cliEnvironment_minimalKeys() {
-    let envKeys = ["PATH", "HOME", "NO_COLOR", "TERM", "LANG"]
-    #expect(envKeys.count == 5, "CLI에 전달하는 환경변수는 5개만이어야 함")
+    let envKeys = ["PATH", "HOME", "TMPDIR", "NO_COLOR", "TERM", "LANG"]
+    #expect(envKeys.count == 6, "CLI에 전달하는 환경변수는 최소 allowlist만 포함해야 함")
     #expect(envKeys.contains("NO_COLOR"), "ANSI 색상 비활성화 필수")
     #expect(envKeys.contains("TERM"), "TERM=dumb 설정 필수")
 }
 
 @Test func cliEnvironment_noSensitiveVars() {
-    let envKeys = Set(["PATH", "HOME", "NO_COLOR", "TERM", "LANG"])
+    let envKeys = Set(["PATH", "HOME", "TMPDIR", "NO_COLOR", "TERM", "LANG"])
     let sensitiveVars = ["API_KEY", "SECRET", "TOKEN", "PASSWORD", "AWS_ACCESS_KEY"]
     for sensitive in sensitiveVars {
         #expect(!envKeys.contains(sensitive), "민감한 환경변수 \(sensitive)이 포함되면 안 됨")
     }
+}
+
+@Test func userContextClaudeEnvironment_usesRestrictedAllowlist() {
+    let env = UserContextService.restrictedCLIEnvironment()
+    #expect(Set(env.keys) == Set(["PATH", "HOME", "TMPDIR", "NO_COLOR", "TERM", "LANG"]))
+    #expect(env["TERM"] == "dumb")
+    #expect(env["NO_COLOR"] == "1")
 }
 
 // ============================================================================

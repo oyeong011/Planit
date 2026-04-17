@@ -135,6 +135,9 @@ struct CalendarEvent: Identifiable, Hashable {
     var calendarID: String = ""   // 안정적인 식별자: "google:primary", "apple:<uuid>"
     var source: CalendarEventSource = .google
     var categoryID: UUID? = nil   // 파생 상태 — 매핑 적용 후 채워짐
+    /// EventKit이 제공하는 외부 동기화 ID. macOS Calendar가 Google 계정을 연결한 경우
+    /// 원본 Google 이벤트 ID가 여기 담겨 있어 Google/Apple 미러 dedup 키로 사용.
+    var externalID: String? = nil
 }
 
 // MARK: - Event Category Mapping (이벤트별 독립 매핑)

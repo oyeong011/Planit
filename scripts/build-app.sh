@@ -19,6 +19,11 @@ TEAM_ID="${NOTARIZE_TEAM_ID:-}"
 APPLE_ID="${NOTARIZE_APPLE_ID:-}"
 APP_PWD="${NOTARIZE_PASSWORD:-}"
 
+if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "✗ VERSION must be X.Y.Z (got: $VERSION)" >&2
+    exit 1
+fi
+
 echo "=== Building Calen v${VERSION} ==="
 
 # 1. Release build — arch별 개별 빌드 후 lipo로 합치기

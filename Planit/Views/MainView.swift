@@ -40,6 +40,8 @@ struct MainCalendarView: View {
     @State private var showLeftPanel: Bool = true
     @State private var leftPanelMode: LeftPanelMode = .chat
     @State private var showSettings: Bool = false
+    /// User context 분석 debounce — 이벤트 배열이 빠르게 바뀔 때 Claude CLI 폭주 방지
+    @State private var contextRefreshTask: Task<Void, Never>?
 
     init(authManager: GoogleAuthManager, newTodoTitle: Binding<String>) {
         self.authManager = authManager
@@ -58,20 +60,31 @@ struct MainCalendarView: View {
     }
 
     var body: some View {
-        HStack(spacing: 0) {
-            if showLeftPanel {
-                leftPanel
-                    .frame(width: 280)
-                Divider()
+        VStack(spacing: 0) {
+            if let notice = viewModel.lastCRUDError {
+                CRUDErrorInlineNotice(notice: notice) {
+                    viewModel.dismissLastCRUDError()
+                }
+                .padding(.horizontal, 12)
+                .padding(.top, 10)
+                .padding(.bottom, 6)
             }
 
-            CalendarGridView(viewModel: viewModel, showChat: $showLeftPanel)
-                .frame(maxWidth: .infinity)
+            HStack(spacing: 0) {
+                if showLeftPanel {
+                    leftPanel
+                        .frame(width: 280)
+                    Divider()
+                }
 
-            Divider()
+                CalendarGridView(viewModel: viewModel, showChat: $showLeftPanel)
+                    .frame(maxWidth: .infinity)
 
-            DailyDetailView(viewModel: viewModel, newTodoTitle: $newTodoTitle, showSettings: $showSettings)
-                .frame(width: 330)
+                Divider()
+
+                DailyDetailView(viewModel: viewModel, newTodoTitle: $newTodoTitle, showSettings: $showSettings)
+                    .frame(width: 330)
+            }
         }
         .frame(width: showLeftPanel ? 1320 : 1040, height: 860)
         .background(Color.platformControlBackground)
@@ -88,10 +101,12 @@ struct MainCalendarView: View {
         }
         .onChange(of: viewModel.calendarEvents) {
             updateEventReminders()
-            refreshUserContextAnalysis()
+            // refreshUserContextAnalysis는 debounce — 이벤트 배열이 fetch/merge로
+            // 초단위 변화할 때마다 매번 돌면 CPU 폭주 원인이 된다.
+            scheduleDebouncedContextRefresh()
         }
         .onChange(of: viewModel.todos.count) {
-            refreshUserContextAnalysis()
+            scheduleDebouncedContextRefresh()
         }
         .sheet(isPresented: $showSettings) {
             SettingsView(
@@ -106,6 +121,18 @@ struct MainCalendarView: View {
         // popover가 바깥 클릭으로 닫히면 설정 시트도 함께 닫기
         .onReceive(NotificationCenter.default.publisher(for: .calenPopoverDidClose)) { _ in
             showSettings = false
+        }
+    }
+
+    /// 연쇄 변화(fetch/merge/optimistic update)마다 refreshUserContextAnalysis가
+    /// 즉시 실행되면 Claude CLI가 과도하게 실행되고 CPU/메모리가 폭주한다.
+    /// 5초 debounce 로 마지막 변경 이후 조용해진 다음 한 번만 실행.
+    private func scheduleDebouncedContextRefresh() {
+        contextRefreshTask?.cancel()
+        contextRefreshTask = Task {
+            try? await Task.sleep(nanoseconds: 5_000_000_000)  // 5s
+            if Task.isCancelled { return }
+            refreshUserContextAnalysis()
         }
     }
 
@@ -158,8 +185,14 @@ struct MainCalendarView: View {
                     viewModel: viewModel,
                     onCreateEvent: { title, start, end in
                         Task {
-                            _ = try? await viewModel.googleService.createEvent(
-                                title: title, startDate: start, endDate: end, isAllDay: false)
+                            do {
+                                if try await viewModel.googleService.createEvent(
+                                    title: title, startDate: start, endDate: end, isAllDay: false) == nil {
+                                    viewModel.reportCRUDFailure(operation: .create, source: .google)
+                                }
+                            } catch {
+                                viewModel.reportCRUDFailure(operation: .create, source: .google, error: error)
+                            }
                             viewModel.refreshEvents()
                         }
                     },
@@ -229,6 +262,39 @@ struct MainCalendarView: View {
             .filter { $0.startDate >= today && $0.startDate < tomorrow && !$0.isAllDay }
             .map { (id: $0.id, title: $0.title, startDate: $0.startDate) }
         notificationService.scheduleRemindersForEvents(todayEvents)
+    }
+}
+
+struct CRUDErrorInlineNotice: View {
+    let notice: CRUDErrorNotice
+    let onDismiss: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 12))
+                .foregroundStyle(.orange)
+            Text(notice.message)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.primary)
+                .lineLimit(2)
+            Spacer(minLength: 8)
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 20, height: 20)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(RoundedRectangle(cornerRadius: 8).fill(Color.orange.opacity(0.12)))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color.orange.opacity(0.28), lineWidth: 1)
+        )
     }
 }
 
@@ -624,6 +690,14 @@ struct DailyDetailView: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 20)
                 .padding(.bottom, 16)
+
+                if let notice = viewModel.lastCRUDError {
+                    CRUDErrorInlineNotice(notice: notice) {
+                        viewModel.dismissLastCRUDError()
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 8)
+                }
 
                 // Events & Todos list
                 ScrollView {

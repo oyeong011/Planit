@@ -1,6 +1,14 @@
 import SwiftUI
 import EventKit
 import Combine
+import OSLog
+
+struct MirrorFilterStats: Equatable {
+    var extCount: Int = 0
+    var fingerprintCount: Int = 0
+    var suppressCount: Int = 0
+    var lastUpdated: Date?
+}
 
 @MainActor
 final class CalendarViewModel: ObservableObject {
@@ -26,12 +34,9 @@ final class CalendarViewModel: ObservableObject {
         didSet {
             UserDefaults.standard.set(appleCalendarEnabled, forKey: "planit.appleCalendarEnabled")
             if appleCalendarEnabled {
-                requestAppleCalendarAccess()
+                enableAppleCalendar()
             } else {
-                // Google 인증 상태면 Google 이벤트만 다시 불러오기
-                if authManager.isAuthenticated {
-                    fetchEventsFromGoogle(for: currentMonth)
-                }
+                disableAppleCalendar()
             }
         }
     }
@@ -40,9 +45,9 @@ final class CalendarViewModel: ObservableObject {
         didSet {
             UserDefaults.standard.set(appleRemindersEnabled, forKey: "planit.appleRemindersEnabled")
             if appleRemindersEnabled {
-                requestAppleRemindersAccess()
+                enableAppleReminders()
             } else {
-                appleReminders = []
+                disableAppleReminders()
             }
         }
     }
@@ -52,6 +57,9 @@ final class CalendarViewModel: ObservableObject {
     @Published var needsReauth: Bool = false
     /// Calen이 자동 재배치한 Todo ID 집합 (UI 인디케이터용)
     @Published var rescheduledTodoIDs: Set<UUID> = []
+    /// Last user-visible CRUD failure for inline UI feedback.
+    @Published var lastCRUDError: CRUDErrorNotice?
+    @Published var lastMirrorFilterStats = MirrorFilterStats()
 
     // MARK: - Services
 
@@ -92,6 +100,49 @@ final class CalendarViewModel: ObservableObject {
     /// syncPendingEdits 재진입 방지 플래그
     private var isSyncingPendingEdits = false
 
+    private func recordCRUDFailure(
+        operation: CRUDOperation,
+        source: CRUDSource,
+        eventID: String? = nil,
+        error: Error? = nil,
+        userVisible: Bool = true
+    ) {
+        let notice = CRUDErrorNotice(operation: operation, source: source, eventID: eventID)
+        let errorSummary = error.map(Self.sanitizedErrorSummary) ?? "none"
+        PlanitLoggers.crud.error(
+            "CRUD failure operation=\(operation.rawValue, privacy: .public) source=\(source.rawValue, privacy: .public) eventID=\(notice.logMetadata["eventID"] ?? "none", privacy: .public) error=\(errorSummary, privacy: .public)"
+        )
+        if userVisible {
+            lastCRUDError = notice
+        }
+    }
+
+    func dismissLastCRUDError() {
+        lastCRUDError = nil
+    }
+
+    func reportCRUDFailure(
+        operation: CRUDOperation,
+        source: CRUDSource,
+        eventID: String? = nil,
+        error: Error? = nil
+    ) {
+        recordCRUDFailure(operation: operation, source: source, eventID: eventID, error: error)
+    }
+
+    nonisolated static func sanitizedErrorSummary(_ error: Error) -> String {
+        if let calendarError = error as? GoogleCalendarError {
+            switch calendarError {
+            case .httpStatus(let code):
+                return "GoogleCalendarError.httpStatus(\(code))"
+            }
+        }
+        if let urlError = error as? URLError {
+            return "URLError.\(urlError.code.rawValue)"
+        }
+        return String(reflecting: type(of: error))
+    }
+
     init(authManager: GoogleAuthManager) {
         self.authManager = authManager
         loadCategories()
@@ -128,7 +179,7 @@ final class CalendarViewModel: ObservableObject {
             fetchEventsFromGoogle(for: currentMonth)
             // Apple Calendar도 활성화되어 있으면 병합
             if appleCalendarEnabled {
-                requestAppleCalendarAccess()
+                enableAppleCalendar()
             }
         } else {
             requestCalendarAccess()
@@ -137,13 +188,14 @@ final class CalendarViewModel: ObservableObject {
 
         // Apple Reminders 활성화되어 있으면 접근 요청
         if appleRemindersEnabled {
-            requestAppleRemindersAccess()
+            enableAppleReminders()
         }
     }
 
     deinit {
         refreshTimer?.invalidate()
         refreshTimer = nil
+        suppressedAppleMirrors.removeAll()
         dateChangeTimer?.invalidate()
         dateChangeTimer = nil
         if let observer = notificationObserver {
@@ -158,7 +210,9 @@ final class CalendarViewModel: ObservableObject {
     private func startPeriodicRefresh() {
         refreshTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                self?.refreshEvents()
+                guard let self else { return }
+                self.cleanupExpiredAppleMirrorSuppressions()
+                self.refreshEvents()
             }
         }
     }
@@ -195,26 +249,225 @@ final class CalendarViewModel: ObservableObject {
 
     // MARK: - Apple Calendar (EventKit 병합 모드)
 
+    nonisolated static func eventsExcludingAppleCalendar(_ events: [CalendarEvent]) -> [CalendarEvent] {
+        events.filter { $0.source != .apple }
+    }
+
+    nonisolated static func inferredEventSource(
+        eventID: String,
+        calendarID: String,
+        events: [CalendarEvent],
+        googleAuthenticated: Bool
+    ) -> CalendarEventSource {
+        if let loaded = events.first(where: { $0.id == eventID }) {
+            return loaded.source
+        }
+        if calendarID.hasPrefix("apple:") {
+            return .apple
+        }
+        if calendarID.hasPrefix("google:") {
+            return .google
+        }
+        if eventID.hasPrefix("apple-") {
+            return .apple
+        }
+        if eventID.hasPrefix("pending-") {
+            return .google
+        }
+        return googleAuthenticated ? .google : .local
+    }
+
+    nonisolated static func eventKitLookupIdentifier(for eventID: String) -> String {
+        if eventID.hasPrefix("apple-") {
+            return String(eventID.dropFirst("apple-".count))
+        }
+        return eventID
+    }
+
+    nonisolated static func deduplicatedCalendarEvents(
+        _ events: [CalendarEvent],
+        todoGoogleEventIDs: Set<String>
+    ) -> [CalendarEvent] {
+        var result: [CalendarEvent] = []
+
+        for event in events {
+            if event.source == .google, todoGoogleEventIDs.contains(event.id) {
+                continue
+            }
+
+            if let existingIndex = result.firstIndex(where: { existing in
+                existing.id == event.id || areCalendarMirrors(existing, event)
+            }) {
+                if result[existingIndex].id == event.id || shouldPreferCalendarEvent(event, over: result[existingIndex]) {
+                    result[existingIndex] = event
+                }
+            } else {
+                result.append(event)
+            }
+        }
+
+        return result
+    }
+
+    struct SuppressKey: Hashable {
+        let title: String
+        let oldStartMinute: Int
+        let calendarID: String
+
+        init(title: String, oldStartMinute: Int, calendarID: String) {
+            self.title = Self.normalizedTitle(title)
+            self.oldStartMinute = oldStartMinute
+            self.calendarID = calendarID
+        }
+
+        nonisolated static func normalizedTitle(_ title: String) -> String {
+            title.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+    }
+
+    struct AppleMirrorFilterResult {
+        let events: [CalendarEvent]
+        let mirrorByExternalID: Int
+        let mirrorByFingerprint: Int
+        let mirrorBySuppress: Int
+    }
+
+    private nonisolated static func startMinute(_ date: Date) -> Int {
+        Int(date.timeIntervalSince1970 / 60)
+    }
+
+    private nonisolated static func durationMinutes(_ event: CalendarEvent) -> Int {
+        max(0, Int((event.endDate.timeIntervalSince(event.startDate) / 60).rounded()))
+    }
+
+    nonisolated static func appleMirrorSuppressKey(for event: CalendarEvent) -> SuppressKey {
+        SuppressKey(
+            title: event.title,
+            oldStartMinute: startMinute(event.startDate),
+            calendarID: event.calendarID
+        )
+    }
+
+    nonisolated static func appleMirrorFingerprint(_ event: CalendarEvent) -> String {
+        let title = SuppressKey.normalizedTitle(event.title)
+        let minute = startMinute(event.startDate)
+        return "\(title)|\(minute)|\(durationMinutes(event))|\(event.isAllDay)"
+    }
+
+    nonisolated static func filteredAppleCalendarEvents(
+        _ appleRaw: [CalendarEvent],
+        googleEvents: [CalendarEvent],
+        suppressedAppleMirrors: [SuppressKey: Date],
+        now: Date
+    ) -> AppleMirrorFilterResult {
+        let googleIDs = Set(googleEvents.map(\.id))
+        let googleFingerprints = Set(googleEvents.map(appleMirrorFingerprint))
+        let activeSuppressKeys = Set(suppressedAppleMirrors.filter { $0.value > now }.keys)
+
+        var mirrorByExternalID = 0
+        var mirrorByFingerprint = 0
+        var mirrorBySuppress = 0
+        let events = appleRaw.filter { apple in
+            if let ext = apple.externalID, googleIDs.contains(ext) {
+                mirrorByExternalID += 1
+                return false
+            }
+            if googleFingerprints.contains(appleMirrorFingerprint(apple)) {
+                mirrorByFingerprint += 1
+                return false
+            }
+            if activeSuppressKeys.contains(appleMirrorSuppressKey(for: apple)) {
+                mirrorBySuppress += 1
+                return false
+            }
+            return true
+        }
+
+        return AppleMirrorFilterResult(
+            events: events,
+            mirrorByExternalID: mirrorByExternalID,
+            mirrorByFingerprint: mirrorByFingerprint,
+            mirrorBySuppress: mirrorBySuppress
+        )
+    }
+
+    private nonisolated static func areCalendarMirrors(_ lhs: CalendarEvent, _ rhs: CalendarEvent) -> Bool {
+        guard lhs.id != rhs.id else { return true }
+        let canMirror = lhs.source != rhs.source || lhs.id.hasPrefix("pending-") || rhs.id.hasPrefix("pending-")
+        guard canMirror else { return false }
+        return eventFingerprint(lhs) == eventFingerprint(rhs)
+    }
+
+    private nonisolated static func eventFingerprint(_ event: CalendarEvent) -> String {
+        let title = event.title.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let start = Int(event.startDate.timeIntervalSinceReferenceDate.rounded())
+        let end = Int(event.endDate.timeIntervalSinceReferenceDate.rounded())
+        return "\(title)|\(start)|\(end)|\(event.isAllDay)"
+    }
+
+    private nonisolated static func shouldPreferCalendarEvent(_ candidate: CalendarEvent, over existing: CalendarEvent) -> Bool {
+        if existing.id.hasPrefix("pending-"), !candidate.id.hasPrefix("pending-") {
+            return true
+        }
+        return sourcePriority(candidate.source) > sourcePriority(existing.source)
+    }
+
+    private nonisolated static func sourcePriority(_ source: CalendarEventSource) -> Int {
+        switch source {
+        case .google: return 3
+        case .apple: return 2
+        case .local: return 1
+        }
+    }
+
+    func enableAppleCalendar() {
+        requestAppleCalendarAccess()
+    }
+
+    func disableAppleCalendar() {
+        removeCalendarObserver()
+        appleCalendarAccessGranted = false
+        calendarEvents = Self.eventsExcludingAppleCalendar(calendarEvents)
+        applyEventCategoryMappings()
+        cacheEvents(calendarEvents)
+    }
+
     /// Apple Calendar 접근 권한 요청 (Google 인증 상태에서 병합용)
     func requestAppleCalendarAccess() {
         if #available(iOS 17.0, macOS 14.0, *) {
             eventStore.requestFullAccessToEvents { [weak self] granted, error in
                 Task { @MainActor in
-                    self?.appleCalendarAccessGranted = granted && error == nil
-                    if granted {
-                        self?.observeCalendarChanges()
+                    guard let self else { return }
+                    guard self.appleCalendarEnabled else {
+                        self.appleCalendarAccessGranted = false
+                        return
+                    }
+                    self.appleCalendarAccessGranted = granted && error == nil
+                    if self.appleCalendarAccessGranted {
+                        self.observeCalendarChanges()
                         // 현재 Google 이벤트에 Apple Calendar 이벤트 병합
-                        self?.mergeAppleCalendarEvents(for: self?.currentMonth ?? Date())
+                        self.mergeAppleCalendarEvents(for: self.currentMonth)
+                    } else {
+                        self.calendarEvents = Self.eventsExcludingAppleCalendar(self.calendarEvents)
+                        self.cacheEvents(self.calendarEvents)
                     }
                 }
             }
         } else {
             eventStore.requestAccess(to: .event) { [weak self] granted, error in
                 Task { @MainActor in
-                    self?.appleCalendarAccessGranted = granted && error == nil
-                    if granted {
-                        self?.observeCalendarChanges()
-                        self?.mergeAppleCalendarEvents(for: self?.currentMonth ?? Date())
+                    guard let self else { return }
+                    guard self.appleCalendarEnabled else {
+                        self.appleCalendarAccessGranted = false
+                        return
+                    }
+                    self.appleCalendarAccessGranted = granted && error == nil
+                    if self.appleCalendarAccessGranted {
+                        self.observeCalendarChanges()
+                        self.mergeAppleCalendarEvents(for: self.currentMonth)
+                    } else {
+                        self.calendarEvents = Self.eventsExcludingAppleCalendar(self.calendarEvents)
+                        self.cacheEvents(self.calendarEvents)
                     }
                 }
             }
@@ -241,42 +494,165 @@ final class CalendarViewModel: ObservableObject {
                 isAllDay: event.isAllDay,
                 calendarName: event.calendar.title,
                 calendarID: "apple:\(event.calendar.calendarIdentifier)",
-                source: .apple
+                source: .apple,
+                // EventKit이 외부 제공자(Google 등)와 동기화된 경우 원본 ID를 담고 있음.
+                // 이것으로 Google API에서 직접 받은 이벤트와 중복 제거.
+                externalID: event.calendarItemExternalIdentifier
             )
         }
     }
 
-    /// Google 이벤트에 Apple Calendar 이벤트를 병합
+    /// Google 이벤트에 Apple Calendar 이벤트를 병합.
+    /// Apple 미러(macOS Calendar가 Google 계정을 연결한 경우) 제거 전략 3단:
+    ///   1) externalID == Google event.id 매칭 (가장 안전한 dedup)
+    ///   2) 현재 위치 fingerprint(title + startDate 분 + duration + allDay) 동일 → 미러
+    ///   3) 최근 수정된 이벤트의 (title, oldStartMinute, calendarID)와 동일 →
+    ///      macOS Calendar가 Google sync 받는 지연 동안 해당 위치 Apple 미러만 차단
     func mergeAppleCalendarEvents(for month: Date) {
         guard appleCalendarEnabled, appleCalendarAccessGranted else { return }
-        let appleEvents = fetchLocalCalendarEvents(for: month)
-        // 기존 Apple 이벤트 제거 후 다시 추가 (중복 방지)
-        calendarEvents.removeAll { $0.source == .apple }
-        calendarEvents.append(contentsOf: appleEvents)
+        let googleEvents = calendarEvents.filter { $0.source == .google }
+
+        // 만료된 suppress 엔트리 청소
+        let now = Date()
+        cleanupExpiredAppleMirrorSuppressions(now: now)
+
+        let appleRaw = fetchLocalCalendarEvents(for: month)
+        let filterResult = Self.filteredAppleCalendarEvents(
+            appleRaw,
+            googleEvents: googleEvents,
+            suppressedAppleMirrors: suppressedAppleMirrors,
+            now: now
+        )
+        let appleEvents = filterResult.events
+        // 진단 UI용 stats 업데이트 (narrow key 기반 카운트 그대로 표시)
+        lastMirrorFilterStats = MirrorFilterStats(
+            extCount: filterResult.mirrorByExternalID,
+            fingerprintCount: filterResult.mirrorByFingerprint,
+            suppressCount: filterResult.mirrorBySuppress,
+            lastUpdated: now
+        )
+
+        var merged = calendarEvents.filter { $0.source != .apple }
+        let existingNonAppleCount = merged.count
+        merged.append(contentsOf: appleEvents)
+        let todoEventIds = Set(todos.compactMap { $0.googleEventId })
+        let deduped = Self.deduplicatedCalendarEvents(merged, todoGoogleEventIDs: todoEventIds)
+        PlanitLoggers.sync.info(
+            "Merged Apple events month=\(Self.logDate(month), privacy: .public) existingNonApple=\(existingNonAppleCount, privacy: .public) appleRaw=\(appleRaw.count, privacy: .public) mirrorByExt=\(filterResult.mirrorByExternalID, privacy: .public) mirrorByFingerprint=\(filterResult.mirrorByFingerprint, privacy: .public) mirrorBySuppress=\(filterResult.mirrorBySuppress, privacy: .public) appleKept=\(appleEvents.count, privacy: .public) deduped=\(deduped.count, privacy: .public)"
+        )
+        calendarEvents = deduped
         applyEventCategoryMappings()
     }
 
+    /// 최근 Google 수정한 이벤트의 Apple 미러 복합키 → 유예 시각.
+    private var suppressedAppleMirrors: [SuppressKey: Date] = [:]
+
+    private nonisolated static let appleMirrorSuppressTTL: TimeInterval = 60
+
+    private func cleanupExpiredAppleMirrorSuppressions(now: Date = Date()) {
+        suppressedAppleMirrors = suppressedAppleMirrors.filter { $0.value > now }
+    }
+
+    /// updateGoogleEvent 등이 호출할 suppress 등록 헬퍼
+    fileprivate func suppressAppleMirror(
+        title: String,
+        startDate: Date,
+        calendarID: String,
+        for duration: TimeInterval = CalendarViewModel.appleMirrorSuppressTTL
+    ) {
+        let key = SuppressKey(
+            title: title,
+            oldStartMinute: Self.startMinute(startDate),
+            calendarID: calendarID
+        )
+        guard !key.title.isEmpty, !key.calendarID.isEmpty else { return }
+        suppressedAppleMirrors[key] = Date().addingTimeInterval(duration)
+    }
+
+    @discardableResult
+    private func suppressAppleMirrorCandidates(
+        eventID: String,
+        title: String,
+        startDate: Date,
+        endDate: Date,
+        isAllDay: Bool,
+        appleCandidates: [CalendarEvent]
+    ) -> Set<SuppressKey> {
+        let normalizedTitle = SuppressKey.normalizedTitle(title)
+        guard !normalizedTitle.isEmpty else { return [] }
+
+        let targetMinute = Self.startMinute(startDate)
+        let targetDuration = max(0, Int((endDate.timeIntervalSince(startDate) / 60).rounded()))
+        let byExternalID = appleCandidates.filter {
+            $0.externalID == eventID
+            && Self.startMinute($0.startDate) == targetMinute
+        }
+        let byExactPosition = appleCandidates.filter {
+            SuppressKey.normalizedTitle($0.title) == normalizedTitle
+            && Self.startMinute($0.startDate) == targetMinute
+            && Self.durationMinutes($0) == targetDuration
+            && $0.isAllDay == isAllDay
+        }
+        let byLoosePosition = appleCandidates.filter {
+            SuppressKey.normalizedTitle($0.title) == normalizedTitle
+            && Self.startMinute($0.startDate) == targetMinute
+        }
+
+        let matchedCandidates = byExternalID.isEmpty
+            ? (byExactPosition.isEmpty ? byLoosePosition : byExactPosition)
+            : byExternalID
+        let keys = Set(matchedCandidates.map(Self.appleMirrorSuppressKey))
+        for key in keys {
+            suppressAppleMirror(title: key.title, startDate: startDate, calendarID: key.calendarID)
+        }
+        return keys
+    }
+
     // MARK: - Apple Reminders (EventKit)
+
+    func enableAppleReminders() {
+        requestAppleRemindersAccess()
+    }
+
+    func disableAppleReminders() {
+        removeReminderObserver()
+        appleReminders = []
+        appleRemindersAccessGranted = false
+    }
 
     /// Apple Reminders 접근 권한 요청
     func requestAppleRemindersAccess() {
         if #available(iOS 17.0, macOS 14.0, *) {
             eventStore.requestFullAccessToReminders { [weak self] granted, error in
                 Task { @MainActor in
-                    self?.appleRemindersAccessGranted = granted && error == nil
-                    if granted {
-                        self?.fetchAppleReminders(for: self?.selectedDate ?? Date())
-                        self?.observeReminderChanges()
+                    guard let self else { return }
+                    guard self.appleRemindersEnabled else {
+                        self.appleRemindersAccessGranted = false
+                        return
+                    }
+                    self.appleRemindersAccessGranted = granted && error == nil
+                    if self.appleRemindersAccessGranted {
+                        self.observeReminderChanges()
+                        self.fetchAppleReminders(for: self.selectedDate)
+                    } else {
+                        self.appleReminders = []
                     }
                 }
             }
         } else {
             eventStore.requestAccess(to: .reminder) { [weak self] granted, error in
                 Task { @MainActor in
-                    self?.appleRemindersAccessGranted = granted && error == nil
-                    if granted {
-                        self?.fetchAppleReminders(for: self?.selectedDate ?? Date())
-                        self?.observeReminderChanges()
+                    guard let self else { return }
+                    guard self.appleRemindersEnabled else {
+                        self.appleRemindersAccessGranted = false
+                        return
+                    }
+                    self.appleRemindersAccessGranted = granted && error == nil
+                    if self.appleRemindersAccessGranted {
+                        self.observeReminderChanges()
+                        self.fetchAppleReminders(for: self.selectedDate)
+                    } else {
+                        self.appleReminders = []
                     }
                 }
             }
@@ -284,6 +660,13 @@ final class CalendarViewModel: ObservableObject {
     }
 
     private var reminderObserver: Any?
+
+    private func removeReminderObserver() {
+        if let observer = reminderObserver {
+            NotificationCenter.default.removeObserver(observer)
+            reminderObserver = nil
+        }
+    }
 
     private func observeReminderChanges() {
         // EKEventStoreChanged는 reminders 변경도 포함
@@ -322,10 +705,27 @@ final class CalendarViewModel: ObservableObject {
         eventStore.fetchReminders(matching: predicate) { [weak self] reminders in
             Task { @MainActor in
                 guard let self = self, let reminders = reminders else { return }
+                guard self.appleRemindersEnabled, self.appleRemindersAccessGranted else {
+                    self.appleReminders = []
+                    return
+                }
 
                 let targetDay = self.calendar.startOfDay(for: date)
                 let items: [TodoItem] = reminders.compactMap { reminder in
-                    // due date가 있는 경우 해당 날짜만 표시
+                    // 1) 시스템 안내/업그레이드 메시지 등 '가짜 미리알림' 필터
+                    guard Self.isMeaningfulReminder(reminder) else { return nil }
+
+                    // 2) 완료된 미리알림은 오늘 날짜에서 최근 완료만 유지 (1일 이내)
+                    if reminder.isCompleted {
+                        if let completionDate = reminder.completionDate {
+                            let ageDays = Calendar.current.dateComponents([.day], from: completionDate, to: Date()).day ?? 999
+                            guard ageDays <= 1 else { return nil }
+                        } else {
+                            return nil
+                        }
+                    }
+
+                    // 3) due date가 있는 경우 해당 날짜만 표시
                     if let dueDateComponents = reminder.dueDateComponents,
                        let dueDate = Calendar.current.date(from: dueDateComponents) {
                         let reminderDay = self.calendar.startOfDay(for: dueDate)
@@ -369,13 +769,40 @@ final class CalendarViewModel: ObservableObject {
                 appleReminders[idx].isCompleted = reminder.isCompleted
             }
         } catch {
-            print("[Calen] Failed to toggle Apple Reminder: \(error)")
+            PlanitLoggers.crud.error("Apple reminder toggle failed eventID=\(identifier, privacy: .public) error=\(Self.sanitizedErrorSummary(error), privacy: .public)")
         }
     }
 
     /// 특정 날짜의 Apple Reminders 반환 (이미 fetch된 것에서 필터)
     func appleRemindersForDate(_ date: Date) -> [TodoItem] {
         appleReminders.filter { calendar.isDate($0.date, inSameDayAs: date) }
+    }
+
+    /// Apple Reminders에서 스팸/시스템 메시지 류 'fake reminder' 필터.
+    /// - 빈 제목 / 공백만 있는 제목
+    /// - Apple이 자동 생성하는 '이 목록의 작성자가 미리 알림을 업그레이드했습니다' 등 안내 메시지
+    /// - 구독 전용 캘린더의 reminder (allowsContentModifications == false)
+    private static func isMeaningfulReminder(_ reminder: EKReminder) -> Bool {
+        guard let title = reminder.title?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !title.isEmpty else { return false }
+
+        // 구독 전용(쓰기 불가) 캘린더는 외부 소스 — 앱에서 관리 불가
+        if reminder.calendar?.allowsContentModifications == false { return false }
+
+        // Apple 시스템 안내 메시지 패턴 (ko/en 주요 시즌 메시지)
+        let systemPatterns = [
+            "업그레이드했습니다",     // 이 목록의 작성자가 미리 알림을 업그레이드했습니다.
+            "upgraded",                 // This list was upgraded...
+            "미리 알림이 보이지",
+            "Reminders not showing",
+            "업그레이드하시겠습니까",
+            "Upgrade to this version",
+        ]
+        let lowered = title.lowercased()
+        for pat in systemPatterns {
+            if title.contains(pat) || lowered.contains(pat.lowercased()) { return false }
+        }
+        return true
     }
 
     // MARK: - Google Calendar API
@@ -406,15 +833,20 @@ final class CalendarViewModel: ObservableObject {
                 for i in merged.indices {
                     merged[i].source = .google
                 }
-                self.calendarEvents = merged
+                let todoEventIds = Set(self.todos.compactMap { $0.googleEventId })
+                let deduped = Self.deduplicatedCalendarEvents(merged, todoGoogleEventIDs: todoEventIds)
+                PlanitLoggers.sync.info(
+                    "Fetched Google events month=\(Self.logDate(month), privacy: .public) raw=\(merged.count, privacy: .public) deduped=\(deduped.count, privacy: .public) todoMirrors=\(todoEventIds.count, privacy: .public)"
+                )
+                self.calendarEvents = deduped
                 self.isOffline = false
                 self.needsReauth = googleService.needsReauth
-                cacheEvents(merged)
+                cacheEvents(deduped)
                 // Apple Calendar 이벤트 병합
                 mergeAppleCalendarEvents(for: month)
                 applyEventCategoryMappings()
             } catch {
-                print("[Calen] Google Calendar fetch failed — using cached data")
+                PlanitLoggers.sync.error("Google Calendar fetch failed; using cached data error=\(Self.sanitizedErrorSummary(error), privacy: .public)")
                 self.isOffline = true
                 self.needsReauth = googleService.needsReauth
                 loadCachedEvents()
@@ -428,10 +860,16 @@ final class CalendarViewModel: ObservableObject {
     func addEventToGoogleCalendar(title: String, startDate: Date, endDate: Date, isAllDay: Bool) {
         Task {
             do {
-                let _ = try await googleService.createEvent(title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
+                if try await googleService.createEvent(title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay) == nil {
+                    recordCRUDFailure(operation: .create, source: .google)
+                }
                 fetchEventsFromGoogle(for: currentMonth)
             } catch {
-                print("[Calen] Offline — queuing create event")
+                guard Self.shouldQueueGoogleMutation(after: error) else {
+                    recordCRUDFailure(operation: .create, source: .google, error: error)
+                    return
+                }
+                PlanitLoggers.sync.info("Offline Google create queued")
                 queuePendingEdit(PendingCalendarEdit(
                     action: "create", title: title, startDate: startDate,
                     endDate: endDate, isAllDay: isAllDay))
@@ -449,12 +887,61 @@ final class CalendarViewModel: ObservableObject {
     }
 
     func updateGoogleEvent(eventID: String, calendarID: String = "google:primary", title: String, startDate: Date, endDate: Date, isAllDay: Bool) {
+        // 낙관 UI: API 호출 전에 로컬 state를 새 날짜로 먼저 반영 + 같은 제목의
+        // Apple 미러를 옛 위치에서 선제 제거. EventKit이 Google 싱크하기 전까지
+        // macOS Calendar가 옛 위치 이벤트를 재표시하는 '깜빡임' 방지.
+        let appleCandidates = (appleCalendarEnabled && appleCalendarAccessGranted)
+            ? fetchLocalCalendarEvents(for: currentMonth)
+            : calendarEvents.filter { $0.source == .apple }
+        var suppressKeysForImmediateRemoval = Set<SuppressKey>()
+        if let idx = calendarEvents.firstIndex(where: { $0.id == eventID }) {
+            let oldStart = calendarEvents[idx].startDate
+            let oldEnd = calendarEvents[idx].endDate
+            let oldTitle = calendarEvents[idx].title
+            let oldIsAllDay = calendarEvents[idx].isAllDay
+            suppressKeysForImmediateRemoval.formUnion(suppressAppleMirrorCandidates(
+                eventID: eventID,
+                title: oldTitle,
+                startDate: oldStart,
+                endDate: oldEnd,
+                isAllDay: oldIsAllDay,
+                appleCandidates: appleCandidates
+            ))
+            calendarEvents[idx].title = title
+            calendarEvents[idx].startDate = startDate
+            calendarEvents[idx].endDate = endDate
+            calendarEvents[idx].isAllDay = isAllDay
+
+            // 옛 시작시각 + 같은 제목의 Apple 미러 즉시 제거
+            calendarEvents.removeAll { ev in
+                ev.source == .apple
+                && suppressKeysForImmediateRemoval.contains(Self.appleMirrorSuppressKey(for: ev))
+            }
+        }
+        // 60초간 Apple 미러 suppress — macOS Calendar sync 지연 구간 커버
+        suppressAppleMirrorCandidates(
+            eventID: eventID,
+            title: title,
+            startDate: startDate,
+            endDate: endDate,
+            isAllDay: isAllDay,
+            appleCandidates: appleCandidates
+        )
         Task {
             do {
-                _ = try await googleService.updateEvent(eventID: eventID, calendarID: calendarID, title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
+                PlanitLoggers.sync.info(
+                    "Updating Google event eventID=\(eventID, privacy: .public) calendarID=\(calendarID, privacy: .public) start=\(Self.logDate(startDate), privacy: .public) end=\(Self.logDate(endDate), privacy: .public) allDay=\(isAllDay, privacy: .public)"
+                )
+                if try await googleService.updateEvent(eventID: eventID, calendarID: calendarID, title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay) == false {
+                    recordCRUDFailure(operation: .update, source: .google, eventID: eventID)
+                }
                 fetchEventsFromGoogle(for: currentMonth)
             } catch {
-                print("[Calen] Offline — queuing update event")
+                guard Self.shouldQueueGoogleMutation(after: error) else {
+                    recordCRUDFailure(operation: .update, source: .google, eventID: eventID, error: error)
+                    return
+                }
+                PlanitLoggers.sync.info("Offline Google update queued eventID=\(eventID, privacy: .public)")
                 queuePendingEdit(PendingCalendarEdit(
                     action: "update", title: title, startDate: startDate,
                     endDate: endDate, isAllDay: isAllDay, eventId: eventID))
@@ -473,13 +960,19 @@ final class CalendarViewModel: ObservableObject {
     func deleteGoogleEvent(eventID: String, calendarID: String = "google:primary") {
         Task {
             do {
-                _ = try await googleService.deleteEvent(eventID: eventID, calendarID: calendarID)
+                if try await googleService.deleteEvent(eventID: eventID, calendarID: calendarID) == false {
+                    recordCRUDFailure(operation: .delete, source: .google, eventID: eventID)
+                }
                 completedEventIDs.remove(eventID)
                 goalService?.removeCompletion(eventId: eventID)
                 saveCompletedEvents()
                 fetchEventsFromGoogle(for: currentMonth)
             } catch {
-                print("[Calen] Offline — queuing delete event")
+                guard Self.shouldQueueGoogleMutation(after: error) else {
+                    recordCRUDFailure(operation: .delete, source: .google, eventID: eventID, error: error)
+                    return
+                }
+                PlanitLoggers.sync.info("Offline Google delete queued eventID=\(eventID, privacy: .public)")
                 queuePendingEdit(PendingCalendarEdit(
                     action: "delete", eventId: eventID))
                 // Optimistic local removal
@@ -492,13 +985,45 @@ final class CalendarViewModel: ObservableObject {
         }
     }
 
+    nonisolated static func shouldQueueGoogleMutation(after error: Error) -> Bool {
+        if let calendarError = error as? GoogleCalendarError {
+            switch calendarError {
+            case .httpStatus(let code):
+                return code == 408 || code == 429 || (500...599).contains(code)
+            }
+        }
+
+        if let urlError = error as? URLError {
+            switch urlError.code {
+            case .timedOut,
+                 .cannotFindHost,
+                 .cannotConnectToHost,
+                 .networkConnectionLost,
+                 .notConnectedToInternet,
+                 .dnsLookupFailed,
+                 .internationalRoamingOff,
+                 .dataNotAllowed:
+                return true
+            default:
+                return false
+            }
+        }
+
+        return false
+    }
+
     // MARK: - EventKit (fallback when not using Google API)
+
+    private func removeCalendarObserver() {
+        if let observer = notificationObserver {
+            NotificationCenter.default.removeObserver(observer)
+            notificationObserver = nil
+        }
+    }
 
     private func observeCalendarChanges() {
         // 기존 observer 제거 후 재등록 — 중복 리스너 누수 방지
-        if let existing = notificationObserver {
-            NotificationCenter.default.removeObserver(existing)
-        }
+        removeCalendarObserver()
         notificationObserver = NotificationCenter.default.addObserver(
             forName: .EKEventStoreChanged,
             object: eventStore,
@@ -543,7 +1068,7 @@ final class CalendarViewModel: ObservableObject {
             calendars: nil
         )
         let ekEvents = eventStore.events(matching: predicate)
-        calendarEvents = ekEvents.map { event in
+        let localEvents = ekEvents.map { event in
             let cgColor = event.calendar.cgColor ?? CGColor(red: 0.4, green: 0.6, blue: 1.0, alpha: 1.0)
             return CalendarEvent(
                 id: event.eventIdentifier,
@@ -557,6 +1082,12 @@ final class CalendarViewModel: ObservableObject {
                 source: .local
             )
         }
+        let todoEventIds = Set(todos.compactMap { $0.googleEventId })
+        let deduped = Self.deduplicatedCalendarEvents(localEvents, todoGoogleEventIDs: todoEventIds)
+        PlanitLoggers.sync.info(
+            "Fetched EventKit events month=\(Self.logDate(month), privacy: .public) raw=\(localEvents.count, privacy: .public) deduped=\(deduped.count, privacy: .public)"
+        )
+        calendarEvents = deduped
         applyEventCategoryMappings()
     }
 
@@ -566,7 +1097,10 @@ final class CalendarViewModel: ObservableObject {
             addEventToGoogleCalendar(title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
             return true
         }
-        guard let cal = writableCalendar else { return false }
+        guard let cal = writableCalendar else {
+            recordCRUDFailure(operation: .create, source: .local)
+            return false
+        }
         let ekEvent = EKEvent(eventStore: eventStore)
         ekEvent.title = title
         ekEvent.startDate = startDate
@@ -578,42 +1112,133 @@ final class CalendarViewModel: ObservableObject {
             fetchEventsFromEventKit(for: currentMonth)
             return true
         } catch {
-            print("[Calen] Failed to create event: \(error)")
+            recordCRUDFailure(operation: .create, source: .local, error: error)
             return false
         }
     }
 
     func updateCalendarEvent(eventID: String, calendarID: String = "google:primary", title: String, startDate: Date, endDate: Date, isAllDay: Bool) -> Bool {
-        if authManager.isAuthenticated {
+        let source = Self.inferredEventSource(
+            eventID: eventID,
+            calendarID: calendarID,
+            events: calendarEvents,
+            googleAuthenticated: authManager.isAuthenticated
+        )
+        PlanitLoggers.sync.info(
+            "Routing calendar update eventID=\(eventID, privacy: .public) calendarID=\(calendarID, privacy: .public) source=\(source.rawValue, privacy: .public)"
+        )
+        switch source {
+        case .google:
+            guard authManager.isAuthenticated else { return false }
             updateGoogleEvent(eventID: eventID, calendarID: calendarID, title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
             return true
+        case .apple:
+            guard let ekEvent = eventKitEvent(withIdentifier: eventID) else {
+                recordCRUDFailure(operation: .update, source: .apple, eventID: eventID)
+                return false
+            }
+            ekEvent.title = title
+            ekEvent.startDate = startDate
+            ekEvent.endDate = endDate
+            ekEvent.isAllDay = isAllDay
+            do {
+                try eventStore.save(ekEvent, span: .thisEvent)
+                refreshAfterEventKitMutation()
+                return true
+            } catch {
+                recordCRUDFailure(operation: .update, source: .apple, eventID: eventID, error: error)
+                return false
+            }
+        case .local:
+            guard let ekEvent = eventKitEvent(withIdentifier: eventID) else {
+                recordCRUDFailure(operation: .update, source: .local, eventID: eventID)
+                return false
+            }
+            ekEvent.title = title
+            ekEvent.startDate = startDate
+            ekEvent.endDate = endDate
+            ekEvent.isAllDay = isAllDay
+            do {
+                try eventStore.save(ekEvent, span: .thisEvent)
+                refreshAfterEventKitMutation()
+                return true
+            } catch {
+                recordCRUDFailure(operation: .update, source: .local, eventID: eventID, error: error)
+                return false
+            }
         }
-        guard let ekEvent = eventStore.event(withIdentifier: eventID) else { return false }
-        ekEvent.title = title
-        ekEvent.startDate = startDate
-        ekEvent.endDate = endDate
-        ekEvent.isAllDay = isAllDay
-        do {
-            try eventStore.save(ekEvent, span: .thisEvent)
-            fetchEventsFromEventKit(for: currentMonth)
-            return true
-        } catch { return false }
     }
 
     func deleteCalendarEvent(eventID: String, calendarID: String = "google:primary") -> Bool {
-        if authManager.isAuthenticated {
+        let source = Self.inferredEventSource(
+            eventID: eventID,
+            calendarID: calendarID,
+            events: calendarEvents,
+            googleAuthenticated: authManager.isAuthenticated
+        )
+        switch source {
+        case .google:
+            guard authManager.isAuthenticated else { return false }
             deleteGoogleEvent(eventID: eventID, calendarID: calendarID)
             return true
+        case .apple:
+            guard let ekEvent = eventKitEvent(withIdentifier: eventID) else {
+                recordCRUDFailure(operation: .delete, source: .apple, eventID: eventID)
+                return false
+            }
+            do {
+                try eventStore.remove(ekEvent, span: .thisEvent)
+                completedEventIDs.remove(eventID)
+                completedEventIDs.remove(Self.eventKitLookupIdentifier(for: eventID))
+                goalService?.removeCompletion(eventId: eventID)
+                goalService?.removeCompletion(eventId: Self.eventKitLookupIdentifier(for: eventID))
+                saveCompletedEvents()
+                calendarEvents.removeAll { $0.id == eventID || $0.id == Self.eventKitLookupIdentifier(for: eventID) }
+                refreshAfterEventKitMutation()
+                return true
+            } catch {
+                recordCRUDFailure(operation: .delete, source: .apple, eventID: eventID, error: error)
+                return false
+            }
+        case .local:
+            guard let ekEvent = eventKitEvent(withIdentifier: eventID) else {
+                recordCRUDFailure(operation: .delete, source: .local, eventID: eventID)
+                return false
+            }
+            do {
+                try eventStore.remove(ekEvent, span: .thisEvent)
+                completedEventIDs.remove(eventID)
+                completedEventIDs.remove(Self.eventKitLookupIdentifier(for: eventID))
+                goalService?.removeCompletion(eventId: eventID)
+                goalService?.removeCompletion(eventId: Self.eventKitLookupIdentifier(for: eventID))
+                saveCompletedEvents()
+                calendarEvents.removeAll { $0.id == eventID || $0.id == Self.eventKitLookupIdentifier(for: eventID) }
+                refreshAfterEventKitMutation()
+                return true
+            } catch {
+                recordCRUDFailure(operation: .delete, source: .local, eventID: eventID, error: error)
+                return false
+            }
         }
-        guard let ekEvent = eventStore.event(withIdentifier: eventID) else { return false }
-        do {
-            try eventStore.remove(ekEvent, span: .thisEvent)
-            completedEventIDs.remove(eventID)
-            goalService?.removeCompletion(eventId: eventID)
-            saveCompletedEvents()
+    }
+
+    private func eventKitEvent(withIdentifier eventID: String) -> EKEvent? {
+        eventStore.event(withIdentifier: eventID)
+            ?? eventStore.event(withIdentifier: Self.eventKitLookupIdentifier(for: eventID))
+    }
+
+    private func refreshAfterEventKitMutation() {
+        let googleAuthenticated = authManager.isAuthenticated
+        let monthForLog = currentMonth
+        PlanitLoggers.sync.info(
+            "Refreshing after EventKit mutation googleAuthenticated=\(googleAuthenticated, privacy: .public) currentMonth=\(Self.logDate(monthForLog), privacy: .public)"
+        )
+        if authManager.isAuthenticated {
+            mergeAppleCalendarEvents(for: currentMonth)
+            cacheEvents(calendarEvents)
+        } else {
             fetchEventsFromEventKit(for: currentMonth)
-            return true
-        } catch { return false }
+        }
     }
 
     private var writableCalendar: EKCalendar? {
@@ -861,11 +1486,15 @@ final class CalendarViewModel: ObservableObject {
             let startOfDay = calendar.startOfDay(for: todo.date)
             let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
             let prefix = todo.isCompleted ? "✅ " : ""
-            if let event = try? await googleService.createEvent(
-                title: "\(prefix)\(todo.title)", startDate: startOfDay,
-                endDate: endOfDay, isAllDay: true) {
-                todos[i].googleEventId = event.id
-                synced += 1
+            do {
+                if let event = try await googleService.createEvent(
+                    title: "\(prefix)\(todo.title)", startDate: startOfDay,
+                    endDate: endOfDay, isAllDay: true) {
+                    todos[i].googleEventId = event.id
+                    synced += 1
+                }
+            } catch {
+                recordCRUDFailure(operation: .create, source: .todo, error: error, userVisible: false)
             }
         }
         if synced > 0 {
@@ -897,9 +1526,11 @@ final class CalendarViewModel: ObservableObject {
                     if let event, let idx = self.todos.firstIndex(where: { $0.id == todo.id }) {
                         self.todos[idx].googleEventId = event.id
                         self.saveTodos()
+                    } else {
+                        recordCRUDFailure(operation: .create, source: .todo)
                     }
                 } catch {
-                    print("[Calen] Todo Google sync failed: \(error)")
+                    recordCRUDFailure(operation: .create, source: .todo, error: error)
                 }
                 self.refreshEvents()
             }
@@ -933,19 +1564,38 @@ final class CalendarViewModel: ObservableObject {
             Task {
                 let startOfDay = Calendar.current.startOfDay(for: todo.date)
                 let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay)!
-                _ = try? await googleService.updateEvent(eventID: eventId, title: "\(prefix)\(cleanTitle)", startDate: startOfDay, endDate: endOfDay, isAllDay: true)
+                do {
+                    if try await googleService.updateEvent(eventID: eventId, title: "\(prefix)\(cleanTitle)", startDate: startOfDay, endDate: endOfDay, isAllDay: true) == false {
+                        recordCRUDFailure(operation: .update, source: .todo, eventID: eventId)
+                    }
+                } catch {
+                    recordCRUDFailure(operation: .update, source: .todo, eventID: eventId, error: error)
+                }
                 self.refreshEvents()
             }
         }
     }
 
     func deleteTodo(id: UUID) {
+        // Apple Reminder인 경우 EventKit으로 삭제
+        if let reminderItem = appleReminders.first(where: { $0.id == id }),
+           let identifier = reminderItem.appleReminderIdentifier {
+            deleteAppleReminder(identifier: identifier)
+            return
+        }
+
         if let todo = todos.first(where: { $0.id == id }) {
             // 완료 기록 정리
             goalService?.removeCompletion(eventId: "todo:\(id.uuidString)")
             if let eventId = todo.googleEventId, authManager.isAuthenticated {
                 Task {
-                    _ = try? await googleService.deleteEvent(eventID: eventId)
+                    do {
+                        if try await googleService.deleteEvent(eventID: eventId) == false {
+                            recordCRUDFailure(operation: .delete, source: .todo, eventID: eventId)
+                        }
+                    } catch {
+                        recordCRUDFailure(operation: .delete, source: .todo, eventID: eventId, error: error)
+                    }
                     self.refreshEvents()
                 }
             }
@@ -955,6 +1605,13 @@ final class CalendarViewModel: ObservableObject {
     }
 
     func updateTodo(id: UUID, title: String, categoryID: UUID, date: Date? = nil) {
+        // Apple Reminder인 경우 EventKit으로 업데이트
+        if let reminderItem = appleReminders.first(where: { $0.id == id }),
+           let identifier = reminderItem.appleReminderIdentifier {
+            updateAppleReminder(identifier: identifier, title: title, date: date)
+            return
+        }
+
         guard let index = todos.firstIndex(where: { $0.id == id }) else { return }
         todos[index].title = title
         todos[index].categoryID = categoryID
@@ -967,9 +1624,53 @@ final class CalendarViewModel: ObservableObject {
             Task {
                 let startOfDay = Calendar.current.startOfDay(for: todo.date)
                 let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay)!
-                _ = try? await googleService.updateEvent(eventID: eventId, title: "\(prefix)\(title)", startDate: startOfDay, endDate: endOfDay, isAllDay: true)
+                do {
+                    if try await googleService.updateEvent(eventID: eventId, title: "\(prefix)\(title)", startDate: startOfDay, endDate: endOfDay, isAllDay: true) == false {
+                        recordCRUDFailure(operation: .update, source: .todo, eventID: eventId)
+                    }
+                } catch {
+                    recordCRUDFailure(operation: .update, source: .todo, eventID: eventId, error: error)
+                }
                 self.refreshEvents()
             }
+        }
+    }
+
+    /// Apple Reminder를 EventKit에서 직접 삭제
+    func deleteAppleReminder(identifier: String) {
+        guard let reminder = eventStore.calendarItem(withIdentifier: identifier) as? EKReminder else {
+            recordCRUDFailure(operation: .delete, source: .apple, eventID: identifier)
+            return
+        }
+        // 완료 기록 정리 (id가 appleReminderIdentifier로도 추적되는 경우)
+        goalService?.removeCompletion(eventId: identifier)
+        do {
+            try eventStore.remove(reminder, commit: true)
+            appleReminders.removeAll { $0.appleReminderIdentifier == identifier }
+        } catch {
+            recordCRUDFailure(operation: .delete, source: .apple, eventID: identifier, error: error)
+        }
+    }
+
+    /// Apple Reminder의 제목/날짜를 EventKit에서 업데이트
+    func updateAppleReminder(identifier: String, title: String, date: Date? = nil) {
+        guard let reminder = eventStore.calendarItem(withIdentifier: identifier) as? EKReminder else {
+            recordCRUDFailure(operation: .update, source: .apple, eventID: identifier)
+            return
+        }
+        reminder.title = title
+        if let newDate = date {
+            let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: newDate)
+            reminder.dueDateComponents = components
+        }
+        do {
+            try eventStore.save(reminder, commit: true)
+            if let idx = appleReminders.firstIndex(where: { $0.appleReminderIdentifier == identifier }) {
+                appleReminders[idx].title = title
+                if let newDate = date { appleReminders[idx].date = newDate }
+            }
+        } catch {
+            recordCRUDFailure(operation: .update, source: .apple, eventID: identifier, error: error)
         }
     }
 
@@ -977,7 +1678,13 @@ final class CalendarViewModel: ObservableObject {
 
     func moveTodo(id: UUID, toDate: Date) {
         guard let idx = todos.firstIndex(where: { $0.id == id }) else { return }
+        let oldDate = todos[idx].date
         todos[idx].date = Calendar.current.startOfDay(for: toDate)
+        let newDate = todos[idx].date
+        let hasGoogleMirror = todos[idx].googleEventId != nil
+        PlanitLoggers.sync.info(
+            "Moving todo id=\(id.uuidString, privacy: .public) oldDate=\(Self.logDate(oldDate), privacy: .public) newDate=\(Self.logDate(newDate), privacy: .public) hasGoogleMirror=\(hasGoogleMirror, privacy: .public)"
+        )
         saveTodos()
 
         if authManager.isAuthenticated, let eventId = todos[idx].googleEventId {
@@ -988,7 +1695,13 @@ final class CalendarViewModel: ObservableObject {
             Task {
                 let start = Calendar.current.startOfDay(for: toDate)
                 let end = Calendar.current.date(byAdding: .day, value: 1, to: start)!
-                _ = try? await googleService.updateEvent(eventID: eventId, title: "\(prefix)\(clean)", startDate: start, endDate: end, isAllDay: true)
+                do {
+                    if try await googleService.updateEvent(eventID: eventId, title: "\(prefix)\(clean)", startDate: start, endDate: end, isAllDay: true) == false {
+                        recordCRUDFailure(operation: .update, source: .todo, eventID: eventId)
+                    }
+                } catch {
+                    recordCRUDFailure(operation: .update, source: .todo, eventID: eventId, error: error)
+                }
                 self.refreshEvents()
             }
         }
@@ -1013,15 +1726,38 @@ final class CalendarViewModel: ObservableObject {
         let srcDay = cal.startOfDay(for: event.startDate)
         let dstDay = cal.startOfDay(for: toDate)
         let delta = dstDay.timeIntervalSince(srcDay)
-        let newStart = event.startDate.addingTimeInterval(delta)
-        let newEnd = event.endDate.addingTimeInterval(delta)
+        var movedEvent = event
+        movedEvent.startDate = event.startDate.addingTimeInterval(delta)
+        movedEvent.endDate = event.endDate.addingTimeInterval(delta)
+        replaceCalendarEventLocally(movedEvent)
+
+        PlanitLoggers.sync.info(
+            "Moving calendar event id=\(id, privacy: .public) source=\(event.source.rawValue, privacy: .public) oldStart=\(Self.logDate(event.startDate), privacy: .public) oldEnd=\(Self.logDate(event.endDate), privacy: .public) newStart=\(Self.logDate(movedEvent.startDate), privacy: .public) newEnd=\(Self.logDate(movedEvent.endDate), privacy: .public) allDay=\(event.isAllDay, privacy: .public)"
+        )
 
         switch event.source {
         case .google:
-            updateGoogleEvent(eventID: id, calendarID: event.calendarID, title: event.title, startDate: newStart, endDate: newEnd, isAllDay: event.isAllDay)
+            updateGoogleEvent(eventID: id, calendarID: event.calendarID, title: event.title, startDate: movedEvent.startDate, endDate: movedEvent.endDate, isAllDay: event.isAllDay)
         case .apple, .local:
-            _ = updateCalendarEvent(eventID: id, title: event.title, startDate: newStart, endDate: newEnd, isAllDay: event.isAllDay)
+            _ = updateCalendarEvent(eventID: id, calendarID: event.calendarID, title: event.title, startDate: movedEvent.startDate, endDate: movedEvent.endDate, isAllDay: event.isAllDay)
         }
+    }
+
+    private func replaceCalendarEventLocally(_ movedEvent: CalendarEvent) {
+        let before = calendarEvents.count
+        calendarEvents.removeAll { $0.id == movedEvent.id }
+        calendarEvents.append(movedEvent)
+        let todoEventIds = Set(todos.compactMap { $0.googleEventId })
+        calendarEvents = Self.deduplicatedCalendarEvents(calendarEvents, todoGoogleEventIDs: todoEventIds)
+        applyEventCategoryMappings()
+        cacheEvents(calendarEvents)
+        PlanitLoggers.sync.info(
+            "Replaced local moved event id=\(movedEvent.id, privacy: .public) before=\(before, privacy: .public) after=\(self.calendarEvents.count, privacy: .public)"
+        )
+    }
+
+    private nonisolated static func logDate(_ date: Date) -> String {
+        ISO8601DateFormatter().string(from: date)
     }
 
     // MARK: - Category CRUD
@@ -1187,7 +1923,7 @@ final class CalendarViewModel: ObservableObject {
     // MARK: - Event Cache (Offline Support)
 
     private func cacheEvents(_ events: [CalendarEvent]) {
-        let cached = events.map { CachedCalendarEvent.from($0) }
+        let cached = Self.eventsExcludingAppleCalendar(events).map { CachedCalendarEvent.from($0) }
         do {
             let data = try JSONEncoder().encode(cached)
             try data.write(to: eventCachePath, options: .atomic)
@@ -1301,25 +2037,44 @@ final class CalendarViewModel: ObservableObject {
             do {
                 switch edit.action {
                 case "create":
-                    _ = try await googleService.createEvent(
+                    if try await googleService.createEvent(
                         title: edit.title, startDate: edit.startDate,
-                        endDate: edit.endDate, isAllDay: edit.isAllDay)
+                        endDate: edit.endDate, isAllDay: edit.isAllDay) == nil {
+                        recordCRUDFailure(operation: .create, source: .google, userVisible: false)
+                    }
                 case "update":
                     if let eventId = edit.eventId {
-                        _ = try await googleService.updateEvent(
+                        if try await googleService.updateEvent(
                             eventID: eventId, title: edit.title,
                             startDate: edit.startDate, endDate: edit.endDate,
-                            isAllDay: edit.isAllDay)
+                            isAllDay: edit.isAllDay) == false {
+                            recordCRUDFailure(operation: .update, source: .google, eventID: eventId, userVisible: false)
+                        }
                     }
                 case "delete":
                     if let eventId = edit.eventId {
-                        _ = try await googleService.deleteEvent(eventID: eventId)
+                        if try await googleService.deleteEvent(eventID: eventId) == false {
+                            recordCRUDFailure(operation: .delete, source: .google, eventID: eventId, userVisible: false)
+                        }
                     }
                 default: break
                 }
             } catch {
                 // Keep failed edits for next sync attempt
-                remaining.append(edit)
+                let operation = CRUDOperation(rawValue: edit.action)
+                recordCRUDFailure(
+                    operation: operation ?? .update,
+                    source: .google,
+                    eventID: edit.eventId,
+                    error: error,
+                    userVisible: false
+                )
+                if Self.shouldQueueGoogleMutation(after: error) {
+                    PlanitLoggers.sync.info("Keeping pending edit for retry action=\(edit.action, privacy: .public) eventID=\(edit.eventId ?? "none", privacy: .public)")
+                    remaining.append(edit)
+                } else {
+                    PlanitLoggers.sync.warning("Dropping permanent pending edit failure action=\(edit.action, privacy: .public) eventID=\(edit.eventId ?? "none", privacy: .public)")
+                }
             }
         }
 

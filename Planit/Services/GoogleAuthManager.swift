@@ -160,9 +160,11 @@ final class GoogleAuthManager: ObservableObject {
 
     // MARK: - PKCE
 
-    private static func generateCodeVerifier() -> String {
+    private static func generateCodeVerifier() throws -> String {
         var bytes = [UInt8](repeating: 0, count: 48)
-        _ = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
+        guard SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) == errSecSuccess else {
+            throw AuthError.serverFailed
+        }
         return Data(bytes).base64EncodedString()
             .replacingOccurrences(of: "+", with: "-")
             .replacingOccurrences(of: "/", with: "_")
@@ -195,7 +197,7 @@ final class GoogleAuthManager: ObservableObject {
             let redirectURI = "http://127.0.0.1:\(port)"
 
             let state = UUID().uuidString
-            let codeVerifier = Self.generateCodeVerifier()
+            let codeVerifier = try Self.generateCodeVerifier()
             let codeChallenge = Self.generateCodeChallenge(from: codeVerifier)
 
             var components = URLComponents(string: "https://accounts.google.com/o/oauth2/v2/auth")!
@@ -474,4 +476,3 @@ final class GoogleAuthManager: ObservableObject {
         } catch {}
     }
 }
-

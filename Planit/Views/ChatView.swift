@@ -815,6 +815,20 @@ struct ChatView: View {
         aiService.onEventCategorySet = { eventID, eventTitle, categoryID in
             viewModel.setEventCategory(eventID: eventID, eventTitle: eventTitle, categoryID: categoryID)
         }
+        // 이벤트 수정/삭제는 ViewModel에 위임해 Google/Apple 소스별 라우팅을 보존
+        aiService.onEventDelete = { eventID, calendarID in
+            viewModel.deleteCalendarEvent(eventID: eventID, calendarID: calendarID)
+        }
+        aiService.onEventUpdate = { eventID, calendarID, title, startDate, endDate, isAllDay in
+            viewModel.updateCalendarEvent(
+                eventID: eventID,
+                calendarID: calendarID,
+                title: title,
+                startDate: startDate,
+                endDate: endDate,
+                isAllDay: isAllDay
+            )
+        }
 
         let currentAttachments = attachments
         let displayText = text.isEmpty

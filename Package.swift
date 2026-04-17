@@ -1,5 +1,10 @@
 // swift-tools-version: 5.9
+import Foundation
 import PackageDescription
+
+let hasBundledCredentials = FileManager.default.fileExists(
+    atPath: "Planit/Services/BundledCredentials.local.swift"
+)
 
 let package = Package(
     name: "Calen",
@@ -51,7 +56,8 @@ let package = Package(
                 .process("Resources/hu.lproj"),
                 .process("Resources/el.lproj"),
                 .process("Resources/he.lproj")
-            ]
+            ],
+            swiftSettings: hasBundledCredentials ? [.define("HAS_BUNDLED_CREDENTIALS")] : []
         ),
         .testTarget(
             name: "CalenTests",

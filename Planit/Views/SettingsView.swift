@@ -807,6 +807,27 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 22) {
             sectionHeader(String(localized: "settings.section.advanced"), subtitle: String(localized: "settings.advanced.subtitle"), icon: "wrench.and.screwdriver")
 
+            settingsCard(String(localized: "settings.apple.diagnostics.card")) {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "calendar.badge.exclamationmark")
+                            .font(.system(size: 16))
+                            .foregroundStyle(.secondary)
+                        Text(mirrorFilterStatsLine)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.primary)
+                            .lineLimit(2)
+                        Spacer()
+                    }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(mirrorFilterAccessibilityLabel)
+
+                    Text(String(localized: "settings.apple.diagnostics.help"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
             settingsCard(String(localized: "settings.onboarding.card")) {
                 HStack {
                     VStack(alignment: .leading, spacing: 3) {
@@ -869,8 +890,9 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 3) {
                         Text("Calen")
                             .font(.system(size: 14, weight: .semibold))
-                        let bundleVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
-                        Text("v\(bundleVersion) · Personal AI Calendar Assistant")
+                        let bundleVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"
+                        let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
+                        Text("v\(bundleVersion) (\(buildNumber)) · Personal AI Calendar Assistant")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -878,6 +900,37 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+
+    private var mirrorFilterStatsLine: String {
+        let stats = viewModel.lastMirrorFilterStats
+        return String(
+            format: NSLocalizedString("settings.apple.diagnostics.summary", comment: ""),
+            stats.extCount,
+            stats.fingerprintCount,
+            stats.suppressCount,
+            mirrorFilterLastUpdatedText
+        )
+    }
+
+    private var mirrorFilterAccessibilityLabel: String {
+        let stats = viewModel.lastMirrorFilterStats
+        return String(
+            format: NSLocalizedString("settings.apple.diagnostics.accessibility", comment: ""),
+            stats.extCount,
+            stats.fingerprintCount,
+            stats.suppressCount,
+            mirrorFilterLastUpdatedText
+        )
+    }
+
+    private var mirrorFilterLastUpdatedText: String {
+        guard let lastUpdated = viewModel.lastMirrorFilterStats.lastUpdated else {
+            return String(localized: "settings.apple.diagnostics.never")
+        }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return formatter.string(from: lastUpdated)
     }
 
     // MARK: - Language Card
