@@ -83,6 +83,7 @@ struct MainCalendarView: View {
             scheduleNotifications()
             // 초개인화: aiService에 컨텍스트 서비스 주입
             aiService.userContextService = userContextService
+            aiService.userProfileProvider = { goalService.profile }
             // 할일 패턴으로 계획 스타일 분석
             let todoTitles = viewModel.todos.map(\.title)
             let eventTitles = viewModel.calendarEvents.prefix(30).map(\.title)

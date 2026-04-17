@@ -1166,6 +1166,47 @@ struct TestCachedEventFull: Codable, Identifiable {
     #expect(providers.count == 2)
 }
 
+@Test func aiTone_promptInstructions_areDistinct() {
+    #expect(AITone.concise.promptInstruction.contains("간결"))
+    #expect(AITone.coaching.promptInstruction.contains("코치"))
+    #expect(AITone.direct.promptInstruction.contains("직접"))
+}
+
+@Test func userProfile_decodesLegacyPayloadWithFocusPlacementDefault() throws {
+    let legacyJSON = """
+    {
+      "workStartHour": 9,
+      "workEndHour": 18,
+      "commuteMinutes": 30,
+      "lunchStartHour": 12,
+      "lunchEndHour": 13,
+      "energyType": "아침형",
+      "weekdayCapacityMinutes": 120,
+      "weekendCapacityMinutes": 180,
+      "morningBriefHour": 8,
+      "eveningReviewHour": 21,
+      "aggressiveness": "수동",
+      "onboardingDone": true
+    }
+    """.data(using: .utf8)!
+
+    let profile = try JSONDecoder.planitDecoder.decode(UserProfile.self, from: legacyJSON)
+
+    #expect(profile.usesFocusWindowsForAI)
+}
+
+@Test func smartScheduler_applyProfileUsesWorkdayHours() {
+    var profile = UserProfile()
+    profile.workStartHour = 10
+    profile.workEndHour = 17
+
+    let scheduler = SmartSchedulerService()
+    scheduler.apply(profile: profile)
+
+    #expect(scheduler.workdayStartHour == 10)
+    #expect(scheduler.workdayEndHour == 17)
+}
+
 // ============================================================================
 // MARK: - TC-25: Codex 출력 정리 (cleanCodexOutput)
 // ============================================================================
