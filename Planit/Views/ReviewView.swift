@@ -122,16 +122,6 @@ struct ReviewView: View {
             }
 
             Spacer()
-
-            Button { onDismiss() } label: {
-                Image(systemName: "xmark")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 24, height: 24)
-                    .background(Circle().fill(Color.secondary.opacity(0.1)))
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)

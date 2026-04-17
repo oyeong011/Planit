@@ -159,6 +159,7 @@ struct CalendarAction: Codable {
     let date: String?          // yyyy-MM-dd (createTodo / findFreeSlot 전용)
     let durationMinutes: Int?  // findFreeSlot / blockTime 전용 (분 단위)
     let preferredTime: String? // "morning" | "afternoon" | "evening"
+    let recurrence: String?    // RRULE 문자열 (반복 일정용, 예: "RRULE:FREQ=WEEKLY;BYDAY=SU")
 }
 
 struct AIResponseWithActions: Codable {
@@ -604,7 +605,10 @@ final class AIService: ObservableObject {
 
         ## 일정 생성
         - 제목은 사용자가 말한 핵심만 간결하게 (예: "친구랑 밥먹기로 했어" → "친구 식사")
-        - 반복 일정 ("매주 월요일") → 단일 일정만 생성하고 "반복 설정은 Google Calendar에서 직접 해주세요" 안내
+        - 반복 일정 ("매주 일요일", "매일 아침", "격주 수요일") → recurrence 필드에 RRULE을 포함해서 생성
+          자주 쓰는 RRULE: 매주 일요일=RRULE:FREQ=WEEKLY;BYDAY=SU, 매주 월요일=RRULE:FREQ=WEEKLY;BYDAY=MO
+          화=TU 수=WE 목=TH 금=FR 토=SA / 매일=RRULE:FREQ=DAILY / 격주=FREQ=WEEKLY;INTERVAL=2
+          반복 일정은 첫 번째 날짜(가장 가까운 해당 요일)를 startDate로, 같은 날 endDate로 설정
         - "비어있어?" / "3시 되나?" → 해당 시간대 일정 유무를 확인해서 답변 (action 없이 텍스트만)
 
         ## 일정 수정/삭제
@@ -633,25 +637,26 @@ final class AIService: ObservableObject {
           - 애매하면 createTodo로 처리
 
         ## 응답 형식
-        캘린더 작업이 필요하면 반드시 아래 JSON 형식으로 응답. 아래는 형식 예시이며, 실제 응답 시에는 사용자 요청에 맞는 내용으로 채워야 함. 예시 값을 그대로 복사하지 말 것.
+        캘린더 작업이 필요하면 반드시 아래 JSON 형식으로 응답. message와 actions는 사용자 요청에 맞는 내용으로 채울 것. 예시 내용을 그대로 복사하지 말 것.
         ```json
         {
-          "message": "4월 25일에 도랑 캐치테이블 예약 일정을 추가할게요. 확인 후 실행해주세요.",
+          "message": "<사용자 요청에 맞는 응답 메시지>",
           "actions": [
             {
               "action": "create",
-              "title": "도랑 캐치테이블 예약",
-              "startDate": "2026-04-25T12:00:00+09:00",
-              "endDate": "2026-04-25T13:00:00+09:00",
+              "title": "<일정 제목>",
+              "startDate": "<ISO8601>",
+              "endDate": "<ISO8601>",
               "isAllDay": false,
-              "categoryName": "약속"
+              "categoryName": "<카테고리명 또는 생략>",
+              "recurrence": "<반복인 경우만 포함, 예: RRULE:FREQ=WEEKLY;BYDAY=SU>"
             }
           ]
         }
         ```
 
         action별 필수/선택 필드:
-        - create: title(필수), startDate(필수), endDate(필수), isAllDay(필수), categoryName(선택)
+        - create: title(필수), startDate(필수), endDate(필수), isAllDay(필수), categoryName(선택), recurrence(반복 일정만)
           종일 일정: startDate = 해당일 00:00, endDate = 다음날 00:00 (exclusive)
         - createTodo: title(필수), date(선택, yyyy-MM-dd), categoryName(선택)
           예: {"action":"createTodo","title":"운동하기","date":"2026-04-15","categoryName":"운동"}
@@ -885,7 +890,7 @@ final class AIService: ObservableObject {
                     continue
                 }
                 do {
-                    let created = try await svc.createEvent(title: rawTitle, startDate: start, endDate: end, isAllDay: action.isAllDay ?? false)
+                    let created = try await svc.createEvent(title: rawTitle, startDate: start, endDate: end, isAllDay: action.isAllDay ?? false, recurrence: action.recurrence)
                     // 카테고리 이름 → UUID 매핑 후 콜백
                     var catLabel = ""
                     if let catName = action.categoryName {
@@ -1110,17 +1115,26 @@ final class AIService: ObservableObject {
 
         let actions = actionsArray.compactMap { obj -> CalendarAction? in
             guard let action = obj["action"] as? String else { return nil }
+            let startDate = obj["startDate"] as? String ?? obj["start_date"] as? String ?? obj["start"] as? String
+            let endDate = obj["endDate"] as? String ?? obj["end_date"] as? String ?? obj["end"] as? String
+            let eventId = obj["eventId"] as? String ?? obj["event_id"] as? String ?? obj["id"] as? String
+            let isAllDay = obj["isAllDay"] as? Bool ?? obj["is_all_day"] as? Bool ?? obj["allDay"] as? Bool
+            let categoryName = obj["categoryName"] as? String ?? obj["category"] as? String
+            let durationMinutes = obj["durationMinutes"] as? Int ?? obj["duration_minutes"] as? Int ?? obj["duration"] as? Int
+            let preferredTime = obj["preferredTime"] as? String ?? obj["preferred_time"] as? String
+            let recurrence = obj["recurrence"] as? String
             return CalendarAction(
                 action: action,
                 title: obj["title"] as? String,
-                startDate: obj["startDate"] as? String ?? obj["start_date"] as? String ?? obj["start"] as? String,
-                endDate: obj["endDate"] as? String ?? obj["end_date"] as? String ?? obj["end"] as? String,
-                eventId: obj["eventId"] as? String ?? obj["event_id"] as? String ?? obj["id"] as? String,
-                isAllDay: obj["isAllDay"] as? Bool ?? obj["is_all_day"] as? Bool ?? obj["allDay"] as? Bool,
-                categoryName: obj["categoryName"] as? String ?? obj["category"] as? String,
+                startDate: startDate,
+                endDate: endDate,
+                eventId: eventId,
+                isAllDay: isAllDay,
+                categoryName: categoryName,
                 date: obj["date"] as? String,
-                durationMinutes: obj["durationMinutes"] as? Int ?? obj["duration_minutes"] as? Int ?? obj["duration"] as? Int,
-                preferredTime: obj["preferredTime"] as? String ?? obj["preferred_time"] as? String
+                durationMinutes: durationMinutes,
+                preferredTime: preferredTime,
+                recurrence: recurrence
             )
         }
 

@@ -4,9 +4,10 @@ import UserNotifications
 struct MainView: View {
     @StateObject private var authManager = GoogleAuthManager()
     @State private var newTodoTitle: String = ""
+    @AppStorage("planit.skipGoogleAuth") private var skipGoogleAuth = false
 
     private var shouldShowLogin: Bool {
-        !authManager.isAuthenticated && !UserDefaults.standard.bool(forKey: "planit.skipGoogleAuth")
+        !authManager.isAuthenticated && !skipGoogleAuth
     }
 
     var body: some View {
@@ -391,10 +392,7 @@ struct CalendarGridView: View {
                 Spacer()
                 HStack(spacing: 12) {
                     // 미완료 할 일 즉시 재배치 버튼
-                    let overdueCount = viewModel.todos.filter {
-                        !$0.isCompleted && $0.source == .local &&
-                        $0.date < Calendar.current.startOfDay(for: Date())
-                    }.count
+                    let overdueCount = viewModel.overdueLocalTodoCount()
                     if overdueCount > 0 {
                         Button {
                             viewModel.rescheduleNow()
@@ -446,23 +444,22 @@ struct CalendarGridView: View {
             .padding(.horizontal, 8)
             .padding(.bottom, 4)
 
-            let days = viewModel.daysInMonth()
-            let rows = stride(from: 0, to: days.count, by: 7).map { Array(days[$0..<min($0+7, days.count)]) }
+            let rows = viewModel.monthGridRows()
 
             VStack(spacing: 0) {
                 ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
                     HStack(spacing: 0) {
-                        ForEach(Array(row.enumerated()), id: \.offset) { _, date in
-                            if let date = date {
+                        ForEach(row) { day in
+                            if let date = day.date {
                                 DayCellView(
                                     date: date,
-                                    isSelected: Calendar.current.isDate(date, inSameDayAs: viewModel.selectedDate),
-                                    isToday: viewModel.isToday(date),
-                                    isSunday: viewModel.isSunday(date),
-                                    isSaturday: viewModel.isSaturday(date),
-                                    isCurrentMonth: viewModel.isCurrentMonth(date),
-                                    events: viewModel.eventsForDate(date),
-                                    todos: viewModel.todosForDate(date),
+                                    isSelected: day.isSelected,
+                                    isToday: day.isToday,
+                                    isSunday: day.isSunday,
+                                    isSaturday: day.isSaturday,
+                                    isCurrentMonth: day.isCurrentMonth,
+                                    events: day.events,
+                                    todos: day.todos,
                                     categoryFor: { viewModel.category(for: $0) },
                                     categoryForEvent: { viewModel.categoryForEvent($0) },
                                     onDrop: { payload, targetDate in
@@ -574,7 +571,7 @@ struct DayCellView: View {
 
     @ViewBuilder private var dayCellItems: some View {
         VStack(alignment: .leading, spacing: 2) {
-            ForEach(Array(events.prefix(4).enumerated()), id: \.offset) { _, event in
+            ForEach(Array(events.prefix(4)), id: \.id) { event in
                 let displayColor = categoryForEvent?(event)?.color ?? themeService.current.eventTint
                 Text(event.title)
                     .font(.system(size: 10))
@@ -585,7 +582,7 @@ struct DayCellView: View {
                     .background(RoundedRectangle(cornerRadius: 3).fill(displayColor.opacity(0.15)))
                     .foregroundStyle(isCurrentMonth ? displayColor.opacity(0.85) : .secondary.opacity(0.3))
             }
-            ForEach(Array(todos.prefix(max(0, 4 - events.count)).enumerated()), id: \.offset) { _, todo in
+            ForEach(Array(todos.prefix(max(0, 4 - events.count))), id: \.id) { todo in
                 DayCellTodoRow(todo: todo, cat: categoryFor(todo.categoryID), isCurrentMonth: isCurrentMonth)
             }
         }

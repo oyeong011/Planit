@@ -70,6 +70,26 @@ final class CalendarViewModel: ObservableObject {
     private let calendar = Calendar.current
     private let fileManager = FileManager.default
 
+    // DateFormatter를 호출마다 새로 생성하면 42개 셀 렌더링 시마다 alloc 폭증 → 캐시
+    private static let dateKeyFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.calendar = Calendar.current
+        return f
+    }()
+    private static let monthTitleFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale.current
+        f.setLocalizedDateFormatFromTemplate("MMMM")
+        return f
+    }()
+    private static let formattedDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale.current
+        f.setLocalizedDateFormatFromTemplate("MMMd EEEE")
+        return f
+    }()
+
     /// Apple Reminders 전용 카테고리 ID (고정)
     static let remindersCategoryID = UUID(uuidString: "00000000-0000-0000-0000-AE1D0DE50001")!
 
@@ -94,6 +114,9 @@ final class CalendarViewModel: ObservableObject {
 
     private var refreshTimer: Timer?
     private var dateChangeTimer: Timer?
+    private var googleFetchTask: Task<Void, Never>?
+    private var googleFetchMonthKey: String?
+    private var googleFetchGeneration = 0
 
     private var notificationObserver: Any?
     private var authCancellable: AnyCancellable?
@@ -193,6 +216,8 @@ final class CalendarViewModel: ObservableObject {
     }
 
     deinit {
+        googleFetchTask?.cancel()
+        googleFetchTask = nil
         refreshTimer?.invalidate()
         refreshTimer = nil
         suppressedAppleMirrors.removeAll()
@@ -332,6 +357,11 @@ final class CalendarViewModel: ObservableObject {
         let mirrorBySuppress: Int
     }
 
+    struct LegacyAppleMirrorFilterResult {
+        let events: [CalendarEvent]
+        let stats: MirrorFilterStats
+    }
+
     private nonisolated static func startMinute(_ date: Date) -> Int {
         Int(date.timeIntervalSince1970 / 60)
     }
@@ -388,6 +418,32 @@ final class CalendarViewModel: ObservableObject {
             mirrorByExternalID: mirrorByExternalID,
             mirrorByFingerprint: mirrorByFingerprint,
             mirrorBySuppress: mirrorBySuppress
+        )
+    }
+
+    nonisolated static func filteredAppleMirrorEvents(
+        _ appleRaw: [CalendarEvent],
+        googleEvents: [CalendarEvent],
+        suppressedTitles: Set<String>,
+        updatedAt: Date
+    ) -> LegacyAppleMirrorFilterResult {
+        let suppressed = Dictionary(uniqueKeysWithValues: appleRaw
+            .filter { suppressedTitles.contains($0.title) }
+            .map { (appleMirrorSuppressKey(for: $0), updatedAt.addingTimeInterval(1)) })
+        let result = filteredAppleCalendarEvents(
+            appleRaw,
+            googleEvents: googleEvents,
+            suppressedAppleMirrors: suppressed,
+            now: updatedAt
+        )
+        return LegacyAppleMirrorFilterResult(
+            events: result.events,
+            stats: MirrorFilterStats(
+                extCount: result.mirrorByExternalID,
+                fingerprintCount: result.mirrorByFingerprint,
+                suppressCount: result.mirrorBySuppress,
+                lastUpdated: updatedAt
+            )
         )
     }
 
@@ -855,9 +911,28 @@ final class CalendarViewModel: ObservableObject {
     // MARK: - Google Calendar API
 
     func fetchEventsFromGoogle(for month: Date) {
-        Task {
+        let key = monthKey(month)
+        if googleFetchTask != nil, googleFetchMonthKey == key {
+            // Timers, popover lifecycle, and CRUD callbacks can request the same month at once.
+            PlanitLoggers.sync.info("Skipping duplicate in-flight Google fetch month=\(key, privacy: .public)")
+            return
+        }
+
+        googleFetchTask?.cancel()
+        googleFetchMonthKey = key
+        googleFetchGeneration += 1
+        let generation = googleFetchGeneration
+        googleFetchTask = Task { [weak self] in
+            guard let self else { return }
+            defer {
+                if self.googleFetchGeneration == generation {
+                    self.googleFetchTask = nil
+                    self.googleFetchMonthKey = nil
+                }
+            }
             // Try syncing pending edits first
             await syncPendingEdits()
+            guard !Task.isCancelled else { return }
 
             do {
                 // 현재 달 + 인접 달(격자에 표시되는 날짜들) 병렬 fetch
@@ -871,10 +946,12 @@ final class CalendarViewModel: ObservableObject {
                 var merged: [CalendarEvent] = []
                 var seen = Set<String>()
                 for batch in try await [current, prev, next] {
+                    guard !Task.isCancelled else { return }
                     for ev in batch where seen.insert(ev.id).inserted {
                         merged.append(ev)
                     }
                 }
+                guard !Task.isCancelled else { return }
 
                 // Google 이벤트에 source 태그 설정
                 for i in merged.indices {
@@ -1338,11 +1415,54 @@ final class CalendarViewModel: ObservableObject {
         return slots
     }
 
+    struct MonthGridDay: Identifiable {
+        let id: String
+        let date: Date?
+        let isSelected: Bool
+        let isToday: Bool
+        let isSunday: Bool
+        let isSaturday: Bool
+        let isCurrentMonth: Bool
+        let events: [CalendarEvent]
+        let todos: [TodoItem]
+    }
+
+    func monthGridRows() -> [[MonthGridDay]] {
+        let todoEventIds = Set(todos.compactMap { $0.googleEventId })
+        let gridDays = daysInMonth().enumerated().map { offset, date -> MonthGridDay in
+            guard let date else {
+                return MonthGridDay(
+                    id: "empty-\(offset)",
+                    date: nil,
+                    isSelected: false,
+                    isToday: false,
+                    isSunday: false,
+                    isSaturday: false,
+                    isCurrentMonth: false,
+                    events: [],
+                    todos: []
+                )
+            }
+            return MonthGridDay(
+                id: dateKey(date),
+                date: date,
+                isSelected: calendar.isDate(date, inSameDayAs: selectedDate),
+                isToday: calendar.isDateInToday(date),
+                isSunday: calendar.component(.weekday, from: date) == 1,
+                isSaturday: calendar.component(.weekday, from: date) == 7,
+                isCurrentMonth: calendar.isDate(date, equalTo: currentMonth, toGranularity: .month),
+                events: eventsForDate(date, todoEventIds: todoEventIds),
+                todos: todosForDate(date)
+            )
+        }
+        // Build rows once per render instead of recomputing day/event/todo filters in every cell.
+        return stride(from: 0, to: gridDays.count, by: 7).map {
+            Array(gridDays[$0..<min($0 + 7, gridDays.count)])
+        }
+    }
+
     func monthTitle() -> String {
-        let fmt = DateFormatter()
-        fmt.locale = Locale.current
-        fmt.setLocalizedDateFormatFromTemplate("MMMM")
-        return fmt.string(from: currentMonth)
+        Self.monthTitleFormatter.string(from: currentMonth)
     }
     func yearTitle() -> String { "\(calendar.component(.year, from: currentMonth))" }
 
@@ -1372,10 +1492,14 @@ final class CalendarViewModel: ObservableObject {
     }
 
     func formattedDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale.current
-        formatter.setLocalizedDateFormatFromTemplate("MMMd EEEE")
-        return formatter.string(from: date)
+        Self.formattedDateFormatter.string(from: date)
+    }
+
+    func overdueLocalTodoCount(now: Date = Date()) -> Int {
+        let today = calendar.startOfDay(for: now)
+        return todos.filter {
+            !$0.isCompleted && $0.source == .local && $0.date < today
+        }.count
     }
 
     // MARK: - Filtering
@@ -1383,19 +1507,29 @@ final class CalendarViewModel: ObservableObject {
     func eventsForDate(_ date: Date) -> [CalendarEvent] {
         // 할 일로 등록된 Google 이벤트는 ID로 제외 (오탐 없는 정확한 방식)
         let todoEventIds = Set(todos.compactMap { $0.googleEventId })
+        return calendarEvents.filter { event in
+            guard !todoEventIds.contains(event.id) else { return false }
+            return eventOccurs(event, on: date)
+        }
+    }
 
+    private func eventsForDate(_ date: Date, todoEventIds: Set<String>) -> [CalendarEvent] {
+        return calendarEvents.filter { event in
+            guard !todoEventIds.contains(event.id) else { return false }
+            return eventOccurs(event, on: date)
+        }
+    }
+
+    private func eventOccurs(_ event: CalendarEvent, on date: Date) -> Bool {
         let dayStart = calendar.startOfDay(for: date)
         let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart)!
 
-        return calendarEvents.filter { event in
-            guard !todoEventIds.contains(event.id) else { return false }
-            if event.isAllDay {
-                let eventStart = calendar.startOfDay(for: event.startDate)
-                let eventEnd = calendar.startOfDay(for: event.endDate)
-                return dayStart >= eventStart && dayStart < eventEnd
-            } else {
-                return event.startDate < dayEnd && event.endDate > dayStart
-            }
+        if event.isAllDay {
+            let eventStart = calendar.startOfDay(for: event.startDate)
+            let eventEnd = calendar.startOfDay(for: event.endDate)
+            return dayStart >= eventStart && dayStart < eventEnd
+        } else {
+            return event.startDate < dayEnd && event.endDate > dayStart
         }
     }
 
@@ -1404,9 +1538,10 @@ final class CalendarViewModel: ObservableObject {
         let reminders = appleRemindersForDate(date)
         // 수동 정렬: todoOrder에 있는 순서 우선, 없는 건 date 순으로 뒤에
         let order = todoOrder[dateKey(date)] ?? []
+        let orderIndex = Dictionary(uniqueKeysWithValues: order.enumerated().map { ($0.element, $0.offset) })
         let ordered = localTodos.sorted { a, b in
-            let ai = order.firstIndex(of: a.id) ?? Int.max
-            let bi = order.firstIndex(of: b.id) ?? Int.max
+            let ai = orderIndex[a.id] ?? Int.max
+            let bi = orderIndex[b.id] ?? Int.max
             if ai != bi { return ai < bi }
             return a.date < b.date
         }
@@ -1445,21 +1580,34 @@ final class CalendarViewModel: ObservableObject {
     /// 없으면 이벤트 먼저(시간순) + 할일(date순) 기본 정렬.
     /// Apple Reminder는 외부 관리라 항상 맨 뒤에 분리 배치.
     func itemsForDate(_ date: Date) -> [DayItem] {
-        let events = eventsForDate(date).map { DayItem.event($0) }
+        let events = eventsForDate(date)
         let localTodos = todos
             .filter { calendar.isDate($0.date, inSameDayAs: date) && $0.source == .local }
-            .map { DayItem.todo($0) }
-        let reminders = appleRemindersForDate(date).map { DayItem.todo($0) }
+        let reminders = appleRemindersForDate(date)
+        return Self.orderedDayItems(
+            events: events,
+            localTodos: localTodos,
+            reminders: reminders,
+            order: dayItemOrder[dateKey(date)] ?? []
+        )
+    }
 
-        let unified = events + localTodos
-        let order = dayItemOrder[dateKey(date)] ?? []
+    nonisolated static func orderedDayItems(
+        events: [CalendarEvent],
+        localTodos: [TodoItem],
+        reminders: [TodoItem],
+        order: [String]
+    ) -> [DayItem] {
+        let orderIndex = Dictionary(uniqueKeysWithValues: order.enumerated().map { ($0.element, $0.offset) })
+        let unified = events.map { DayItem.event($0) } + localTodos.map { DayItem.todo($0) }
+        // Pre-index manual order so drag renders do not scan the order array for every comparison.
         let sorted = unified.sorted { a, b in
-            let ai = order.firstIndex(of: a.id) ?? Int.max
-            let bi = order.firstIndex(of: b.id) ?? Int.max
+            let ai = orderIndex[a.id] ?? Int.max
+            let bi = orderIndex[b.id] ?? Int.max
             if ai != bi { return ai < bi }
             return a.sortDate < b.sortDate
         }
-        return sorted + reminders
+        return sorted + reminders.map { DayItem.todo($0) }
     }
 
     /// 드래그 완료 시 통합 순서를 통째로 저장. Apple Reminder는 입력에서 제외됨.
@@ -1483,10 +1631,12 @@ final class CalendarViewModel: ObservableObject {
     }
 
     private func dateKey(_ date: Date) -> String {
-        let fmt = DateFormatter()
-        fmt.dateFormat = "yyyy-MM-dd"
-        fmt.calendar = calendar
-        return fmt.string(from: date)
+        Self.dateKeyFormatter.string(from: date)
+    }
+
+    private func monthKey(_ date: Date) -> String {
+        let start = calendar.dateInterval(of: .month, for: date)?.start ?? date
+        return dateKey(start)
     }
 
     /// 특정 날짜의 local todo 순서를 통째로 설정. Apple Reminder는 영향 없음.
