@@ -29,6 +29,8 @@ enum SettingsSection: String, CaseIterable {
 // MARK: - Settings View
 
 struct SettingsView: View {
+    @Environment(\.openURL) private var openURL
+
     @ObservedObject var goalService: GoalService
     @ObservedObject var authManager: GoogleAuthManager
     @ObservedObject var aiService: AIService
@@ -648,7 +650,9 @@ struct SettingsView: View {
                     }
                     Spacer()
                     Button(String(localized: "settings.notifications.open.system")) {
-                        openURL(URL(string: "x-apple.systempreferences:com.apple.preference.notifications")!)
+                        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications") {
+                            openURL(url)
+                        }
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
@@ -694,18 +698,16 @@ struct SettingsView: View {
                             openURL(URL(fileURLWithPath: userContextService.contextFilePath))
                         } label: {
                             Label(String(localized: "settings.context.open.file"), systemImage: "doc.text")
-                                .font(.system(size: 11, weight: .medium))
+                                .font(.platformSmallLabel)
                         }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
 
                         Button {
-                            #if os(macOS)
-                            NSWorkspace.shared.selectFile(userContextService.contextFilePath, inFileViewerRootedAtPath: "")
-                            #endif
+                            showInFileManager(URL(fileURLWithPath: userContextService.contextFilePath))
                         } label: {
                             Label(String(localized: "settings.context.show.finder"), systemImage: "folder")
-                                .font(.system(size: 11, weight: .medium))
+                                .font(.platformSmallLabel)
                         }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
@@ -713,7 +715,7 @@ struct SettingsView: View {
                         Spacer()
 
                         Text(userContextService.contextFilePath.components(separatedBy: "/").last ?? "")
-                            .font(.system(size: 10, design: .monospaced))
+                            .font(.platformMonospacedCaption)
                             .foregroundStyle(.tertiary)
                             .lineLimit(1)
                     }

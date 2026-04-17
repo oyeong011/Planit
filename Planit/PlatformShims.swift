@@ -15,8 +15,10 @@ extension Color {
     static var platformControlBackground: Color {
         #if os(macOS)
         Color(nsColor: .controlBackgroundColor)
-        #else
+        #elseif os(iOS)
         Color(.secondarySystemBackground)
+        #else
+        Color.secondary.opacity(0.12)
         #endif
     }
 
@@ -24,8 +26,10 @@ extension Color {
     static var platformWindowBackground: Color {
         #if os(macOS)
         Color(nsColor: .windowBackgroundColor)
-        #else
+        #elseif os(iOS)
         Color(.systemBackground)
+        #else
+        Color.clear
         #endif
     }
 
@@ -33,8 +37,10 @@ extension Color {
     static var platformControl: Color {
         #if os(macOS)
         Color(nsColor: .controlColor)
-        #else
+        #elseif os(iOS)
         Color(.systemFill)
+        #else
+        Color.secondary.opacity(0.16)
         #endif
     }
 
@@ -42,9 +48,47 @@ extension Color {
     static var platformTextBackground: Color {
         #if os(macOS)
         Color(nsColor: .textBackgroundColor)
-        #else
+        #elseif os(iOS)
         Color(.secondarySystemBackground)
+        #else
+        Color.secondary.opacity(0.08)
         #endif
+    }
+}
+
+// MARK: - Platform Font Shims
+
+extension Font {
+    static func platformSystem(size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default) -> Font {
+        .system(size: size, weight: weight, design: design)
+    }
+
+    static var platformSmallLabel: Font {
+        .platformSystem(size: 11, weight: .medium)
+    }
+
+    static var platformMonospacedCaption: Font {
+        .platformSystem(size: 10, design: .monospaced)
+    }
+}
+
+// MARK: - Platform Keyboard Shims
+
+enum PlatformShortcut {
+    static var primaryModifier: EventModifiers {
+        .command
+    }
+
+    static var primaryModifierSymbol: String {
+        #if os(macOS)
+        "⌘"
+        #else
+        "Command"
+        #endif
+    }
+
+    static var submitKey: KeyEquivalent {
+        .return
     }
 }
 
@@ -56,7 +100,38 @@ func openURL(_ url: URL) {
     NSWorkspace.shared.open(url)
     #elseif os(iOS)
     UIApplication.shared.open(url)
+    #else
+    _ = url
     #endif
+}
+
+// MARK: - Platform File and Pasteboard Helpers
+
+func showInFileManager(_ url: URL) {
+    #if os(macOS)
+    NSWorkspace.shared.selectFile(url.path, inFileViewerRootedAtPath: "")
+    #elseif os(iOS)
+    UIApplication.shared.open(url)
+    #else
+    _ = url
+    #endif
+}
+
+func copyTextToPasteboard(_ text: String) {
+    #if os(macOS)
+    NSPasteboard.general.clearContents()
+    NSPasteboard.general.setString(text, forType: .string)
+    #elseif os(iOS)
+    UIPasteboard.general.string = text
+    #else
+    _ = text
+    #endif
+}
+
+// MARK: - Platform Notifications
+
+extension Notification.Name {
+    static let calenPopoverDidClose = Notification.Name("calenPopoverDidClose")
 }
 
 // MARK: - Color Hex Conversion

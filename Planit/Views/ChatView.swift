@@ -344,18 +344,13 @@ struct ChatView: View {
                 ForEach(commands, id: \.self) { cmd in
                     HStack(spacing: 6) {
                         Text(cmd)
-                            .font(.system(size: 10, design: .monospaced))
+                            .font(.platformMonospacedCaption)
                             .foregroundStyle(.primary)
                             .textSelection(.enabled)
                             .lineLimit(1)
                         Spacer(minLength: 0)
                         Button {
-                            #if os(macOS)
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString(cmd, forType: .string)
-                            #else
-                            UIPasteboard.general.string = cmd
-                            #endif
+                            copyTextToPasteboard(cmd)
                         } label: {
                             Image(systemName: "doc.on.doc")
                                 .font(.system(size: 10))
