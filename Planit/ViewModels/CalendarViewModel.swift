@@ -401,15 +401,27 @@ final class CalendarViewModel: ObservableObject {
                 isAllDay: event.isAllDay,
                 calendarName: event.calendar.title,
                 calendarID: "apple:\(event.calendar.calendarIdentifier)",
-                source: .apple
+                source: .apple,
+                // EventKit이 외부 제공자(Google 등)와 동기화된 경우 원본 ID를 담고 있음.
+                // 이것으로 Google API에서 직접 받은 이벤트와 중복 제거.
+                externalID: event.calendarItemExternalIdentifier
             )
         }
     }
 
     /// Google 이벤트에 Apple Calendar 이벤트를 병합
+    /// macOS Apple Calendar가 Google 계정을 연결한 경우 같은 이벤트가
+    /// Google 직접 API와 EventKit 양쪽으로 들어온다. EventKit의
+    /// calendarItemExternalIdentifier == Google event.id 인 경우 Apple 미러는 제거.
     func mergeAppleCalendarEvents(for month: Date) {
         guard appleCalendarEnabled, appleCalendarAccessGranted else { return }
-        let appleEvents = fetchLocalCalendarEvents(for: month)
+        let googleIDs = Set(calendarEvents.filter { $0.source == .google }.map(\.id))
+        let appleRaw = fetchLocalCalendarEvents(for: month)
+        let appleEvents = appleRaw.filter { apple in
+            // externalID 가 Google id와 일치하면 미러이므로 제외
+            if let ext = apple.externalID, googleIDs.contains(ext) { return false }
+            return true
+        }
         var merged = calendarEvents.filter { $0.source != .apple }
         let existingNonAppleCount = merged.count
         merged.append(contentsOf: appleEvents)
@@ -417,7 +429,7 @@ final class CalendarViewModel: ObservableObject {
         let deduped = Self.deduplicatedCalendarEvents(merged, todoGoogleEventIDs: todoEventIds)
         let seenIDs = Set(deduped.map(\.id))
         PlanitLoggers.sync.info(
-            "Merged Apple events month=\(Self.logDate(month), privacy: .public) existingNonApple=\(existingNonAppleCount, privacy: .public) apple=\(appleEvents.count, privacy: .public) deduped=\(deduped.count, privacy: .public) uniqueIDs=\(seenIDs.count, privacy: .public)"
+            "Merged Apple events month=\(Self.logDate(month), privacy: .public) existingNonApple=\(existingNonAppleCount, privacy: .public) appleRaw=\(appleRaw.count, privacy: .public) appleAfterMirrorFilter=\(appleEvents.count, privacy: .public) deduped=\(deduped.count, privacy: .public) uniqueIDs=\(seenIDs.count, privacy: .public)"
         )
         calendarEvents = deduped
         applyEventCategoryMappings()
