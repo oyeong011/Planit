@@ -9,6 +9,7 @@ enum SettingsSection: String, CaseIterable {
     case context       = "context"
     case integrations  = "integrations"
     case notifications = "notifications"
+    case appearance    = "appearance"
     case advanced      = "advanced"
 
     var localizedTitle: String { NSLocalizedString("settings.section.\(rawValue)", comment: "") }
@@ -21,6 +22,7 @@ enum SettingsSection: String, CaseIterable {
         case .context:       return "brain.head.profile"
         case .integrations:  return "link"
         case .notifications: return "bell"
+        case .appearance:    return "paintpalette"
         case .advanced:      return "wrench.and.screwdriver"
         }
     }
@@ -140,6 +142,7 @@ struct SettingsView: View {
                 case .context:       contextSection
                 case .integrations:  integrationsSection
                 case .notifications: notificationsSection
+                case .appearance:    appearanceSection
                 case .advanced:      advancedSection
                 }
             }
@@ -809,9 +812,6 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 22) {
             sectionHeader(String(localized: "settings.section.advanced"), subtitle: String(localized: "settings.advanced.subtitle"), icon: "wrench.and.screwdriver")
 
-            appearanceCard
-            calendarThemeCard
-
             settingsCard(String(localized: "settings.apple.diagnostics.card")) {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {
@@ -942,6 +942,19 @@ struct SettingsView: View {
 
     @ObservedObject private var languageManager = LanguageManager.shared
 
+    private var appearanceSection: some View {
+        VStack(alignment: .leading, spacing: 22) {
+            sectionHeader(
+                String(localized: "settings.section.appearance"),
+                subtitle: String(localized: "settings.appearance.subtitle", defaultValue: "앱 표시 방식과 캘린더 색상을 설정합니다"),
+                icon: "paintpalette"
+            )
+
+            appearanceCard
+            calendarThemeCard
+        }
+    }
+
     private var appearanceCard: some View {
         settingsCard(String(localized: "settings.appearance.card", defaultValue: "외관")) {
             HStack(alignment: .top) {
@@ -972,7 +985,7 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
-                let columns = [GridItem(.adaptive(minimum: 132), spacing: 10)]
+                let columns = [GridItem(.adaptive(minimum: 190, maximum: 240), spacing: 10)]
                 LazyVGrid(columns: columns, spacing: 10) {
                     ForEach(calendarThemeService.themes) { theme in
                         CalendarThemeTile(
@@ -1128,10 +1141,15 @@ private struct CalendarThemeTile: View {
         Button(action: onSelect) {
             VStack(alignment: .leading, spacing: 9) {
                 HStack(spacing: 6) {
-                    Text(theme.name)
-                        .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
-                        .foregroundStyle(.primary)
-                        .lineLimit(1)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(theme.name)
+                            .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
+                            .foregroundStyle(.primary)
+                            .lineLimit(1)
+                        Text(theme.primaryHex)
+                            .font(.system(size: 10, weight: .medium, design: .monospaced))
+                            .foregroundStyle(.secondary)
+                    }
                     Spacer()
                     if isSelected {
                         Image(systemName: "checkmark.circle.fill")
