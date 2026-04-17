@@ -327,6 +327,7 @@ struct CRUDErrorInlineNotice: View {
 struct CalendarGridView: View {
     @ObservedObject var viewModel: CalendarViewModel
     @Binding var showChat: Bool
+    @ObservedObject private var themeService = CalendarThemeService.shared
     private let weekdays = [
         String(localized: "calendar.weekdays.sun"),
         String(localized: "calendar.weekdays.mon"),
@@ -344,7 +345,7 @@ struct CalendarGridView: View {
                 Button { withAnimation(.easeInOut(duration: 0.2)) { showChat.toggle() } } label: {
                     Image(systemName: showChat ? "bubble.left.fill" : "bubble.left")
                         .font(.system(size: 14))
-                        .foregroundStyle(showChat ? .purple : .secondary)
+                        .foregroundStyle(showChat ? themeService.current.accent : .secondary)
                 }
                 .buttonStyle(.plain)
                 .help(String(localized: "calendar.help.chat"))
@@ -393,7 +394,7 @@ struct CalendarGridView: View {
                                 Text("\(overdueCount)")
                                     .font(.system(size: 11, weight: .semibold))
                             }
-                            .foregroundStyle(.purple)
+                            .foregroundStyle(themeService.current.accent)
                         }
                         .buttonStyle(.plain)
                         .help("밀린 할 일 \(overdueCount)개를 지금 재배치")
@@ -498,6 +499,7 @@ struct DayCellView: View {
     var onDrop: ((String, Date) -> Void)? = nil
 
     @State private var isDropTarget = false
+    @ObservedObject private var themeService = CalendarThemeService.shared
 
     private var dayNumber: String {
         "\(Calendar.current.component(.day, from: date))"
@@ -520,7 +522,7 @@ struct DayCellView: View {
         .padding(6)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(RoundedRectangle(cornerRadius: 6).fill(cellBackground))
-        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.purple.opacity(isDropTarget ? 0.7 : 0), lineWidth: 2))
+        .overlay(RoundedRectangle(cornerRadius: 6).stroke(themeService.current.accent.opacity(isDropTarget ? 0.7 : 0), lineWidth: 2))
         .contentShape(Rectangle())
         .dropDestination(for: String.self) { items, _ in
             guard let payload = items.first else { return false }
@@ -530,8 +532,8 @@ struct DayCellView: View {
     }
 
     private var cellBackground: Color {
-        if isDropTarget { return Color.purple.opacity(0.12) }
-        if isSelected { return Color.blue.opacity(0.08) }
+        if isDropTarget { return themeService.current.accent.opacity(0.12) }
+        if isSelected { return themeService.current.backgroundOverlay.opacity(0.65) }
         return Color.clear
     }
 
@@ -542,7 +544,7 @@ struct DayCellView: View {
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(.white)
                     .frame(width: 26, height: 26)
-                    .background(Circle().fill(Color.blue))
+                    .background(Circle().fill(themeService.current.primary))
             } else {
                 Text(dayNumber)
                     .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
@@ -556,7 +558,7 @@ struct DayCellView: View {
     @ViewBuilder private var dayCellItems: some View {
         VStack(alignment: .leading, spacing: 2) {
             ForEach(Array(events.prefix(4).enumerated()), id: \.offset) { _, event in
-                let displayColor = categoryForEvent?(event)?.color ?? event.color
+                let displayColor = categoryForEvent?(event)?.color ?? themeService.current.eventTint
                 Text(event.title)
                     .font(.system(size: 10))
                     .lineLimit(1)
@@ -601,6 +603,7 @@ struct DailyDetailView: View {
     @Binding var showSettings: Bool
 
     @StateObject private var updater = UpdaterService.shared
+    @ObservedObject private var themeService = CalendarThemeService.shared
     @State private var selectedCategoryID: UUID?
     @State private var isRepeating: Bool = false
     @State private var showCategoryManager = false
@@ -645,8 +648,8 @@ struct DailyDetailView: View {
                                     .font(.system(size: 10, weight: .medium))
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
-                                    .background(RoundedRectangle(cornerRadius: 4).fill(Color.purple.opacity(0.15)))
-                                    .foregroundStyle(.purple)
+                                    .background(RoundedRectangle(cornerRadius: 4).fill(themeService.current.accent.opacity(0.15)))
+                                    .foregroundStyle(themeService.current.accent)
                             }
                         }
                     }
@@ -807,10 +810,10 @@ struct DailyDetailView: View {
                             Text(String(localized: "detail.add.todo")).font(.system(size: 13, weight: .medium))
                             Spacer()
                         }
-                        .foregroundStyle(Color.blue)
+                        .foregroundStyle(themeService.current.primary)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 12)
-                        .background(RoundedRectangle(cornerRadius: 10).fill(Color.blue.opacity(0.08)))
+                        .background(RoundedRectangle(cornerRadius: 10).fill(themeService.current.backgroundOverlay.opacity(0.65)))
                     }
                     .buttonStyle(.plain)
                     .padding(.horizontal, 16)
@@ -927,6 +930,7 @@ struct DailyDetailView: View {
 }
 
 // MARK: - Category Manager (Popover)
+// TODO(calendar-theme): migrate remaining calendar editor/form accents after separating semantic action colors from palette colors.
 
 struct CategoryManagerView: View {
     @ObservedObject var viewModel: CalendarViewModel

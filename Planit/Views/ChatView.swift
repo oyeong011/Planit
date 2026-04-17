@@ -5,6 +5,7 @@ import PDFKit
 struct ChatView: View {
     @ObservedObject var aiService: AIService
     @ObservedObject var viewModel: CalendarViewModel
+    @ObservedObject private var themeService = CalendarThemeService.shared
     var goalMemoryService: GoalMemoryService? = nil
     var habitService: HabitService? = nil          // 습관 — 목표와 완전히 분리
     // aiService.chatMessages 사용 — 탭 전환 후에도 유지
@@ -35,7 +36,7 @@ struct ChatView: View {
             HStack(spacing: 8) {
                 Image(systemName: "sparkles")
                     .font(.system(size: 13))
-                    .foregroundStyle(.purple)
+                    .foregroundStyle(themeService.current.accent)
                 Text("AI")
                     .font(.system(size: 13, weight: .bold))
 
@@ -55,9 +56,9 @@ struct ChatView: View {
                             .padding(.horizontal, 8).padding(.vertical, 4)
                             .background(
                                 RoundedRectangle(cornerRadius: 6)
-                                    .fill(isSelected ? Color.purple.opacity(0.18) : Color.clear)
+                                    .fill(isSelected ? themeService.current.accent.opacity(0.18) : Color.clear)
                             )
-                            .foregroundStyle(isSelected ? Color.purple : Color.secondary)
+                            .foregroundStyle(isSelected ? themeService.current.accent : Color.secondary)
                         }
                         .buttonStyle(.plain)
                     }
@@ -136,6 +137,7 @@ struct ChatView: View {
     }
 
     // MARK: - Setup Guide (CLI 미설치 시)
+    // TODO(calendar-theme): migrate remaining ChatView action accents after separating AI/provider status colors from calendar palette colors.
 
     private var unconfiguredView: some View {
         ScrollView {
