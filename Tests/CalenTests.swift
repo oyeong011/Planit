@@ -1258,6 +1258,79 @@ struct TestCachedEventFull: Codable, Identifiable {
     #expect(deduped.map(\.id) == ["google-1"])
 }
 
+@Test func appleMirrorFilterStats_countsFilteredMirrorsWithoutExposingTitles() {
+    let start = Date(timeIntervalSince1970: 0)
+    let google = CalendarEvent(
+        id: "google-1",
+        title: "Shared standup",
+        startDate: start,
+        endDate: start.addingTimeInterval(1800),
+        color: .blue,
+        isAllDay: false,
+        calendarName: "primary",
+        calendarID: "google:primary",
+        source: .google
+    )
+    let extMirror = CalendarEvent(
+        id: "apple-ext",
+        title: "Private ext title",
+        startDate: start.addingTimeInterval(3600),
+        endDate: start.addingTimeInterval(5400),
+        color: .red,
+        isAllDay: false,
+        calendarName: "Apple",
+        calendarID: "apple:calendar",
+        source: .apple,
+        externalID: "google-1"
+    )
+    let fingerprintMirror = CalendarEvent(
+        id: "apple-fingerprint",
+        title: "Shared standup",
+        startDate: start,
+        endDate: start.addingTimeInterval(1800),
+        color: .red,
+        isAllDay: false,
+        calendarName: "Apple",
+        calendarID: "apple:calendar",
+        source: .apple
+    )
+    let suppressedMirror = CalendarEvent(
+        id: "apple-suppress",
+        title: "Recently moved",
+        startDate: start.addingTimeInterval(7200),
+        endDate: start.addingTimeInterval(9000),
+        color: .red,
+        isAllDay: false,
+        calendarName: "Apple",
+        calendarID: "apple:calendar",
+        source: .apple
+    )
+    let kept = CalendarEvent(
+        id: "apple-kept",
+        title: "Apple only",
+        startDate: start.addingTimeInterval(10800),
+        endDate: start.addingTimeInterval(12600),
+        color: .red,
+        isAllDay: false,
+        calendarName: "Apple",
+        calendarID: "apple:calendar",
+        source: .apple
+    )
+
+    let result = CalendarViewModel.filteredAppleMirrorEvents(
+        [extMirror, fingerprintMirror, suppressedMirror, kept],
+        googleEvents: [google],
+        suppressedTitles: ["Recently moved"],
+        updatedAt: start
+    )
+
+    #expect(result.events.map(\.id) == ["apple-kept"])
+    #expect(result.stats.extCount == 1)
+    #expect(result.stats.fingerprintCount == 1)
+    #expect(result.stats.suppressCount == 1)
+    #expect(result.stats.lastUpdated == start)
+}
+
 @Test func calendarEventDedupe_replacesPendingMirrorWithFetchedGoogleEvent() {
     let start = Date(timeIntervalSince1970: 0)
     let pending = CalendarEvent(

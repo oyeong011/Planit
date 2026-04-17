@@ -3,6 +3,13 @@ import EventKit
 import Combine
 import OSLog
 
+struct MirrorFilterStats: Equatable {
+    var extCount: Int = 0
+    var fingerprintCount: Int = 0
+    var suppressCount: Int = 0
+    var lastUpdated: Date?
+}
+
 @MainActor
 final class CalendarViewModel: ObservableObject {
 
@@ -52,6 +59,7 @@ final class CalendarViewModel: ObservableObject {
     @Published var rescheduledTodoIDs: Set<UUID> = []
     /// Last user-visible CRUD failure for inline UI feedback.
     @Published var lastCRUDError: CRUDErrorNotice?
+    @Published var lastMirrorFilterStats = MirrorFilterStats()
 
     // MARK: - Services
 
@@ -516,6 +524,13 @@ final class CalendarViewModel: ObservableObject {
             now: now
         )
         let appleEvents = filterResult.events
+        // 진단 UI용 stats 업데이트 (narrow key 기반 카운트 그대로 표시)
+        lastMirrorFilterStats = MirrorFilterStats(
+            extCount: filterResult.mirrorByExternalID,
+            fingerprintCount: filterResult.mirrorByFingerprint,
+            suppressCount: filterResult.mirrorBySuppress,
+            lastUpdated: now
+        )
 
         var merged = calendarEvents.filter { $0.source != .apple }
         let existingNonAppleCount = merged.count
@@ -530,8 +545,6 @@ final class CalendarViewModel: ObservableObject {
     }
 
     /// 최근 Google 수정한 이벤트의 Apple 미러 복합키 → 유예 시각.
-    /// title 단독 suppress는 같은 제목의 반복/Apple-only 이벤트까지 숨기므로
-    /// 이동 전/후 위치와 Apple calendarID가 확인된 후보만 제한적으로 제외한다.
     private var suppressedAppleMirrors: [SuppressKey: Date] = [:]
 
     private nonisolated static let appleMirrorSuppressTTL: TimeInterval = 60
