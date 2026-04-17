@@ -47,5 +47,18 @@
             type="application/octet-stream" />
         <description><![CDATA[릴리스 v0.2.1]]></description>
     </item>
+            <item>
+        <title>v0.2.2</title>
+        <sparkle:version>202</sparkle:version>
+        <sparkle:shortVersionString>0.2.2</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 04:22:37 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.2/Calen-0.2.2-universal.zip"
+            sparkle:edSignature="+ORtXqmqsUgnruqPgwJ4xigZ1fb5oS/xRbUmS6Zcg+BJntGZPlRBqzm02X6HdBR6NyeXmG8qN5dxO7er2j9bAQ=="
+            length="5269756"
+            type="application/octet-stream" />
+        <description><![CDATA[릴리스 v0.2.2]]></description>
+    </item>
     </channel>
 </rss>
