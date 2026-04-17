@@ -511,6 +511,13 @@ struct DailyDetailView: View {
     @State private var addCategoryID: UUID?
     @State private var addType: TodoType = .normal
 
+    // 할일 드래그 재배치 상태 (리뷰페이지 스타일)
+    @State private var draggingTodoID: UUID? = nil
+    @State private var dragOffset: CGFloat = 0
+    @State private var pendingTodoOrder: [UUID] = []
+    /// 각 할일 행의 예상 높이 — 행 콘텐츠(패딩 포함) + 행 간 간격 8pt
+    private let todoRowSlotHeight: CGFloat = 62
+
     private var dDayText: String {
         let diff = viewModel.daysSinceToday(viewModel.selectedDate)
         if diff == 0 { return String(localized: "detail.dday.today") }
@@ -610,7 +617,9 @@ struct DailyDetailView: View {
 
                 // Events & Todos list
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 8) {
+                    // 행 사이 gap(spacing) 대신 각 행의 vertical padding으로 처리 —
+                    // 이래야 드롭 타겟 사이 "dead zone"이 생기지 않는다.
+                    VStack(alignment: .leading, spacing: 0) {
                         let events = viewModel.eventsForDate(viewModel.selectedDate)
                         ForEach(events) { event in
                             EventRowView(
@@ -623,11 +632,14 @@ struct DailyDetailView: View {
                                 },
                                 onToggle: { viewModel.toggleEventCompleted(event.id, title: event.title) }
                             )
+                            .padding(.vertical, 4)
                         }
 
                         let todos = viewModel.todosForDate(viewModel.selectedDate)
                         ForEach(todos) { todo in
                             let cat = viewModel.category(for: todo.categoryID)
+                            let isDragging = draggingTodoID == todo.id
+                            let offset = isDragging ? dragOffset : todoDisplacement(for: todo.id, in: todos)
                             TodoRowView(
                                 todo: todo,
                                 category: cat,
@@ -637,15 +649,16 @@ struct DailyDetailView: View {
                                     tappedEvent = nil
                                 },
                                 onToggle: { viewModel.toggleTodo(id: todo.id) },
-                                // Apple Reminder(외부)는 재배치 미지원
-                                onTodoDrop: todo.source == .local ? { draggedID in
-                                    viewModel.reorderLocalTodo(
-                                        draggedID: draggedID,
-                                        droppedOnTargetID: todo.id,
-                                        on: viewModel.selectedDate
-                                    )
-                                } : nil
+                                isDragging: isDragging,
+                                yOffset: offset,
+                                handleDragGesture: todo.source == .local
+                                    ? todoReorderGesture(for: todo, allTodos: todos)
+                                    : nil
                             )
+                            .transition(.asymmetric(
+                                insertion: .opacity.combined(with: .scale(scale: 0.96)),
+                                removal: .opacity
+                            ))
                         }
 
                         if events.isEmpty && todos.isEmpty && !showAddForm {
@@ -733,6 +746,67 @@ struct DailyDetailView: View {
         }
     }
 
+    // MARK: - Todo Reorder Drag (리뷰페이지 스타일)
+
+    /// 드래그 중이 아닐 때 다른 행이 비켜야 할 y 변위.
+    /// pendingOrder 기준 예상 인덱스 - 현재 인덱스 * slot 높이.
+    private func todoDisplacement(for id: UUID, in todos: [TodoItem]) -> CGFloat {
+        guard let dID = draggingTodoID, dID != id,
+              let origIdx = todos.firstIndex(where: { $0.id == id }),
+              let pendIdx = pendingTodoOrder.firstIndex(of: id),
+              origIdx != pendIdx else { return 0 }
+        return CGFloat(pendIdx - origIdx) * todoRowSlotHeight
+    }
+
+    /// 현재 드래그 offset으로 예상 순서를 계산.
+    private func computePendingTodoOrder(
+        dragging id: UUID, offset: CGFloat, allTodos: [TodoItem]
+    ) -> [UUID] {
+        let localIDs = allTodos.filter { $0.source == .local }.map(\.id)
+        guard let fromIdx = localIDs.firstIndex(of: id) else { return localIDs }
+        let steps = Int((offset / todoRowSlotHeight).rounded())
+        let toIdx = max(0, min(localIDs.count - 1, fromIdx + steps))
+        guard toIdx != fromIdx else { return localIDs }
+        var result = localIDs
+        result.move(fromOffsets: IndexSet(integer: fromIdx),
+                    toOffset: toIdx > fromIdx ? toIdx + 1 : toIdx)
+        return result
+    }
+
+    /// 드래그 핸들에만 부착되는 재배치 제스처.
+    /// 핸들 위에서 시작한 드래그만 여기로 옴 → .draggable(크로스뷰)와 공간적으로 분리.
+    private func todoReorderGesture(for todo: TodoItem, allTodos: [TodoItem]) -> AnyGesture<DragGesture.Value> {
+        AnyGesture(DragGesture(minimumDistance: 0)
+            .onChanged { value in
+                if draggingTodoID != todo.id {
+                    withAnimation(.spring(response: 0.22, dampingFraction: 0.8)) {
+                        draggingTodoID = todo.id
+                        pendingTodoOrder = allTodos.filter { $0.source == .local }.map(\.id)
+                    }
+                }
+                dragOffset = value.translation.height
+                let newPending = computePendingTodoOrder(
+                    dragging: todo.id,
+                    offset: dragOffset,
+                    allTodos: allTodos
+                )
+                if newPending != pendingTodoOrder {
+                    withAnimation(.spring(response: 0.32, dampingFraction: 0.72)) {
+                        pendingTodoOrder = newPending
+                    }
+                }
+            }
+            .onEnded { _ in
+                if !pendingTodoOrder.isEmpty {
+                    viewModel.setLocalTodoOrder(pendingTodoOrder, on: viewModel.selectedDate)
+                }
+                withAnimation(.spring(response: 0.38, dampingFraction: 0.72)) {
+                    draggingTodoID = nil
+                    dragOffset = 0
+                    pendingTodoOrder = []
+                }
+            })
+    }
 }
 
 // MARK: - Category Manager (Popover)
@@ -1395,14 +1469,30 @@ struct TodoRowView: View {
     var isRescheduled: Bool = false   // Calen이 자동 재배치한 항목
     var onTap: () -> Void = {}
     let onToggle: () -> Void
-    /// 다른 todo가 이 row에 드롭됐을 때 호출. payload는 드래그 중인 todo UUID.
-    /// nil이면 드롭 타겟 비활성화 (Apple Reminder 등).
-    var onTodoDrop: ((UUID) -> Void)? = nil
+    /// 리뷰페이지 스타일 드래그 재배치 지원용 상태 (부모가 주입)
+    var isDragging: Bool = false
+    var yOffset: CGFloat = 0
+    /// 리오더 모드 진입됨 — 드래그 핸들을 잡았을 때 true.
+    var isReorderMode: Bool = false
+    /// 드래그 핸들 영역에만 부착할 제스처. nil이면 핸들 숨김 (재배치 불가).
+    var handleDragGesture: AnyGesture<DragGesture.Value>? = nil
 
-    @State private var isDropTargeted: Bool = false
+    @State private var isHandleHover: Bool = false
 
     var body: some View {
         HStack(spacing: 10) {
+            // 드래그 핸들 — 리오더 전용 hit 영역. highPriorityGesture로 .draggable보다 우선.
+            if let reorderGesture = handleDragGesture {
+                Image(systemName: "line.3.horizontal")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(isHandleHover || isDragging ? .primary : Color.secondary.opacity(0.5))
+                    .frame(width: 20, height: 32)
+                    .contentShape(Rectangle())
+                    .onHover { isHandleHover = $0 }
+                    .help("드래그해서 순서 변경")
+                    .highPriorityGesture(reorderGesture)
+            }
+
             RoundedRectangle(cornerRadius: 2)
                 .fill(todo.source == .appleReminder ? Color.orange : category.color)
                 .frame(width: 4)
@@ -1463,34 +1553,24 @@ struct TodoRowView: View {
         .background(
             RoundedRectangle(cornerRadius: 10)
                 .fill(Color.platformControlBackground)
-                .shadow(color: .black.opacity(0.04), radius: 2, y: 1)
-        )
-        .overlay(
-            // 드롭 타겟 강조 — 위쪽 경계선
-            RoundedRectangle(cornerRadius: 10)
-                .strokeBorder(isDropTargeted ? Color.accentColor : .clear, lineWidth: 2)
+                .shadow(color: .black.opacity(isDragging ? 0.22 : 0.04),
+                        radius: isDragging ? 14 : 2,
+                        y: isDragging ? 6 : 1)
         )
         .contentShape(Rectangle())
         .onTapGesture { onTap() }
+        .scaleEffect(isDragging ? 1.025 : 1.0, anchor: .center)
+        .offset(y: yOffset)
+        .zIndex(isDragging ? 100 : 0)
+        .animation(isDragging ? nil : .spring(response: 0.32, dampingFraction: 0.72),
+                   value: yOffset)
+        // 전체 행에 .draggable — 핸들 위에서 시작한 드래그는 highPriorityGesture가 가로채므로 안전
         .draggable("todo:\(todo.id.uuidString)") {
             DragGhostRow(
                 title: todo.title,
                 color: todo.source == .appleReminder ? Color.orange : category.color,
                 subtitle: todo.source == .appleReminder ? String(localized: "detail.reminders") : category.name
             )
-        }
-        .dropDestination(for: String.self) { items, _ in
-            guard let reorder = onTodoDrop,
-                  let payload = items.first,
-                  payload.hasPrefix("todo:"),
-                  let draggedID = UUID(uuidString: String(payload.dropFirst(5))),
-                  draggedID != todo.id
-            else { return false }
-            reorder(draggedID)
-            return true
-        } isTargeted: { targeted in
-            // Apple Reminder row는 onTodoDrop=nil이라 타겟 표시도 생략
-            isDropTargeted = targeted && onTodoDrop != nil
         }
     }
 }

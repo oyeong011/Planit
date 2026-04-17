@@ -743,6 +743,15 @@ final class CalendarViewModel: ObservableObject {
         return fmt.string(from: date)
     }
 
+    /// 특정 날짜의 local todo 순서를 통째로 설정. Apple Reminder는 영향 없음.
+    func setLocalTodoOrder(_ ids: [UUID], on date: Date) {
+        let localIDs = Set(todos.filter { calendar.isDate($0.date, inSameDayAs: date) && $0.source == .local }.map(\.id))
+        let filtered = ids.filter(localIDs.contains)
+        guard !filtered.isEmpty else { return }
+        todoOrder[dateKey(date)] = filtered
+        saveTodoOrder()
+    }
+
     /// 드래그된 todo를 타겟 todo 위치로 이동. 같은 날짜 안에서만 동작.
     /// Apple Reminder(외부 관리)는 재배치 대상에서 제외.
     func reorderLocalTodo(draggedID: UUID, droppedOnTargetID targetID: UUID, on date: Date) {
