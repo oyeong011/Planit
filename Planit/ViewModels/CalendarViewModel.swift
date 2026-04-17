@@ -242,6 +242,91 @@ final class CalendarViewModel: ObservableObject {
         events.filter { $0.source != .apple }
     }
 
+    nonisolated static func inferredEventSource(
+        eventID: String,
+        calendarID: String,
+        events: [CalendarEvent],
+        googleAuthenticated: Bool
+    ) -> CalendarEventSource {
+        if let loaded = events.first(where: { $0.id == eventID }) {
+            return loaded.source
+        }
+        if calendarID.hasPrefix("apple:") {
+            return .apple
+        }
+        if calendarID.hasPrefix("google:") {
+            return .google
+        }
+        if eventID.hasPrefix("apple-") {
+            return .apple
+        }
+        if eventID.hasPrefix("pending-") {
+            return .google
+        }
+        return googleAuthenticated ? .google : .local
+    }
+
+    nonisolated static func eventKitLookupIdentifier(for eventID: String) -> String {
+        if eventID.hasPrefix("apple-") {
+            return String(eventID.dropFirst("apple-".count))
+        }
+        return eventID
+    }
+
+    nonisolated static func deduplicatedCalendarEvents(
+        _ events: [CalendarEvent],
+        todoGoogleEventIDs: Set<String>
+    ) -> [CalendarEvent] {
+        var result: [CalendarEvent] = []
+
+        for event in events {
+            if event.source == .google, todoGoogleEventIDs.contains(event.id) {
+                continue
+            }
+
+            if let existingIndex = result.firstIndex(where: { existing in
+                existing.id == event.id || areCalendarMirrors(existing, event)
+            }) {
+                if shouldPreferCalendarEvent(event, over: result[existingIndex]) {
+                    result[existingIndex] = event
+                }
+            } else {
+                result.append(event)
+            }
+        }
+
+        return result
+    }
+
+    private nonisolated static func areCalendarMirrors(_ lhs: CalendarEvent, _ rhs: CalendarEvent) -> Bool {
+        guard lhs.id != rhs.id else { return true }
+        let canMirror = lhs.source != rhs.source || lhs.id.hasPrefix("pending-") || rhs.id.hasPrefix("pending-")
+        guard canMirror else { return false }
+        return eventFingerprint(lhs) == eventFingerprint(rhs)
+    }
+
+    private nonisolated static func eventFingerprint(_ event: CalendarEvent) -> String {
+        let title = event.title.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let start = Int(event.startDate.timeIntervalSinceReferenceDate.rounded())
+        let end = Int(event.endDate.timeIntervalSinceReferenceDate.rounded())
+        return "\(title)|\(start)|\(end)|\(event.isAllDay)"
+    }
+
+    private nonisolated static func shouldPreferCalendarEvent(_ candidate: CalendarEvent, over existing: CalendarEvent) -> Bool {
+        if existing.id.hasPrefix("pending-"), !candidate.id.hasPrefix("pending-") {
+            return true
+        }
+        return sourcePriority(candidate.source) > sourcePriority(existing.source)
+    }
+
+    private nonisolated static func sourcePriority(_ source: CalendarEventSource) -> Int {
+        switch source {
+        case .google: return 3
+        case .apple: return 2
+        case .local: return 1
+        }
+    }
+
     func enableAppleCalendar() {
         requestAppleCalendarAccess()
     }
@@ -325,9 +410,10 @@ final class CalendarViewModel: ObservableObject {
     func mergeAppleCalendarEvents(for month: Date) {
         guard appleCalendarEnabled, appleCalendarAccessGranted else { return }
         let appleEvents = fetchLocalCalendarEvents(for: month)
-        // 기존 Apple 이벤트 제거 후 다시 추가 (중복 방지)
-        calendarEvents.removeAll { $0.source == .apple }
-        calendarEvents.append(contentsOf: appleEvents)
+        var merged = calendarEvents.filter { $0.source != .apple }
+        merged.append(contentsOf: appleEvents)
+        let todoEventIds = Set(todos.compactMap { $0.googleEventId })
+        calendarEvents = Self.deduplicatedCalendarEvents(merged, todoGoogleEventIDs: todoEventIds)
         applyEventCategoryMappings()
     }
 
@@ -516,10 +602,12 @@ final class CalendarViewModel: ObservableObject {
                 for i in merged.indices {
                     merged[i].source = .google
                 }
-                self.calendarEvents = merged
+                let todoEventIds = Set(self.todos.compactMap { $0.googleEventId })
+                let deduped = Self.deduplicatedCalendarEvents(merged, todoGoogleEventIDs: todoEventIds)
+                self.calendarEvents = deduped
                 self.isOffline = false
                 self.needsReauth = googleService.needsReauth
-                cacheEvents(merged)
+                cacheEvents(deduped)
                 // Apple Calendar 이벤트 병합
                 mergeAppleCalendarEvents(for: month)
                 applyEventCategoryMappings()
@@ -703,7 +791,7 @@ final class CalendarViewModel: ObservableObject {
             calendars: nil
         )
         let ekEvents = eventStore.events(matching: predicate)
-        calendarEvents = ekEvents.map { event in
+        let localEvents = ekEvents.map { event in
             let cgColor = event.calendar.cgColor ?? CGColor(red: 0.4, green: 0.6, blue: 1.0, alpha: 1.0)
             return CalendarEvent(
                 id: event.eventIdentifier,
@@ -717,6 +805,8 @@ final class CalendarViewModel: ObservableObject {
                 source: .local
             )
         }
+        let todoEventIds = Set(todos.compactMap { $0.googleEventId })
+        calendarEvents = Self.deduplicatedCalendarEvents(localEvents, todoGoogleEventIDs: todoEventIds)
         applyEventCategoryMappings()
     }
 
@@ -747,11 +837,18 @@ final class CalendarViewModel: ObservableObject {
     }
 
     func updateCalendarEvent(eventID: String, calendarID: String = "google:primary", title: String, startDate: Date, endDate: Date, isAllDay: Bool) -> Bool {
-        if authManager.isAuthenticated {
+        let source = Self.inferredEventSource(
+            eventID: eventID,
+            calendarID: calendarID,
+            events: calendarEvents,
+            googleAuthenticated: authManager.isAuthenticated
+        )
+        if source == .google {
+            guard authManager.isAuthenticated else { return false }
             updateGoogleEvent(eventID: eventID, calendarID: calendarID, title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
             return true
         }
-        guard let ekEvent = eventStore.event(withIdentifier: eventID) else {
+        guard let ekEvent = eventKitEvent(withIdentifier: eventID) else {
             recordCRUDFailure(operation: .update, source: .local, eventID: eventID)
             return false
         }
@@ -761,7 +858,7 @@ final class CalendarViewModel: ObservableObject {
         ekEvent.isAllDay = isAllDay
         do {
             try eventStore.save(ekEvent, span: .thisEvent)
-            fetchEventsFromEventKit(for: currentMonth)
+            refreshAfterEventKitMutation()
             return true
         } catch {
             recordCRUDFailure(operation: .update, source: .local, eventID: eventID, error: error)
@@ -770,24 +867,48 @@ final class CalendarViewModel: ObservableObject {
     }
 
     func deleteCalendarEvent(eventID: String, calendarID: String = "google:primary") -> Bool {
-        if authManager.isAuthenticated {
+        let source = Self.inferredEventSource(
+            eventID: eventID,
+            calendarID: calendarID,
+            events: calendarEvents,
+            googleAuthenticated: authManager.isAuthenticated
+        )
+        if source == .google {
+            guard authManager.isAuthenticated else { return false }
             deleteGoogleEvent(eventID: eventID, calendarID: calendarID)
             return true
         }
-        guard let ekEvent = eventStore.event(withIdentifier: eventID) else {
+        guard let ekEvent = eventKitEvent(withIdentifier: eventID) else {
             recordCRUDFailure(operation: .delete, source: .local, eventID: eventID)
             return false
         }
         do {
             try eventStore.remove(ekEvent, span: .thisEvent)
             completedEventIDs.remove(eventID)
+            completedEventIDs.remove(Self.eventKitLookupIdentifier(for: eventID))
             goalService?.removeCompletion(eventId: eventID)
+            goalService?.removeCompletion(eventId: Self.eventKitLookupIdentifier(for: eventID))
             saveCompletedEvents()
-            fetchEventsFromEventKit(for: currentMonth)
+            calendarEvents.removeAll { $0.id == eventID || $0.id == Self.eventKitLookupIdentifier(for: eventID) }
+            refreshAfterEventKitMutation()
             return true
         } catch {
             recordCRUDFailure(operation: .delete, source: .local, eventID: eventID, error: error)
             return false
+        }
+    }
+
+    private func eventKitEvent(withIdentifier eventID: String) -> EKEvent? {
+        eventStore.event(withIdentifier: eventID)
+            ?? eventStore.event(withIdentifier: Self.eventKitLookupIdentifier(for: eventID))
+    }
+
+    private func refreshAfterEventKitMutation() {
+        if authManager.isAuthenticated {
+            mergeAppleCalendarEvents(for: currentMonth)
+            cacheEvents(calendarEvents)
+        } else {
+            fetchEventsFromEventKit(for: currentMonth)
         }
     }
 
@@ -1225,7 +1346,7 @@ final class CalendarViewModel: ObservableObject {
         case .google:
             updateGoogleEvent(eventID: id, calendarID: event.calendarID, title: event.title, startDate: newStart, endDate: newEnd, isAllDay: event.isAllDay)
         case .apple, .local:
-            _ = updateCalendarEvent(eventID: id, title: event.title, startDate: newStart, endDate: newEnd, isAllDay: event.isAllDay)
+            _ = updateCalendarEvent(eventID: id, calendarID: event.calendarID, title: event.title, startDate: newStart, endDate: newEnd, isAllDay: event.isAllDay)
         }
     }
 

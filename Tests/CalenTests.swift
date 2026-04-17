@@ -1143,6 +1143,151 @@ struct TestCachedEventFull: Codable, Identifiable {
     #expect(!filtered.contains { $0.source == .apple })
 }
 
+@Test func calendarCrudRouting_prefersLoadedAppleSourceWhenGoogleAuthenticated() {
+    let start = Date(timeIntervalSince1970: 0)
+    let event = CalendarEvent(
+        id: "apple-EK-123",
+        title: "Apple",
+        startDate: start,
+        endDate: start.addingTimeInterval(3600),
+        color: .red,
+        isAllDay: false,
+        calendarName: "Home",
+        calendarID: "apple:home",
+        source: .apple
+    )
+
+    let source = CalendarViewModel.inferredEventSource(
+        eventID: "apple-EK-123",
+        calendarID: "google:primary",
+        events: [event],
+        googleAuthenticated: true
+    )
+
+    #expect(source == .apple)
+    #expect(CalendarViewModel.eventKitLookupIdentifier(for: "apple-EK-123") == "EK-123")
+}
+
+@Test func calendarCrudRouting_usesCalendarIDAndIDPrefixesWhenSourceMissing() {
+    #expect(CalendarViewModel.inferredEventSource(
+        eventID: "raw-ek-id",
+        calendarID: "apple:home",
+        events: [],
+        googleAuthenticated: true
+    ) == .apple)
+    #expect(CalendarViewModel.inferredEventSource(
+        eventID: "apple-raw-ek-id",
+        calendarID: "",
+        events: [],
+        googleAuthenticated: true
+    ) == .apple)
+    #expect(CalendarViewModel.inferredEventSource(
+        eventID: "pending-temp-id",
+        calendarID: "",
+        events: [],
+        googleAuthenticated: true
+    ) == .google)
+    #expect(CalendarViewModel.inferredEventSource(
+        eventID: "google-id",
+        calendarID: "google:primary",
+        events: [],
+        googleAuthenticated: false
+    ) == .google)
+}
+
+@Test func calendarEventDedupe_removesTodoBackedGoogleEvents() {
+    let start = Date(timeIntervalSince1970: 0)
+    let todoEvent = CalendarEvent(
+        id: "google-todo-1",
+        title: "Todo mirror",
+        startDate: start,
+        endDate: start.addingTimeInterval(86400),
+        color: .blue,
+        isAllDay: true,
+        calendarName: "primary",
+        calendarID: "google:primary",
+        source: .google
+    )
+    let normalEvent = CalendarEvent(
+        id: "google-normal-1",
+        title: "Normal",
+        startDate: start,
+        endDate: start.addingTimeInterval(3600),
+        color: .blue,
+        isAllDay: false,
+        calendarName: "primary",
+        calendarID: "google:primary",
+        source: .google
+    )
+
+    let deduped = CalendarViewModel.deduplicatedCalendarEvents(
+        [todoEvent, normalEvent],
+        todoGoogleEventIDs: ["google-todo-1"]
+    )
+
+    #expect(deduped.map(\.id) == ["google-normal-1"])
+}
+
+@Test func calendarEventDedupe_prefersGoogleOverAppleForSameEventFingerprint() {
+    let start = Date(timeIntervalSince1970: 0)
+    let google = CalendarEvent(
+        id: "google-1",
+        title: "Same event",
+        startDate: start,
+        endDate: start.addingTimeInterval(3600),
+        color: .blue,
+        isAllDay: false,
+        calendarName: "primary",
+        calendarID: "google:primary",
+        source: .google
+    )
+    let apple = CalendarEvent(
+        id: "apple-EK-1",
+        title: "Same event",
+        startDate: start,
+        endDate: start.addingTimeInterval(3600),
+        color: .red,
+        isAllDay: false,
+        calendarName: "Google",
+        calendarID: "apple:caldav",
+        source: .apple
+    )
+
+    let deduped = CalendarViewModel.deduplicatedCalendarEvents([apple, google], todoGoogleEventIDs: [])
+
+    #expect(deduped.map(\.id) == ["google-1"])
+}
+
+@Test func calendarEventDedupe_replacesPendingMirrorWithFetchedGoogleEvent() {
+    let start = Date(timeIntervalSince1970: 0)
+    let pending = CalendarEvent(
+        id: "pending-temp",
+        title: "Created offline",
+        startDate: start,
+        endDate: start.addingTimeInterval(3600),
+        color: .blue,
+        isAllDay: false,
+        calendarName: "Google",
+        calendarID: "google:primary",
+        source: .google
+    )
+    let fetched = CalendarEvent(
+        id: "google-created",
+        title: "Created offline",
+        startDate: start,
+        endDate: start.addingTimeInterval(3600),
+        color: .blue,
+        isAllDay: false,
+        calendarName: "primary",
+        calendarID: "google:primary",
+        source: .google
+    )
+
+    let deduped = CalendarViewModel.deduplicatedCalendarEvents([pending, fetched], todoGoogleEventIDs: [])
+
+    #expect(deduped.map(\.id) == ["google-created"])
+}
+
 // ============================================================================
 // MARK: - TC-22: 파일 보안 — 디렉토리/파일 권한
 // ============================================================================
