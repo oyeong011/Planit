@@ -521,7 +521,20 @@ final class CalendarViewModel: ObservableObject {
 
                 let targetDay = self.calendar.startOfDay(for: date)
                 let items: [TodoItem] = reminders.compactMap { reminder in
-                    // due date가 있는 경우 해당 날짜만 표시
+                    // 1) 시스템 안내/업그레이드 메시지 등 '가짜 미리알림' 필터
+                    guard Self.isMeaningfulReminder(reminder) else { return nil }
+
+                    // 2) 완료된 미리알림은 오늘 날짜에서 최근 완료만 유지 (1일 이내)
+                    if reminder.isCompleted {
+                        if let completionDate = reminder.completionDate {
+                            let ageDays = Calendar.current.dateComponents([.day], from: completionDate, to: Date()).day ?? 999
+                            guard ageDays <= 1 else { return nil }
+                        } else {
+                            return nil
+                        }
+                    }
+
+                    // 3) due date가 있는 경우 해당 날짜만 표시
                     if let dueDateComponents = reminder.dueDateComponents,
                        let dueDate = Calendar.current.date(from: dueDateComponents) {
                         let reminderDay = self.calendar.startOfDay(for: dueDate)
@@ -572,6 +585,33 @@ final class CalendarViewModel: ObservableObject {
     /// 특정 날짜의 Apple Reminders 반환 (이미 fetch된 것에서 필터)
     func appleRemindersForDate(_ date: Date) -> [TodoItem] {
         appleReminders.filter { calendar.isDate($0.date, inSameDayAs: date) }
+    }
+
+    /// Apple Reminders에서 스팸/시스템 메시지 류 'fake reminder' 필터.
+    /// - 빈 제목 / 공백만 있는 제목
+    /// - Apple이 자동 생성하는 '이 목록의 작성자가 미리 알림을 업그레이드했습니다' 등 안내 메시지
+    /// - 구독 전용 캘린더의 reminder (allowsContentModifications == false)
+    private static func isMeaningfulReminder(_ reminder: EKReminder) -> Bool {
+        guard let title = reminder.title?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !title.isEmpty else { return false }
+
+        // 구독 전용(쓰기 불가) 캘린더는 외부 소스 — 앱에서 관리 불가
+        if reminder.calendar?.allowsContentModifications == false { return false }
+
+        // Apple 시스템 안내 메시지 패턴 (ko/en 주요 시즌 메시지)
+        let systemPatterns = [
+            "업그레이드했습니다",     // 이 목록의 작성자가 미리 알림을 업그레이드했습니다.
+            "upgraded",                 // This list was upgraded...
+            "미리 알림이 보이지",
+            "Reminders not showing",
+            "업그레이드하시겠습니까",
+            "Upgrade to this version",
+        ]
+        let lowered = title.lowercased()
+        for pat in systemPatterns {
+            if title.contains(pat) || lowered.contains(pat.lowercased()) { return false }
+        }
+        return true
     }
 
     // MARK: - Google Calendar API
