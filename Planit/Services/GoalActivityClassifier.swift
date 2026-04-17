@@ -6,7 +6,8 @@ import Foundation
 ///   1) 키워드 매칭 — 빠름·결정적. goal.keywords / goal.targets 가 제목에 포함되면 즉시 매칭.
 ///   2) AI 분류   — 키워드 누락 활동에 한해 Claude/Codex CLI로 판정.
 ///
-/// 이 타입 자체는 캐시/영속화를 하지 않는다 (후속 커밋에서 캐시 레이어 추가 예정).
+/// 같은 활동을 반복 분류하지 않도록 UserDefaults에 결과를 캐시한다.
+/// 목표 목록이 바뀌면(hash 변경) 캐시는 자동 무효화.
 @MainActor
 final class GoalActivityClassifier {
 
@@ -22,12 +23,54 @@ final class GoalActivityClassifier {
         enum Kind: String, Sendable { case event, todo }
     }
 
-    struct Match: Sendable {
+    struct Match: Sendable, Codable {
         let activityID: String
         let goalID: UUID?
         let source: Source
 
-        enum Source: String, Sendable { case keyword, ai, none }
+        enum Source: String, Sendable, Codable { case keyword, ai, none }
+    }
+
+    // MARK: - Cache
+
+    private let cacheKey = "planit.goalActivity.cache"
+    private let cacheHashKey = "planit.goalActivity.goalsHash"
+
+    /// 목표 목록의 내용 기반 해시 (순서 무관).
+    /// targets/keywords/title 중 하나라도 바뀌면 다른 해시.
+    private func goalsHash(_ goals: [ChatGoal]) -> String {
+        let parts = goals.map { goal -> String in
+            let targets = goal.targets.sorted().joined(separator: ",")
+            let kws = goal.keywords.sorted().joined(separator: ",")
+            return "\(goal.id.uuidString):\(goal.title):\(targets):\(kws)"
+        }.sorted().joined(separator: "|")
+        return String(parts.hashValue)
+    }
+
+    private func loadCache(for goals: [ChatGoal]) -> [String: Match] {
+        let defaults = UserDefaults.standard
+        let currentHash = goalsHash(goals)
+        let storedHash = defaults.string(forKey: cacheHashKey)
+        guard storedHash == currentHash,
+              let data = defaults.data(forKey: cacheKey),
+              let decoded = try? JSONDecoder().decode([String: Match].self, from: data)
+        else { return [:] }
+        return decoded
+    }
+
+    private func saveCache(_ cache: [String: Match], for goals: [ChatGoal]) {
+        let defaults = UserDefaults.standard
+        defaults.set(goalsHash(goals), forKey: cacheHashKey)
+        if let data = try? JSONEncoder().encode(cache) {
+            defaults.set(data, forKey: cacheKey)
+        }
+    }
+
+    /// 캐시를 강제로 비운다 (목표 리스트 변경 등).
+    func invalidateCache() {
+        let defaults = UserDefaults.standard
+        defaults.removeObject(forKey: cacheKey)
+        defaults.removeObject(forKey: cacheHashKey)
     }
 
     // MARK: - 키워드 매칭 (동기)
@@ -51,19 +94,27 @@ final class GoalActivityClassifier {
     // MARK: - 통합 분류 (키워드 → AI fallback)
 
     /// 활동들을 일괄 분류한다.
-    /// - 키워드로 매칭되는 건 바로 결과에 추가 (AI 호출 없음)
-    /// - 미매칭은 5개씩 묶어 Claude로 배치 분류
+    /// - 캐시 적중: 바로 반환 (AI 호출 없음)
+    /// - 키워드 매칭: 즉시 결과에 추가
+    /// - 미매칭: 5개씩 묶어 Claude로 배치 분류
+    /// 결과는 캐시에 저장되어 다음 호출 시 재사용된다.
     func classify(_ activities: [Activity], against goals: [ChatGoal]) async -> [Match] {
         guard !goals.isEmpty, !activities.isEmpty else {
             return activities.map { Match(activityID: $0.id, goalID: nil, source: .none) }
         }
 
+        var cache = loadCache(for: goals)
         var results: [Match] = []
         var pendingAI: [Activity] = []
 
         for activity in activities {
+            if let cached = cache[activity.id] {
+                results.append(cached)
+                continue
+            }
             let quick = classifyByKeyword(activity, against: goals)
             if quick.goalID != nil {
+                cache[activity.id] = quick
                 results.append(quick)
             } else {
                 pendingAI.append(activity)
@@ -71,8 +122,14 @@ final class GoalActivityClassifier {
         }
 
         if !pendingAI.isEmpty {
-            results.append(contentsOf: await classifyByAI(pendingAI, against: goals))
+            let aiMatches = await classifyByAI(pendingAI, against: goals)
+            for match in aiMatches {
+                cache[match.activityID] = match
+            }
+            results.append(contentsOf: aiMatches)
         }
+
+        saveCache(cache, for: goals)
         return results
     }
 
