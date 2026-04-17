@@ -56,6 +56,43 @@ git branch -d release/v1.x.x
 git push origin develop
 ```
 
+### 3-1. Sparkle 자동 업데이트 릴리스
+
+배포 후 기존 사용자가 재설치 없이 업데이트 받을 수 있게 하는 절차.
+
+**최초 1회 — 키 생성 (이 작업은 한 번만):**
+```bash
+swift build               # Sparkle 아티팩트 내려받기
+.build/artifacts/sparkle/Sparkle/bin/generate_keys
+# 출력된 공개키(SUPublicEDKey)를 Planit/Info.plist에 붙여넣기
+# 개인키는 macOS Keychain에 자동 저장됨 — 절대 커밋·공유 금지
+```
+
+**매 릴리스:**
+```bash
+# 1. 서명/공증 환경변수 준비
+export DEVELOPER_ID="Developer ID Application: ... (TEAM_ID)"
+export NOTARIZE_TEAM_ID="..."
+export NOTARIZE_APPLE_ID="..."
+export NOTARIZE_PASSWORD="..."
+
+# 2. 빌드 + EdDSA 서명 + appcast.xml 갱신
+scripts/release-sparkle.sh 0.1.26 "릴리스 노트 내용"
+
+# 3. GitHub Release 생성 + zip/dmg 업로드
+gh release create v0.1.26 \
+    .build/apple/Products/Release/Calen-0.1.26-universal.zip \
+    .build/apple/Products/Release/Calen-0.1.26-universal.dmg \
+    --title "v0.1.26" --notes "릴리스 노트"
+
+# 4. appcast 커밋 & 푸시 → GitHub Pages 반영
+git add docs/appcast.xml
+git commit -m "release: v0.1.26 appcast"
+git push
+```
+
+기존 사용자는 앱 실행 중 Sparkle이 백그라운드로 `docs/appcast.xml`을 확인하고 "업데이트가 있습니다" 다이얼로그를 띄운 뒤 다운로드·설치·자동 재시작까지 처리합니다.
+
 ### 4. 핫픽스 (프로덕션 긴급 패치)
 ```bash
 git checkout main
