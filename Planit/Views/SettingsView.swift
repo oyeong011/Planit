@@ -110,7 +110,7 @@ struct SettingsView: View {
             HStack(spacing: 10) {
                 Image(systemName: section.icon)
                     .frame(width: 20)
-                    .foregroundStyle(selectedSection == section ? .purple : .secondary)
+                    .foregroundStyle(selectedSection == section ? calendarThemeService.current.accent : .secondary)
                 Text(section.localizedTitle)
                     .font(.system(size: 13, weight: selectedSection == section ? .semibold : .regular))
                     .foregroundStyle(selectedSection == section ? .primary : .secondary)
@@ -120,7 +120,7 @@ struct SettingsView: View {
             .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 7)
-                    .fill(selectedSection == section ? Color.purple.opacity(0.12) : Color.clear)
+                    .fill(selectedSection == section ? calendarThemeService.current.accent.opacity(0.12) : Color.clear)
             )
             .contentShape(Rectangle())
         }
@@ -189,7 +189,7 @@ struct SettingsView: View {
             VStack(spacing: 4) {
                 Image(systemName: energyTypeIcon(type))
                     .font(.system(size: 18))
-                    .foregroundStyle(profile.energyType == type ? .purple : .secondary)
+                    .foregroundStyle(profile.energyType == type ? calendarThemeService.current.accent : .secondary)
                 Text(type.localizedTitle)
                     .font(.system(size: 12, weight: profile.energyType == type ? .semibold : .regular))
                     .foregroundStyle(profile.energyType == type ? .primary : .secondary)
@@ -198,11 +198,11 @@ struct SettingsView: View {
             .padding(.vertical, 12)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(profile.energyType == type ? Color.purple.opacity(0.12) : Color.platformControl)
+                    .fill(profile.energyType == type ? calendarThemeService.current.accent.opacity(0.12) : Color.platformControl)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
-                    .stroke(profile.energyType == type ? Color.purple.opacity(0.4) : Color.clear, lineWidth: 1.5)
+                    .stroke(profile.energyType == type ? calendarThemeService.current.accent.opacity(0.4) : Color.clear, lineWidth: 1.5)
             )
             .contentShape(Rectangle())
         }
@@ -224,7 +224,7 @@ struct SettingsView: View {
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: profile.aggressiveness == mode ? "largecircle.fill.circle" : "circle")
-                    .foregroundStyle(profile.aggressiveness == mode ? .purple : .secondary)
+                    .foregroundStyle(profile.aggressiveness == mode ? calendarThemeService.current.accent : .secondary)
                     .font(.system(size: 16))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(mode.localizedTitle)
@@ -239,7 +239,7 @@ struct SettingsView: View {
             .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(profile.aggressiveness == mode ? Color.purple.opacity(0.08) : Color.clear)
+                    .fill(profile.aggressiveness == mode ? calendarThemeService.current.accent.opacity(0.08) : Color.clear)
             )
             .contentShape(Rectangle())
         }
@@ -292,13 +292,13 @@ struct SettingsView: View {
                         Spacer()
                         Text(verbatim: String(format: String(localized: "settings.commute.minutes.format"), profile.commuteMinutes))
                             .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                            .foregroundStyle(.purple)
+                            .foregroundStyle(calendarThemeService.current.accent)
                     }
                     Slider(value: Binding(
                         get: { Double(profile.commuteMinutes) },
                         set: { profile.commuteMinutes = Int($0); autosave() }
                     ), in: 0...120, step: 5)
-                    .accentColor(.purple)
+                    .accentColor(calendarThemeService.current.accent)
                     Text(verbatim: String(format: String(localized: "settings.commute.roundtrip.format"), profile.commuteMinutes * 2))
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -344,13 +344,13 @@ struct SettingsView: View {
                 let m = value.wrappedValue % 60
                 Text(verbatim: m == 0 ? String(format: String(localized: "settings.capacity.hours.format"), h) : String(format: String(localized: "settings.capacity.hours.minutes.format"), h, m))
                     .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(.purple)
+                    .foregroundStyle(calendarThemeService.current.accent)
             }
             Slider(value: Binding(
                 get: { Double(value.wrappedValue) },
                 set: { value.wrappedValue = Int($0); autosave() }
             ), in: 60...480, step: 30)
-            .accentColor(.purple)
+            .accentColor(calendarThemeService.current.accent)
         }
     }
 
@@ -398,7 +398,7 @@ struct SettingsView: View {
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
-                    .foregroundStyle(isSelected ? .purple : .secondary)
+                    .foregroundStyle(isSelected ? calendarThemeService.current.accent : .secondary)
                     .font(.system(size: 16))
 
                 VStack(alignment: .leading, spacing: 3) {
@@ -433,11 +433,11 @@ struct SettingsView: View {
             .padding(12)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(isSelected ? Color.purple.opacity(0.08) : Color.platformControl.opacity(0.5))
+                    .fill(isSelected ? calendarThemeService.current.accent.opacity(0.08) : Color.platformControl.opacity(0.5))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
-                    .stroke(isSelected ? Color.purple.opacity(0.35) : Color.clear, lineWidth: 1.5)
+                    .stroke(isSelected ? calendarThemeService.current.accent.opacity(0.35) : Color.clear, lineWidth: 1.5)
             )
             .contentShape(Rectangle())
         }
@@ -453,7 +453,7 @@ struct SettingsView: View {
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
-                    .foregroundStyle(isSelected ? .purple : .secondary)
+                    .foregroundStyle(isSelected ? calendarThemeService.current.accent : .secondary)
                     .font(.system(size: 16))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(tone.localizedTitle)
@@ -468,7 +468,7 @@ struct SettingsView: View {
             .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(isSelected ? Color.purple.opacity(0.08) : Color.clear)
+                    .fill(isSelected ? calendarThemeService.current.accent.opacity(0.08) : Color.clear)
             )
             .contentShape(Rectangle())
         }
@@ -757,7 +757,7 @@ struct SettingsView: View {
                     contextHowItWorksRow(icon: "magnifyingglass.circle", color: .orange,
                         title: String(localized: "settings.context.how.search"),
                         desc: String(localized: "settings.context.how.search.desc"))
-                    contextHowItWorksRow(icon: "brain", color: .purple,
+                    contextHowItWorksRow(icon: "brain", color: calendarThemeService.current.accent,
                         title: String(localized: "settings.context.how.recommend"),
                         desc: String(localized: "settings.context.how.recommend.desc"))
                     contextHowItWorksRow(icon: "checkmark.square", color: .green,
@@ -1013,18 +1013,18 @@ struct SettingsView: View {
                                 if isCurrent {
                                     Image(systemName: "checkmark")
                                         .font(.system(size: 10, weight: .semibold))
-                                        .foregroundStyle(.purple)
+                                        .foregroundStyle(calendarThemeService.current.accent)
                                 }
                             }
                             .padding(.horizontal, 10)
                             .padding(.vertical, 7)
                             .background(
                                 RoundedRectangle(cornerRadius: 8)
-                                    .fill(isCurrent ? Color.purple.opacity(0.12) : Color.platformControl)
+                                    .fill(isCurrent ? calendarThemeService.current.accent.opacity(0.12) : Color.platformControl)
                             )
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
-                                    .stroke(isCurrent ? Color.purple.opacity(0.4) : Color.clear, lineWidth: 1.5)
+                                    .stroke(isCurrent ? calendarThemeService.current.accent.opacity(0.4) : Color.clear, lineWidth: 1.5)
                             )
                             .contentShape(Rectangle())
                         }
@@ -1060,7 +1060,7 @@ struct SettingsView: View {
             HStack(spacing: 8) {
                 Image(systemName: icon)
                     .font(.title2)
-                    .foregroundStyle(.purple)
+                    .foregroundStyle(calendarThemeService.current.accent)
                 Text(title)
                     .font(.title2.bold())
             }
