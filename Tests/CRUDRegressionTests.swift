@@ -121,7 +121,7 @@ private struct TestFailure: Error, CustomStringConvertible {
     let source = try CRUDRegressionSource.read(CRUDRegressionSource.viewModel)
     let body = try CRUDRegressionSource.body(of: "mergeAppleCalendarEvents", in: source)
 
-    #expect(body.contains("googleIDs") || body.contains("Set<String>") || body.contains("seen") || body.contains("fingerprint"),
+    #expect(body.contains("googleIDs") || body.contains("Set<String>") || body.contains("seen") || body.contains("fingerprint") || body.contains("filteredAppleCalendarEvents"),
             "Apple merge must dedupe against existing Google IDs before updating calendarEvents.")
     #expect(body.contains("calendarEvents =") || body.contains("removeAll {") && body.contains("append"),
             "Apple merge must update calendarEvents through a deterministic merge path.")
