@@ -14,6 +14,7 @@ final class UpdaterService: NSObject, ObservableObject {
 
     private var controller: SPUStandardUpdaterController!
     private var pollTimer: Timer?
+    private var isPollingAppcast = false
     /// 같은 버전에 대해 알림이 매 체크마다 재발송되지 않도록 유지.
     private var lastNotifiedVersion: String?
 
@@ -48,6 +49,11 @@ final class UpdaterService: NSObject, ObservableObject {
     /// `didFindValidUpdate` delegate를 호출하지 않는 케이스가 있어 배너가 안 뜬다.
     /// 이 경로는 Sparkle에 의존하지 않고 직접 XML을 파싱해 Publisher를 갱신한다.
     func pollAppcastForBanner() async {
+        guard !isPollingAppcast else { return }
+        // Periodic polling and popover onAppear can overlap; keep only one appcast request active.
+        isPollingAppcast = true
+        defer { isPollingAppcast = false }
+
         guard let feedURLString = Bundle.main.object(forInfoDictionaryKey: "SUFeedURL") as? String,
               let feedURL = URL(string: feedURLString) else { return }
         var request = URLRequest(url: feedURL, cachePolicy: .reloadIgnoringLocalCacheData)

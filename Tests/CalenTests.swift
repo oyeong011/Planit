@@ -1383,6 +1383,49 @@ struct TestCachedEventFull: Codable, Identifiable {
     #expect(deduped.isEmpty)
 }
 
+@Test func dayItemOrdering_appliesManualOrderAndKeepsRemindersLast() {
+    let categoryID = UUID(uuidString: "00000000-0000-0000-0000-000000000111")!
+    let start = Date(timeIntervalSince1970: 1_700_000_000)
+    let event = CalendarEvent(
+        id: "event-1",
+        title: "Event",
+        startDate: start,
+        endDate: start.addingTimeInterval(3_600),
+        color: .blue,
+        isAllDay: false,
+        calendarName: "Google",
+        calendarID: "google:primary",
+        source: .google
+    )
+    let todo = TodoItem(
+        id: UUID(uuidString: "00000000-0000-0000-0000-000000000222")!,
+        title: "Todo",
+        categoryID: categoryID,
+        date: start.addingTimeInterval(7_200)
+    )
+    let reminder = TodoItem(
+        id: UUID(uuidString: "00000000-0000-0000-0000-000000000333")!,
+        title: "Reminder",
+        categoryID: categoryID,
+        date: start,
+        source: .appleReminder,
+        appleReminderIdentifier: "reminder-1"
+    )
+
+    let ordered = CalendarViewModel.orderedDayItems(
+        events: [event],
+        localTodos: [todo],
+        reminders: [reminder],
+        order: ["todo:\(todo.id.uuidString)", "event:event-1"]
+    )
+
+    #expect(ordered.map(\.id) == [
+        "todo:\(todo.id.uuidString)",
+        "event:event-1",
+        "todo:\(reminder.id.uuidString)",
+    ])
+}
+
 @Test func moveCalendarEvent_googleReplacesOldDateForSameEventID() {
     let oldStart = Date(timeIntervalSince1970: 1_700_000_000)
     let newStart = oldStart.addingTimeInterval(86_400)

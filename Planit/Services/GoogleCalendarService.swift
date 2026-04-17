@@ -21,6 +21,11 @@ final class GoogleCalendarService {
 
     /// 세션 캐시: 한 번 불러온 캘린더 목록 재사용 (로그아웃 시 clearCache() 호출)
     private var cachedCalendars: [GoogleCalendarInfo]? = nil
+    private struct EventFetchInFlight {
+        let id: UUID
+        let task: Task<[CalendarEvent], Error>
+    }
+    private var inFlightEventFetches: [String: EventFetchInFlight] = [:]
 
     init(auth: GoogleAuthManager) {
         self.auth = auth
@@ -41,6 +46,8 @@ final class GoogleCalendarService {
 
     func clearCache() {
         cachedCalendars = nil
+        inFlightEventFetches.values.forEach { $0.task.cancel() }
+        inFlightEventFetches.removeAll()
         needsReauth = false
     }
 
@@ -166,6 +173,32 @@ final class GoogleCalendarService {
     // MARK: - List Events (모든 캘린더)
 
     func fetchEvents(for month: Date) async throws -> [CalendarEvent] {
+        let key = Self.monthKey(for: month)
+        if let inFlight = inFlightEventFetches[key] {
+            // Share identical date-range requests across views/services while the first request is running.
+            return try await inFlight.task.value
+        }
+
+        let id = UUID()
+        let task = Task { @MainActor in
+            try await self.fetchEventsUncoalesced(for: month)
+        }
+        inFlightEventFetches[key] = EventFetchInFlight(id: id, task: task)
+        do {
+            let events = try await task.value
+            if inFlightEventFetches[key]?.id == id {
+                inFlightEventFetches[key] = nil
+            }
+            return events
+        } catch {
+            if inFlightEventFetches[key]?.id == id {
+                inFlightEventFetches[key] = nil
+            }
+            throw error
+        }
+    }
+
+    private func fetchEventsUncoalesced(for month: Date) async throws -> [CalendarEvent] {
         let calendars = try await fetchCalendarList()
         guard !calendars.isEmpty else { return [] }
 
@@ -219,6 +252,13 @@ final class GoogleCalendarService {
         return allEvents.filter { seen.insert($0.id).inserted }
     }
 
+    private nonisolated static func monthKey(for month: Date) -> String {
+        let cal = Calendar.current
+        let start = cal.dateInterval(of: .month, for: month)?.start ?? month
+        let comps = cal.dateComponents([.year, .month], from: start)
+        return "\(comps.year ?? 0)-\(comps.month ?? 0)"
+    }
+
     private func fetchEventsForCalendar(calInfo: GoogleCalendarInfo, token: String, timeMin: String, timeMax: String) async throws -> [CalendarEvent] {
         guard let encoded = Self.percentEncodedPathSegment(calInfo.id) else { return [] }
 
@@ -260,7 +300,7 @@ final class GoogleCalendarService {
 
     // MARK: - Create Event
 
-    func createEvent(title: String, startDate: Date, endDate: Date, isAllDay: Bool) async throws -> CalendarEvent? {
+    func createEvent(title: String, startDate: Date, endDate: Date, isAllDay: Bool, recurrence: String? = nil) async throws -> CalendarEvent? {
         let token = try await auth.getValidToken()
         let url = URL(string: "\(baseURL)/calendars/primary/events")!
 
@@ -280,6 +320,9 @@ final class GoogleCalendarService {
             fmt.formatOptions = [.withInternetDateTime]
             body["start"] = ["dateTime": fmt.string(from: startDate), "timeZone": TimeZone.current.identifier]
             body["end"] = ["dateTime": fmt.string(from: endDate), "timeZone": TimeZone.current.identifier]
+        }
+        if let rrule = recurrence, !rrule.isEmpty {
+            body["recurrence"] = [rrule]
         }
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)

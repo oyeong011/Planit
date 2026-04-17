@@ -62,6 +62,17 @@ struct SettingsView: View {
         }
         .frame(width: 1150, height: 780)
         .background(Color.platformWindowBackground)
+        .overlay(alignment: .topTrailing) {
+            Button { saveAndDismiss() } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundStyle(.secondary)
+                    .font(.title3)
+                    .frame(width: 32, height: 32)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .padding(12)
+        }
     }
 
     // MARK: - Sidebar
@@ -72,14 +83,6 @@ struct SettingsView: View {
                 Text(String(localized: "settings.title"))
                     .font(.title2.bold())
                 Spacer()
-                Button { saveAndDismiss() } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.secondary)
-                        .font(.title3)
-                        .frame(width: 24, height: 24)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
             }
             .padding(.horizontal, 16)
             .padding(.top, 20)
