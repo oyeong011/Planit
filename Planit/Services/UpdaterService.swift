@@ -34,6 +34,35 @@ final class UpdaterService: NSObject, ObservableObject {
     func checkForUpdatesInBackground() {
         controller.updater.checkForUpdatesInBackground()
     }
+
+    /// appcast XML을 직접 받아 최신 버전을 확인하고 `updateAvailable`/`latestVersion`을 갱신.
+    /// Sparkle의 `checkForUpdatesInBackground`는 menubar(accessory) 앱에서
+    /// `didFindValidUpdate` delegate를 호출하지 않는 케이스가 있어 배너가 안 뜬다.
+    /// 이 경로는 Sparkle에 의존하지 않고 직접 XML을 파싱해 Publisher를 갱신한다.
+    func pollAppcastForBanner() async {
+        guard let feedURLString = Bundle.main.object(forInfoDictionaryKey: "SUFeedURL") as? String,
+              let feedURL = URL(string: feedURLString) else { return }
+        var request = URLRequest(url: feedURL, cachePolicy: .reloadIgnoringLocalCacheData)
+        request.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
+        guard let (data, _) = try? await URLSession.shared.data(for: request),
+              let xml = String(data: data, encoding: .utf8) else { return }
+        // appcast 규약상 첫 번째 <item>이 최신. 첫 sparkle:shortVersionString만 보면 충분.
+        let pattern = #"<sparkle:shortVersionString>([^<]+)</sparkle:shortVersionString>"#
+        guard let regex = try? NSRegularExpression(pattern: pattern),
+              let match = regex.firstMatch(in: xml, range: NSRange(xml.startIndex..., in: xml)),
+              let range = Range(match.range(at: 1), in: xml) else { return }
+        let latest = String(xml[range]).trimmingCharacters(in: .whitespacesAndNewlines)
+        let current = currentVersion
+        await MainActor.run {
+            if latest.compare(current, options: .numeric) == .orderedDescending {
+                self.updateAvailable = true
+                self.latestVersion = latest
+            } else {
+                self.updateAvailable = false
+                self.latestVersion = nil
+            }
+        }
+    }
 }
 
 // MARK: - SPUUpdaterDelegate

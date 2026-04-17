@@ -117,8 +117,11 @@ struct MainCalendarView: View {
             aiService.userContextService = userContextService
             aiService.userProfileProvider = { goalService.profile }
             refreshUserContextAnalysis()
-            // Sparkle 백그라운드 체크는 세션당 1회만. 팝오버를 자주 여닫는 사용자
-            // 환경에서 반복 호출되어 네트워크/CPU 부하가 누적되는 걸 방지.
+            // 업데이트 배너용 appcast 직접 폴링 — Sparkle의 background check가
+            // menubar(accessory) 앱에서 didFindValidUpdate delegate를 호출하지 않는
+            // 케이스가 있어 자체 경로로 확인한다. 팝오버 열 때마다 한 번씩 호출 (가벼운 HTTP GET).
+            Task { await updater.pollAppcastForBanner() }
+            // Sparkle background check는 세션당 1회. 설치 다이얼로그 UI는 그대로 유지.
             if !didTriggerUpdateCheckThisSession {
                 didTriggerUpdateCheckThisSession = true
                 updater.checkForUpdatesInBackground()
