@@ -60,5 +60,369 @@
             type="application/octet-stream" />
         <description><![CDATA[릴리스 v0.2.2]]></description>
     </item>
+            <item>
+        <title>v0.2.3</title>
+        <sparkle:version>203</sparkle:version>
+        <sparkle:shortVersionString>0.2.3</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 07:16:57 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.3/Calen-0.2.3-universal.zip"
+            sparkle:edSignature="ndLOQIvpYQ66BlZJk1rnVBv4K2BC/ZiQCuycqmbWJjfEJb4SnriWgSThQIf+VB0PdiPJse3mF9uZjodiR/PIAQ=="
+            length="5527525"
+            type="application/octet-stream" />
+        <description><![CDATA[릴리스 v0.2.3]]></description>
+    </item>
+            <item>
+        <title>v0.2.4</title>
+        <sparkle:version>204</sparkle:version>
+        <sparkle:shortVersionString>0.2.4</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 09:41:23 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.4/Calen-0.2.4-universal.zip"
+            sparkle:edSignature="rs5BCR+r/K8TRakv0EcZdyeRIeXxRofEXLTbUowtEY5PeamIi7JMniCldsMsVPVz5iChz1XopEIn92wpUuKIBg=="
+            length="5527541"
+            type="application/octet-stream" />
+        <description><![CDATA[릴리스 v0.2.4]]></description>
+    </item>
+            <item>
+        <title>v0.2.5</title>
+        <sparkle:version>205</sparkle:version>
+        <sparkle:shortVersionString>0.2.5</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 10:03:25 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.5/Calen-0.2.5-universal.zip"
+            sparkle:edSignature="7HFKc8C5gBePpvi6T5CzPBLIk4DmdNbTYU/bAxbMEGUPoHkIibZZ8NF5K3rii/nEf1UurEiofwEb2FuxWI8tCw=="
+            length="5535727"
+            type="application/octet-stream" />
+        <description><![CDATA[릴리스 v0.2.5]]></description>
+    </item>
+            <item>
+        <title>v0.2.6</title>
+        <sparkle:version>206</sparkle:version>
+        <sparkle:shortVersionString>0.2.6</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 10:10:59 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.6/Calen-0.2.6-universal.zip"
+            sparkle:edSignature="VJge+LJ54Tyh33G/TfvSf6GCeAjOhdmDO3We9en1bP5uGg0IBzU2sZZsItjUDQjiGY9DRg/Lpdy72QKKEoftCw=="
+            length="5561269"
+            type="application/octet-stream" />
+        <description><![CDATA[릴리스 v0.2.6]]></description>
+    </item>
+            <item>
+        <title>v0.2.7</title>
+        <sparkle:version>207</sparkle:version>
+        <sparkle:shortVersionString>0.2.7</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 10:44:04 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.7/Calen-0.2.7-universal.zip"
+            sparkle:edSignature="fdUmWJGNzgDNUaBlaGLxDwojYI6NxLqmFqYOYItby0iyVKaYmRjMZ7q+MZrIi4yq6/HV1vTUmcdfU/TeaSekDA=="
+            length="5580856"
+            type="application/octet-stream" />
+        <description><![CDATA[릴리스 v0.2.7]]></description>
+    </item>
+            <item>
+        <title>v0.2.8</title>
+        <sparkle:version>208</sparkle:version>
+        <sparkle:shortVersionString>0.2.8</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 11:37:36 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.8/Calen-0.2.8-universal.zip"
+            sparkle:edSignature="3TGzEZ49LlBbBsOoUjKgWlcmVW/XICfZ9AE2llrxko1Kb2QAx0FLNMcVUm7i2gSeTRtfRj0R1aUk8uqCAgjWCA=="
+            length="5632162"
+            type="application/octet-stream" />
+        <description><![CDATA[릴리스 v0.2.8]]></description>
+    </item>
+            <item>
+        <title>v0.2.9</title>
+        <sparkle:version>209</sparkle:version>
+        <sparkle:shortVersionString>0.2.9</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 11:56:29 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.9/Calen-0.2.9-universal.zip"
+            sparkle:edSignature="bOTEN+i9jJBQnGO7a9nBG2kfRBdMdeh4+aqKMI2cPXsLBYNQ8phWcGF5wS3oq8HlrjAShR5nxckxRJ8CbL9hAA=="
+            length="5641214"
+            type="application/octet-stream" />
+        <description><![CDATA[릴리스 v0.2.9]]></description>
+    </item>
+            <item>
+        <title>v0.2.10</title>
+        <sparkle:version>210</sparkle:version>
+        <sparkle:shortVersionString>0.2.10</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 12:03:26 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.10/Calen-0.2.10-universal.zip"
+            sparkle:edSignature="7zlKQ/Td3FxnvbbVkkjZ6NIyPEf5Sys0rUNIpGBKFCotzxTQfnGBgOyaM79lx9Y3hsM/7ZIr+Orl0CKzdI7TBA=="
+            length="5646790"
+            type="application/octet-stream" />
+        <description><![CDATA[릴리스 v0.2.10]]></description>
+    </item>
+            <item>
+        <title>v0.2.11</title>
+        <sparkle:version>211</sparkle:version>
+        <sparkle:shortVersionString>0.2.11</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 12:08:17 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.11/Calen-0.2.11-universal.zip"
+            sparkle:edSignature="Lt/X32v89C03ct0UdTTnbiMj1JPQKUV14prZWxuiTW3M9Q7JyBBmfLh5AmXPf/OGNhsMkz1/jAkAsuRylLHTAA=="
+            length="5646774"
+            type="application/octet-stream" />
+        <description><![CDATA[릴리스 v0.2.11]]></description>
+    </item>
+            <item>
+        <title>v0.2.11</title>
+        <sparkle:version>211</sparkle:version>
+        <sparkle:shortVersionString>0.2.11</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 12:08:36 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.11/Calen-0.2.11-universal.zip"
+            sparkle:edSignature="hEL0m0YlElyuAKyN5jSpwtxZGeJiJEqxRJvy3P42UpTTYdppYznJ+iThfhJw9zAfQgxBZOpetskFTxFJVdSDBg=="
+            length="5645760"
+            type="application/octet-stream" />
+        <description><![CDATA[## Calen v0.2.11
+
+### 설치 방법 (Homebrew, 권장)
+```bash
+brew install --cask oyeong011/calen/calen-ai
+```
+
+> 기존 `brew install --cask calen` 은 homebrew/cask의 동명 cask와 충돌해 구버전이 설치될 수 있습니다. 유니크한 `calen-ai` 를 사용하세요.
+
+### 기존 사용자 업그레이드
+이미 `calen` cask로 설치했다면 그대로 `brew upgrade --cask calen` 로도 갱신됩니다 (하위 호환 유지).
+
+### 직접 다운로드
+아래 Assets에서 DMG 파일을 받아 설치하세요.]]></description>
+    </item>
+            <item>
+        <title>v0.2.11</title>
+        <sparkle:version>211</sparkle:version>
+        <sparkle:shortVersionString>0.2.11</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 12:12:15 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.11/Calen-0.2.11-universal.zip"
+            sparkle:edSignature="LBQKTUfnm53Norl4kQbgIwJi9ZTNRfaAb8AkTR5/cZew3HD0xtvPqzO1DbQyaLaBj/ElNJHLcIoqkYQXS9peDQ=="
+            length="5645754"
+            type="application/octet-stream" />
+        <description><![CDATA[릴리스 v0.2.11]]></description>
+    </item>
+            <item>
+        <title>v0.2.12</title>
+        <sparkle:version>212</sparkle:version>
+        <sparkle:shortVersionString>0.2.12</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 12:18:57 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.12/Calen-0.2.12-universal.zip"
+            sparkle:edSignature="vvzj0DnnkDKtxNNmZSif+cbscYiLbw+80E0hQaFANMtSWNEbi9RjDqVLZ2bgbxmtsgP35D/0FVBMmG9BM3yxAg=="
+            length="5647360"
+            type="application/octet-stream" />
+        <description><![CDATA[릴리스 v0.2.12]]></description>
+    </item>
+            <item>
+        <title>v0.2.13</title>
+        <sparkle:version>213</sparkle:version>
+        <sparkle:shortVersionString>0.2.13</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 12:38:14 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.13/Calen-0.2.13-universal.zip"
+            sparkle:edSignature="GqW8Ey7EHY2f9tZnA9phaTFg1wjZdoR7cROJx9fTBl+cUKt6JMA4No8PRfgGNLK8fx5q40NT4Qw4VqlGd+oTBQ=="
+            length="5647394"
+            type="application/octet-stream" />
+        <description><![CDATA[릴리스 v0.2.13]]></description>
+    </item>
+            <item>
+        <title>v0.2.13</title>
+        <sparkle:version>213</sparkle:version>
+        <sparkle:shortVersionString>0.2.13</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 12:40:02 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.13/Calen-0.2.13-universal.zip"
+            sparkle:edSignature="QolA0tC2aAzw7f8dtOhl5xSM1Pjdy6ehT3naklYy8+6V9uVjRGbVXiwxHW4O/M1dwA2sriKffyQWqMBDXA2wBA=="
+            length="5655206"
+            type="application/octet-stream" />
+        <description><![CDATA[## Calen v0.2.13
+
+### 설치 방법 (Homebrew, 권장)
+```bash
+brew install --cask oyeong011/calen/calen-ai
+```
+
+> 기존 `brew install --cask calen` 은 homebrew/cask의 동명 cask와 충돌해 구버전이 설치될 수 있습니다. 유니크한 `calen-ai` 를 사용하세요.
+
+### 기존 사용자 업그레이드
+이미 `calen` cask로 설치했다면 그대로 `brew upgrade --cask calen` 로도 갱신됩니다 (하위 호환 유지).
+
+### 직접 다운로드
+아래 Assets에서 DMG 파일을 받아 설치하세요.]]></description>
+    </item>
+            <item>
+        <title>v0.2.13</title>
+        <sparkle:version>213</sparkle:version>
+        <sparkle:shortVersionString>0.2.13</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 12:43:53 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.13/Calen-0.2.13-universal.zip"
+            sparkle:edSignature="k8rDHosz+wtXKEPolZxdzy8QibBCC6tpkN2f3z1QEA6kkwxdjWQNQfWKr7m8OaZupx0VWBgBS8G7FHWDUpo4Ag=="
+            length="5655220"
+            type="application/octet-stream" />
+        <description><![CDATA[릴리스 v0.2.13]]></description>
+    </item>
+            <item>
+        <title>v0.2.14</title>
+        <sparkle:version>214</sparkle:version>
+        <sparkle:shortVersionString>0.2.14</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 12:48:32 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.14/Calen-0.2.14-universal.zip"
+            sparkle:edSignature="jVHJt+LIUn6VUu4WwtbOACSPxRAyTmHHWSWWY+y/CSnHuKAp0OMbHAGWE+Vjn4P80UFpnqgnR5AiLlU7s3y8Bw=="
+            length="5658262"
+            type="application/octet-stream" />
+        <description><![CDATA[릴리스 v0.2.14]]></description>
+    </item>
+            <item>
+        <title>v0.2.15</title>
+        <sparkle:version>215</sparkle:version>
+        <sparkle:shortVersionString>0.2.15</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 13:01:12 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.15/Calen-0.2.15-universal.zip"
+            sparkle:edSignature="BLMAYnp67wZV1GyThNXYA11g7c6vNOIf27F6w0216fB85fKkrYt4CXa6hqncsR/e3E3LFOalyAwCYZyL5lEKCA=="
+            length="5660253"
+            type="application/octet-stream" />
+        <description><![CDATA[릴리스 v0.2.15]]></description>
+    </item>
+            <item>
+        <title>v0.2.16</title>
+        <sparkle:version>216</sparkle:version>
+        <sparkle:shortVersionString>0.2.16</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 13:09:40 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.16/Calen-0.2.16-universal.zip"
+            sparkle:edSignature="Ph9otSWn21Vno79QfuIvAbBrMF/0ALWjJUNjMdlv+G023C+FZuRRjmzNskVosu05PjcLmaT/PriVonsiDtOjDQ=="
+            length="5660235"
+            type="application/octet-stream" />
+        <description><![CDATA[릴리스 v0.2.16]]></description>
+    </item>
+            <item>
+        <title>v0.2.16</title>
+        <sparkle:version>216</sparkle:version>
+        <sparkle:shortVersionString>0.2.16</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 13:10:13 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.16/Calen-0.2.16-universal.zip"
+            sparkle:edSignature="aDlDIHVjsHE7Os3Rf12VTynhsvf200BtTJs4XhC9t5zR7u+1VMgEKS+VWv5DO3I2IpwnMxBU9WwbNK4Q/TR0Cw=="
+            length="5666136"
+            type="application/octet-stream" />
+        <description><![CDATA[## Calen v0.2.16
+
+### 설치 방법 (Homebrew, 권장)
+```bash
+brew install --cask oyeong011/calen/calen-ai
+```
+
+> 기존 `brew install --cask calen` 은 homebrew/cask의 동명 cask와 충돌해 구버전이 설치될 수 있습니다. 유니크한 `calen-ai` 를 사용하세요.
+
+### 기존 사용자 업그레이드
+이미 `calen` cask로 설치했다면 그대로 `brew upgrade --cask calen` 로도 갱신됩니다 (하위 호환 유지).
+
+### 직접 다운로드
+아래 Assets에서 DMG 파일을 받아 설치하세요.]]></description>
+    </item>
+            <item>
+        <title>v0.2.16</title>
+        <sparkle:version>216</sparkle:version>
+        <sparkle:shortVersionString>0.2.16</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 13:14:00 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.16/Calen-0.2.16-universal.zip"
+            sparkle:edSignature="xbkS2oEN/wA0NHdCuxeG4BtnccIKAVAHqTFSDj2IOAxy3d1qS0AD03f3Omvvc+YRS6MIBWNA2gBo9K46YDi7CQ=="
+            length="5666137"
+            type="application/octet-stream" />
+        <description><![CDATA[릴리스 v0.2.16]]></description>
+    </item>
+            <item>
+        <title>v0.2.17</title>
+        <sparkle:version>217</sparkle:version>
+        <sparkle:shortVersionString>0.2.17</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 13:15:21 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.17/Calen-0.2.17-universal.zip"
+            sparkle:edSignature="eIAfkobv45gbvc9p0h73jB58u89HJl5eR45ZAbq3aExdSm4YJ2s/B39Um8ggxpBz01UiozC2lO1y90/8gqtWCA=="
+            length="5666101"
+            type="application/octet-stream" />
+        <description><![CDATA[릴리스 v0.2.17]]></description>
+    </item>
+            <item>
+        <title>v0.2.17</title>
+        <sparkle:version>217</sparkle:version>
+        <sparkle:shortVersionString>0.2.17</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 13:15:49 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.17/Calen-0.2.17-universal.zip"
+            sparkle:edSignature="E+9/H+FcJMTJOsxTg/UQfwxObXycIkWv//sfzp44eMvprvI2xjYeX9zM8SQQpEniI1MjTMkhB65yUJuuwCvDCA=="
+            length="5666127"
+            type="application/octet-stream" />
+        <description><![CDATA[## Calen v0.2.17
+
+### 설치 방법 (Homebrew, 권장)
+```bash
+brew install --cask oyeong011/calen/calen-ai
+```
+
+> 기존 `brew install --cask calen` 은 homebrew/cask의 동명 cask와 충돌해 구버전이 설치될 수 있습니다. 유니크한 `calen-ai` 를 사용하세요.
+
+### 기존 사용자 업그레이드
+이미 `calen` cask로 설치했다면 그대로 `brew upgrade --cask calen` 로도 갱신됩니다 (하위 호환 유지).
+
+### 직접 다운로드
+아래 Assets에서 DMG 파일을 받아 설치하세요.]]></description>
+    </item>
+            <item>
+        <title>v0.2.17</title>
+        <sparkle:version>217</sparkle:version>
+        <sparkle:shortVersionString>0.2.17</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 13:18:50 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.17/Calen-0.2.17-universal.zip"
+            sparkle:edSignature="q4TQjcQRZY3m4PvFNAm2IjkP//3ZtV5WPhRgdX0y40ydMc3zEhLN64DS2GGLJGMI6m0hrz0CXForiEKaCKyyCA=="
+            length="5666127"
+            type="application/octet-stream" />
+        <description><![CDATA[릴리스 v0.2.17]]></description>
+    </item>
+            <item>
+        <title>v0.2.18</title>
+        <sparkle:version>218</sparkle:version>
+        <sparkle:shortVersionString>0.2.18</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 13:38:35 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.18/Calen-0.2.18-universal.zip"
+            sparkle:edSignature="CvVbD1e4GwewjAxT5CA6M+Nq8zDzNUQrDwrJYi+rMu1JdlEis02ClAiV+ZwdzZjspkrvO+6xkyy1UJ/ItWY/DQ=="
+            length="5673577"
+            type="application/octet-stream" />
+        <description><![CDATA[릴리스 v0.2.18]]></description>
+    </item>
     </channel>
 </rss>
