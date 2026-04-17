@@ -53,6 +53,13 @@ final class SmartSchedulerService {
 
     private let calendar = Calendar.current
 
+    /// SettingsView의 스케줄 설정은 GoalService.profile에 저장되고,
+    /// AIService가 채팅/자동 배치 전에 이 메서드로 SmartScheduler에 주입한다.
+    func apply(profile: UserProfile) {
+        workdayStartHour = max(0, min(23, profile.workStartHour))
+        workdayEndHour = max(workdayStartHour + 1, min(23, profile.workEndHour))
+    }
+
     // MARK: - Free Slot Analysis
 
     /// 특정 날짜의 근무 시간 내 빈 슬롯 목록 반환

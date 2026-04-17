@@ -108,6 +108,8 @@ else
     echo "⚠️  DEVELOPER_ID not set — skipping code signing (unsigned build)"
 fi
 
+"$PROJECT_DIR/scripts/sparkle-static-check.sh" "$APP_BUNDLE"
+
 # 4. Create zip (공증 제출용)
 echo "→ Creating zip..."
 cd "$BUILD_DIR"

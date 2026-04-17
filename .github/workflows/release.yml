@@ -133,6 +133,9 @@ jobs:
             "$APP_BUNDLE"
           codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE"
 
+      - name: Sparkle static check
+        run: scripts/sparkle-static-check.sh "$APP_BUNDLE"
+
       - name: Create zip for notarization
         env:
           VERSION: ${{ steps.version.outputs.VERSION }}

@@ -113,7 +113,12 @@ final class TomorrowPlannerService: ObservableObject {
         for var item in candidates {
             guard usedMinutes + item.duration <= capacityMinutes else { break }
 
-            if let slot = assignSlot(for: item, from: remainingSlots, energyType: profile.energyType) {
+            if let slot = assignSlot(
+                for: item,
+                from: remainingSlots,
+                energyType: profile.energyType,
+                useFocusWindows: profile.usesFocusWindowsForAI
+            ) {
                 item.assignedStart = slot.start
                 item.assignedEnd = slot.end
                 scheduled.append(item)
@@ -360,16 +365,23 @@ final class TomorrowPlannerService: ObservableObject {
 
     // MARK: - Slot Assignment
 
-    private func assignSlot(for item: PlannedItem, from slots: [TimeSlot], energyType: EnergyType) -> TimeSlot? {
+    private func assignSlot(
+        for item: PlannedItem,
+        from slots: [TimeSlot],
+        energyType: EnergyType,
+        useFocusWindows: Bool
+    ) -> TimeSlot? {
         let duration = TimeInterval(item.duration * 60)
 
         // Prefer slots matching preferred time tags aligned with energy type
-        let deepSlots = energyType.deepSlots
-        let preferred = slots.filter { slot in
-            slot.available >= duration && item.preferredTimeTags.contains(slot.tag) && deepSlots.contains(slot.tag)
-        }
-        if let slot = preferred.first {
-            return TimeSlot(start: slot.start, end: slot.start.addingTimeInterval(duration), tag: slot.tag)
+        if useFocusWindows {
+            let deepSlots = energyType.deepSlots
+            let preferred = slots.filter { slot in
+                slot.available >= duration && item.preferredTimeTags.contains(slot.tag) && deepSlots.contains(slot.tag)
+            }
+            if let slot = preferred.first {
+                return TimeSlot(start: slot.start, end: slot.start.addingTimeInterval(duration), tag: slot.tag)
+            }
         }
 
         // Second preference: just matching preferred time tags

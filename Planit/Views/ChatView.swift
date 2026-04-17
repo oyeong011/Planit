@@ -19,7 +19,7 @@ struct ChatView: View {
     /// 허용하는 파일 타입
     private static let allowedTypes: [UTType] = [.pdf]
     private static let maxAttachments = 5
-    private static let maxFileSize: Int = 20_971_520  // 20MB
+    private static let maxFileSize: Int = AttachmentSecurity.maxAttachmentBytes
 
     var body: some View {
         VStack(spacing: 0) {
@@ -410,6 +410,11 @@ struct ChatView: View {
                             actionApprovalCard
                                 .id("approval")
                         }
+
+                        if aiService.externalContextPreview != nil {
+                            externalContextApprovalCard
+                                .id("external-context-approval")
+                        }
                     }
                     .padding(.horizontal, 8)
                     .padding(.vertical, 8)
@@ -619,13 +624,7 @@ struct ChatView: View {
     private func addAttachment(url: URL) {
         guard attachments.count < Self.maxAttachments else { return }
 
-        let ext = url.pathExtension.lowercased()
-        let imageExts = ["png", "jpg", "jpeg", "gif", "webp", "tiff", "bmp", "heic"]
-        guard imageExts.contains(ext) || ext == "pdf" else { return }
-
-        // 파일 크기 제한
-        if let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
-           let size = attrs[.size] as? Int, size > Self.maxFileSize { return }
+        guard AttachmentSecurity.validateFile(url: url, maxBytes: Self.maxFileSize) != nil else { return }
 
         // 중복 방지
         guard !attachments.contains(where: { $0.url == url }) else { return }
@@ -646,6 +645,57 @@ struct ChatView: View {
     }
 
     // MARK: - Action Approval Card
+
+    private var externalContextApprovalCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: "lock.shield.fill")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.blue)
+                Text("AI 컨텍스트 전송 승인")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(.blue)
+                Spacer()
+            }
+
+            Text("캘린더, 목표, 첨부 파일 정보가 선택한 CLI 제공자에게 전송됩니다. 민감한 이름의 캘린더는 제외됩니다.")
+                .font(.system(size: 10))
+                .foregroundStyle(.secondary)
+
+            if let preview = aiService.externalContextPreview {
+                ScrollView {
+                    Text(preview)
+                        .font(.system(size: 9, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(maxHeight: 140)
+                .padding(6)
+                .background(RoundedRectangle(cornerRadius: 6).fill(Color.secondary.opacity(0.08)))
+            }
+
+            Button {
+                aiService.grantExternalContextConsent()
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 9, weight: .bold))
+                    Text("승인하고 계속")
+                        .font(.system(size: 10, weight: .semibold))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 5)
+                .background(RoundedRectangle(cornerRadius: 6).fill(.blue))
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 8).fill(Color.platformControlBackground))
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.blue.opacity(0.25), lineWidth: 1))
+    }
 
     private var actionApprovalCard: some View {
         let hasDelete = aiService.pendingActions.contains { $0.action == "delete" }
