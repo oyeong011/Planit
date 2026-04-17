@@ -114,6 +114,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         checkItem.target = self
         menu.addItem(checkItem)
 
+        let feedbackItem = NSMenuItem(title: "피드백 보내기...", action: #selector(sendFeedback), keyEquivalent: "")
+        feedbackItem.target = self
+        feedbackItem.image = NSImage(systemSymbolName: "envelope", accessibilityDescription: nil)
+        menu.addItem(feedbackItem)
+
         menu.addItem(.separator())
 
         let relaunch = NSMenuItem(title: "재시작", action: #selector(relaunchApp), keyEquivalent: "r")
@@ -132,6 +137,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     /// Sparkle 업데이트 다이얼로그 트리거
     @objc private func checkForUpdates() {
         updater.checkForUpdates()
+    }
+
+    @objc private func sendFeedback() {
+        let version = updater.currentVersion
+        let osVersion = ProcessInfo.processInfo.operatingSystemVersionString
+        let subject = "Calen v\(version) 피드백"
+        let body = """
+
+            ---
+            앱 버전: \(version)
+            macOS: \(osVersion)
+            """
+        let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let encodedBody = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        if let url = URL(string: "mailto:oyeong011@gmail.com?subject=\(encodedSubject)&body=\(encodedBody)") {
+            NSWorkspace.shared.open(url)
+        }
     }
 
     /// 앱 재시작 (업데이트 적용 또는 단순 재시작)
