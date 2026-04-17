@@ -1288,6 +1288,82 @@ struct TestCachedEventFull: Codable, Identifiable {
     #expect(deduped.map(\.id) == ["google-created"])
 }
 
+@Test func moveTodo_dropsStaleGoogleMirrorFromOldDate() {
+    let oldStart = Date(timeIntervalSince1970: 1_700_000_000)
+    let staleGoogleMirror = CalendarEvent(
+        id: "google-todo-mirror",
+        title: "Moved todo",
+        startDate: oldStart,
+        endDate: oldStart.addingTimeInterval(86_400),
+        color: .blue,
+        isAllDay: true,
+        calendarName: "Google",
+        calendarID: "google:primary",
+        source: .google
+    )
+
+    let deduped = CalendarViewModel.deduplicatedCalendarEvents(
+        [staleGoogleMirror],
+        todoGoogleEventIDs: ["google-todo-mirror"]
+    )
+
+    #expect(deduped.isEmpty)
+}
+
+@Test func moveCalendarEvent_googleReplacesOldDateForSameEventID() {
+    let oldStart = Date(timeIntervalSince1970: 1_700_000_000)
+    let newStart = oldStart.addingTimeInterval(86_400)
+    let oldEvent = CalendarEvent(
+        id: "google-move-1",
+        title: "Move me",
+        startDate: oldStart,
+        endDate: oldStart.addingTimeInterval(3_600),
+        color: .blue,
+        isAllDay: false,
+        calendarName: "Google",
+        calendarID: "google:primary",
+        source: .google
+    )
+    var movedEvent = oldEvent
+    movedEvent.startDate = newStart
+    movedEvent.endDate = newStart.addingTimeInterval(3_600)
+
+    let deduped = CalendarViewModel.deduplicatedCalendarEvents(
+        [oldEvent, movedEvent],
+        todoGoogleEventIDs: []
+    )
+
+    #expect(deduped.count == 1)
+    #expect(deduped.first?.startDate == newStart)
+}
+
+@Test func moveCalendarEvent_appleReplacesOldDateForSameEventID() {
+    let oldStart = Date(timeIntervalSince1970: 1_700_000_000)
+    let newStart = oldStart.addingTimeInterval(86_400)
+    let oldEvent = CalendarEvent(
+        id: "apple-EK-move-1",
+        title: "Move me",
+        startDate: oldStart,
+        endDate: oldStart.addingTimeInterval(3_600),
+        color: .red,
+        isAllDay: false,
+        calendarName: "Home",
+        calendarID: "apple:home",
+        source: .apple
+    )
+    var movedEvent = oldEvent
+    movedEvent.startDate = newStart
+    movedEvent.endDate = newStart.addingTimeInterval(3_600)
+
+    let deduped = CalendarViewModel.deduplicatedCalendarEvents(
+        [oldEvent, movedEvent],
+        todoGoogleEventIDs: []
+    )
+
+    #expect(deduped.count == 1)
+    #expect(deduped.first?.startDate == newStart)
+}
+
 // ============================================================================
 // MARK: - TC-22: 파일 보안 — 디렉토리/파일 권한
 // ============================================================================

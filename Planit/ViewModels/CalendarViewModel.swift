@@ -287,7 +287,7 @@ final class CalendarViewModel: ObservableObject {
             if let existingIndex = result.firstIndex(where: { existing in
                 existing.id == event.id || areCalendarMirrors(existing, event)
             }) {
-                if shouldPreferCalendarEvent(event, over: result[existingIndex]) {
+                if result[existingIndex].id == event.id || shouldPreferCalendarEvent(event, over: result[existingIndex]) {
                     result[existingIndex] = event
                 }
             } else {
@@ -411,9 +411,15 @@ final class CalendarViewModel: ObservableObject {
         guard appleCalendarEnabled, appleCalendarAccessGranted else { return }
         let appleEvents = fetchLocalCalendarEvents(for: month)
         var merged = calendarEvents.filter { $0.source != .apple }
+        let existingNonAppleCount = merged.count
         merged.append(contentsOf: appleEvents)
         let todoEventIds = Set(todos.compactMap { $0.googleEventId })
-        calendarEvents = Self.deduplicatedCalendarEvents(merged, todoGoogleEventIDs: todoEventIds)
+        let deduped = Self.deduplicatedCalendarEvents(merged, todoGoogleEventIDs: todoEventIds)
+        let seenIDs = Set(deduped.map(\.id))
+        PlanitLoggers.sync.info(
+            "Merged Apple events month=\(Self.logDate(month), privacy: .public) existingNonApple=\(existingNonAppleCount, privacy: .public) apple=\(appleEvents.count, privacy: .public) deduped=\(deduped.count, privacy: .public) uniqueIDs=\(seenIDs.count, privacy: .public)"
+        )
+        calendarEvents = deduped
         applyEventCategoryMappings()
     }
 
@@ -644,6 +650,9 @@ final class CalendarViewModel: ObservableObject {
                 }
                 let todoEventIds = Set(self.todos.compactMap { $0.googleEventId })
                 let deduped = Self.deduplicatedCalendarEvents(merged, todoGoogleEventIDs: todoEventIds)
+                PlanitLoggers.sync.info(
+                    "Fetched Google events month=\(Self.logDate(month), privacy: .public) raw=\(merged.count, privacy: .public) deduped=\(deduped.count, privacy: .public) todoMirrors=\(todoEventIds.count, privacy: .public)"
+                )
                 self.calendarEvents = deduped
                 self.isOffline = false
                 self.needsReauth = googleService.needsReauth
@@ -695,6 +704,9 @@ final class CalendarViewModel: ObservableObject {
     func updateGoogleEvent(eventID: String, calendarID: String = "google:primary", title: String, startDate: Date, endDate: Date, isAllDay: Bool) {
         Task {
             do {
+                PlanitLoggers.sync.info(
+                    "Updating Google event eventID=\(eventID, privacy: .public) calendarID=\(calendarID, privacy: .public) start=\(Self.logDate(startDate), privacy: .public) end=\(Self.logDate(endDate), privacy: .public) allDay=\(isAllDay, privacy: .public)"
+                )
                 if try await googleService.updateEvent(eventID: eventID, calendarID: calendarID, title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay) == false {
                     recordCRUDFailure(operation: .update, source: .google, eventID: eventID)
                 }
@@ -846,7 +858,11 @@ final class CalendarViewModel: ObservableObject {
             )
         }
         let todoEventIds = Set(todos.compactMap { $0.googleEventId })
-        calendarEvents = Self.deduplicatedCalendarEvents(localEvents, todoGoogleEventIDs: todoEventIds)
+        let deduped = Self.deduplicatedCalendarEvents(localEvents, todoGoogleEventIDs: todoEventIds)
+        PlanitLoggers.sync.info(
+            "Fetched EventKit events month=\(Self.logDate(month), privacy: .public) raw=\(localEvents.count, privacy: .public) deduped=\(deduped.count, privacy: .public)"
+        )
+        calendarEvents = deduped
         applyEventCategoryMappings()
     }
 
@@ -883,26 +899,48 @@ final class CalendarViewModel: ObservableObject {
             events: calendarEvents,
             googleAuthenticated: authManager.isAuthenticated
         )
-        if source == .google {
+        PlanitLoggers.sync.info(
+            "Routing calendar update eventID=\(eventID, privacy: .public) calendarID=\(calendarID, privacy: .public) source=\(source.rawValue, privacy: .public)"
+        )
+        switch source {
+        case .google:
             guard authManager.isAuthenticated else { return false }
             updateGoogleEvent(eventID: eventID, calendarID: calendarID, title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
             return true
-        }
-        guard let ekEvent = eventKitEvent(withIdentifier: eventID) else {
-            recordCRUDFailure(operation: .update, source: .local, eventID: eventID)
-            return false
-        }
-        ekEvent.title = title
-        ekEvent.startDate = startDate
-        ekEvent.endDate = endDate
-        ekEvent.isAllDay = isAllDay
-        do {
-            try eventStore.save(ekEvent, span: .thisEvent)
-            refreshAfterEventKitMutation()
-            return true
-        } catch {
-            recordCRUDFailure(operation: .update, source: .local, eventID: eventID, error: error)
-            return false
+        case .apple:
+            guard let ekEvent = eventKitEvent(withIdentifier: eventID) else {
+                recordCRUDFailure(operation: .update, source: .apple, eventID: eventID)
+                return false
+            }
+            ekEvent.title = title
+            ekEvent.startDate = startDate
+            ekEvent.endDate = endDate
+            ekEvent.isAllDay = isAllDay
+            do {
+                try eventStore.save(ekEvent, span: .thisEvent)
+                refreshAfterEventKitMutation()
+                return true
+            } catch {
+                recordCRUDFailure(operation: .update, source: .apple, eventID: eventID, error: error)
+                return false
+            }
+        case .local:
+            guard let ekEvent = eventKitEvent(withIdentifier: eventID) else {
+                recordCRUDFailure(operation: .update, source: .local, eventID: eventID)
+                return false
+            }
+            ekEvent.title = title
+            ekEvent.startDate = startDate
+            ekEvent.endDate = endDate
+            ekEvent.isAllDay = isAllDay
+            do {
+                try eventStore.save(ekEvent, span: .thisEvent)
+                refreshAfterEventKitMutation()
+                return true
+            } catch {
+                recordCRUDFailure(operation: .update, source: .local, eventID: eventID, error: error)
+                return false
+            }
         }
     }
 
@@ -913,28 +951,49 @@ final class CalendarViewModel: ObservableObject {
             events: calendarEvents,
             googleAuthenticated: authManager.isAuthenticated
         )
-        if source == .google {
+        switch source {
+        case .google:
             guard authManager.isAuthenticated else { return false }
             deleteGoogleEvent(eventID: eventID, calendarID: calendarID)
             return true
-        }
-        guard let ekEvent = eventKitEvent(withIdentifier: eventID) else {
-            recordCRUDFailure(operation: .delete, source: .local, eventID: eventID)
-            return false
-        }
-        do {
-            try eventStore.remove(ekEvent, span: .thisEvent)
-            completedEventIDs.remove(eventID)
-            completedEventIDs.remove(Self.eventKitLookupIdentifier(for: eventID))
-            goalService?.removeCompletion(eventId: eventID)
-            goalService?.removeCompletion(eventId: Self.eventKitLookupIdentifier(for: eventID))
-            saveCompletedEvents()
-            calendarEvents.removeAll { $0.id == eventID || $0.id == Self.eventKitLookupIdentifier(for: eventID) }
-            refreshAfterEventKitMutation()
-            return true
-        } catch {
-            recordCRUDFailure(operation: .delete, source: .local, eventID: eventID, error: error)
-            return false
+        case .apple:
+            guard let ekEvent = eventKitEvent(withIdentifier: eventID) else {
+                recordCRUDFailure(operation: .delete, source: .apple, eventID: eventID)
+                return false
+            }
+            do {
+                try eventStore.remove(ekEvent, span: .thisEvent)
+                completedEventIDs.remove(eventID)
+                completedEventIDs.remove(Self.eventKitLookupIdentifier(for: eventID))
+                goalService?.removeCompletion(eventId: eventID)
+                goalService?.removeCompletion(eventId: Self.eventKitLookupIdentifier(for: eventID))
+                saveCompletedEvents()
+                calendarEvents.removeAll { $0.id == eventID || $0.id == Self.eventKitLookupIdentifier(for: eventID) }
+                refreshAfterEventKitMutation()
+                return true
+            } catch {
+                recordCRUDFailure(operation: .delete, source: .apple, eventID: eventID, error: error)
+                return false
+            }
+        case .local:
+            guard let ekEvent = eventKitEvent(withIdentifier: eventID) else {
+                recordCRUDFailure(operation: .delete, source: .local, eventID: eventID)
+                return false
+            }
+            do {
+                try eventStore.remove(ekEvent, span: .thisEvent)
+                completedEventIDs.remove(eventID)
+                completedEventIDs.remove(Self.eventKitLookupIdentifier(for: eventID))
+                goalService?.removeCompletion(eventId: eventID)
+                goalService?.removeCompletion(eventId: Self.eventKitLookupIdentifier(for: eventID))
+                saveCompletedEvents()
+                calendarEvents.removeAll { $0.id == eventID || $0.id == Self.eventKitLookupIdentifier(for: eventID) }
+                refreshAfterEventKitMutation()
+                return true
+            } catch {
+                recordCRUDFailure(operation: .delete, source: .local, eventID: eventID, error: error)
+                return false
+            }
         }
     }
 
@@ -944,6 +1003,11 @@ final class CalendarViewModel: ObservableObject {
     }
 
     private func refreshAfterEventKitMutation() {
+        let googleAuthenticated = authManager.isAuthenticated
+        let monthForLog = currentMonth
+        PlanitLoggers.sync.info(
+            "Refreshing after EventKit mutation googleAuthenticated=\(googleAuthenticated, privacy: .public) currentMonth=\(Self.logDate(monthForLog), privacy: .public)"
+        )
         if authManager.isAuthenticated {
             mergeAppleCalendarEvents(for: currentMonth)
             cacheEvents(calendarEvents)
@@ -1389,7 +1453,13 @@ final class CalendarViewModel: ObservableObject {
 
     func moveTodo(id: UUID, toDate: Date) {
         guard let idx = todos.firstIndex(where: { $0.id == id }) else { return }
+        let oldDate = todos[idx].date
         todos[idx].date = Calendar.current.startOfDay(for: toDate)
+        let newDate = todos[idx].date
+        let hasGoogleMirror = todos[idx].googleEventId != nil
+        PlanitLoggers.sync.info(
+            "Moving todo id=\(id.uuidString, privacy: .public) oldDate=\(Self.logDate(oldDate), privacy: .public) newDate=\(Self.logDate(newDate), privacy: .public) hasGoogleMirror=\(hasGoogleMirror, privacy: .public)"
+        )
         saveTodos()
 
         if authManager.isAuthenticated, let eventId = todos[idx].googleEventId {
@@ -1431,15 +1501,38 @@ final class CalendarViewModel: ObservableObject {
         let srcDay = cal.startOfDay(for: event.startDate)
         let dstDay = cal.startOfDay(for: toDate)
         let delta = dstDay.timeIntervalSince(srcDay)
-        let newStart = event.startDate.addingTimeInterval(delta)
-        let newEnd = event.endDate.addingTimeInterval(delta)
+        var movedEvent = event
+        movedEvent.startDate = event.startDate.addingTimeInterval(delta)
+        movedEvent.endDate = event.endDate.addingTimeInterval(delta)
+        replaceCalendarEventLocally(movedEvent)
+
+        PlanitLoggers.sync.info(
+            "Moving calendar event id=\(id, privacy: .public) source=\(event.source.rawValue, privacy: .public) oldStart=\(Self.logDate(event.startDate), privacy: .public) oldEnd=\(Self.logDate(event.endDate), privacy: .public) newStart=\(Self.logDate(movedEvent.startDate), privacy: .public) newEnd=\(Self.logDate(movedEvent.endDate), privacy: .public) allDay=\(event.isAllDay, privacy: .public)"
+        )
 
         switch event.source {
         case .google:
-            updateGoogleEvent(eventID: id, calendarID: event.calendarID, title: event.title, startDate: newStart, endDate: newEnd, isAllDay: event.isAllDay)
+            updateGoogleEvent(eventID: id, calendarID: event.calendarID, title: event.title, startDate: movedEvent.startDate, endDate: movedEvent.endDate, isAllDay: event.isAllDay)
         case .apple, .local:
-            _ = updateCalendarEvent(eventID: id, calendarID: event.calendarID, title: event.title, startDate: newStart, endDate: newEnd, isAllDay: event.isAllDay)
+            _ = updateCalendarEvent(eventID: id, calendarID: event.calendarID, title: event.title, startDate: movedEvent.startDate, endDate: movedEvent.endDate, isAllDay: event.isAllDay)
         }
+    }
+
+    private func replaceCalendarEventLocally(_ movedEvent: CalendarEvent) {
+        let before = calendarEvents.count
+        calendarEvents.removeAll { $0.id == movedEvent.id }
+        calendarEvents.append(movedEvent)
+        let todoEventIds = Set(todos.compactMap { $0.googleEventId })
+        calendarEvents = Self.deduplicatedCalendarEvents(calendarEvents, todoGoogleEventIDs: todoEventIds)
+        applyEventCategoryMappings()
+        cacheEvents(calendarEvents)
+        PlanitLoggers.sync.info(
+            "Replaced local moved event id=\(movedEvent.id, privacy: .public) before=\(before, privacy: .public) after=\(self.calendarEvents.count, privacy: .public)"
+        )
+    }
+
+    private nonisolated static func logDate(_ date: Date) -> String {
+        ISO8601DateFormatter().string(from: date)
     }
 
     // MARK: - Category CRUD
@@ -1751,7 +1844,12 @@ final class CalendarViewModel: ObservableObject {
                     error: error,
                     userVisible: false
                 )
-                remaining.append(edit)
+                if Self.shouldQueueGoogleMutation(after: error) {
+                    PlanitLoggers.sync.info("Keeping pending edit for retry action=\(edit.action, privacy: .public) eventID=\(edit.eventId ?? "none", privacy: .public)")
+                    remaining.append(edit)
+                } else {
+                    PlanitLoggers.sync.warning("Dropping permanent pending edit failure action=\(edit.action, privacy: .public) eventID=\(edit.eventId ?? "none", privacy: .public)")
+                }
             }
         }
 

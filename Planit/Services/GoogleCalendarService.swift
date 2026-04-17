@@ -315,6 +315,9 @@ final class GoogleCalendarService {
         guard let httpResponse = response as? HTTPURLResponse else {
             throw URLError(.badServerResponse)
         }
+        PlanitLoggers.sync.info(
+            "Google event title PATCH eventID=\(eventID, privacy: .public) calendarID=\(rawCalID, privacy: .public) status=\(httpResponse.statusCode, privacy: .public)"
+        )
         guard httpResponse.statusCode == 200 else {
             throw GoogleCalendarError.httpStatus(httpResponse.statusCode)
         }
@@ -352,6 +355,9 @@ final class GoogleCalendarService {
         guard let httpResponse = response as? HTTPURLResponse else {
             throw URLError(.badServerResponse)
         }
+        PlanitLoggers.sync.info(
+            "Google event update PATCH eventID=\(eventID, privacy: .public) calendarID=\(rawCalID, privacy: .public) status=\(httpResponse.statusCode, privacy: .public) allDay=\(isAllDay, privacy: .public)"
+        )
         guard httpResponse.statusCode == 200 else {
             throw GoogleCalendarError.httpStatus(httpResponse.statusCode)
         }
