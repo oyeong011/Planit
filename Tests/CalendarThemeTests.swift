@@ -5,14 +5,42 @@ import Testing
 @Test func calendarThemeBuiltIns_areStableAndComplete() {
     let themes = CalendarTheme.builtIn
 
-    #expect(themes.count == 6)
-    #expect(themes.map(\.id) == ["classic", "ocean", "sunset", "forest", "mono", "sakura"])
+    #expect(themes.count == 14)
+    #expect(themes.map(\.id) == [
+        "classic",
+        "ocean",
+        "sunset",
+        "forest",
+        "mono",
+        "sakura",
+        "pantone-classic-blue",
+        "pantone-illuminating",
+        "pantone-ultimate-gray",
+        "pantone-very-peri",
+        "pantone-viva-magenta",
+        "pantone-peach-fuzz",
+        "pantone-mocha-mousse",
+        "pantone-cloud-dancer"
+    ])
     #expect(Set(themes.map(\.id)).count == themes.count)
 
     for theme in themes {
         #expect(theme.swatchHexes.count == 5)
         #expect(theme.swatchHexes.allSatisfy { $0.hasPrefix("#") && $0.count == 7 })
     }
+}
+
+@Test func pantoneThemePrimaryColors_matchColorOfTheYearValues() {
+    let primaryHexById = Dictionary(uniqueKeysWithValues: CalendarTheme.builtIn.map { ($0.id, $0.primaryHex) })
+
+    #expect(primaryHexById["pantone-classic-blue"] == "#0F4C81")
+    #expect(primaryHexById["pantone-illuminating"] == "#F5DF4D")
+    #expect(primaryHexById["pantone-ultimate-gray"] == "#939597")
+    #expect(primaryHexById["pantone-very-peri"] == "#6667AB")
+    #expect(primaryHexById["pantone-viva-magenta"] == "#BB2649")
+    #expect(primaryHexById["pantone-peach-fuzz"] == "#FFBE98")
+    #expect(primaryHexById["pantone-mocha-mousse"] == "#A47864")
+    #expect(primaryHexById["pantone-cloud-dancer"] == "#F0EEE9")
 }
 
 @MainActor
