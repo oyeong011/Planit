@@ -102,10 +102,7 @@ struct MainCalendarView: View {
             }
         }
         .frame(width: showLeftPanel ? 1320 : 1040, height: 860)
-        .background(
-            Color.platformControlBackground
-                .overlay(themeService.current.subtleBackgroundTint)
-        )
+        .background(Color.platformControlBackground)
         .animation(.easeInOut(duration: 0.28), value: themeService.current.id)
         .onChange(of: authManager.isAuthenticated) {
             viewModel.refreshEvents()
@@ -547,7 +544,9 @@ struct DayCellView: View {
 
     private var cellBackground: Color {
         if isDropTarget { return themeService.current.accent.opacity(0.12) }
-        if isSelected { return themeService.current.backgroundOverlay.opacity(0.65) }
+        // 다크 모드에서 0.65 오버레이가 너무 밝아 이벤트 텍스트가 묻히던 문제 수정.
+        // accent를 낮은 투명도로 얇게 틴트하는 방식으로 변경.
+        if isSelected { return themeService.current.accent.opacity(0.14) }
         return Color.clear
     }
 
