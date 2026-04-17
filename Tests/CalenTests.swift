@@ -1423,6 +1423,15 @@ func cleanCodexOutput(_ raw: String) -> String {
     }
 }
 
+@Test func googleMutationQueuePolicy_retriesOnlyTransientFailures() {
+    #expect(CalendarViewModel.shouldQueueGoogleMutation(after: URLError(.notConnectedToInternet)))
+    #expect(CalendarViewModel.shouldQueueGoogleMutation(after: GoogleCalendarError.httpStatus(500)))
+    #expect(CalendarViewModel.shouldQueueGoogleMutation(after: GoogleCalendarError.httpStatus(429)))
+    #expect(!CalendarViewModel.shouldQueueGoogleMutation(after: GoogleCalendarError.httpStatus(400)))
+    #expect(!CalendarViewModel.shouldQueueGoogleMutation(after: GoogleCalendarError.httpStatus(401)))
+    #expect(!CalendarViewModel.shouldQueueGoogleMutation(after: URLError(.badURL)))
+}
+
 // ============================================================================
 // MARK: - TC-30: Google Calendar 색상 매핑
 // ============================================================================

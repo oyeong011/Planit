@@ -1,6 +1,17 @@
 import Foundation
 import SwiftUI
 
+enum GoogleCalendarError: LocalizedError {
+    case httpStatus(Int)
+
+    var errorDescription: String? {
+        switch self {
+        case .httpStatus(let code):
+            return "Google Calendar HTTP \(code)"
+        }
+    }
+}
+
 /// Direct Google Calendar REST API client — bypasses macOS Calendar/EventKit delay
 @MainActor
 final class GoogleCalendarService {
@@ -259,8 +270,11 @@ final class GoogleCalendarService {
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         let (data, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+        guard let httpResponse = response as? HTTPURLResponse else {
             throw URLError(.badServerResponse)
+        }
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw GoogleCalendarError.httpStatus(httpResponse.statusCode)
         }
         // 생성은 항상 primary 캘린더 — calInfo nil → "Google" / "google:primary"
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -284,7 +298,13 @@ final class GoogleCalendarService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: ["summary": title])
         let (_, response) = try await URLSession.shared.data(for: request)
-        return (response as? HTTPURLResponse)?.statusCode == 200
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+        }
+        guard httpResponse.statusCode == 200 else {
+            throw GoogleCalendarError.httpStatus(httpResponse.statusCode)
+        }
+        return true
     }
 
     func updateEvent(eventID: String, calendarID: String = "primary", title: String?, startDate: Date, endDate: Date, isAllDay: Bool) async throws -> Bool {
@@ -315,7 +335,13 @@ final class GoogleCalendarService {
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         let (_, response) = try await URLSession.shared.data(for: request)
-        return (response as? HTTPURLResponse)?.statusCode == 200
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+        }
+        guard httpResponse.statusCode == 200 else {
+            throw GoogleCalendarError.httpStatus(httpResponse.statusCode)
+        }
+        return true
     }
 
     // MARK: - Delete Event
@@ -333,7 +359,10 @@ final class GoogleCalendarService {
 
         let (_, response) = try await URLSession.shared.data(for: request)
         let code = (response as? HTTPURLResponse)?.statusCode ?? 0
-        return code == 204 || code == 200
+        guard code == 204 || code == 200 else {
+            throw GoogleCalendarError.httpStatus(code)
+        }
+        return true
     }
 
     // MARK: - Helpers

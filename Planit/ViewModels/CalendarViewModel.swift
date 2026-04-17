@@ -431,6 +431,10 @@ final class CalendarViewModel: ObservableObject {
                 let _ = try await googleService.createEvent(title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
                 fetchEventsFromGoogle(for: currentMonth)
             } catch {
+                guard Self.shouldQueueGoogleMutation(after: error) else {
+                    print("[Calen] Google create failed: \(error)")
+                    return
+                }
                 print("[Calen] Offline — queuing create event")
                 queuePendingEdit(PendingCalendarEdit(
                     action: "create", title: title, startDate: startDate,
@@ -454,6 +458,10 @@ final class CalendarViewModel: ObservableObject {
                 _ = try await googleService.updateEvent(eventID: eventID, calendarID: calendarID, title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
                 fetchEventsFromGoogle(for: currentMonth)
             } catch {
+                guard Self.shouldQueueGoogleMutation(after: error) else {
+                    print("[Calen] Google update failed: \(error)")
+                    return
+                }
                 print("[Calen] Offline — queuing update event")
                 queuePendingEdit(PendingCalendarEdit(
                     action: "update", title: title, startDate: startDate,
@@ -479,6 +487,10 @@ final class CalendarViewModel: ObservableObject {
                 saveCompletedEvents()
                 fetchEventsFromGoogle(for: currentMonth)
             } catch {
+                guard Self.shouldQueueGoogleMutation(after: error) else {
+                    print("[Calen] Google delete failed: \(error)")
+                    return
+                }
                 print("[Calen] Offline — queuing delete event")
                 queuePendingEdit(PendingCalendarEdit(
                     action: "delete", eventId: eventID))
@@ -490,6 +502,33 @@ final class CalendarViewModel: ObservableObject {
                 cacheEvents(calendarEvents)
             }
         }
+    }
+
+    nonisolated static func shouldQueueGoogleMutation(after error: Error) -> Bool {
+        if let calendarError = error as? GoogleCalendarError {
+            switch calendarError {
+            case .httpStatus(let code):
+                return code == 408 || code == 429 || (500...599).contains(code)
+            }
+        }
+
+        if let urlError = error as? URLError {
+            switch urlError.code {
+            case .timedOut,
+                 .cannotFindHost,
+                 .cannotConnectToHost,
+                 .networkConnectionLost,
+                 .notConnectedToInternet,
+                 .dnsLookupFailed,
+                 .internationalRoamingOff,
+                 .dataNotAllowed:
+                return true
+            default:
+                return false
+            }
+        }
+
+        return false
     }
 
     // MARK: - EventKit (fallback when not using Google API)
