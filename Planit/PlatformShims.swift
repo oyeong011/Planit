@@ -48,6 +48,42 @@ extension Color {
     }
 }
 
+// MARK: - Platform Font Shims
+
+extension Font {
+    static func platformSystem(size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default) -> Font {
+        .system(size: size, weight: weight, design: design)
+    }
+
+    static var platformSmallLabel: Font {
+        .platformSystem(size: 11, weight: .medium)
+    }
+
+    static var platformMonospacedCaption: Font {
+        .platformSystem(size: 10, design: .monospaced)
+    }
+}
+
+// MARK: - Platform Keyboard Shims
+
+enum PlatformShortcut {
+    static var primaryModifier: EventModifiers {
+        .command
+    }
+
+    static var primaryModifierSymbol: String {
+        #if os(macOS)
+        "⌘"
+        #else
+        "Command"
+        #endif
+    }
+
+    static var submitKey: KeyEquivalent {
+        .return
+    }
+}
+
 // MARK: - Platform URL Opening
 
 /// 외부 URL을 시스템 기본 브라우저/앱으로 엽니다.
@@ -56,6 +92,25 @@ func openURL(_ url: URL) {
     NSWorkspace.shared.open(url)
     #elseif os(iOS)
     UIApplication.shared.open(url)
+    #endif
+}
+
+// MARK: - Platform File and Pasteboard Helpers
+
+func showInFileManager(_ url: URL) {
+    #if os(macOS)
+    NSWorkspace.shared.selectFile(url.path, inFileViewerRootedAtPath: "")
+    #elseif os(iOS)
+    UIApplication.shared.open(url)
+    #endif
+}
+
+func copyTextToPasteboard(_ text: String) {
+    #if os(macOS)
+    NSPasteboard.general.clearContents()
+    NSPasteboard.general.setString(text, forType: .string)
+    #elseif os(iOS)
+    UIPasteboard.general.string = text
     #endif
 }
 
