@@ -610,7 +610,9 @@ struct DailyDetailView: View {
 
                 // Events & Todos list
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 8) {
+                    // 행 사이 gap(spacing) 대신 각 행의 vertical padding으로 처리 —
+                    // 이래야 드롭 타겟 사이 "dead zone"이 생기지 않는다.
+                    VStack(alignment: .leading, spacing: 0) {
                         let events = viewModel.eventsForDate(viewModel.selectedDate)
                         ForEach(events) { event in
                             EventRowView(
@@ -623,6 +625,7 @@ struct DailyDetailView: View {
                                 },
                                 onToggle: { viewModel.toggleEventCompleted(event.id, title: event.title) }
                             )
+                            .padding(.vertical, 4)
                         }
 
                         let todos = viewModel.todosForDate(viewModel.selectedDate)
@@ -646,7 +649,14 @@ struct DailyDetailView: View {
                                     )
                                 } : nil
                             )
+                            .padding(.vertical, 4)
+                            .transition(.asymmetric(
+                                insertion: .opacity.combined(with: .scale(scale: 0.96)),
+                                removal: .opacity
+                            ))
                         }
+                        .animation(.spring(response: 0.38, dampingFraction: 0.78),
+                                   value: todos.map(\.id))
 
                         if events.isEmpty && todos.isEmpty && !showAddForm {
                             Text(String(localized: "detail.no.events"))
@@ -1463,13 +1473,16 @@ struct TodoRowView: View {
         .background(
             RoundedRectangle(cornerRadius: 10)
                 .fill(Color.platformControlBackground)
-                .shadow(color: .black.opacity(0.04), radius: 2, y: 1)
+                .shadow(color: .black.opacity(isDropTargeted ? 0.12 : 0.04),
+                        radius: isDropTargeted ? 6 : 2,
+                        y: isDropTargeted ? 3 : 1)
         )
         .overlay(
-            // 드롭 타겟 강조 — 위쪽 경계선
             RoundedRectangle(cornerRadius: 10)
                 .strokeBorder(isDropTargeted ? Color.accentColor : .clear, lineWidth: 2)
         )
+        .scaleEffect(isDropTargeted ? 1.02 : 1.0, anchor: .center)
+        .animation(.spring(response: 0.22, dampingFraction: 0.75), value: isDropTargeted)
         .contentShape(Rectangle())
         .onTapGesture { onTap() }
         .draggable("todo:\(todo.id.uuidString)") {
