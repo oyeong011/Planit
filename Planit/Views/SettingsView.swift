@@ -383,21 +383,6 @@ struct SettingsView: View {
                                 detail: aiService.codexAvailable ? String(localized: "settings.ai.codex.installed.detail") : String(localized: "settings.ai.codex.install.hint"))
                 }
             }
-
-            settingsCard(String(localized: "settings.ai.save.card")) {
-                Button {
-                    aiService.saveSettings()
-                } label: {
-                    Text(String(localized: "settings.ai.save.button"))
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 9)
-                        .background(RoundedRectangle(cornerRadius: 8).fill(Color.purple))
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-            }
         }
     }
 
@@ -407,6 +392,7 @@ struct SettingsView: View {
 
         return Button {
             aiService.provider = provider
+            aiService.saveSettings()
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
@@ -605,25 +591,6 @@ struct SettingsView: View {
                         .toggleStyle(.switch)
                         .labelsHidden()
                     }
-                }
-            }
-
-            settingsCard(String(localized: "settings.google.skip.card")) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(String(localized: "settings.google.skip.title"))
-                            .font(.system(size: 13, weight: .medium))
-                        Text(String(localized: "settings.google.skip.desc"))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Toggle("", isOn: Binding(
-                        get: { UserDefaults.standard.bool(forKey: "planit.skipGoogleAuth") },
-                        set: { UserDefaults.standard.set($0, forKey: "planit.skipGoogleAuth") }
-                    ))
-                    .toggleStyle(.switch)
-                    .labelsHidden()
                 }
             }
         }
