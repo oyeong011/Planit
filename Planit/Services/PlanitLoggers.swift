@@ -7,6 +7,7 @@ enum PlanitLoggers {
     static let crud = Logger(subsystem: subsystem, category: "crud")
     static let sync = Logger(subsystem: subsystem, category: "sync")
     static let ai = Logger(subsystem: subsystem, category: "ai")
+    static let review = Logger(subsystem: subsystem, category: "review")
 }
 
 enum CRUDOperation: String {
