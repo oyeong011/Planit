@@ -1913,6 +1913,28 @@ struct ReviewView: View {
     // MARK: - Progress Helpers
 
     private func progressCounts(for period: GoalService.CompletionPeriod) -> (done: Int, total: Int) {
+        // '오늘' 탭은 DailyDetailView와 동일하게 itemsForDate()를 기준으로 계산해
+        // 우측 패널에 보이는 개수와 분모가 정확히 일치하도록 한다.
+        // 이전 구현은 viewModel.todos 전체 + appleReminders + all-day events까지
+        // 합산해 중복/과다 카운트(3/7 현상)를 만들었다.
+        if period == .day {
+            let items = viewModel.itemsForDate(Calendar.current.startOfDay(for: Date()))
+                .filter { item in
+                    if case .event(let e) = item { return !e.isAllDay }
+                    return true
+                }
+            let done = items.filter { item in
+                switch item {
+                case .event(let e): return viewModel.isEventCompleted(e.id)
+                case .todo(let t):  return t.isCompleted
+                }
+            }.count
+            PlanitLoggers.review.info(
+                "progressCounts(day) items=\(items.count, privacy: .public) done=\(done, privacy: .public)"
+            )
+            return (done, items.count)
+        }
+
         var cal = Calendar(identifier: .gregorian)
         cal.firstWeekday = 1
         cal.minimumDaysInFirstWeek = 1
