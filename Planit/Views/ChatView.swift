@@ -344,7 +344,7 @@ struct ChatView: View {
                 ForEach(commands, id: \.self) { cmd in
                     HStack(spacing: 6) {
                         Text(cmd)
-                            .font(.system(size: 10, design: .monospaced))
+                            .font(.platformMonospacedCaption)
                             .foregroundStyle(.primary)
                             .textSelection(.enabled)
                             .lineLimit(1)

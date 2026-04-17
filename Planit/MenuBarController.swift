@@ -150,8 +150,4 @@ extension MenuBarController: NSPopoverDelegate {
         NotificationCenter.default.post(name: .calenPopoverDidClose, object: nil)
     }
 }
-
-extension Notification.Name {
-    static let calenPopoverDidClose = Notification.Name("calenPopoverDidClose")
-}
 #endif
