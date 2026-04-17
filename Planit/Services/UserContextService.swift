@@ -865,6 +865,20 @@ final class UserContextService: ObservableObject {
 
     // MARK: - Claude One-shot (nonisolated helper)
 
+    nonisolated private static let cliTimeout: TimeInterval = 90
+    nonisolated private static let maxCLIOutputBytes = 131_072
+
+    nonisolated static func restrictedCLIEnvironment() -> [String: String] {
+        [
+            "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+            "HOME": NSHomeDirectory(),
+            "TMPDIR": FileManager.default.temporaryDirectory.path,
+            "NO_COLOR": "1",
+            "TERM": "dumb",
+            "LANG": "en_US.UTF-8",
+        ]
+    }
+
     nonisolated static func runClaude(prompt: String, claudePath: String) -> String {
         #if os(macOS)
         let process = Process()
@@ -873,6 +887,7 @@ final class UserContextService: ObservableObject {
                              "--no-session-persistence",
                              "--model", "claude-haiku-4-5-20251001",
                              "--system-prompt", "한국어로 간결하게 답변하는 AI 비서입니다."]
+        process.environment = restrictedCLIEnvironment()
 
         let input = Pipe()
         let output = Pipe()
@@ -881,14 +896,94 @@ final class UserContextService: ObservableObject {
         process.standardOutput = output
         process.standardError = errPipe
 
+        final class CLIState: @unchecked Sendable {
+            var out = Data()
+            var err = Data()
+            var outputCapped = false
+            let lock = NSLock()
+        }
+        let state = CLIState()
+
         do {
             try process.run()
+            let killQueue = DispatchQueue(label: "planit.user-context.cli.timeout")
+            let termTimer = DispatchSource.makeTimerSource(queue: killQueue)
+            termTimer.schedule(deadline: .now() + cliTimeout)
+            termTimer.setEventHandler {
+                if process.isRunning { process.terminate() }
+            }
+            termTimer.resume()
+
+            let killTimer = DispatchSource.makeTimerSource(queue: killQueue)
+            killTimer.schedule(deadline: .now() + cliTimeout + 5)
+            killTimer.setEventHandler {
+                if process.isRunning {
+                    kill(process.processIdentifier, SIGKILL)
+                }
+            }
+            killTimer.resume()
+
+            output.fileHandleForReading.readabilityHandler = { handle in
+                let chunk = handle.availableData
+                if chunk.isEmpty {
+                    handle.readabilityHandler = nil
+                    return
+                }
+                state.lock.lock()
+                defer { state.lock.unlock() }
+                let remaining = maxCLIOutputBytes - state.out.count
+                if remaining <= 0 {
+                    state.outputCapped = true
+                    handle.readabilityHandler = nil
+                    if process.isRunning { process.terminate() }
+                } else if chunk.count > remaining {
+                    state.out.append(chunk.prefix(remaining))
+                    state.outputCapped = true
+                    handle.readabilityHandler = nil
+                    if process.isRunning { process.terminate() }
+                } else {
+                    state.out.append(chunk)
+                }
+            }
+
+            errPipe.fileHandleForReading.readabilityHandler = { handle in
+                let chunk = handle.availableData
+                if chunk.isEmpty {
+                    handle.readabilityHandler = nil
+                    return
+                }
+                state.lock.lock()
+                defer { state.lock.unlock() }
+                if state.err.count < 65_536 {
+                    state.err.append(chunk.prefix(65_536 - state.err.count))
+                }
+            }
+
             let data = prompt.data(using: .utf8) ?? Data()
             input.fileHandleForWriting.write(data)
             input.fileHandleForWriting.closeFile()
             process.waitUntilExit()
-            let outData = output.fileHandleForReading.readDataToEndOfFile()
-            return String(data: outData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            termTimer.cancel()
+            killTimer.cancel()
+
+            output.fileHandleForReading.readabilityHandler = nil
+            errPipe.fileHandleForReading.readabilityHandler = nil
+
+            state.lock.lock()
+            var outData = state.out
+            let capped = state.outputCapped
+            let errData = state.err
+            state.lock.unlock()
+
+            if outData.isEmpty, process.terminationStatus != 0 {
+                outData = errData
+            }
+            var result = String(data: outData, encoding: .utf8)?
+                .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            if capped {
+                result += "\n... (출력이 잘렸습니다)"
+            }
+            return result
         } catch {
             return ""
         }

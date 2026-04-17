@@ -1435,18 +1435,25 @@ func cleanCodexOutput(_ raw: String) -> String {
 // ============================================================================
 
 @Test func cliEnvironment_minimalKeys() {
-    let envKeys = ["PATH", "HOME", "NO_COLOR", "TERM", "LANG"]
-    #expect(envKeys.count == 5, "CLI에 전달하는 환경변수는 5개만이어야 함")
+    let envKeys = ["PATH", "HOME", "TMPDIR", "NO_COLOR", "TERM", "LANG"]
+    #expect(envKeys.count == 6, "CLI에 전달하는 환경변수는 최소 allowlist만 포함해야 함")
     #expect(envKeys.contains("NO_COLOR"), "ANSI 색상 비활성화 필수")
     #expect(envKeys.contains("TERM"), "TERM=dumb 설정 필수")
 }
 
 @Test func cliEnvironment_noSensitiveVars() {
-    let envKeys = Set(["PATH", "HOME", "NO_COLOR", "TERM", "LANG"])
+    let envKeys = Set(["PATH", "HOME", "TMPDIR", "NO_COLOR", "TERM", "LANG"])
     let sensitiveVars = ["API_KEY", "SECRET", "TOKEN", "PASSWORD", "AWS_ACCESS_KEY"]
     for sensitive in sensitiveVars {
         #expect(!envKeys.contains(sensitive), "민감한 환경변수 \(sensitive)이 포함되면 안 됨")
     }
+}
+
+@Test func userContextClaudeEnvironment_usesRestrictedAllowlist() {
+    let env = UserContextService.restrictedCLIEnvironment()
+    #expect(Set(env.keys) == Set(["PATH", "HOME", "TMPDIR", "NO_COLOR", "TERM", "LANG"]))
+    #expect(env["TERM"] == "dumb")
+    #expect(env["NO_COLOR"] == "1")
 }
 
 // ============================================================================
