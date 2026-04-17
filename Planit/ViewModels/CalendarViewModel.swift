@@ -3,6 +3,13 @@ import EventKit
 import Combine
 import OSLog
 
+struct MirrorFilterStats: Equatable {
+    var extCount: Int = 0
+    var fingerprintCount: Int = 0
+    var suppressCount: Int = 0
+    var lastUpdated: Date?
+}
+
 @MainActor
 final class CalendarViewModel: ObservableObject {
 
@@ -52,6 +59,7 @@ final class CalendarViewModel: ObservableObject {
     @Published var rescheduledTodoIDs: Set<UUID> = []
     /// Last user-visible CRUD failure for inline UI feedback.
     @Published var lastCRUDError: CRUDErrorNotice?
+    @Published var lastMirrorFilterStats = MirrorFilterStats()
 
     // MARK: - Services
 
@@ -418,13 +426,6 @@ final class CalendarViewModel: ObservableObject {
     func mergeAppleCalendarEvents(for month: Date) {
         guard appleCalendarEnabled, appleCalendarAccessGranted else { return }
         let googleEvents = calendarEvents.filter { $0.source == .google }
-        let googleIDs = Set(googleEvents.map(\.id))
-
-        func fingerprint(_ e: CalendarEvent) -> String {
-            let minute = Int(e.startDate.timeIntervalSince1970 / 60)
-            return "\(e.title.trimmingCharacters(in: .whitespaces))|\(minute)"
-        }
-        let googleFingerprints = Set(googleEvents.map(fingerprint))
 
         // 만료된 suppress 엔트리 청소
         let now = Date()
@@ -432,25 +433,14 @@ final class CalendarViewModel: ObservableObject {
         let suppressed = Set(suppressedAppleTitles.keys)
 
         let appleRaw = fetchLocalCalendarEvents(for: month)
-        var mirrorByExternalID = 0
-        var mirrorByFingerprint = 0
-        var mirrorBySuppress = 0
-        let appleEvents = appleRaw.filter { apple in
-            if let ext = apple.externalID, googleIDs.contains(ext) {
-                mirrorByExternalID += 1
-                return false
-            }
-            if googleFingerprints.contains(fingerprint(apple)) {
-                mirrorByFingerprint += 1
-                return false
-            }
-            let normalized = apple.title.trimmingCharacters(in: .whitespaces)
-            if suppressed.contains(normalized) {
-                mirrorBySuppress += 1
-                return false
-            }
-            return true
-        }
+        let filtered = Self.filteredAppleMirrorEvents(
+            appleRaw,
+            googleEvents: googleEvents,
+            suppressedTitles: suppressed,
+            updatedAt: now
+        )
+        let appleEvents = filtered.events
+        lastMirrorFilterStats = filtered.stats
 
         var merged = calendarEvents.filter { $0.source != .apple }
         let existingNonAppleCount = merged.count
@@ -458,10 +448,45 @@ final class CalendarViewModel: ObservableObject {
         let todoEventIds = Set(todos.compactMap { $0.googleEventId })
         let deduped = Self.deduplicatedCalendarEvents(merged, todoGoogleEventIDs: todoEventIds)
         PlanitLoggers.sync.info(
-            "Merged Apple events month=\(Self.logDate(month), privacy: .public) existingNonApple=\(existingNonAppleCount, privacy: .public) appleRaw=\(appleRaw.count, privacy: .public) mirrorByExt=\(mirrorByExternalID, privacy: .public) mirrorByFingerprint=\(mirrorByFingerprint, privacy: .public) mirrorBySuppress=\(mirrorBySuppress, privacy: .public) appleKept=\(appleEvents.count, privacy: .public) deduped=\(deduped.count, privacy: .public)"
+            "Merged Apple events month=\(Self.logDate(month), privacy: .public) existingNonApple=\(existingNonAppleCount, privacy: .public) appleRaw=\(appleRaw.count, privacy: .public) mirrorByExt=\(filtered.stats.extCount, privacy: .public) mirrorByFingerprint=\(filtered.stats.fingerprintCount, privacy: .public) mirrorBySuppress=\(filtered.stats.suppressCount, privacy: .public) appleKept=\(appleEvents.count, privacy: .public) deduped=\(deduped.count, privacy: .public)"
         )
         calendarEvents = deduped
         applyEventCategoryMappings()
+    }
+
+    nonisolated static func filteredAppleMirrorEvents(
+        _ appleEvents: [CalendarEvent],
+        googleEvents: [CalendarEvent],
+        suppressedTitles: Set<String>,
+        updatedAt: Date
+    ) -> (events: [CalendarEvent], stats: MirrorFilterStats) {
+        let googleIDs = Set(googleEvents.map(\.id))
+
+        func fingerprint(_ event: CalendarEvent) -> String {
+            let minute = Int(event.startDate.timeIntervalSince1970 / 60)
+            return "\(event.title.trimmingCharacters(in: .whitespaces))|\(minute)"
+        }
+
+        let googleFingerprints = Set(googleEvents.map(fingerprint))
+        var stats = MirrorFilterStats(lastUpdated: updatedAt)
+        let filteredEvents = appleEvents.filter { apple in
+            if let ext = apple.externalID, googleIDs.contains(ext) {
+                stats.extCount += 1
+                return false
+            }
+            if googleFingerprints.contains(fingerprint(apple)) {
+                stats.fingerprintCount += 1
+                return false
+            }
+            let normalized = apple.title.trimmingCharacters(in: .whitespaces)
+            if suppressedTitles.contains(normalized) {
+                stats.suppressCount += 1
+                return false
+            }
+            return true
+        }
+
+        return (filteredEvents, stats)
     }
 
     /// 최근 Google 수정한 이벤트 title → 유예 시각.

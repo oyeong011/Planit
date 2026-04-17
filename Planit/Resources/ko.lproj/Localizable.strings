@@ -306,6 +306,11 @@
 "settings.apple.calendar.desc" = "기기의 Apple 캘린더 이벤트를 함께 표시합니다";
 "settings.apple.reminders.title" = "Apple 미리 알림 가져오기";
 "settings.apple.reminders.desc" = "미리 알림 항목을 할 일로 가져옵니다";
+"settings.apple.diagnostics.card" = "Apple 캘린더 진단";
+"settings.apple.diagnostics.summary" = "중복 필터 적용: ext %d / fingerprint %d / suppress %d · 마지막 업데이트 %@";
+"settings.apple.diagnostics.help" = "동일 이벤트가 Google과 Apple 양쪽에 있을 때 자동 제거된 수";
+"settings.apple.diagnostics.never" = "없음";
+"settings.apple.diagnostics.accessibility" = "Apple 캘린더 진단. 중복 필터 적용: external ID %d건, fingerprint %d건, suppress %d건. 마지막 업데이트 %@.";
 "settings.google.skip.card" = "Google 없이 사용";
 "settings.google.skip.title" = "Google 로그인 건너뛰기";
 "settings.google.skip.desc" = "Apple 캘린더나 캘린더 없이 AI 기능만 사용합니다";

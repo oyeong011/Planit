@@ -306,6 +306,11 @@
 "settings.apple.calendar.desc" = "Shows Apple Calendar events on your device";
 "settings.apple.reminders.title" = "Import Apple Reminders";
 "settings.apple.reminders.desc" = "Imports reminders as todos";
+"settings.apple.diagnostics.card" = "Apple Calendar Diagnostics";
+"settings.apple.diagnostics.summary" = "Duplicate filter applied: ext %d / fingerprint %d / suppress %d · Last updated %@";
+"settings.apple.diagnostics.help" = "Number automatically removed when the same event exists in both Google and Apple.";
+"settings.apple.diagnostics.never" = "never";
+"settings.apple.diagnostics.accessibility" = "Apple Calendar diagnostics. Duplicate filter applied: external ID %d, fingerprint %d, suppress %d. Last updated %@.";
 "settings.google.skip.card" = "Use Without Google";
 "settings.google.skip.title" = "Skip Google Sign-in";
 "settings.google.skip.desc" = "Use AI features without Google Calendar";
