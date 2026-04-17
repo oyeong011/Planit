@@ -195,6 +195,78 @@ jobs:
           echo "ZIP SHA256: $ZIP_SHA"
           echo "DMG SHA256: $DMG_SHA"
 
+      - name: Sign Sparkle update (EdDSA)
+        env:
+          SPARKLE_ED_PRIVATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
+        run: |
+          if [ -z "${SPARKLE_ED_PRIVATE_KEY:-}" ]; then
+            echo "⚠️  SPARKLE_ED_PRIVATE_KEY secret 미설정 — appcast 서명/갱신 건너뜀"
+            echo "SPARKLE_SIGNED=false" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          SIGN_UPDATE=".build/artifacts/sparkle/Sparkle/bin/sign_update"
+          KEY_FILE="$RUNNER_TEMP/sparkle_ed_key"
+          printf '%s' "$SPARKLE_ED_PRIVATE_KEY" > "$KEY_FILE"
+          chmod 600 "$KEY_FILE"
+          SIGN_OUTPUT=$("$SIGN_UPDATE" -f "$KEY_FILE" "$ZIP_PATH")
+          rm -f "$KEY_FILE"
+          ED_SIG=$(echo "$SIGN_OUTPUT" | sed -n 's/.*sparkle:edSignature="\([^"]*\)".*/\1/p')
+          LENGTH=$(echo "$SIGN_OUTPUT" | sed -n 's/.*length="\([^"]*\)".*/\1/p')
+          if [ -z "$ED_SIG" ] || [ -z "$LENGTH" ]; then
+            echo "✗ Sparkle 서명 생성 실패: $SIGN_OUTPUT" >&2
+            exit 1
+          fi
+          echo "SPARKLE_ED_SIG=$ED_SIG" >> "$GITHUB_ENV"
+          echo "SPARKLE_LENGTH=$LENGTH" >> "$GITHUB_ENV"
+          echo "SPARKLE_SIGNED=true" >> "$GITHUB_ENV"
+
+      - name: Update appcast.xml on main
+        if: env.SPARKLE_SIGNED == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          WORK=/tmp/appcast-repo
+          rm -rf "$WORK"
+          git clone --depth=1 --branch main \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$WORK"
+          cd "$WORK"
+
+          export PUB_DATE=$(date -u +"%a, %d %b %Y %H:%M:%S +0000")
+          export DOWNLOAD_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/v${VERSION}/Calen-${VERSION}-universal.zip"
+          NOTES_FILE=$(mktemp)
+          gh release view "v${VERSION}" --repo "$GITHUB_REPOSITORY" --json body --jq '.body' > "$NOTES_FILE" 2>/dev/null || echo "릴리스 v${VERSION}" > "$NOTES_FILE"
+          export NOTES=$(cat "$NOTES_FILE")
+          rm -f "$NOTES_FILE"
+
+          python3 - <<PYEOF
+          import os, re
+          path = "docs/appcast.xml"
+          with open(path) as f: content = f.read()
+          item = f'''        <item>
+                  <title>v{os.environ["VERSION"]}</title>
+                  <sparkle:version>{os.environ["BUILD_NUMBER"]}</sparkle:version>
+                  <sparkle:shortVersionString>{os.environ["VERSION"]}</sparkle:shortVersionString>
+                  <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+                  <pubDate>{os.environ["PUB_DATE"]}</pubDate>
+                  <enclosure
+                      url="{os.environ["DOWNLOAD_URL"]}"
+                      sparkle:edSignature="{os.environ["SPARKLE_ED_SIG"]}"
+                      length="{os.environ["SPARKLE_LENGTH"]}"
+                      type="application/octet-stream" />
+                  <description><![CDATA[{os.environ["NOTES"]}]]></description>
+              </item>
+          '''
+          content = content.replace("</channel>", item + "    </channel>", 1)
+          with open(path, "w") as f: f.write(content)
+          PYEOF
+
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add docs/appcast.xml
+          git commit -m "release: v${VERSION} appcast entry"
+          git push origin main
+
       - name: Create GitHub Release & upload artifacts
         env:
           GH_TOKEN: ${{ github.token }}
