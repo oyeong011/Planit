@@ -4,8 +4,8 @@ import SwiftUI
 
 enum SettingsSection: String, CaseIterable {
     case profile       = "profile"
-    case schedule      = "schedule"
     case ai            = "ai"
+    case schedule      = "schedule"
     case context       = "context"
     case integrations  = "integrations"
     case notifications = "notifications"
@@ -133,8 +133,8 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 28) {
                 switch selectedSection {
                 case .profile:       profileSection
-                case .schedule:      scheduleSection
                 case .ai:            aiSection
+                case .schedule:      scheduleSection
                 case .context:       contextSection
                 case .integrations:  integrationsSection
                 case .notifications: notificationsSection
@@ -310,6 +310,25 @@ struct SettingsView: View {
                     capacityRow(String(localized: "settings.capacity.weekend"), value: $profile.weekendCapacityMinutes)
                 }
             }
+
+            settingsCard(String(localized: "settings.focus.windows.card")) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(String(localized: "settings.focus.windows.title"))
+                            .font(.system(size: 13, weight: .medium))
+                        Text(String(localized: "settings.focus.windows.desc"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Toggle("", isOn: Binding(
+                        get: { profile.usesFocusWindowsForAI },
+                        set: { profile.usesFocusWindowsForAI = $0; autosave() }
+                    ))
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+                }
+            }
         }
     }
 
@@ -347,6 +366,14 @@ struct SettingsView: View {
                 }
             }
 
+            settingsCard(String(localized: "settings.ai.tone.card")) {
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(AITone.allCases, id: \.self) { tone in
+                        aiToneRow(tone)
+                    }
+                }
+            }
+
             settingsCard(String(localized: "settings.ai.status.card")) {
                 VStack(spacing: 10) {
                     aiStatusRow("Claude CLI", available: aiService.claudeAvailable,
@@ -355,21 +382,6 @@ struct SettingsView: View {
                     aiStatusRow("Codex CLI", available: aiService.codexAvailable,
                                 detail: aiService.codexAvailable ? String(localized: "settings.ai.codex.installed.detail") : String(localized: "settings.ai.codex.install.hint"))
                 }
-            }
-
-            settingsCard(String(localized: "settings.ai.save.card")) {
-                Button {
-                    aiService.saveSettings()
-                } label: {
-                    Text(String(localized: "settings.ai.save.button"))
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 9)
-                        .background(RoundedRectangle(cornerRadius: 8).fill(Color.purple))
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
             }
         }
     }
@@ -380,6 +392,7 @@ struct SettingsView: View {
 
         return Button {
             aiService.provider = provider
+            aiService.saveSettings()
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
@@ -423,6 +436,37 @@ struct SettingsView: View {
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(isSelected ? Color.purple.opacity(0.35) : Color.clear, lineWidth: 1.5)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func aiToneRow(_ tone: AITone) -> some View {
+        let isSelected = aiService.tone == tone
+
+        return Button {
+            aiService.tone = tone
+            aiService.saveSettings()
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
+                    .foregroundStyle(isSelected ? .purple : .secondary)
+                    .font(.system(size: 16))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(tone.localizedTitle)
+                        .font(.system(size: 13, weight: .medium))
+                    Text(tone.localizedDescription)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isSelected ? Color.purple.opacity(0.08) : Color.clear)
             )
             .contentShape(Rectangle())
         }
@@ -547,25 +591,6 @@ struct SettingsView: View {
                         .toggleStyle(.switch)
                         .labelsHidden()
                     }
-                }
-            }
-
-            settingsCard(String(localized: "settings.google.skip.card")) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(String(localized: "settings.google.skip.title"))
-                            .font(.system(size: 13, weight: .medium))
-                        Text(String(localized: "settings.google.skip.desc"))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Toggle("", isOn: Binding(
-                        get: { UserDefaults.standard.bool(forKey: "planit.skipGoogleAuth") },
-                        set: { UserDefaults.standard.set($0, forKey: "planit.skipGoogleAuth") }
-                    ))
-                    .toggleStyle(.switch)
-                    .labelsHidden()
                 }
             }
         }
@@ -981,6 +1006,7 @@ struct SettingsView: View {
 
     private func autosave() {
         goalService.profile = profile
+        aiService.scheduler.apply(profile: profile)
         goalService.saveProfile()
     }
 

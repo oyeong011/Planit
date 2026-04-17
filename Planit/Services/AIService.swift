@@ -24,6 +24,39 @@ enum AIProvider: String, CaseIterable, Codable {
     }
 }
 
+enum AITone: String, CaseIterable, Codable {
+    case concise
+    case coaching
+    case direct
+
+    var localizedTitle: String {
+        switch self {
+        case .concise:  return NSLocalizedString("settings.ai.tone.concise", comment: "")
+        case .coaching: return NSLocalizedString("settings.ai.tone.coaching", comment: "")
+        case .direct:   return NSLocalizedString("settings.ai.tone.direct", comment: "")
+        }
+    }
+
+    var localizedDescription: String {
+        switch self {
+        case .concise:  return NSLocalizedString("settings.ai.tone.concise.desc", comment: "")
+        case .coaching: return NSLocalizedString("settings.ai.tone.coaching.desc", comment: "")
+        case .direct:   return NSLocalizedString("settings.ai.tone.direct.desc", comment: "")
+        }
+    }
+
+    var promptInstruction: String {
+        switch self {
+        case .concise:
+            return "응답 톤: 간결하게. 핵심 판단과 다음 행동만 짧게 말해."
+        case .coaching:
+            return "응답 톤: 코치처럼. 사용자의 목표와 에너지 관리를 고려해 이유를 짧게 설명해."
+        case .direct:
+            return "응답 톤: 직접적으로. 불필요한 완곡 표현 없이 우선순위와 실행안을 명확히 말해."
+        }
+    }
+}
+
 // MARK: - Chat Attachment
 
 enum ChatAttachmentType: String {
@@ -138,6 +171,7 @@ struct AIResponseWithActions: Codable {
 @MainActor
 final class AIService: ObservableObject {
     @Published var provider: AIProvider = .claude
+    @Published var tone: AITone = .concise
     @Published var isLoading: Bool = false
     @Published var claudeAvailable: Bool = false
     @Published var codexAvailable: Bool = false
@@ -178,6 +212,9 @@ final class AIService: ObservableObject {
 
     /// 초개인화 컨텍스트 서비스 (외부에서 주입)
     var userContextService: UserContextService?
+
+    /// 현재 설정 프로필. SmartScheduler와 시스템 프롬프트에 설정값을 반영한다.
+    var userProfileProvider: (() -> UserProfile)?
 
     /// 스마트 스케줄러 (여유 슬롯 탐색, 충돌 감지)
     let scheduler = SmartSchedulerService()
@@ -266,6 +303,11 @@ final class AIService: ObservableObject {
            let p = AIProvider(rawValue: raw) {
             provider = p
         }
+        if let data = try? Data(contentsOf: dir.appendingPathComponent("tone")),
+           let raw = String(data: data, encoding: .utf8),
+           let t = AITone(rawValue: raw) {
+            tone = t
+        }
     }
 
     func saveSettings() {
@@ -273,11 +315,19 @@ final class AIService: ObservableObject {
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true,
                                                   attributes: [.posixPermissions: 0o700])
         try? provider.rawValue.data(using: .utf8)?.write(to: dir.appendingPathComponent("provider"), options: .atomic)
+        try? tone.rawValue.data(using: .utf8)?.write(to: dir.appendingPathComponent("tone"), options: .atomic)
+    }
+
+    private func applySchedulingProfile() {
+        guard let profile = userProfileProvider?() else { return }
+        scheduler.apply(profile: profile)
     }
 
     // MARK: - Calendar Context
 
     private func buildCalendarContext() async -> (context: String, eventIds: Set<String>) {
+        applySchedulingProfile()
+
         let cal = Calendar.current
         let today = cal.startOfDay(for: Date())
 
@@ -379,10 +429,21 @@ final class AIService: ObservableObject {
 
         let categoryContext = buildCategoryContext()
         let userContext = userContextService?.contextForAI() ?? ""
+        let profile = userProfileProvider?()
+        let focusRule: String
+        if let profile {
+            focusRule = profile.usesFocusWindowsForAI
+                ? "- 집중 시간대 기반 배치: 켜짐. 사용자의 에너지 타입과 선호 시간대를 우선 고려해."
+                : "- 집중 시간대 기반 배치: 꺼짐. 아침형/저녁형 선호보다 실제 빈 시간과 마감 우선순위를 먼저 고려해."
+        } else {
+            focusRule = ""
+        }
 
         return """
         너는 Calen 캘린더 앱의 AI 일정 비서야. 한국어로 답변해.
         현재 시각: \(now), 타임존: Asia/Seoul
+        \(tone.promptInstruction)
+        \(focusRule)
 
         \(userContext.isEmpty ? "" : userContext + "\n")
 
@@ -584,6 +645,7 @@ final class AIService: ObservableObject {
 
             switch action.action {
             case "findFreeSlot", "blockTime":
+                applySchedulingProfile()
                 let rawTitle = String((action.title ?? (action.action == "blockTime" ? "집중 블록" : "")).prefix(500))
                 guard !rawTitle.isEmpty else {
                     results.append(ChatMessage(role: .toolCall, content: "\(action.action) 실패: 제목 없음"))
@@ -605,7 +667,7 @@ final class AIService: ObservableObject {
                     events: cachedCalendarEvents,
                     durationMinutes: durationMins,
                     preferredDate: preferredDate,
-                    preferredTime: action.preferredTime
+                    preferredTime: userProfileProvider?().usesFocusWindowsForAI == false ? nil : action.preferredTime
                 )
 
                 guard let slot = slot else {

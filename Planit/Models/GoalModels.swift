@@ -110,6 +110,7 @@ struct UserProfile: Codable {
     var morningBriefHour: Int    // e.g., 8
     var eveningReviewHour: Int   // e.g., 21
     var aggressiveness: Aggressiveness
+    var usesFocusWindowsForAI: Bool
     var onboardingDone: Bool
 
     init() {
@@ -124,7 +125,42 @@ struct UserProfile: Codable {
         morningBriefHour = 8
         eveningReviewHour = 21
         aggressiveness = .manual
+        usesFocusWindowsForAI = true
         onboardingDone = false
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case workStartHour
+        case workEndHour
+        case commuteMinutes
+        case lunchStartHour
+        case lunchEndHour
+        case energyType
+        case weekdayCapacityMinutes
+        case weekendCapacityMinutes
+        case morningBriefHour
+        case eveningReviewHour
+        case aggressiveness
+        case usesFocusWindowsForAI
+        case onboardingDone
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        let defaults = UserProfile()
+        workStartHour = try values.decodeIfPresent(Int.self, forKey: .workStartHour) ?? defaults.workStartHour
+        workEndHour = try values.decodeIfPresent(Int.self, forKey: .workEndHour) ?? defaults.workEndHour
+        commuteMinutes = try values.decodeIfPresent(Int.self, forKey: .commuteMinutes) ?? defaults.commuteMinutes
+        lunchStartHour = try values.decodeIfPresent(Int.self, forKey: .lunchStartHour) ?? defaults.lunchStartHour
+        lunchEndHour = try values.decodeIfPresent(Int.self, forKey: .lunchEndHour) ?? defaults.lunchEndHour
+        energyType = try values.decodeIfPresent(EnergyType.self, forKey: .energyType) ?? defaults.energyType
+        weekdayCapacityMinutes = try values.decodeIfPresent(Int.self, forKey: .weekdayCapacityMinutes) ?? defaults.weekdayCapacityMinutes
+        weekendCapacityMinutes = try values.decodeIfPresent(Int.self, forKey: .weekendCapacityMinutes) ?? defaults.weekendCapacityMinutes
+        morningBriefHour = try values.decodeIfPresent(Int.self, forKey: .morningBriefHour) ?? defaults.morningBriefHour
+        eveningReviewHour = try values.decodeIfPresent(Int.self, forKey: .eveningReviewHour) ?? defaults.eveningReviewHour
+        aggressiveness = try values.decodeIfPresent(Aggressiveness.self, forKey: .aggressiveness) ?? defaults.aggressiveness
+        usesFocusWindowsForAI = try values.decodeIfPresent(Bool.self, forKey: .usesFocusWindowsForAI) ?? defaults.usesFocusWindowsForAI
+        onboardingDone = try values.decodeIfPresent(Bool.self, forKey: .onboardingDone) ?? defaults.onboardingDone
     }
 }
 
