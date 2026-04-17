@@ -409,27 +409,46 @@ final class CalendarViewModel: ObservableObject {
         }
     }
 
-    /// Google 이벤트에 Apple Calendar 이벤트를 병합
-    /// macOS Apple Calendar가 Google 계정을 연결한 경우 같은 이벤트가
-    /// Google 직접 API와 EventKit 양쪽으로 들어온다. EventKit의
-    /// calendarItemExternalIdentifier == Google event.id 인 경우 Apple 미러는 제거.
+    /// Google 이벤트에 Apple Calendar 이벤트를 병합.
+    /// Apple 미러(macOS Calendar가 Google 계정을 연결한 경우) 제거 전략 2단:
+    ///   1) externalID == Google event.id 매칭 (가장 안전한 dedup)
+    ///   2) fallback: (title + startDate 분단위) 동일하면 미러로 간주 — externalID가
+    ///      일관되게 채워지지 않는 계정/macOS 버전 커버
     func mergeAppleCalendarEvents(for month: Date) {
         guard appleCalendarEnabled, appleCalendarAccessGranted else { return }
-        let googleIDs = Set(calendarEvents.filter { $0.source == .google }.map(\.id))
+        let googleEvents = calendarEvents.filter { $0.source == .google }
+        let googleIDs = Set(googleEvents.map(\.id))
+
+        // 미러 fingerprint: 제목 + 시작시각(분 단위 절삭). EventKit 저장 후 초 단위가
+        // 달라질 수 있으므로 분까지만 비교한다.
+        func fingerprint(_ e: CalendarEvent) -> String {
+            let minute = Int(e.startDate.timeIntervalSince1970 / 60)
+            return "\(e.title.trimmingCharacters(in: .whitespaces))|\(minute)"
+        }
+        let googleFingerprints = Set(googleEvents.map(fingerprint))
+
         let appleRaw = fetchLocalCalendarEvents(for: month)
+        var mirrorByExternalID = 0
+        var mirrorByFingerprint = 0
         let appleEvents = appleRaw.filter { apple in
-            // externalID 가 Google id와 일치하면 미러이므로 제외
-            if let ext = apple.externalID, googleIDs.contains(ext) { return false }
+            if let ext = apple.externalID, googleIDs.contains(ext) {
+                mirrorByExternalID += 1
+                return false
+            }
+            if googleFingerprints.contains(fingerprint(apple)) {
+                mirrorByFingerprint += 1
+                return false
+            }
             return true
         }
+
         var merged = calendarEvents.filter { $0.source != .apple }
         let existingNonAppleCount = merged.count
         merged.append(contentsOf: appleEvents)
         let todoEventIds = Set(todos.compactMap { $0.googleEventId })
         let deduped = Self.deduplicatedCalendarEvents(merged, todoGoogleEventIDs: todoEventIds)
-        let seenIDs = Set(deduped.map(\.id))
         PlanitLoggers.sync.info(
-            "Merged Apple events month=\(Self.logDate(month), privacy: .public) existingNonApple=\(existingNonAppleCount, privacy: .public) appleRaw=\(appleRaw.count, privacy: .public) appleAfterMirrorFilter=\(appleEvents.count, privacy: .public) deduped=\(deduped.count, privacy: .public) uniqueIDs=\(seenIDs.count, privacy: .public)"
+            "Merged Apple events month=\(Self.logDate(month), privacy: .public) existingNonApple=\(existingNonAppleCount, privacy: .public) appleRaw=\(appleRaw.count, privacy: .public) mirrorByExt=\(mirrorByExternalID, privacy: .public) mirrorByFingerprint=\(mirrorByFingerprint, privacy: .public) appleKept=\(appleEvents.count, privacy: .public) deduped=\(deduped.count, privacy: .public)"
         )
         calendarEvents = deduped
         applyEventCategoryMappings()
@@ -714,6 +733,25 @@ final class CalendarViewModel: ObservableObject {
     }
 
     func updateGoogleEvent(eventID: String, calendarID: String = "google:primary", title: String, startDate: Date, endDate: Date, isAllDay: Bool) {
+        // 낙관 UI: API 호출 전에 로컬 state를 새 날짜로 먼저 반영 + 같은 제목의
+        // Apple 미러를 옛 위치에서 선제 제거. EventKit이 Google 싱크하기 전까지
+        // macOS Calendar가 옛 위치 이벤트를 재표시하는 '깜빡임' 방지.
+        if let idx = calendarEvents.firstIndex(where: { $0.id == eventID }) {
+            let oldStart = calendarEvents[idx].startDate
+            let oldTitle = calendarEvents[idx].title
+            calendarEvents[idx].title = title
+            calendarEvents[idx].startDate = startDate
+            calendarEvents[idx].endDate = endDate
+            calendarEvents[idx].isAllDay = isAllDay
+
+            // 옛 시작시각 + 같은 제목의 Apple 미러 즉시 제거
+            let oldMinute = Int(oldStart.timeIntervalSince1970 / 60)
+            calendarEvents.removeAll { ev in
+                ev.source == .apple
+                && ev.title.trimmingCharacters(in: .whitespaces) == oldTitle.trimmingCharacters(in: .whitespaces)
+                && Int(ev.startDate.timeIntervalSince1970 / 60) == oldMinute
+            }
+        }
         Task {
             do {
                 PlanitLoggers.sync.info(
