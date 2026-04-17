@@ -195,6 +195,7 @@ final class CalendarViewModel: ObservableObject {
     deinit {
         refreshTimer?.invalidate()
         refreshTimer = nil
+        suppressedAppleMirrors.removeAll()
         dateChangeTimer?.invalidate()
         dateChangeTimer = nil
         if let observer = notificationObserver {
@@ -209,7 +210,9 @@ final class CalendarViewModel: ObservableObject {
     private func startPeriodicRefresh() {
         refreshTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                self?.refreshEvents()
+                guard let self else { return }
+                self.cleanupExpiredAppleMirrorSuppressions()
+                self.refreshEvents()
             }
         }
     }
@@ -304,6 +307,88 @@ final class CalendarViewModel: ObservableObject {
         }
 
         return result
+    }
+
+    struct SuppressKey: Hashable {
+        let title: String
+        let oldStartMinute: Int
+        let calendarID: String
+
+        init(title: String, oldStartMinute: Int, calendarID: String) {
+            self.title = Self.normalizedTitle(title)
+            self.oldStartMinute = oldStartMinute
+            self.calendarID = calendarID
+        }
+
+        nonisolated static func normalizedTitle(_ title: String) -> String {
+            title.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+    }
+
+    struct AppleMirrorFilterResult {
+        let events: [CalendarEvent]
+        let mirrorByExternalID: Int
+        let mirrorByFingerprint: Int
+        let mirrorBySuppress: Int
+    }
+
+    private nonisolated static func startMinute(_ date: Date) -> Int {
+        Int(date.timeIntervalSince1970 / 60)
+    }
+
+    private nonisolated static func durationMinutes(_ event: CalendarEvent) -> Int {
+        max(0, Int((event.endDate.timeIntervalSince(event.startDate) / 60).rounded()))
+    }
+
+    nonisolated static func appleMirrorSuppressKey(for event: CalendarEvent) -> SuppressKey {
+        SuppressKey(
+            title: event.title,
+            oldStartMinute: startMinute(event.startDate),
+            calendarID: event.calendarID
+        )
+    }
+
+    nonisolated static func appleMirrorFingerprint(_ event: CalendarEvent) -> String {
+        let title = SuppressKey.normalizedTitle(event.title)
+        let minute = startMinute(event.startDate)
+        return "\(title)|\(minute)|\(durationMinutes(event))|\(event.isAllDay)"
+    }
+
+    nonisolated static func filteredAppleCalendarEvents(
+        _ appleRaw: [CalendarEvent],
+        googleEvents: [CalendarEvent],
+        suppressedAppleMirrors: [SuppressKey: Date],
+        now: Date
+    ) -> AppleMirrorFilterResult {
+        let googleIDs = Set(googleEvents.map(\.id))
+        let googleFingerprints = Set(googleEvents.map(appleMirrorFingerprint))
+        let activeSuppressKeys = Set(suppressedAppleMirrors.filter { $0.value > now }.keys)
+
+        var mirrorByExternalID = 0
+        var mirrorByFingerprint = 0
+        var mirrorBySuppress = 0
+        let events = appleRaw.filter { apple in
+            if let ext = apple.externalID, googleIDs.contains(ext) {
+                mirrorByExternalID += 1
+                return false
+            }
+            if googleFingerprints.contains(appleMirrorFingerprint(apple)) {
+                mirrorByFingerprint += 1
+                return false
+            }
+            if activeSuppressKeys.contains(appleMirrorSuppressKey(for: apple)) {
+                mirrorBySuppress += 1
+                return false
+            }
+            return true
+        }
+
+        return AppleMirrorFilterResult(
+            events: events,
+            mirrorByExternalID: mirrorByExternalID,
+            mirrorByFingerprint: mirrorByFingerprint,
+            mirrorBySuppress: mirrorBySuppress
+        )
     }
 
     private nonisolated static func areCalendarMirrors(_ lhs: CalendarEvent, _ rhs: CalendarEvent) -> Bool {
@@ -420,27 +505,32 @@ final class CalendarViewModel: ObservableObject {
     /// Google 이벤트에 Apple Calendar 이벤트를 병합.
     /// Apple 미러(macOS Calendar가 Google 계정을 연결한 경우) 제거 전략 3단:
     ///   1) externalID == Google event.id 매칭 (가장 안전한 dedup)
-    ///   2) 현재 위치 fingerprint(title + startDate 분) 동일 → 미러
-    ///   3) 최근 수정된 이벤트 title(`suppressedAppleTitles`)과 동일 →
-    ///      macOS Calendar가 Google sync 받는 지연 동안 옛 위치 Apple 미러 차단
+    ///   2) 현재 위치 fingerprint(title + startDate 분 + duration + allDay) 동일 → 미러
+    ///   3) 최근 수정된 이벤트의 (title, oldStartMinute, calendarID)와 동일 →
+    ///      macOS Calendar가 Google sync 받는 지연 동안 해당 위치 Apple 미러만 차단
     func mergeAppleCalendarEvents(for month: Date) {
         guard appleCalendarEnabled, appleCalendarAccessGranted else { return }
         let googleEvents = calendarEvents.filter { $0.source == .google }
 
         // 만료된 suppress 엔트리 청소
         let now = Date()
-        suppressedAppleTitles = suppressedAppleTitles.filter { $0.value > now }
-        let suppressed = Set(suppressedAppleTitles.keys)
+        cleanupExpiredAppleMirrorSuppressions(now: now)
 
         let appleRaw = fetchLocalCalendarEvents(for: month)
-        let filtered = Self.filteredAppleMirrorEvents(
+        let filterResult = Self.filteredAppleCalendarEvents(
             appleRaw,
             googleEvents: googleEvents,
-            suppressedTitles: suppressed,
-            updatedAt: now
+            suppressedAppleMirrors: suppressedAppleMirrors,
+            now: now
         )
-        let appleEvents = filtered.events
-        lastMirrorFilterStats = filtered.stats
+        let appleEvents = filterResult.events
+        // 진단 UI용 stats 업데이트 (narrow key 기반 카운트 그대로 표시)
+        lastMirrorFilterStats = MirrorFilterStats(
+            extCount: filterResult.mirrorByExternalID,
+            fingerprintCount: filterResult.mirrorByFingerprint,
+            suppressCount: filterResult.mirrorBySuppress,
+            lastUpdated: now
+        )
 
         var merged = calendarEvents.filter { $0.source != .apple }
         let existingNonAppleCount = merged.count
@@ -448,58 +538,74 @@ final class CalendarViewModel: ObservableObject {
         let todoEventIds = Set(todos.compactMap { $0.googleEventId })
         let deduped = Self.deduplicatedCalendarEvents(merged, todoGoogleEventIDs: todoEventIds)
         PlanitLoggers.sync.info(
-            "Merged Apple events month=\(Self.logDate(month), privacy: .public) existingNonApple=\(existingNonAppleCount, privacy: .public) appleRaw=\(appleRaw.count, privacy: .public) mirrorByExt=\(filtered.stats.extCount, privacy: .public) mirrorByFingerprint=\(filtered.stats.fingerprintCount, privacy: .public) mirrorBySuppress=\(filtered.stats.suppressCount, privacy: .public) appleKept=\(appleEvents.count, privacy: .public) deduped=\(deduped.count, privacy: .public)"
+            "Merged Apple events month=\(Self.logDate(month), privacy: .public) existingNonApple=\(existingNonAppleCount, privacy: .public) appleRaw=\(appleRaw.count, privacy: .public) mirrorByExt=\(filterResult.mirrorByExternalID, privacy: .public) mirrorByFingerprint=\(filterResult.mirrorByFingerprint, privacy: .public) mirrorBySuppress=\(filterResult.mirrorBySuppress, privacy: .public) appleKept=\(appleEvents.count, privacy: .public) deduped=\(deduped.count, privacy: .public)"
         )
         calendarEvents = deduped
         applyEventCategoryMappings()
     }
 
-    nonisolated static func filteredAppleMirrorEvents(
-        _ appleEvents: [CalendarEvent],
-        googleEvents: [CalendarEvent],
-        suppressedTitles: Set<String>,
-        updatedAt: Date
-    ) -> (events: [CalendarEvent], stats: MirrorFilterStats) {
-        let googleIDs = Set(googleEvents.map(\.id))
+    /// 최근 Google 수정한 이벤트의 Apple 미러 복합키 → 유예 시각.
+    private var suppressedAppleMirrors: [SuppressKey: Date] = [:]
 
-        func fingerprint(_ event: CalendarEvent) -> String {
-            let minute = Int(event.startDate.timeIntervalSince1970 / 60)
-            return "\(event.title.trimmingCharacters(in: .whitespaces))|\(minute)"
-        }
+    private nonisolated static let appleMirrorSuppressTTL: TimeInterval = 60
 
-        let googleFingerprints = Set(googleEvents.map(fingerprint))
-        var stats = MirrorFilterStats(lastUpdated: updatedAt)
-        let filteredEvents = appleEvents.filter { apple in
-            if let ext = apple.externalID, googleIDs.contains(ext) {
-                stats.extCount += 1
-                return false
-            }
-            if googleFingerprints.contains(fingerprint(apple)) {
-                stats.fingerprintCount += 1
-                return false
-            }
-            let normalized = apple.title.trimmingCharacters(in: .whitespaces)
-            if suppressedTitles.contains(normalized) {
-                stats.suppressCount += 1
-                return false
-            }
-            return true
-        }
-
-        return (filteredEvents, stats)
+    private func cleanupExpiredAppleMirrorSuppressions(now: Date = Date()) {
+        suppressedAppleMirrors = suppressedAppleMirrors.filter { $0.value > now }
     }
 
-    /// 최근 Google 수정한 이벤트 title → 유예 시각.
-    /// 이 시각까지는 mergeAppleCalendarEvents가 해당 title의 Apple 미러를
-    /// 위치 무관하게 제외하여 'macOS Calendar sync 지연'으로 인한 옛 위치
-    /// 재출현을 방지한다. 60초면 대부분의 CalDAV 싱크를 커버.
-    private var suppressedAppleTitles: [String: Date] = [:]
-
     /// updateGoogleEvent 등이 호출할 suppress 등록 헬퍼
-    fileprivate func suppressAppleMirror(title: String, for duration: TimeInterval = 60) {
-        let key = title.trimmingCharacters(in: .whitespaces)
-        guard !key.isEmpty else { return }
-        suppressedAppleTitles[key] = Date().addingTimeInterval(duration)
+    fileprivate func suppressAppleMirror(
+        title: String,
+        startDate: Date,
+        calendarID: String,
+        for duration: TimeInterval = CalendarViewModel.appleMirrorSuppressTTL
+    ) {
+        let key = SuppressKey(
+            title: title,
+            oldStartMinute: Self.startMinute(startDate),
+            calendarID: calendarID
+        )
+        guard !key.title.isEmpty, !key.calendarID.isEmpty else { return }
+        suppressedAppleMirrors[key] = Date().addingTimeInterval(duration)
+    }
+
+    @discardableResult
+    private func suppressAppleMirrorCandidates(
+        eventID: String,
+        title: String,
+        startDate: Date,
+        endDate: Date,
+        isAllDay: Bool,
+        appleCandidates: [CalendarEvent]
+    ) -> Set<SuppressKey> {
+        let normalizedTitle = SuppressKey.normalizedTitle(title)
+        guard !normalizedTitle.isEmpty else { return [] }
+
+        let targetMinute = Self.startMinute(startDate)
+        let targetDuration = max(0, Int((endDate.timeIntervalSince(startDate) / 60).rounded()))
+        let byExternalID = appleCandidates.filter {
+            $0.externalID == eventID
+            && Self.startMinute($0.startDate) == targetMinute
+        }
+        let byExactPosition = appleCandidates.filter {
+            SuppressKey.normalizedTitle($0.title) == normalizedTitle
+            && Self.startMinute($0.startDate) == targetMinute
+            && Self.durationMinutes($0) == targetDuration
+            && $0.isAllDay == isAllDay
+        }
+        let byLoosePosition = appleCandidates.filter {
+            SuppressKey.normalizedTitle($0.title) == normalizedTitle
+            && Self.startMinute($0.startDate) == targetMinute
+        }
+
+        let matchedCandidates = byExternalID.isEmpty
+            ? (byExactPosition.isEmpty ? byLoosePosition : byExactPosition)
+            : byExternalID
+        let keys = Set(matchedCandidates.map(Self.appleMirrorSuppressKey))
+        for key in keys {
+            suppressAppleMirror(title: key.title, startDate: startDate, calendarID: key.calendarID)
+        }
+        return keys
     }
 
     // MARK: - Apple Reminders (EventKit)
@@ -784,28 +890,43 @@ final class CalendarViewModel: ObservableObject {
         // 낙관 UI: API 호출 전에 로컬 state를 새 날짜로 먼저 반영 + 같은 제목의
         // Apple 미러를 옛 위치에서 선제 제거. EventKit이 Google 싱크하기 전까지
         // macOS Calendar가 옛 위치 이벤트를 재표시하는 '깜빡임' 방지.
-        var suppressedTitles = [title]
+        let appleCandidates = (appleCalendarEnabled && appleCalendarAccessGranted)
+            ? fetchLocalCalendarEvents(for: currentMonth)
+            : calendarEvents.filter { $0.source == .apple }
+        var suppressKeysForImmediateRemoval = Set<SuppressKey>()
         if let idx = calendarEvents.firstIndex(where: { $0.id == eventID }) {
             let oldStart = calendarEvents[idx].startDate
+            let oldEnd = calendarEvents[idx].endDate
             let oldTitle = calendarEvents[idx].title
-            suppressedTitles.append(oldTitle)
+            let oldIsAllDay = calendarEvents[idx].isAllDay
+            suppressKeysForImmediateRemoval.formUnion(suppressAppleMirrorCandidates(
+                eventID: eventID,
+                title: oldTitle,
+                startDate: oldStart,
+                endDate: oldEnd,
+                isAllDay: oldIsAllDay,
+                appleCandidates: appleCandidates
+            ))
             calendarEvents[idx].title = title
             calendarEvents[idx].startDate = startDate
             calendarEvents[idx].endDate = endDate
             calendarEvents[idx].isAllDay = isAllDay
 
             // 옛 시작시각 + 같은 제목의 Apple 미러 즉시 제거
-            let oldMinute = Int(oldStart.timeIntervalSince1970 / 60)
             calendarEvents.removeAll { ev in
                 ev.source == .apple
-                && ev.title.trimmingCharacters(in: .whitespaces) == oldTitle.trimmingCharacters(in: .whitespaces)
-                && Int(ev.startDate.timeIntervalSince1970 / 60) == oldMinute
+                && suppressKeysForImmediateRemoval.contains(Self.appleMirrorSuppressKey(for: ev))
             }
         }
         // 60초간 Apple 미러 suppress — macOS Calendar sync 지연 구간 커버
-        for t in suppressedTitles {
-            suppressAppleMirror(title: t, for: 60)
-        }
+        suppressAppleMirrorCandidates(
+            eventID: eventID,
+            title: title,
+            startDate: startDate,
+            endDate: endDate,
+            isAllDay: isAllDay,
+            appleCandidates: appleCandidates
+        )
         Task {
             do {
                 PlanitLoggers.sync.info(
