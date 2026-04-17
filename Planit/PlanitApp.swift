@@ -67,6 +67,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.refreshStatusIcon() }
             .store(in: &cancellables)
+
+        // 앱이 메뉴바에 조용히 떠 있어도 새 버전을 자동 감지해 알림으로 알리도록 주기 폴링 시작.
+        // (Sparkle의 accessory 앱 UI가 안 뜨는 환경에서도 배너 + 시스템 알림 동작)
+        updater.startPeriodicAppcastPolling()
     }
 
     @objc func handleStatusItemClick() {
