@@ -661,7 +661,7 @@ struct ChatView: View {
                         .font(.system(size: 13))
                         .foregroundStyle(action.action == "delete" ? .red : .orange)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text(action.title ?? "?")
+                        Text(resolveActionTitle(action))
                             .font(.system(size: 11, weight: .medium))
                             .lineLimit(1)
                         Text(actionLabel(action.action))
@@ -722,6 +722,16 @@ struct ChatView: View {
         case "delete": return String(localized: "chat.action.delete")
         default: return action
         }
+    }
+
+    /// delete/update 액션은 AI가 title을 누락해도 eventId로 실제 이벤트 제목을 조회해 표시한다.
+    private func resolveActionTitle(_ action: CalendarAction) -> String {
+        if let title = action.title, !title.isEmpty { return title }
+        if let eid = action.eventId,
+           let event = viewModel.calendarEvents.first(where: { $0.id == eid }) {
+            return event.title
+        }
+        return String(localized: "chat.action.unknown")
     }
 
     // MARK: - Send Message
