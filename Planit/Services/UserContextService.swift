@@ -64,6 +64,7 @@ final class UserContextService: ObservableObject {
     /// AI 시스템 프롬프트에 주입할 컨텍스트 블록 반환
     func contextForAI() -> String {
         let content = (try? String(contentsOf: contextFileURL, encoding: .utf8)) ?? ""
+        guard Self.isValidContextDocument(content) else { return "" }
         guard !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return "" }
 
         // 전체 파일에서 최근 관찰 기록은 최대 10줄만 포함 (토큰 절약)
@@ -97,6 +98,7 @@ final class UserContextService: ObservableObject {
     /// 특정 섹션 내용 반환
     func sectionContent(_ header: String) -> String {
         let content = (try? String(contentsOf: contextFileURL, encoding: .utf8)) ?? ""
+        guard Self.isValidContextDocument(content) else { return "" }
         return extractSection(header, from: content)
     }
 
@@ -519,39 +521,7 @@ final class UserContextService: ObservableObject {
         guard !fm.fileExists(atPath: contextFileURL.path) else { return }
 
         // 파일 초기 내용은 언어 무관 — 섹션 헤더는 파싱 키이므로 고정
-        let initial = """
-        # 🧠 Calen User Context
-        > This file is automatically managed by the app. You can also edit it directly.
-        > AI reads this file to provide hyper-personalized schedule recommendations.
-
-        \(Section.profile)
-        _[auto-filled from conversations]_
-
-        \(Section.focus)
-        _[current focus area — exams, projects, topics]_
-
-        \(Section.style)
-        _[auto-detected from your todo/event patterns]_
-
-        \(Section.current)
-        _[auto-generated high-level behavioral summary]_
-
-        \(Section.timePatterns)
-        _[auto-detected busy windows, light windows, and schedule fragmentation]_
-
-        \(Section.taskTendency)
-        _[auto-detected task completion, categories, and overdue patterns]_
-
-        \(Section.goalStatus)
-        _[auto-detected goal progress, risk, and execution trend]_
-
-        \(Section.external)
-        _[external info cached from web searches]_
-
-        \(Section.log)
-        _[observations noted from your conversations]_
-        """
-        try? initial.write(to: contextFileURL, atomically: true, encoding: .utf8)
+        try? Self.initialContextDocument.write(to: contextFileURL, atomically: true, encoding: .utf8)
     }
 
     private func ensureKnownSections() {
@@ -610,6 +580,10 @@ final class UserContextService: ObservableObject {
 
     private func loadSummary() {
         let content = (try? String(contentsOf: contextFileURL, encoding: .utf8)) ?? ""
+        guard Self.isValidContextDocument(content) else {
+            contextSummary = ""
+            return
+        }
         let profile = extractSection(Section.profile, from: content)
         let focus = extractSection(Section.focus, from: content)
         let current = extractSection(Section.current, from: content)
@@ -624,6 +598,9 @@ final class UserContextService: ObservableObject {
 
     private func updateSection(_ header: String, body: String) {
         var content = (try? String(contentsOf: contextFileURL, encoding: .utf8)) ?? ""
+        if !Self.isValidContextDocument(content) {
+            content = Self.initialContextDocument
+        }
         let allHeaders = Section.ordered
 
         if content.contains(header) {
@@ -751,6 +728,66 @@ final class UserContextService: ObservableObject {
             }
             return total + tight
         }
+    }
+
+    // MARK: - Document integrity / initial template (from security branch)
+
+    private static func isValidContextDocument(_ content: String) -> Bool {
+        guard content.utf8.count <= 256_000 else { return false }
+        let required = [
+            Section.profile,
+            Section.focus,
+            Section.style,
+            Section.external,
+            Section.log,
+        ]
+        guard required.allSatisfy({ content.contains($0) }) else { return false }
+
+        let lowered = content.lowercased()
+        let blockedPrefixes = ["system:", "assistant:", "human:"]
+        return !content.components(separatedBy: "\n").contains { line in
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            let loweredLine = trimmed.lowercased()
+            return blockedPrefixes.contains { loweredLine.hasPrefix($0) } ||
+                trimmed.hasPrefix("사용자:") ||
+                trimmed.hasPrefix("어시스턴트:")
+        } && !lowered.contains("```json")
+    }
+
+    /// 초기 템플릿 — context 심화 PR의 확장 섹션을 포함
+    private static var initialContextDocument: String {
+        """
+        # 🧠 Calen User Context
+        > This file is automatically managed by the app. You can also edit it directly.
+        > AI reads this file to provide hyper-personalized schedule recommendations.
+
+        \(Section.profile)
+        _[auto-filled from conversations]_
+
+        \(Section.focus)
+        _[current focus area — exams, projects, topics]_
+
+        \(Section.style)
+        _[auto-detected from your todo/event patterns]_
+
+        \(Section.current)
+        _[auto-generated high-level behavioral summary]_
+
+        \(Section.timePatterns)
+        _[auto-detected busy windows, light windows, and schedule fragmentation]_
+
+        \(Section.taskTendency)
+        _[auto-detected task completion, categories, and overdue patterns]_
+
+        \(Section.goalStatus)
+        _[auto-detected goal progress, risk, and execution trend]_
+
+        \(Section.external)
+        _[external info cached from web searches]_
+
+        \(Section.log)
+        _[observations noted from your conversations]_
+        """
     }
 
     // MARK: - DuckDuckGo 검색

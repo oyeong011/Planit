@@ -83,6 +83,7 @@ struct MainCalendarView: View {
             scheduleNotifications()
             // 초개인화: aiService에 컨텍스트 서비스 주입
             aiService.userContextService = userContextService
+            aiService.userProfileProvider = { goalService.profile }
             refreshUserContextAnalysis()
         }
         .onChange(of: viewModel.calendarEvents) {

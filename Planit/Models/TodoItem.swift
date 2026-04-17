@@ -236,6 +236,27 @@ struct PendingCalendarEdit: Codable, Identifiable {
         self.eventId = eventId
         self.createdAt = Date()
     }
+
+    var isSafeForSync: Bool {
+        guard ["create", "update", "delete"].contains(action) else { return false }
+        guard title.count <= 500 else { return false }
+        guard endDate >= startDate else { return false }
+        guard endDate.timeIntervalSince(startDate) <= 366 * 24 * 60 * 60 else { return false }
+
+        if action == "create" {
+            return !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        guard let eventId, !eventId.isEmpty, eventId.count <= 512 else { return false }
+        if action == "update" {
+            return !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        return true
+    }
+
+    static func isSafeQueue(_ edits: [PendingCalendarEdit]) -> Bool {
+        guard edits.count < 50 else { return false }
+        return edits.allSatisfy(\.isSafeForSync)
+    }
 }
 
 // Color.toHex()는 PlatformShims.swift에 정의됨 (크로스플랫폼)
