@@ -80,6 +80,7 @@ final class CalendarViewModel: ObservableObject {
     private var eventCachePath: URL { appSupportDir.appendingPathComponent("events_cache.json") }
     private var pendingEditsPath: URL { appSupportDir.appendingPathComponent("pending_edits.json") }
     private var eventCategoryMappingsPath: URL { appSupportDir.appendingPathComponent("event_category_mappings.json") }
+    private let pendingEditsIntegrityMigratedKey = "planit.pendingEditsIntegrityMigrated.v1"
 
     // MARK: - Init
 
@@ -1220,7 +1221,13 @@ final class CalendarViewModel: ObservableObject {
     private func savePendingEdits() {
         do {
             let data = try JSONEncoder().encode(pendingEdits)
-            try data.write(to: pendingEditsPath, options: .atomic)
+            if let key = KeychainHelper.loadOrCreateFileIntegrityKey() {
+                try SignedFileStore.write(data, to: pendingEditsPath, key: key)
+                UserDefaults.standard.set(true, forKey: pendingEditsIntegrityMigratedKey)
+                try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: SignedFileStore.signatureURL(for: pendingEditsPath).path)
+            } else {
+                try data.write(to: pendingEditsPath, options: .atomic)
+            }
             try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: pendingEditsPath.path)
         } catch { print("[Calen] Failed to save pending edits") }
     }
@@ -1228,8 +1235,42 @@ final class CalendarViewModel: ObservableObject {
     private func loadPendingEdits() {
         guard fileManager.fileExists(atPath: pendingEditsPath.path) else { return }
         do {
-            let data = try Data(contentsOf: pendingEditsPath)
-            pendingEdits = try JSONDecoder().decode([PendingCalendarEdit].self, from: data)
+            let key = KeychainHelper.loadOrCreateFileIntegrityKey()
+            let data: Data
+            if let key {
+                if let verified = try SignedFileStore.readVerified(from: pendingEditsPath, key: key) {
+                    data = verified
+                } else {
+                    guard !UserDefaults.standard.bool(forKey: pendingEditsIntegrityMigratedKey) else {
+                        print("[Calen] Rejected unsigned or tampered pending edits")
+                        pendingEdits = []
+                        pendingEditsCount = 0
+                        return
+                    }
+                    let legacyData = try Data(contentsOf: pendingEditsPath)
+                    let legacyEdits = try JSONDecoder().decode([PendingCalendarEdit].self, from: legacyData)
+                    guard PendingCalendarEdit.isSafeQueue(legacyEdits) else {
+                        print("[Calen] Rejected unsafe pending edits")
+                        pendingEdits = []
+                        pendingEditsCount = 0
+                        return
+                    }
+                    pendingEdits = legacyEdits
+                    pendingEditsCount = pendingEdits.count
+                    savePendingEdits()
+                    return
+                }
+            } else {
+                data = try Data(contentsOf: pendingEditsPath)
+            }
+            let decoded = try JSONDecoder().decode([PendingCalendarEdit].self, from: data)
+            guard PendingCalendarEdit.isSafeQueue(decoded) else {
+                print("[Calen] Rejected unsafe pending edits")
+                pendingEdits = []
+                pendingEditsCount = 0
+                return
+            }
+            pendingEdits = decoded
             pendingEditsCount = pendingEdits.count
         } catch { print("[Calen] Failed to load pending edits") }
     }
@@ -1244,6 +1285,13 @@ final class CalendarViewModel: ObservableObject {
         // 처리할 배치를 스냅샷하고 pendingEdits를 즉시 비움
         // → await 구간에 새로 추가된 편집이 remaining 덮어쓰기로 유실되는 문제 방지
         let batch = pendingEdits
+        guard PendingCalendarEdit.isSafeQueue(batch) else {
+            print("[Calen] Rejected unsafe pending edits before sync")
+            pendingEdits = []
+            pendingEditsCount = 0
+            savePendingEdits()
+            return
+        }
         pendingEdits = []
         savePendingEdits()
 

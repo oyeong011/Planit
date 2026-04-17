@@ -98,6 +98,23 @@ enum KeychainHelper {
         return deleteItem(account: tokenAccount)
     }
 
+    // MARK: - Local File Integrity
+
+    private static let fileIntegrityKeyAccount = "planit.file-integrity.key.v1"
+
+    static func loadOrCreateFileIntegrityKey() -> Data? {
+        if let existing = loadItem(account: fileIntegrityKeyAccount), existing.count >= 32 {
+            return existing
+        }
+
+        var bytes = [UInt8](repeating: 0, count: 32)
+        guard SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) == errSecSuccess else {
+            return nil
+        }
+        let key = Data(bytes)
+        return saveItem(account: fileIntegrityKeyAccount, data: key) ? key : nil
+    }
+
     // MARK: - OAuth Credentials
 
     private static let credentialsAccount = "planit.auth.credentials"
