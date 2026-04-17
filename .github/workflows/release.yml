@@ -72,10 +72,14 @@ jobs:
           mkdir -p "$APP_BUNDLE/Contents/MacOS"
           mkdir -p "$APP_BUNDLE/Contents/Resources"
 
+          # 고정폭 단조 증가 빌드 번호 (major*10000 + minor*100 + patch)
+          read V_MAJOR V_MINOR V_PATCH < <(echo "$VERSION" | awk -F. '{printf "%d %d %d\n", $1+0, $2+0, $3+0}')
+          BUILD_NUMBER=$((V_MAJOR * 10000 + V_MINOR * 100 + V_PATCH))
+
           cp "$BUILD_DIR/Calen" "$APP_BUNDLE/Contents/MacOS/Calen"
           cp "Planit/Info.plist" "$APP_BUNDLE/Contents/Info.plist"
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$APP_BUNDLE/Contents/Info.plist"
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VERSION" "$APP_BUNDLE/Contents/Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$APP_BUNDLE/Contents/Info.plist"
           cp "Planit/Resources/AppIcon.icns" "$APP_BUNDLE/Contents/Resources/AppIcon.icns"
 
           if [ -f "Planit/Resources/PrivacyInfo.xcprivacy" ]; then
@@ -89,12 +93,39 @@ jobs:
             [ -d "$lproj" ] && cp -R "$lproj" "$APP_BUNDLE/Contents/Resources/"
           done
 
-          echo "APP_BUNDLE=$APP_BUNDLE" >> "$GITHUB_ENV"
+          # Sparkle.framework 번들링
+          SPARKLE_SRC=".build/artifacts/sparkle/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework"
+          if [ -d "$SPARKLE_SRC" ]; then
+            mkdir -p "$APP_BUNDLE/Contents/Frameworks"
+            rm -rf "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
+            ditto "$SPARKLE_SRC" "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
+            echo "✓ Sparkle.framework embedded"
+          else
+            echo "✗ Sparkle.framework artifact not found at $SPARKLE_SRC" >&2
+            exit 1
+          fi
 
-      - name: Code sign
+          echo "APP_BUNDLE=$APP_BUNDLE" >> "$GITHUB_ENV"
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$GITHUB_ENV"
+
+      - name: Code sign (inside-out for Sparkle)
         env:
           DEVELOPER_ID: ${{ secrets.DEVELOPER_ID }}
         run: |
+          SPARKLE_FW="$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
+          # XPC services → Autoupdate → Updater.app → framework 순서
+          for xpc in "$SPARKLE_FW/Versions/B/XPCServices"/*.xpc; do
+            [ -d "$xpc" ] && codesign --force --options runtime --timestamp \
+              --preserve-metadata=identifier,entitlements,flags \
+              --sign "$DEVELOPER_ID" "$xpc"
+          done
+          codesign --force --options runtime --timestamp --sign "$DEVELOPER_ID" \
+            "$SPARKLE_FW/Versions/B/Autoupdate"
+          codesign --force --options runtime --timestamp --sign "$DEVELOPER_ID" \
+            "$SPARKLE_FW/Versions/B/Updater.app"
+          codesign --force --options runtime --timestamp --sign "$DEVELOPER_ID" "$SPARKLE_FW"
+
+          # 메인 앱 마지막
           codesign --force --options runtime \
             --entitlements "Planit/Planit.entitlements" \
             --sign "$DEVELOPER_ID" \
@@ -163,6 +194,78 @@ jobs:
           echo "DMG_SHA=$DMG_SHA" >> "$GITHUB_ENV"
           echo "ZIP SHA256: $ZIP_SHA"
           echo "DMG SHA256: $DMG_SHA"
+
+      - name: Sign Sparkle update (EdDSA)
+        env:
+          SPARKLE_ED_PRIVATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
+        run: |
+          if [ -z "${SPARKLE_ED_PRIVATE_KEY:-}" ]; then
+            echo "⚠️  SPARKLE_ED_PRIVATE_KEY secret 미설정 — appcast 서명/갱신 건너뜀"
+            echo "SPARKLE_SIGNED=false" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          SIGN_UPDATE=".build/artifacts/sparkle/Sparkle/bin/sign_update"
+          KEY_FILE="$RUNNER_TEMP/sparkle_ed_key"
+          printf '%s' "$SPARKLE_ED_PRIVATE_KEY" > "$KEY_FILE"
+          chmod 600 "$KEY_FILE"
+          SIGN_OUTPUT=$("$SIGN_UPDATE" -f "$KEY_FILE" "$ZIP_PATH")
+          rm -f "$KEY_FILE"
+          ED_SIG=$(echo "$SIGN_OUTPUT" | sed -n 's/.*sparkle:edSignature="\([^"]*\)".*/\1/p')
+          LENGTH=$(echo "$SIGN_OUTPUT" | sed -n 's/.*length="\([^"]*\)".*/\1/p')
+          if [ -z "$ED_SIG" ] || [ -z "$LENGTH" ]; then
+            echo "✗ Sparkle 서명 생성 실패: $SIGN_OUTPUT" >&2
+            exit 1
+          fi
+          echo "SPARKLE_ED_SIG=$ED_SIG" >> "$GITHUB_ENV"
+          echo "SPARKLE_LENGTH=$LENGTH" >> "$GITHUB_ENV"
+          echo "SPARKLE_SIGNED=true" >> "$GITHUB_ENV"
+
+      - name: Update appcast.xml on main
+        if: env.SPARKLE_SIGNED == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          WORK=/tmp/appcast-repo
+          rm -rf "$WORK"
+          git clone --depth=1 --branch main \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$WORK"
+          cd "$WORK"
+
+          export PUB_DATE=$(date -u +"%a, %d %b %Y %H:%M:%S +0000")
+          export DOWNLOAD_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/v${VERSION}/Calen-${VERSION}-universal.zip"
+          NOTES_FILE=$(mktemp)
+          gh release view "v${VERSION}" --repo "$GITHUB_REPOSITORY" --json body --jq '.body' > "$NOTES_FILE" 2>/dev/null || echo "릴리스 v${VERSION}" > "$NOTES_FILE"
+          export NOTES=$(cat "$NOTES_FILE")
+          rm -f "$NOTES_FILE"
+
+          python3 - <<PYEOF
+          import os, re
+          path = "docs/appcast.xml"
+          with open(path) as f: content = f.read()
+          item = f'''        <item>
+                  <title>v{os.environ["VERSION"]}</title>
+                  <sparkle:version>{os.environ["BUILD_NUMBER"]}</sparkle:version>
+                  <sparkle:shortVersionString>{os.environ["VERSION"]}</sparkle:shortVersionString>
+                  <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+                  <pubDate>{os.environ["PUB_DATE"]}</pubDate>
+                  <enclosure
+                      url="{os.environ["DOWNLOAD_URL"]}"
+                      sparkle:edSignature="{os.environ["SPARKLE_ED_SIG"]}"
+                      length="{os.environ["SPARKLE_LENGTH"]}"
+                      type="application/octet-stream" />
+                  <description><![CDATA[{os.environ["NOTES"]}]]></description>
+              </item>
+          '''
+          content = content.replace("</channel>", item + "    </channel>", 1)
+          with open(path, "w") as f: f.write(content)
+          PYEOF
+
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add docs/appcast.xml
+          git commit -m "release: v${VERSION} appcast entry"
+          git push origin main
 
       - name: Create GitHub Release & upload artifacts
         env:

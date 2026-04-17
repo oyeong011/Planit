@@ -1,0 +1,25 @@
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.0">
+    <channel>
+        <title>Calen</title>
+        <link>https://oyeong011.github.io/Planit/appcast.xml</link>
+        <description>Calen 자동 업데이트 피드</description>
+        <language>ko</language>
+        <!--
+            릴리스 시 scripts/release-sparkle.sh가 아래 항목을 자동 생성합니다.
+            <item>
+                <title>v0.1.26</title>
+                <sparkle:version>126</sparkle:version>
+                <sparkle:shortVersionString>0.1.26</sparkle:shortVersionString>
+                <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+                <pubDate>Mon, 17 Apr 2026 00:00:00 +0900</pubDate>
+                <enclosure
+                    url="https://github.com/oyeong011/Planit/releases/download/v0.1.26/Calen-0.1.26-universal.zip"
+                    sparkle:edSignature="..."
+                    length="12345678"
+                    type="application/octet-stream" />
+                <description><![CDATA[릴리스 노트]]></description>
+            </item>
+        -->
+    </channel>
+</rss>

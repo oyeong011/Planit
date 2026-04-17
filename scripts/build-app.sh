@@ -3,7 +3,7 @@ set -euo pipefail
 
 VERSION="${1:-1.0.0}"
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-BUILD_DIR="$PROJECT_DIR/.build/apple/Products/Release"
+BUILD_DIR="$PROJECT_DIR/.build/release"
 APP_NAME="Calen"
 APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
 DMG_NAME="Calen-${VERSION}-universal.dmg"
@@ -21,10 +21,20 @@ APP_PWD="${NOTARIZE_PASSWORD:-}"
 
 echo "=== Building Calen v${VERSION} ==="
 
-# 1. Release build (universal binary)
-echo "→ Building release binary..."
+# 1. Release build — arch별 개별 빌드 후 lipo로 합치기
+#    (최신 Xcode SwiftBuild에서 `--arch arm64 --arch x86_64` 동시 호출이 hang하는 이슈 회피)
 cd "$PROJECT_DIR"
-swift build -c release --arch arm64 --arch x86_64
+echo "→ Building release binary (arm64)..."
+swift build -c release --arch arm64
+echo "→ Building release binary (x86_64)..."
+swift build -c release --arch x86_64
+
+mkdir -p "$BUILD_DIR"
+echo "→ Creating universal binary via lipo..."
+lipo -create \
+    "$PROJECT_DIR/.build/arm64-apple-macosx/release/Calen" \
+    "$PROJECT_DIR/.build/x86_64-apple-macosx/release/Calen" \
+    -output "$BUILD_DIR/Calen"
 
 # 2. Create .app bundle
 echo "→ Creating .app bundle..."
@@ -32,29 +42,60 @@ rm -rf "$APP_BUNDLE"
 mkdir -p "$APP_BUNDLE/Contents/MacOS"
 mkdir -p "$APP_BUNDLE/Contents/Resources"
 
+# VERSION="1.2.3" → BUILD_NUMBER=10203 (각 성분 2자리 고정, 단조 증가 보장)
+read MAJOR MINOR PATCH < <(echo "$VERSION" | awk -F. '{printf "%d %d %d\n", $1+0, $2+0, $3+0}')
+BUILD_NUMBER=$((MAJOR * 10000 + MINOR * 100 + PATCH))
+
 cp "$BUILD_DIR/Calen" "$APP_BUNDLE/Contents/MacOS/Calen"
 cp "$PROJECT_DIR/Planit/Info.plist" "$APP_BUNDLE/Contents/Info.plist"
 cp "$PROJECT_DIR/Planit/Info.plist" "$APP_BUNDLE/Contents/Resources/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$APP_BUNDLE/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$APP_BUNDLE/Contents/Info.plist"
 
 if [ -f "$PROJECT_DIR/Planit/Resources/PrivacyInfo.xcprivacy" ]; then
     cp "$PROJECT_DIR/Planit/Resources/PrivacyInfo.xcprivacy" "$APP_BUNDLE/Contents/Resources/"
 fi
 cp "$PROJECT_DIR/Planit/Resources/AppIcon.icns" "$APP_BUNDLE/Contents/Resources/AppIcon.icns"
-if [ -d "$BUILD_DIR/Calen_Calen.bundle" ]; then
-    cp -R "$BUILD_DIR/Calen_Calen.bundle" "$APP_BUNDLE/Contents/Resources/"
+RBUNDLE="$PROJECT_DIR/.build/arm64-apple-macosx/release/Calen_Calen.bundle"
+if [ -d "$RBUNDLE" ]; then
+    cp -R "$RBUNDLE" "$APP_BUNDLE/Contents/Resources/"
 fi
 # lproj를 소스에서 직접 복사 → Bundle.main이 찾을 수 있도록
 for lproj in "$PROJECT_DIR/Planit/Resources"/*.lproj; do
     [ -d "$lproj" ] && cp -R "$lproj" "$APP_BUNDLE/Contents/Resources/"
 done
 
+# Sparkle.framework 번들링 (자동 업데이트)
+SPARKLE_SRC="$PROJECT_DIR/.build/artifacts/sparkle/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework"
+if [ -d "$SPARKLE_SRC" ]; then
+    echo "→ Embedding Sparkle.framework..."
+    mkdir -p "$APP_BUNDLE/Contents/Frameworks"
+    rm -rf "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
+    ditto "$SPARKLE_SRC" "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
+else
+    echo "⚠️  Sparkle.framework 아티팩트 없음 — swift build 먼저 실행하세요"
+fi
+
 echo "→ .app bundle created at: $APP_BUNDLE"
 
-# 3. 코드 서명
+# 3. 코드 서명 (Sparkle은 inside-out 순서 필수)
 if [ -n "$SIGN" ]; then
     echo "→ Code signing with: $SIGN"
-    # 리소스 먼저 서명, 메인 번들 마지막
+    SPARKLE_FW="$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
+    if [ -d "$SPARKLE_FW" ]; then
+        # XPC services → Autoupdate → Updater.app → framework 순서
+        for xpc in "$SPARKLE_FW/Versions/B/XPCServices"/*.xpc; do
+            [ -d "$xpc" ] && codesign --force --options runtime --timestamp \
+                --preserve-metadata=identifier,entitlements,flags \
+                --sign "$SIGN" "$xpc"
+        done
+        codesign --force --options runtime --timestamp --sign "$SIGN" \
+            "$SPARKLE_FW/Versions/B/Autoupdate"
+        codesign --force --options runtime --timestamp --sign "$SIGN" \
+            "$SPARKLE_FW/Versions/B/Updater.app"
+        codesign --force --options runtime --timestamp --sign "$SIGN" "$SPARKLE_FW"
+    fi
+    # 메인 앱 마지막
     codesign --force --options runtime \
         --entitlements "$PROJECT_DIR/Planit/Planit.entitlements" \
         --sign "$SIGN" \
