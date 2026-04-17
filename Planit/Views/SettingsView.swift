@@ -38,6 +38,7 @@ struct SettingsView: View {
 
     @State private var selectedSection: SettingsSection = .profile
     @State private var profile: UserProfile
+    @ObservedObject private var appearance = AppearanceService.shared
 
     init(goalService: GoalService, authManager: GoogleAuthManager, aiService: AIService,
          viewModel: CalendarViewModel, userContextService: UserContextService, onDismiss: @escaping () -> Void) {
@@ -807,6 +808,8 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 22) {
             sectionHeader(String(localized: "settings.section.advanced"), subtitle: String(localized: "settings.advanced.subtitle"), icon: "wrench.and.screwdriver")
 
+            appearanceCard
+
             settingsCard(String(localized: "settings.apple.diagnostics.card")) {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {
@@ -936,6 +939,29 @@ struct SettingsView: View {
     // MARK: - Language Card
 
     @ObservedObject private var languageManager = LanguageManager.shared
+
+    private var appearanceCard: some View {
+        settingsCard(String(localized: "settings.appearance.card", defaultValue: "외관")) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(String(localized: "settings.appearance.title", defaultValue: "테마"))
+                        .font(.system(size: 13, weight: .medium))
+                    Text(String(localized: "settings.appearance.desc", defaultValue: "라이트/다크 모드 또는 시스템 설정을 따릅니다."))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Picker("", selection: $appearance.mode) {
+                    ForEach(AppearanceService.Mode.allCases) { mode in
+                        Label(mode.title, systemImage: mode.icon).tag(mode)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.segmented)
+                .frame(width: 260)
+            }
+        }
+    }
 
     private var languageCard: some View {
         settingsCard(String(localized: "settings.language.card")) {
