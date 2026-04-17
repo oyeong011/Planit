@@ -154,7 +154,7 @@ struct ChatView: View {
                     icon: "terminal.fill",
                     color: .purple,
                     title: String(localized: "setup.step1.title"),
-                    done: aiService.claudeAvailable || aiService.codexAvailable
+                    done: AIProvider.allCases.contains { aiService.isAvailable($0) }
                 ) {
                     VStack(alignment: .leading, spacing: 8) {
                         // Claude Code
@@ -180,6 +180,18 @@ struct ChatView: View {
                             ],
                             isInstalled: aiService.codexAvailable,
                             badgeColor: .green
+                        )
+
+                        // Hermes
+                        installOption(
+                            name: "Hermes",
+                            description: String(localized: "setup.hermes.desc"),
+                            commands: [
+                                "# " + String(localized: "setup.hermes.install.after"),
+                                "hermes --version"
+                            ],
+                            isInstalled: aiService.hermesAvailable,
+                            badgeColor: .orange
                         )
 
                         // 재감지 버튼
@@ -996,17 +1008,11 @@ struct ProviderRow: View {
     let aiService: AIService
 
     private var isAvailable: Bool {
-        switch provider {
-        case .claude: return aiService.claudeAvailable
-        case .codex: return aiService.codexAvailable
-        }
+        aiService.isAvailable(provider)
     }
 
     private var statusText: String {
-        switch provider {
-        case .claude: return aiService.claudeAvailable ? String(localized: "ai.provider.installed") : String(localized: "ai.provider.not.installed")
-        case .codex: return aiService.codexAvailable ? String(localized: "ai.provider.installed") : String(localized: "ai.provider.not.installed")
-        }
+        isAvailable ? String(localized: "ai.provider.installed") : String(localized: "ai.provider.not.installed")
     }
 
     var body: some View {

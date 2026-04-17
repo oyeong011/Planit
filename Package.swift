@@ -17,7 +17,7 @@ let package = Package(
                 .product(name: "Sparkle", package: "Sparkle")
             ],
             path: "Planit",
-            exclude: ["Info.plist", "Planit.entitlements"],
+            exclude: ["Info.plist", "Planit.entitlements", "Services/README-ai-providers.md"],
             resources: [
                 .copy("Resources/PrivacyInfo.xcprivacy"),
                 .copy("Resources/AppIcon.icns"),

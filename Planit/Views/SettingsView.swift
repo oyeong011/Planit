@@ -376,11 +376,13 @@ struct SettingsView: View {
 
             settingsCard(String(localized: "settings.ai.status.card")) {
                 VStack(spacing: 10) {
-                    aiStatusRow("Claude CLI", available: aiService.claudeAvailable,
-                                detail: aiService.claudeAvailable ? String(localized: "settings.ai.claude.installed.detail") : String(localized: "settings.ai.claude.install.hint"))
-                    Divider()
-                    aiStatusRow("Codex CLI", available: aiService.codexAvailable,
-                                detail: aiService.codexAvailable ? String(localized: "settings.ai.codex.installed.detail") : String(localized: "settings.ai.codex.install.hint"))
+                    ForEach(Array(AIProvider.allCases.enumerated()), id: \.element) { index, provider in
+                        if index > 0 {
+                            Divider()
+                        }
+                        aiStatusRow("\(provider.rawValue) CLI", available: aiService.isAvailable(provider),
+                                    detail: providerStatusDetail(provider))
+                    }
                 }
             }
         }
@@ -388,7 +390,7 @@ struct SettingsView: View {
 
     private func aiProviderRow(_ provider: AIProvider) -> some View {
         let isSelected = aiService.provider == provider
-        let isAvailable: Bool = provider == .claude ? aiService.claudeAvailable : aiService.codexAvailable
+        let isAvailable = aiService.isAvailable(provider)
 
         return Button {
             aiService.provider = provider
@@ -477,6 +479,18 @@ struct SettingsView: View {
         switch provider {
         case .claude: return String(localized: "settings.ai.claude.desc")
         case .codex:  return String(localized: "settings.ai.codex.desc")
+        case .hermes: return String(localized: "settings.ai.hermes.desc")
+        }
+    }
+
+    private func providerStatusDetail(_ provider: AIProvider) -> String {
+        switch provider {
+        case .claude:
+            return aiService.claudeAvailable ? String(localized: "settings.ai.claude.installed.detail") : String(localized: "settings.ai.claude.install.hint")
+        case .codex:
+            return aiService.codexAvailable ? String(localized: "settings.ai.codex.installed.detail") : String(localized: "settings.ai.codex.install.hint")
+        case .hermes:
+            return aiService.hermesAvailable ? String(localized: "settings.ai.hermes.installed.detail") : String(localized: "settings.ai.hermes.install.hint")
         }
     }
 

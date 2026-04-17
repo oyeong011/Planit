@@ -8,11 +8,13 @@ import CoreGraphics
 enum AIProvider: String, CaseIterable, Codable {
     case claude = "Claude Code"
     case codex = "Codex"
+    case hermes = "Hermes"
 
     var icon: String {
         switch self {
         case .claude: return "c.circle.fill"
         case .codex: return "o.circle.fill"
+        case .hermes: return "h.circle.fill"
         }
     }
 
@@ -20,6 +22,22 @@ enum AIProvider: String, CaseIterable, Codable {
         switch self {
         case .claude: return "claude-sonnet-4-20250514"
         case .codex: return "gpt-5.4"
+        case .hermes: return "provider:model"
+        }
+    }
+
+    var cliName: String {
+        switch self {
+        case .claude: return "claude"
+        case .codex: return "codex"
+        case .hermes: return "hermes"
+        }
+    }
+
+    var isStateful: Bool {
+        switch self {
+        case .claude, .codex: return false
+        case .hermes: return true
         }
     }
 }
@@ -175,6 +193,7 @@ final class AIService: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var claudeAvailable: Bool = false
     @Published var codexAvailable: Bool = false
+    @Published var hermesAvailable: Bool = false
     /// Pending actions awaiting user approval before execution
     @Published var pendingActions: [CalendarAction] = []
     @Published var pendingMessage: String?
@@ -189,6 +208,7 @@ final class AIService: ObservableObject {
     /// Cached absolute paths for CLI tools (resolved once)
     private var claudePath: String?
     private var codexPath: String?
+    private var hermesPath: String?
 
     /// Known valid event IDs from the last calendar context fetch
     private var knownEventIds: Set<String> = []
@@ -224,9 +244,14 @@ final class AIService: ObservableObject {
     private static let externalContextConsentKey = "planit.aiExternalContextConsentGranted.v1"
 
     var isConfigured: Bool {
+        isAvailable(provider)
+    }
+
+    func isAvailable(_ provider: AIProvider) -> Bool {
         switch provider {
         case .claude: return claudeAvailable
         case .codex: return codexAvailable
+        case .hermes: return hermesAvailable
         }
     }
 
@@ -246,20 +271,23 @@ final class AIService: ObservableObject {
 
     private func checkCLIAvailability() {
         Task.detached { [weak self] in
-            let claudeResolved = Self.resolvePath("claude")
-            let codexResolved = Self.resolvePath("codex")
+            let claudeResolved = Self.resolvePath(AIProvider.claude.cliName)
+            let codexResolved = Self.resolvePath(AIProvider.codex.cliName)
+            let hermesResolved = Self.resolvePath(AIProvider.hermes.cliName)
             guard let self else { return }
             await MainActor.run { [self] in
                 self.claudePath = claudeResolved
                 self.claudeAvailable = claudeResolved != nil
                 self.codexPath = codexResolved
                 self.codexAvailable = codexResolved != nil
+                self.hermesPath = hermesResolved
+                self.hermesAvailable = hermesResolved != nil
             }
         }
     }
 
     /// Review planner 등 외부 서비스에서 Claude 경로 탐색용
-    nonisolated static func findClaudePath() -> String? { resolvePath("claude") }
+    nonisolated static func findClaudePath() -> String? { resolvePath(AIProvider.claude.cliName) }
 
     /// Review planner 등 외부 서비스에서 Claude 단발 호출용
     nonisolated static func runClaudeOneShot(prompt: String, claudePath: String) -> String {
@@ -270,7 +298,7 @@ final class AIService: ObservableObject {
     /// Resolve absolute path for a command without login shell.
     /// Searches known directories in priority order (system-managed first).
     nonisolated private static func resolvePath(_ cmd: String) -> String? {
-        guard cmd == "claude" || cmd == "codex" else { return nil }
+        guard AIProvider.allCases.map(\.cliName).contains(cmd) else { return nil }
 
         // 시스템 관리 경로만 허용 — 사용자 쓰기가능 경로(~/.local/bin 등)는 악성 바이너리 주입 위험
         let searchPaths = [
@@ -1004,17 +1032,20 @@ final class AIService: ObservableObject {
         let systemPrompt = buildSystemPrompt(calendarContext: calContext)
 
         // CLI 경로가 없으면 한 번 재감지 시도
-        if (provider == .claude && claudePath == nil) || (provider == .codex && codexPath == nil) {
+        if !isAvailable(provider) {
             await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
                 Task.detached { [weak self] in
-                    let claudeResolved = Self.resolvePath("claude")
-                    let codexResolved = Self.resolvePath("codex")
+                    let claudeResolved = Self.resolvePath(AIProvider.claude.cliName)
+                    let codexResolved = Self.resolvePath(AIProvider.codex.cliName)
+                    let hermesResolved = Self.resolvePath(AIProvider.hermes.cliName)
                     guard let self else { cont.resume(); return }
                     await MainActor.run { [self] in
                         self.claudePath = claudeResolved
                         self.claudeAvailable = claudeResolved != nil
                         self.codexPath = codexResolved
                         self.codexAvailable = codexResolved != nil
+                        self.hermesPath = hermesResolved
+                        self.hermesAvailable = hermesResolved != nil
                         cont.resume()
                     }
                 }
@@ -1078,6 +1109,12 @@ final class AIService: ObservableObject {
             rawResponse = await sendCLI(executablePath: path, args: codexArgs,
                                          system: systemPrompt, userMessage: augmentedMessage, history: history,
                                          isCodex: true)
+        case .hermes:
+            guard hermesPath != nil else { return [ChatMessage(role: .assistant, content: "Hermes가 설치되지 않았습니다. Hermes 설치 후 `hermes gateway` 또는 `hermes --version`이 시스템 경로에서 실행되는지 확인해주세요.")] }
+            // TODO: Implement Hermes CLI integration after the command contract is finalized.
+            // Hermes is stateful, so future work should decide whether to persist a Planit
+            // conversation ID or force a fresh Hermes session per chat before invoking it.
+            rawResponse = "Hermes provider is prepared but not implemented yet. Hermes 설치 후 연동을 활성화할 예정입니다."
         }
 
         let (message, actions) = parseAIResponse(rawResponse)

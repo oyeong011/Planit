@@ -286,9 +286,12 @@
 "settings.ai.claude.install.hint" = "설치 필요: brew install claude-code";
 "settings.ai.codex.installed.detail" = "설치됨 — 코드 최적화 특화";
 "settings.ai.codex.install.hint" = "설치 필요: npm install -g @openai/codex";
+"settings.ai.hermes.installed.detail" = "설치됨 — 실제 연동 구현 후 사용 가능";
+"settings.ai.hermes.install.hint" = "나중에 Hermes 설치 후 CLI를 다시 감지하세요";
 "settings.ai.save.button" = "AI 설정 저장";
 "settings.ai.claude.desc" = "자연어 이해 능력이 뛰어납니다. 복잡한 일정 조정과 목표 분석에 적합합니다.";
 "settings.ai.codex.desc" = "코드 기반 최적화에 특화되어 있습니다. 빠른 규칙 기반 계획 생성에 유용합니다.";
+"settings.ai.hermes.desc" = "세션을 유지하는 gateway 기반 에이전트입니다. Hermes 설치 후 향후 사용을 위해 준비되어 있습니다.";
 "settings.aggressiveness.manual.desc" = "모든 일정을 직접 관리합니다. AI는 조용합니다.";
 "settings.aggressiveness.assist.desc" = "AI가 제안만 합니다. 수락은 직접 결정합니다.";
 "settings.aggressiveness.semiauto.desc" = "승인된 제안을 자동으로 캘린더에 등록합니다.";
@@ -388,6 +391,8 @@
 "setup.step2.title" = "Google 캘린더 연동";
 "setup.claude.desc" = "Claude로 하루 일정을 계획하고 정리해보세요";
 "setup.codex.desc" = "Codex로 스마트한 제안을 받아보세요";
+"setup.hermes.desc" = "상태를 유지하는 Hermes gateway 에이전트 설치 후 사용하세요";
+"setup.hermes.install.after" = "이 provider를 활성화할 준비가 되면 Hermes를 설치하세요";
 "setup.google.desc" = "캘린더 일정을 연동하면 더 스마트한 스케줄링이 가능합니다";
 "setup.google.connect.button" = "Google 캘린더 연동";
 "setup.google.skip.hint" = "나중에 설정에서 연동할 수 있습니다";
