@@ -72,10 +72,14 @@ jobs:
           mkdir -p "$APP_BUNDLE/Contents/MacOS"
           mkdir -p "$APP_BUNDLE/Contents/Resources"
 
+          # 고정폭 단조 증가 빌드 번호 (major*10000 + minor*100 + patch)
+          read V_MAJOR V_MINOR V_PATCH < <(echo "$VERSION" | awk -F. '{printf "%d %d %d\n", $1+0, $2+0, $3+0}')
+          BUILD_NUMBER=$((V_MAJOR * 10000 + V_MINOR * 100 + V_PATCH))
+
           cp "$BUILD_DIR/Calen" "$APP_BUNDLE/Contents/MacOS/Calen"
           cp "Planit/Info.plist" "$APP_BUNDLE/Contents/Info.plist"
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$APP_BUNDLE/Contents/Info.plist"
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VERSION" "$APP_BUNDLE/Contents/Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$APP_BUNDLE/Contents/Info.plist"
           cp "Planit/Resources/AppIcon.icns" "$APP_BUNDLE/Contents/Resources/AppIcon.icns"
 
           if [ -f "Planit/Resources/PrivacyInfo.xcprivacy" ]; then
@@ -89,12 +93,39 @@ jobs:
             [ -d "$lproj" ] && cp -R "$lproj" "$APP_BUNDLE/Contents/Resources/"
           done
 
-          echo "APP_BUNDLE=$APP_BUNDLE" >> "$GITHUB_ENV"
+          # Sparkle.framework 번들링
+          SPARKLE_SRC=".build/artifacts/sparkle/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework"
+          if [ -d "$SPARKLE_SRC" ]; then
+            mkdir -p "$APP_BUNDLE/Contents/Frameworks"
+            rm -rf "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
+            ditto "$SPARKLE_SRC" "$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
+            echo "✓ Sparkle.framework embedded"
+          else
+            echo "✗ Sparkle.framework artifact not found at $SPARKLE_SRC" >&2
+            exit 1
+          fi
 
-      - name: Code sign
+          echo "APP_BUNDLE=$APP_BUNDLE" >> "$GITHUB_ENV"
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$GITHUB_ENV"
+
+      - name: Code sign (inside-out for Sparkle)
         env:
           DEVELOPER_ID: ${{ secrets.DEVELOPER_ID }}
         run: |
+          SPARKLE_FW="$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
+          # XPC services → Autoupdate → Updater.app → framework 순서
+          for xpc in "$SPARKLE_FW/Versions/B/XPCServices"/*.xpc; do
+            [ -d "$xpc" ] && codesign --force --options runtime --timestamp \
+              --preserve-metadata=identifier,entitlements,flags \
+              --sign "$DEVELOPER_ID" "$xpc"
+          done
+          codesign --force --options runtime --timestamp --sign "$DEVELOPER_ID" \
+            "$SPARKLE_FW/Versions/B/Autoupdate"
+          codesign --force --options runtime --timestamp --sign "$DEVELOPER_ID" \
+            "$SPARKLE_FW/Versions/B/Updater.app"
+          codesign --force --options runtime --timestamp --sign "$DEVELOPER_ID" "$SPARKLE_FW"
+
+          # 메인 앱 마지막
           codesign --force --options runtime \
             --entitlements "Planit/Planit.entitlements" \
             --sign "$DEVELOPER_ID" \
