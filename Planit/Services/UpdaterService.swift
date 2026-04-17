@@ -82,9 +82,10 @@ final class UpdaterService: NSObject, ObservableObject {
         }
     }
 
-    /// 주기적으로 appcast를 폴링해 새 버전을 감지 (기본 30분 간격).
-    /// 앱이 메뉴바에 조용히 떠 있어도 새 버전이 나오면 자동으로 알림/배너를 띄움.
-    func startPeriodicAppcastPolling(interval: TimeInterval = 1800) {
+    /// 주기적으로 appcast를 폴링해 새 버전을 감지 (기본 5분 간격).
+    /// 서버 기반 push가 없는 환경에서 "릴리즈 직후 체감 즉시 알림"에 가깝도록
+    /// 짧은 간격으로 당긴다. 목표 URL은 GitHub Pages CDN이라 부하는 미미함.
+    func startPeriodicAppcastPolling(interval: TimeInterval = 300) {
         stopPeriodicAppcastPolling()
         // 시작 즉시 한 번 체크
         Task { await self.pollAppcastForBanner() }
