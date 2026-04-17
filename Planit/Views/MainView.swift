@@ -515,7 +515,11 @@ struct DailyDetailView: View {
     @State private var draggingTodoID: UUID? = nil
     @State private var dragOffset: CGFloat = 0
     @State private var pendingTodoOrder: [UUID] = []
-    /// 각 할일 행의 예상 높이 — 행 콘텐츠(패딩 포함) + 행 간 간격 8pt
+    // 이벤트 드래그 재배치 상태 (todo와 독립)
+    @State private var draggingEventID: String? = nil
+    @State private var eventDragOffset: CGFloat = 0
+    @State private var pendingEventOrder: [String] = []
+    /// 각 행의 예상 높이 — 행 콘텐츠(패딩 포함) + 행 간 간격 8pt
     private let todoRowSlotHeight: CGFloat = 62
 
     private var dDayText: String {
@@ -622,6 +626,8 @@ struct DailyDetailView: View {
                     VStack(alignment: .leading, spacing: 0) {
                         let events = viewModel.eventsForDate(viewModel.selectedDate)
                         ForEach(events) { event in
+                            let isDragging = draggingEventID == event.id
+                            let offset = isDragging ? eventDragOffset : eventDisplacement(for: event.id, in: events)
                             EventRowView(
                                 event: event,
                                 category: viewModel.categoryForEvent(event),
@@ -630,7 +636,10 @@ struct DailyDetailView: View {
                                     tappedEvent = event
                                     tappedTodo = nil
                                 },
-                                onToggle: { viewModel.toggleEventCompleted(event.id, title: event.title) }
+                                onToggle: { viewModel.toggleEventCompleted(event.id, title: event.title) },
+                                isDragging: isDragging,
+                                yOffset: offset,
+                                handleDragGesture: eventReorderGesture(for: event, allEvents: events)
                             )
                             .padding(.vertical, 4)
                         }
@@ -744,6 +753,65 @@ struct DailyDetailView: View {
         .popover(isPresented: $showCategoryManager) {
             CategoryManagerView(viewModel: viewModel)
         }
+    }
+
+    // MARK: - Event Reorder Drag
+
+    private func eventDisplacement(for id: String, in events: [CalendarEvent]) -> CGFloat {
+        guard let dID = draggingEventID, dID != id,
+              let origIdx = events.firstIndex(where: { $0.id == id }),
+              let pendIdx = pendingEventOrder.firstIndex(of: id),
+              origIdx != pendIdx else { return 0 }
+        return CGFloat(pendIdx - origIdx) * todoRowSlotHeight
+    }
+
+    private func computePendingEventOrder(
+        dragging id: String, offset: CGFloat, allEvents: [CalendarEvent]
+    ) -> [String] {
+        let ids = allEvents.map(\.id)
+        guard let fromIdx = ids.firstIndex(of: id) else { return ids }
+        let steps = Int((offset / todoRowSlotHeight).rounded())
+        let toIdx = max(0, min(ids.count - 1, fromIdx + steps))
+        guard toIdx != fromIdx else { return ids }
+        var result = ids
+        result.move(fromOffsets: IndexSet(integer: fromIdx),
+                    toOffset: toIdx > fromIdx ? toIdx + 1 : toIdx)
+        return result
+    }
+
+    private func eventReorderGesture(
+        for event: CalendarEvent, allEvents: [CalendarEvent]
+    ) -> AnyGesture<DragGesture.Value> {
+        AnyGesture(DragGesture(minimumDistance: 0)
+            .onChanged { value in
+                if draggingEventID != event.id {
+                    withAnimation(.spring(response: 0.22, dampingFraction: 0.8)) {
+                        draggingEventID = event.id
+                        pendingEventOrder = allEvents.map(\.id)
+                    }
+                }
+                eventDragOffset = value.translation.height
+                let newPending = computePendingEventOrder(
+                    dragging: event.id,
+                    offset: eventDragOffset,
+                    allEvents: allEvents
+                )
+                if newPending != pendingEventOrder {
+                    withAnimation(.spring(response: 0.32, dampingFraction: 0.72)) {
+                        pendingEventOrder = newPending
+                    }
+                }
+            }
+            .onEnded { _ in
+                if !pendingEventOrder.isEmpty {
+                    viewModel.setEventOrder(pendingEventOrder, on: viewModel.selectedDate)
+                }
+                withAnimation(.spring(response: 0.38, dampingFraction: 0.72)) {
+                    draggingEventID = nil
+                    eventDragOffset = 0
+                    pendingEventOrder = []
+                }
+            })
     }
 
     // MARK: - Todo Reorder Drag (리뷰페이지 스타일)
@@ -1396,6 +1464,13 @@ struct EventRowView: View {
     var isCompleted: Bool = false
     var onTap: () -> Void = {}
     var onToggle: (() -> Void)? = nil
+    /// 리뷰페이지 스타일 드래그 재배치 지원용 상태 (부모가 주입)
+    var isDragging: Bool = false
+    var yOffset: CGFloat = 0
+    /// 드래그 핸들 영역에만 부착할 제스처. nil이면 핸들 숨김.
+    var handleDragGesture: AnyGesture<DragGesture.Value>? = nil
+
+    @State private var isHandleHover: Bool = false
 
     private var displayColor: Color { category?.color ?? event.color }
 
@@ -1409,6 +1484,18 @@ struct EventRowView: View {
 
     var body: some View {
         HStack(spacing: 10) {
+            // 드래그 핸들 — 리오더 전용
+            if let reorderGesture = handleDragGesture {
+                Image(systemName: "line.3.horizontal")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(isHandleHover || isDragging ? .primary : Color.secondary.opacity(0.5))
+                    .frame(width: 20, height: 32)
+                    .contentShape(Rectangle())
+                    .onHover { isHandleHover = $0 }
+                    .help("드래그해서 순서 변경")
+                    .highPriorityGesture(reorderGesture)
+            }
+
             RoundedRectangle(cornerRadius: 2).fill(displayColor).frame(width: 4)
 
             VStack(alignment: .leading, spacing: 2) {
@@ -1450,10 +1537,17 @@ struct EventRowView: View {
         .background(
             RoundedRectangle(cornerRadius: 10)
                 .fill(Color.platformControlBackground)
-                .shadow(color: .black.opacity(0.04), radius: 2, y: 1)
+                .shadow(color: .black.opacity(isDragging ? 0.22 : 0.04),
+                        radius: isDragging ? 14 : 2,
+                        y: isDragging ? 6 : 1)
         )
         .contentShape(Rectangle())
         .onTapGesture { onTap() }
+        .scaleEffect(isDragging ? 1.025 : 1.0, anchor: .center)
+        .offset(y: yOffset)
+        .zIndex(isDragging ? 100 : 0)
+        .animation(isDragging ? nil : .spring(response: 0.32, dampingFraction: 0.72),
+                   value: yOffset)
         .draggable("event:\(event.id)") {
             DragGhostRow(title: event.title, color: displayColor, subtitle: timeText)
         }

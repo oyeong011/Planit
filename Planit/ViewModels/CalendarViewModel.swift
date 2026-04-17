@@ -96,6 +96,7 @@ final class CalendarViewModel: ObservableObject {
         loadCategories()
         loadTodos()
         loadTodoOrder()
+        loadEventOrder()
         loadCompletedEvents()
         loadPendingEdits()
         loadEventCategoryMappings()
@@ -702,17 +703,23 @@ final class CalendarViewModel: ObservableObject {
         let dayStart = calendar.startOfDay(for: date)
         let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart)!
 
-        return calendarEvents.filter { event in
+        let filtered = calendarEvents.filter { event in
             guard !todoEventIds.contains(event.id) else { return false }
             if event.isAllDay {
-                // All-day: [start, end) 반개구간 — Google은 end가 exclusive
                 let eventStart = calendar.startOfDay(for: event.startDate)
                 let eventEnd = calendar.startOfDay(for: event.endDate)
                 return dayStart >= eventStart && dayStart < eventEnd
             } else {
-                // Timed: 구간 겹침 [start, end) vs [dayStart, dayEnd)
                 return event.startDate < dayEnd && event.endDate > dayStart
             }
+        }
+        // 수동 정렬: eventOrder에 있는 순서 우선, 없는 건 startDate 오름차순 fallback
+        let order = eventOrder[dateKey(date)] ?? []
+        return filtered.sorted { a, b in
+            let ai = order.firstIndex(of: a.id) ?? Int.max
+            let bi = order.firstIndex(of: b.id) ?? Int.max
+            if ai != bi { return ai < bi }
+            return a.startDate < b.startDate
         }
     }
 
@@ -730,11 +737,35 @@ final class CalendarViewModel: ObservableObject {
         return ordered + reminders
     }
 
-    // MARK: - Todo Manual Ordering (per-date)
+    // MARK: - Manual Ordering (per-date, todos + events)
 
     /// date("yyyy-MM-dd") → [UUID] 순서. 없는 날짜는 생성 순서 기본.
     @Published private var todoOrder: [String: [UUID]] = [:]
     private let todoOrderKey = "planit.todoOrder.v1"
+
+    /// date("yyyy-MM-dd") → [EventID] 순서. 없는 날짜는 startDate 기본.
+    @Published private var eventOrder: [String: [String]] = [:]
+    private let eventOrderKey = "planit.eventOrder.v1"
+
+    /// 특정 날짜의 이벤트 순서를 통째로 설정
+    func setEventOrder(_ ids: [String], on date: Date) {
+        guard !ids.isEmpty else { return }
+        eventOrder[dateKey(date)] = ids
+        saveEventOrder()
+    }
+
+    func loadEventOrder() {
+        guard let data = UserDefaults.standard.data(forKey: eventOrderKey),
+              let decoded = try? JSONDecoder().decode([String: [String]].self, from: data)
+        else { return }
+        eventOrder = decoded
+    }
+
+    private func saveEventOrder() {
+        if let data = try? JSONEncoder().encode(eventOrder) {
+            UserDefaults.standard.set(data, forKey: eventOrderKey)
+        }
+    }
 
     private func dateKey(_ date: Date) -> String {
         let fmt = DateFormatter()
