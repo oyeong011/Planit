@@ -549,6 +549,31 @@ final class CalendarViewModel: ObservableObject {
 
     private nonisolated static let appleMirrorSuppressTTL: TimeInterval = 60
 
+    /// 최근 update/move한 Google 이벤트 id → 유예 시각.
+    /// Google Calendar의 eventual consistency로 PATCH 직후 fetch가 옛 상태를
+    /// 반환하면 local에서 이동/수정해둔 값이 옛 값으로 덮어씌워져 원본 위치에
+    /// 이벤트가 재출현하는 문제가 있다. 이 기간 동안은 서버 응답에서 해당 id의
+    /// 이벤트를 무시하고 local 값을 유지한다.
+    private var recentlyMutatedGoogleIDs: [String: Date] = [:]
+
+    private nonisolated static let recentlyMutatedTTL: TimeInterval = 12
+
+    private func markRecentlyMutatedGoogle(_ eventID: String,
+                                           ttl: TimeInterval = recentlyMutatedTTL) {
+        let now = Date()
+        recentlyMutatedGoogleIDs[eventID] = now.addingTimeInterval(ttl)
+        recentlyMutatedGoogleIDs = recentlyMutatedGoogleIDs.filter { $0.value > now }
+    }
+
+    private func isRecentlyMutatedGoogle(_ eventID: String) -> Bool {
+        guard let expiresAt = recentlyMutatedGoogleIDs[eventID] else { return false }
+        if expiresAt <= Date() {
+            recentlyMutatedGoogleIDs.removeValue(forKey: eventID)
+            return false
+        }
+        return true
+    }
+
     private func cleanupExpiredAppleMirrorSuppressions(now: Date = Date()) {
         suppressedAppleMirrors = suppressedAppleMirrors.filter { $0.value > now }
     }
@@ -838,7 +863,17 @@ final class CalendarViewModel: ObservableObject {
                 PlanitLoggers.sync.info(
                     "Fetched Google events month=\(Self.logDate(month), privacy: .public) raw=\(merged.count, privacy: .public) deduped=\(deduped.count, privacy: .public) todoMirrors=\(todoEventIds.count, privacy: .public)"
                 )
-                self.calendarEvents = deduped
+                // Google eventual consistency로 옛 상태가 올 수 있어, 최근 mutate한
+                // id는 서버 응답 대신 local 값을 유지한다 (드래그 이동 직후 원본 재출현 방지).
+                let localByID = Dictionary(uniqueKeysWithValues: self.calendarEvents.map { ($0.id, $0) })
+                let reconciled: [CalendarEvent] = deduped.map { serverEvent in
+                    if self.isRecentlyMutatedGoogle(serverEvent.id),
+                       let localCopy = localByID[serverEvent.id] {
+                        return localCopy
+                    }
+                    return serverEvent
+                }
+                self.calendarEvents = reconciled
                 self.isOffline = false
                 self.needsReauth = googleService.needsReauth
                 cacheEvents(deduped)
@@ -927,6 +962,7 @@ final class CalendarViewModel: ObservableObject {
             isAllDay: isAllDay,
             appleCandidates: appleCandidates
         )
+        markRecentlyMutatedGoogle(eventID)
         Task {
             do {
                 PlanitLoggers.sync.info(
@@ -1730,6 +1766,9 @@ final class CalendarViewModel: ObservableObject {
         movedEvent.startDate = event.startDate.addingTimeInterval(delta)
         movedEvent.endDate = event.endDate.addingTimeInterval(delta)
         replaceCalendarEventLocally(movedEvent)
+        if event.source == .google {
+            markRecentlyMutatedGoogle(id)
+        }
 
         PlanitLoggers.sync.info(
             "Moving calendar event id=\(id, privacy: .public) source=\(event.source.rawValue, privacy: .public) oldStart=\(Self.logDate(event.startDate), privacy: .public) oldEnd=\(Self.logDate(event.endDate), privacy: .public) newStart=\(Self.logDate(movedEvent.startDate), privacy: .public) newEnd=\(Self.logDate(movedEvent.endDate), privacy: .public) allDay=\(event.isAllDay, privacy: .public)"
