@@ -95,6 +95,7 @@ final class CalendarViewModel: ObservableObject {
         self.authManager = authManager
         loadCategories()
         loadTodos()
+        loadTodoOrder()
         loadCompletedEvents()
         loadPendingEdits()
         loadEventCategoryMappings()
@@ -718,7 +719,62 @@ final class CalendarViewModel: ObservableObject {
     func todosForDate(_ date: Date) -> [TodoItem] {
         let localTodos = todos.filter { calendar.isDate($0.date, inSameDayAs: date) }
         let reminders = appleRemindersForDate(date)
-        return localTodos + reminders
+        // 수동 정렬: todoOrder에 있는 순서 우선, 없는 건 date 순으로 뒤에
+        let order = todoOrder[dateKey(date)] ?? []
+        let ordered = localTodos.sorted { a, b in
+            let ai = order.firstIndex(of: a.id) ?? Int.max
+            let bi = order.firstIndex(of: b.id) ?? Int.max
+            if ai != bi { return ai < bi }
+            return a.date < b.date
+        }
+        return ordered + reminders
+    }
+
+    // MARK: - Todo Manual Ordering (per-date)
+
+    /// date("yyyy-MM-dd") → [UUID] 순서. 없는 날짜는 생성 순서 기본.
+    @Published private var todoOrder: [String: [UUID]] = [:]
+    private let todoOrderKey = "planit.todoOrder.v1"
+
+    private func dateKey(_ date: Date) -> String {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM-dd"
+        fmt.calendar = calendar
+        return fmt.string(from: date)
+    }
+
+    /// 드래그된 todo를 타겟 todo 위치로 이동. 같은 날짜 안에서만 동작.
+    /// Apple Reminder(외부 관리)는 재배치 대상에서 제외.
+    func reorderLocalTodo(draggedID: UUID, droppedOnTargetID targetID: UUID, on date: Date) {
+        guard draggedID != targetID else { return }
+        let localIDs = todos.filter { calendar.isDate($0.date, inSameDayAs: date) }.map(\.id)
+        guard localIDs.contains(draggedID), localIDs.contains(targetID) else { return }
+
+        let key = dateKey(date)
+        var order = todoOrder[key] ?? []
+        for id in localIDs where !order.contains(id) { order.append(id) }
+        order = order.filter(localIDs.contains)
+
+        guard let from = order.firstIndex(of: draggedID),
+              let to   = order.firstIndex(of: targetID) else { return }
+        let item = order.remove(at: from)
+        let insertAt = from < to ? to - 1 : to
+        order.insert(item, at: insertAt)
+        todoOrder[key] = order
+        saveTodoOrder()
+    }
+
+    func loadTodoOrder() {
+        guard let data = UserDefaults.standard.data(forKey: todoOrderKey),
+              let decoded = try? JSONDecoder().decode([String: [UUID]].self, from: data)
+        else { return }
+        todoOrder = decoded
+    }
+
+    private func saveTodoOrder() {
+        if let data = try? JSONEncoder().encode(todoOrder) {
+            UserDefaults.standard.set(data, forKey: todoOrderKey)
+        }
     }
 
     // MARK: - Todo Bulk Sync
