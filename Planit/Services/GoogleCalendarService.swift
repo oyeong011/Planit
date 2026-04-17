@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import OSLog
 
 enum GoogleCalendarError: LocalizedError {
     case httpStatus(Int)
@@ -23,6 +24,19 @@ final class GoogleCalendarService {
 
     init(auth: GoogleAuthManager) {
         self.auth = auth
+    }
+
+    private nonisolated static func sanitizedErrorSummary(_ error: Error) -> String {
+        if let calendarError = error as? GoogleCalendarError {
+            switch calendarError {
+            case .httpStatus(let code):
+                return "GoogleCalendarError.httpStatus(\(code))"
+            }
+        }
+        if let urlError = error as? URLError {
+            return "URLError.\(urlError.code.rawValue)"
+        }
+        return String(reflecting: type(of: error))
     }
 
     func clearCache() {
@@ -83,7 +97,7 @@ final class GoogleCalendarService {
 
         // 스코프 없으면 (403) primary만 반환 — 재로그인 필요 플래그 설정
         if statusCode == 403 || statusCode == 401 {
-            print("[Calen] calendarList 스코프 없음 — primary 캘린더만 사용, 재로그인 필요")
+            PlanitLoggers.sync.warning("Google calendarList scope unavailable status=\(statusCode, privacy: .public); using primary calendar")
             needsReauth = true
             let primary = GoogleCalendarInfo(id: "primary", name: "Google", color: Self.defaultColor, accessRole: "owner")
             cachedCalendars = [primary]
@@ -180,7 +194,7 @@ final class GoogleCalendarService {
                         )
                         return .success(events)
                     } catch {
-                        print("[Calen] 캘린더 fetch 실패 (\(calInfo.name)): \(error)")
+                        PlanitLoggers.sync.error("Google calendar fetch failed calendarID=\(calInfo.id, privacy: .public) error=\(Self.sanitizedErrorSummary(error), privacy: .public)")
                         return .failure(error)
                     }
                 }

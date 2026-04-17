@@ -1,6 +1,7 @@
 import SwiftUI
 import EventKit
 import Combine
+import OSLog
 
 @MainActor
 final class CalendarViewModel: ObservableObject {
@@ -49,6 +50,8 @@ final class CalendarViewModel: ObservableObject {
     @Published var needsReauth: Bool = false
     /// Calen이 자동 재배치한 Todo ID 집합 (UI 인디케이터용)
     @Published var rescheduledTodoIDs: Set<UUID> = []
+    /// Last user-visible CRUD failure for inline UI feedback.
+    @Published var lastCRUDError: CRUDErrorNotice?
 
     // MARK: - Services
 
@@ -88,6 +91,49 @@ final class CalendarViewModel: ObservableObject {
     private var authCancellable: AnyCancellable?
     /// syncPendingEdits 재진입 방지 플래그
     private var isSyncingPendingEdits = false
+
+    private func recordCRUDFailure(
+        operation: CRUDOperation,
+        source: CRUDSource,
+        eventID: String? = nil,
+        error: Error? = nil,
+        userVisible: Bool = true
+    ) {
+        let notice = CRUDErrorNotice(operation: operation, source: source, eventID: eventID)
+        let errorSummary = error.map(Self.sanitizedErrorSummary) ?? "none"
+        PlanitLoggers.crud.error(
+            "CRUD failure operation=\(operation.rawValue, privacy: .public) source=\(source.rawValue, privacy: .public) eventID=\(notice.logMetadata["eventID"] ?? "none", privacy: .public) error=\(errorSummary, privacy: .public)"
+        )
+        if userVisible {
+            lastCRUDError = notice
+        }
+    }
+
+    func dismissLastCRUDError() {
+        lastCRUDError = nil
+    }
+
+    func reportCRUDFailure(
+        operation: CRUDOperation,
+        source: CRUDSource,
+        eventID: String? = nil,
+        error: Error? = nil
+    ) {
+        recordCRUDFailure(operation: operation, source: source, eventID: eventID, error: error)
+    }
+
+    nonisolated static func sanitizedErrorSummary(_ error: Error) -> String {
+        if let calendarError = error as? GoogleCalendarError {
+            switch calendarError {
+            case .httpStatus(let code):
+                return "GoogleCalendarError.httpStatus(\(code))"
+            }
+        }
+        if let urlError = error as? URLError {
+            return "URLError.\(urlError.code.rawValue)"
+        }
+        return String(reflecting: type(of: error))
+    }
 
     init(authManager: GoogleAuthManager) {
         self.authManager = authManager
@@ -433,7 +479,7 @@ final class CalendarViewModel: ObservableObject {
                 appleReminders[idx].isCompleted = reminder.isCompleted
             }
         } catch {
-            print("[Calen] Failed to toggle Apple Reminder: \(error)")
+            PlanitLoggers.crud.error("Apple reminder toggle failed eventID=\(identifier, privacy: .public) error=\(Self.sanitizedErrorSummary(error), privacy: .public)")
         }
     }
 
@@ -478,7 +524,7 @@ final class CalendarViewModel: ObservableObject {
                 mergeAppleCalendarEvents(for: month)
                 applyEventCategoryMappings()
             } catch {
-                print("[Calen] Google Calendar fetch failed — using cached data")
+                PlanitLoggers.sync.error("Google Calendar fetch failed; using cached data error=\(Self.sanitizedErrorSummary(error), privacy: .public)")
                 self.isOffline = true
                 self.needsReauth = googleService.needsReauth
                 loadCachedEvents()
@@ -492,14 +538,16 @@ final class CalendarViewModel: ObservableObject {
     func addEventToGoogleCalendar(title: String, startDate: Date, endDate: Date, isAllDay: Bool) {
         Task {
             do {
-                let _ = try await googleService.createEvent(title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
+                if try await googleService.createEvent(title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay) == nil {
+                    recordCRUDFailure(operation: .create, source: .google)
+                }
                 fetchEventsFromGoogle(for: currentMonth)
             } catch {
                 guard Self.shouldQueueGoogleMutation(after: error) else {
-                    print("[Calen] Google create failed: \(error)")
+                    recordCRUDFailure(operation: .create, source: .google, error: error)
                     return
                 }
-                print("[Calen] Offline — queuing create event")
+                PlanitLoggers.sync.info("Offline Google create queued")
                 queuePendingEdit(PendingCalendarEdit(
                     action: "create", title: title, startDate: startDate,
                     endDate: endDate, isAllDay: isAllDay))
@@ -519,14 +567,16 @@ final class CalendarViewModel: ObservableObject {
     func updateGoogleEvent(eventID: String, calendarID: String = "google:primary", title: String, startDate: Date, endDate: Date, isAllDay: Bool) {
         Task {
             do {
-                _ = try await googleService.updateEvent(eventID: eventID, calendarID: calendarID, title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
+                if try await googleService.updateEvent(eventID: eventID, calendarID: calendarID, title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay) == false {
+                    recordCRUDFailure(operation: .update, source: .google, eventID: eventID)
+                }
                 fetchEventsFromGoogle(for: currentMonth)
             } catch {
                 guard Self.shouldQueueGoogleMutation(after: error) else {
-                    print("[Calen] Google update failed: \(error)")
+                    recordCRUDFailure(operation: .update, source: .google, eventID: eventID, error: error)
                     return
                 }
-                print("[Calen] Offline — queuing update event")
+                PlanitLoggers.sync.info("Offline Google update queued eventID=\(eventID, privacy: .public)")
                 queuePendingEdit(PendingCalendarEdit(
                     action: "update", title: title, startDate: startDate,
                     endDate: endDate, isAllDay: isAllDay, eventId: eventID))
@@ -545,17 +595,19 @@ final class CalendarViewModel: ObservableObject {
     func deleteGoogleEvent(eventID: String, calendarID: String = "google:primary") {
         Task {
             do {
-                _ = try await googleService.deleteEvent(eventID: eventID, calendarID: calendarID)
+                if try await googleService.deleteEvent(eventID: eventID, calendarID: calendarID) == false {
+                    recordCRUDFailure(operation: .delete, source: .google, eventID: eventID)
+                }
                 completedEventIDs.remove(eventID)
                 goalService?.removeCompletion(eventId: eventID)
                 saveCompletedEvents()
                 fetchEventsFromGoogle(for: currentMonth)
             } catch {
                 guard Self.shouldQueueGoogleMutation(after: error) else {
-                    print("[Calen] Google delete failed: \(error)")
+                    recordCRUDFailure(operation: .delete, source: .google, eventID: eventID, error: error)
                     return
                 }
-                print("[Calen] Offline — queuing delete event")
+                PlanitLoggers.sync.info("Offline Google delete queued eventID=\(eventID, privacy: .public)")
                 queuePendingEdit(PendingCalendarEdit(
                     action: "delete", eventId: eventID))
                 // Optimistic local removal
@@ -674,7 +726,10 @@ final class CalendarViewModel: ObservableObject {
             addEventToGoogleCalendar(title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
             return true
         }
-        guard let cal = writableCalendar else { return false }
+        guard let cal = writableCalendar else {
+            recordCRUDFailure(operation: .create, source: .local)
+            return false
+        }
         let ekEvent = EKEvent(eventStore: eventStore)
         ekEvent.title = title
         ekEvent.startDate = startDate
@@ -686,7 +741,7 @@ final class CalendarViewModel: ObservableObject {
             fetchEventsFromEventKit(for: currentMonth)
             return true
         } catch {
-            print("[Calen] Failed to create event: \(error)")
+            recordCRUDFailure(operation: .create, source: .local, error: error)
             return false
         }
     }
@@ -696,7 +751,10 @@ final class CalendarViewModel: ObservableObject {
             updateGoogleEvent(eventID: eventID, calendarID: calendarID, title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay)
             return true
         }
-        guard let ekEvent = eventStore.event(withIdentifier: eventID) else { return false }
+        guard let ekEvent = eventStore.event(withIdentifier: eventID) else {
+            recordCRUDFailure(operation: .update, source: .local, eventID: eventID)
+            return false
+        }
         ekEvent.title = title
         ekEvent.startDate = startDate
         ekEvent.endDate = endDate
@@ -705,7 +763,10 @@ final class CalendarViewModel: ObservableObject {
             try eventStore.save(ekEvent, span: .thisEvent)
             fetchEventsFromEventKit(for: currentMonth)
             return true
-        } catch { return false }
+        } catch {
+            recordCRUDFailure(operation: .update, source: .local, eventID: eventID, error: error)
+            return false
+        }
     }
 
     func deleteCalendarEvent(eventID: String, calendarID: String = "google:primary") -> Bool {
@@ -713,7 +774,10 @@ final class CalendarViewModel: ObservableObject {
             deleteGoogleEvent(eventID: eventID, calendarID: calendarID)
             return true
         }
-        guard let ekEvent = eventStore.event(withIdentifier: eventID) else { return false }
+        guard let ekEvent = eventStore.event(withIdentifier: eventID) else {
+            recordCRUDFailure(operation: .delete, source: .local, eventID: eventID)
+            return false
+        }
         do {
             try eventStore.remove(ekEvent, span: .thisEvent)
             completedEventIDs.remove(eventID)
@@ -721,7 +785,10 @@ final class CalendarViewModel: ObservableObject {
             saveCompletedEvents()
             fetchEventsFromEventKit(for: currentMonth)
             return true
-        } catch { return false }
+        } catch {
+            recordCRUDFailure(operation: .delete, source: .local, eventID: eventID, error: error)
+            return false
+        }
     }
 
     private var writableCalendar: EKCalendar? {
@@ -969,11 +1036,15 @@ final class CalendarViewModel: ObservableObject {
             let startOfDay = calendar.startOfDay(for: todo.date)
             let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
             let prefix = todo.isCompleted ? "✅ " : ""
-            if let event = try? await googleService.createEvent(
-                title: "\(prefix)\(todo.title)", startDate: startOfDay,
-                endDate: endOfDay, isAllDay: true) {
-                todos[i].googleEventId = event.id
-                synced += 1
+            do {
+                if let event = try await googleService.createEvent(
+                    title: "\(prefix)\(todo.title)", startDate: startOfDay,
+                    endDate: endOfDay, isAllDay: true) {
+                    todos[i].googleEventId = event.id
+                    synced += 1
+                }
+            } catch {
+                recordCRUDFailure(operation: .create, source: .todo, error: error, userVisible: false)
             }
         }
         if synced > 0 {
@@ -1005,9 +1076,11 @@ final class CalendarViewModel: ObservableObject {
                     if let event, let idx = self.todos.firstIndex(where: { $0.id == todo.id }) {
                         self.todos[idx].googleEventId = event.id
                         self.saveTodos()
+                    } else {
+                        recordCRUDFailure(operation: .create, source: .todo)
                     }
                 } catch {
-                    print("[Calen] Todo Google sync failed: \(error)")
+                    recordCRUDFailure(operation: .create, source: .todo, error: error)
                 }
                 self.refreshEvents()
             }
@@ -1041,7 +1114,13 @@ final class CalendarViewModel: ObservableObject {
             Task {
                 let startOfDay = Calendar.current.startOfDay(for: todo.date)
                 let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay)!
-                _ = try? await googleService.updateEvent(eventID: eventId, title: "\(prefix)\(cleanTitle)", startDate: startOfDay, endDate: endOfDay, isAllDay: true)
+                do {
+                    if try await googleService.updateEvent(eventID: eventId, title: "\(prefix)\(cleanTitle)", startDate: startOfDay, endDate: endOfDay, isAllDay: true) == false {
+                        recordCRUDFailure(operation: .update, source: .todo, eventID: eventId)
+                    }
+                } catch {
+                    recordCRUDFailure(operation: .update, source: .todo, eventID: eventId, error: error)
+                }
                 self.refreshEvents()
             }
         }
@@ -1053,7 +1132,13 @@ final class CalendarViewModel: ObservableObject {
             goalService?.removeCompletion(eventId: "todo:\(id.uuidString)")
             if let eventId = todo.googleEventId, authManager.isAuthenticated {
                 Task {
-                    _ = try? await googleService.deleteEvent(eventID: eventId)
+                    do {
+                        if try await googleService.deleteEvent(eventID: eventId) == false {
+                            recordCRUDFailure(operation: .delete, source: .todo, eventID: eventId)
+                        }
+                    } catch {
+                        recordCRUDFailure(operation: .delete, source: .todo, eventID: eventId, error: error)
+                    }
                     self.refreshEvents()
                 }
             }
@@ -1075,7 +1160,13 @@ final class CalendarViewModel: ObservableObject {
             Task {
                 let startOfDay = Calendar.current.startOfDay(for: todo.date)
                 let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay)!
-                _ = try? await googleService.updateEvent(eventID: eventId, title: "\(prefix)\(title)", startDate: startOfDay, endDate: endOfDay, isAllDay: true)
+                do {
+                    if try await googleService.updateEvent(eventID: eventId, title: "\(prefix)\(title)", startDate: startOfDay, endDate: endOfDay, isAllDay: true) == false {
+                        recordCRUDFailure(operation: .update, source: .todo, eventID: eventId)
+                    }
+                } catch {
+                    recordCRUDFailure(operation: .update, source: .todo, eventID: eventId, error: error)
+                }
                 self.refreshEvents()
             }
         }
@@ -1096,7 +1187,13 @@ final class CalendarViewModel: ObservableObject {
             Task {
                 let start = Calendar.current.startOfDay(for: toDate)
                 let end = Calendar.current.date(byAdding: .day, value: 1, to: start)!
-                _ = try? await googleService.updateEvent(eventID: eventId, title: "\(prefix)\(clean)", startDate: start, endDate: end, isAllDay: true)
+                do {
+                    if try await googleService.updateEvent(eventID: eventId, title: "\(prefix)\(clean)", startDate: start, endDate: end, isAllDay: true) == false {
+                        recordCRUDFailure(operation: .update, source: .todo, eventID: eventId)
+                    }
+                } catch {
+                    recordCRUDFailure(operation: .update, source: .todo, eventID: eventId, error: error)
+                }
                 self.refreshEvents()
             }
         }
@@ -1409,24 +1506,38 @@ final class CalendarViewModel: ObservableObject {
             do {
                 switch edit.action {
                 case "create":
-                    _ = try await googleService.createEvent(
+                    if try await googleService.createEvent(
                         title: edit.title, startDate: edit.startDate,
-                        endDate: edit.endDate, isAllDay: edit.isAllDay)
+                        endDate: edit.endDate, isAllDay: edit.isAllDay) == nil {
+                        recordCRUDFailure(operation: .create, source: .google, userVisible: false)
+                    }
                 case "update":
                     if let eventId = edit.eventId {
-                        _ = try await googleService.updateEvent(
+                        if try await googleService.updateEvent(
                             eventID: eventId, title: edit.title,
                             startDate: edit.startDate, endDate: edit.endDate,
-                            isAllDay: edit.isAllDay)
+                            isAllDay: edit.isAllDay) == false {
+                            recordCRUDFailure(operation: .update, source: .google, eventID: eventId, userVisible: false)
+                        }
                     }
                 case "delete":
                     if let eventId = edit.eventId {
-                        _ = try await googleService.deleteEvent(eventID: eventId)
+                        if try await googleService.deleteEvent(eventID: eventId) == false {
+                            recordCRUDFailure(operation: .delete, source: .google, eventID: eventId, userVisible: false)
+                        }
                     }
                 default: break
                 }
             } catch {
                 // Keep failed edits for next sync attempt
+                let operation = CRUDOperation(rawValue: edit.action)
+                recordCRUDFailure(
+                    operation: operation ?? .update,
+                    source: .google,
+                    eventID: edit.eventId,
+                    error: error,
+                    userVisible: false
+                )
                 remaining.append(edit)
             }
         }

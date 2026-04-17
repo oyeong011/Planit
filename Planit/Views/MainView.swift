@@ -58,20 +58,31 @@ struct MainCalendarView: View {
     }
 
     var body: some View {
-        HStack(spacing: 0) {
-            if showLeftPanel {
-                leftPanel
-                    .frame(width: 280)
-                Divider()
+        VStack(spacing: 0) {
+            if let notice = viewModel.lastCRUDError {
+                CRUDErrorInlineNotice(notice: notice) {
+                    viewModel.dismissLastCRUDError()
+                }
+                .padding(.horizontal, 12)
+                .padding(.top, 10)
+                .padding(.bottom, 6)
             }
 
-            CalendarGridView(viewModel: viewModel, showChat: $showLeftPanel)
-                .frame(maxWidth: .infinity)
+            HStack(spacing: 0) {
+                if showLeftPanel {
+                    leftPanel
+                        .frame(width: 280)
+                    Divider()
+                }
 
-            Divider()
+                CalendarGridView(viewModel: viewModel, showChat: $showLeftPanel)
+                    .frame(maxWidth: .infinity)
 
-            DailyDetailView(viewModel: viewModel, newTodoTitle: $newTodoTitle, showSettings: $showSettings)
-                .frame(width: 330)
+                Divider()
+
+                DailyDetailView(viewModel: viewModel, newTodoTitle: $newTodoTitle, showSettings: $showSettings)
+                    .frame(width: 330)
+            }
         }
         .frame(width: showLeftPanel ? 1320 : 1040, height: 860)
         .background(Color.platformControlBackground)
@@ -158,8 +169,14 @@ struct MainCalendarView: View {
                     viewModel: viewModel,
                     onCreateEvent: { title, start, end in
                         Task {
-                            _ = try? await viewModel.googleService.createEvent(
-                                title: title, startDate: start, endDate: end, isAllDay: false)
+                            do {
+                                if try await viewModel.googleService.createEvent(
+                                    title: title, startDate: start, endDate: end, isAllDay: false) == nil {
+                                    viewModel.reportCRUDFailure(operation: .create, source: .google)
+                                }
+                            } catch {
+                                viewModel.reportCRUDFailure(operation: .create, source: .google, error: error)
+                            }
                             viewModel.refreshEvents()
                         }
                     },
@@ -229,6 +246,39 @@ struct MainCalendarView: View {
             .filter { $0.startDate >= today && $0.startDate < tomorrow && !$0.isAllDay }
             .map { (id: $0.id, title: $0.title, startDate: $0.startDate) }
         notificationService.scheduleRemindersForEvents(todayEvents)
+    }
+}
+
+struct CRUDErrorInlineNotice: View {
+    let notice: CRUDErrorNotice
+    let onDismiss: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 12))
+                .foregroundStyle(.orange)
+            Text(notice.message)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.primary)
+                .lineLimit(2)
+            Spacer(minLength: 8)
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 20, height: 20)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(RoundedRectangle(cornerRadius: 8).fill(Color.orange.opacity(0.12)))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color.orange.opacity(0.28), lineWidth: 1)
+        )
     }
 }
 
@@ -624,6 +674,14 @@ struct DailyDetailView: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 20)
                 .padding(.bottom, 16)
+
+                if let notice = viewModel.lastCRUDError {
+                    CRUDErrorInlineNotice(notice: notice) {
+                        viewModel.dismissLastCRUDError()
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 8)
+                }
 
                 // Events & Todos list
                 ScrollView {
