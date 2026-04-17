@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terms of Service – Calen</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 720px; margin: 60px auto; padding: 0 24px; color: #1a1a1a; line-height: 1.7; }
+    h1 { font-size: 2rem; margin-bottom: 4px; }
+    .meta { color: #666; font-size: 0.9rem; margin-bottom: 40px; }
+    h2 { font-size: 1.2rem; margin-top: 36px; }
+    a { color: #0066cc; }
+    code { background: #f4f4f4; padding: 2px 6px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Terms of Service</h1>
+  <p class="meta">Calen · Last updated: April 17, 2026</p>
+
+  <p>By installing or using Calen ("the App"), you agree to these Terms of Service. If you do not agree, do not use the App.</p>
+
+  <h2>1. License</h2>
+  <p>Calen is distributed under the <a href="https://github.com/oyeong011/Planit/blob/main/LICENSE" target="_blank">MIT License</a>. You may use, copy, modify, and redistribute the App's source code under those terms.</p>
+
+  <h2>2. No Warranty</h2>
+  <p>The App is provided "AS IS", without warranty of any kind. The authors are not liable for any damages arising from use of the App, including data loss, missed events, or calendar synchronization errors. Always keep independent backups of important calendar data.</p>
+
+  <h2>3. Your Responsibilities</h2>
+  <ul>
+    <li>You are responsible for your own Google account credentials and the data you sync through the App.</li>
+    <li>You are responsible for ensuring that your use of the App complies with Google's <a href="https://developers.google.com/terms" target="_blank">API Terms of Service</a> and Anthropic/OpenAI terms if you enable AI features.</li>
+    <li>You must not use the App to harass, spam, or violate the rights of others.</li>
+  </ul>
+
+  <h2>4. Third-Party Services</h2>
+  <p>Calen integrates with:</p>
+  <ul>
+    <li><strong>Google Calendar API</strong> — subject to <a href="https://policies.google.com/terms" target="_blank">Google Terms</a> and <a href="https://policies.google.com/privacy" target="_blank">Privacy Policy</a>.</li>
+    <li><strong>Apple EventKit</strong> — subject to macOS permission prompts.</li>
+    <li><strong>Claude Code / Codex CLI (optional)</strong> — local binaries installed by you. Subject to Anthropic's and OpenAI's respective terms when those CLIs contact their providers.</li>
+    <li><strong>Sparkle auto-updates</strong> — update payloads are EdDSA-signed and fetched from this project's GitHub Pages.</li>
+  </ul>
+
+  <h2>5. AI Features Disclosure</h2>
+  <p>When you use the AI chat feature, Calen passes the current calendar context (filtered to exclude calendars you've marked sensitive) to your locally installed Claude Code or Codex CLI. That CLI may then contact its AI provider under your own credentials. Calen never contacts an AI provider directly on your behalf.</p>
+
+  <h2>6. Data Loss Safeguards</h2>
+  <p>Calen applies several guardrails to reduce accidental data loss:</p>
+  <ul>
+    <li>A 50-item cap on each AI-suggested create, update, or delete batch.</li>
+    <li>AI-suggested destructive actions (delete, update) require explicit user approval.</li>
+    <li>Pending offline edits are HMAC-signed to prevent tampering on disk.</li>
+  </ul>
+  <p>These guardrails reduce but do not eliminate risk. You are responsible for reviewing each AI action before confirming it.</p>
+
+  <h2>7. Account Termination</h2>
+  <p>You may stop using the App at any time by quitting and uninstalling it. To revoke Google access, visit <a href="https://myaccount.google.com/permissions" target="_blank">your Google Account permissions page</a>.</p>
+
+  <h2>8. Changes</h2>
+  <p>We may update these Terms occasionally. Changes will be reflected by updating the "Last updated" date above. Continued use after changes constitutes acceptance.</p>
+
+  <h2>9. Contact</h2>
+  <p>Questions? Email <a href="mailto:beetleboy_@naver.com">beetleboy_@naver.com</a> or open an issue at <a href="https://github.com/oyeong011/Planit" target="_blank">github.com/oyeong011/Planit</a>.</p>
+</body>
+</html>
