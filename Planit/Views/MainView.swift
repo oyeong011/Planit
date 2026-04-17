@@ -40,6 +40,8 @@ struct MainCalendarView: View {
     @State private var showLeftPanel: Bool = true
     @State private var leftPanelMode: LeftPanelMode = .chat
     @State private var showSettings: Bool = false
+    /// User context 분석 debounce — 이벤트 배열이 빠르게 바뀔 때 Claude CLI 폭주 방지
+    @State private var contextRefreshTask: Task<Void, Never>?
 
     init(authManager: GoogleAuthManager, newTodoTitle: Binding<String>) {
         self.authManager = authManager
@@ -99,10 +101,12 @@ struct MainCalendarView: View {
         }
         .onChange(of: viewModel.calendarEvents) {
             updateEventReminders()
-            refreshUserContextAnalysis()
+            // refreshUserContextAnalysis는 debounce — 이벤트 배열이 fetch/merge로
+            // 초단위 변화할 때마다 매번 돌면 CPU 폭주 원인이 된다.
+            scheduleDebouncedContextRefresh()
         }
         .onChange(of: viewModel.todos.count) {
-            refreshUserContextAnalysis()
+            scheduleDebouncedContextRefresh()
         }
         .sheet(isPresented: $showSettings) {
             SettingsView(
@@ -117,6 +121,18 @@ struct MainCalendarView: View {
         // popover가 바깥 클릭으로 닫히면 설정 시트도 함께 닫기
         .onReceive(NotificationCenter.default.publisher(for: .calenPopoverDidClose)) { _ in
             showSettings = false
+        }
+    }
+
+    /// 연쇄 변화(fetch/merge/optimistic update)마다 refreshUserContextAnalysis가
+    /// 즉시 실행되면 Claude CLI가 과도하게 실행되고 CPU/메모리가 폭주한다.
+    /// 5초 debounce 로 마지막 변경 이후 조용해진 다음 한 번만 실행.
+    private func scheduleDebouncedContextRefresh() {
+        contextRefreshTask?.cancel()
+        contextRefreshTask = Task {
+            try? await Task.sleep(nanoseconds: 5_000_000_000)  // 5s
+            if Task.isCancelled { return }
+            refreshUserContextAnalysis()
         }
     }
 
