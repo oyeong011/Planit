@@ -222,13 +222,11 @@ final class AIService: ObservableObject {
     nonisolated private static func resolvePath(_ cmd: String) -> String? {
         guard cmd == "claude" || cmd == "codex" else { return nil }
 
+        // 시스템 관리 경로만 허용 — 사용자 쓰기가능 경로(~/.local/bin 등)는 악성 바이너리 주입 위험
         let searchPaths = [
             "/opt/homebrew/bin",
             "/usr/local/bin",
             "/usr/bin",
-            NSHomeDirectory() + "/.local/bin",
-            NSHomeDirectory() + "/.npm-global/bin",
-            NSHomeDirectory() + "/.nvm/current/bin",
         ]
 
         for dir in searchPaths {
@@ -521,11 +519,21 @@ final class AIService: ObservableObject {
         var results: [ChatMessage] = []
         let service = calendarService  // optional — nil이면 Google 관련 action만 실패
 
-        // 일괄 삭제 안전장치: UI 확정(실행 버튼) 이후 호출되는 경로이므로 AI 단독 폭주는 막힌다.
-        // 단 한 번에 50건 이상은 실수일 가능성이 높아 안전상 거부.
+        // 일괄 작업 안전장치: UI 확정(실행 버튼) 이후 호출되는 경로이므로 AI 단독 폭주는 막힌다.
+        // 한 번에 50건 이상은 실수/프롬프트 인젝션 가능성 → 거부.
         let deleteCount = actions.filter { $0.action == "delete" }.count
         if deleteCount >= 50 {
             return [ChatMessage(role: .toolCall, content: "한 번에 50건 이상 삭제는 안전을 위해 거부되었습니다. 범위를 줄여 재시도해주세요.")]
+        }
+        // create/createTodo도 동일한 하드캡 — 캘린더 인젝션으로 대량 일정 생성 방지
+        let createCount = actions.filter { $0.action == "create" || $0.action == "createTodo" }.count
+        if createCount >= 50 {
+            return [ChatMessage(role: .toolCall, content: "한 번에 50건 이상 생성은 안전을 위해 거부되었습니다. 범위를 줄여 재시도해주세요.")]
+        }
+        // update도 동일 적용
+        let updateCount = actions.filter { $0.action == "update" }.count
+        if updateCount >= 50 {
+            return [ChatMessage(role: .toolCall, content: "한 번에 50건 이상 수정은 안전을 위해 거부되었습니다. 범위를 줄여 재시도해주세요.")]
         }
         let fmt = ISO8601DateFormatter()
         fmt.formatOptions = [.withInternetDateTime]
