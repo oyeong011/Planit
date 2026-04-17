@@ -18,7 +18,7 @@ VERSION="${1:?사용법: $0 VERSION [릴리스노트|경로]}"
 NOTES_INPUT="${2:-}"
 
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-BUILD_DIR="$PROJECT_DIR/.build/apple/Products/Release"
+BUILD_DIR="$PROJECT_DIR/.build/release"
 ZIP_NAME="Calen-${VERSION}-universal.zip"
 ZIP_PATH="$BUILD_DIR/$ZIP_NAME"
 SPARKLE_BIN="$PROJECT_DIR/.build/artifacts/sparkle/Sparkle/bin"
@@ -50,7 +50,10 @@ else
     NOTES="$NOTES_INPUT"
 fi
 
-BUILD_NUMBER="${VERSION//./}"   # 0.1.26 → 0126
+# 고정폭 단조 증가 빌드 번호 (major*10000 + minor*100 + patch)
+# 예: 0.1.26 → 126, 1.0.0 → 10000, 1.2.3 → 10203 — Sparkle 버전 비교가 항상 올바름
+read V_MAJOR V_MINOR V_PATCH < <(echo "$VERSION" | awk -F. '{printf "%d %d %d\n", $1+0, $2+0, $3+0}')
+BUILD_NUMBER=$((V_MAJOR * 10000 + V_MINOR * 100 + V_PATCH))
 PUB_DATE=$(date -u +"%a, %d %b %Y %H:%M:%S +0000")
 DOWNLOAD_URL="https://github.com/oyeong011/Planit/releases/download/v${VERSION}/${ZIP_NAME}"
 
