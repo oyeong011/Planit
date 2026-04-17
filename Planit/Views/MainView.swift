@@ -37,9 +37,11 @@ struct MainCalendarView: View {
     @StateObject private var userContextService = UserContextService()
     @StateObject private var goalMemoryService = GoalMemoryService()
     @StateObject private var habitService = HabitService()
+    @StateObject private var updater = UpdaterService.shared
     @State private var showLeftPanel: Bool = true
     @State private var leftPanelMode: LeftPanelMode = .chat
     @State private var showSettings: Bool = false
+    @State private var updateBannerDismissedFor: String?
     /// User context 분석 debounce — 이벤트 배열이 빠르게 바뀔 때 Claude CLI 폭주 방지
     @State private var contextRefreshTask: Task<Void, Never>?
 
@@ -85,6 +87,15 @@ struct MainCalendarView: View {
                 DailyDetailView(viewModel: viewModel, newTodoTitle: $newTodoTitle, showSettings: $showSettings)
                     .frame(width: 330)
             }
+
+            if shouldShowUpdateBanner {
+                UpdateAvailableBanner(
+                    currentVersion: updater.currentVersion,
+                    latestVersion: updater.latestVersion ?? "",
+                    onInstall: { updater.checkForUpdates() },
+                    onDismiss: { updateBannerDismissedFor = updater.latestVersion }
+                )
+            }
         }
         .frame(width: showLeftPanel ? 1320 : 1040, height: 860)
         .background(Color.platformControlBackground)
@@ -98,6 +109,9 @@ struct MainCalendarView: View {
             aiService.userContextService = userContextService
             aiService.userProfileProvider = { goalService.profile }
             refreshUserContextAnalysis()
+            // 앱 팝오버가 열릴 때마다 업데이트 존재 여부를 배너로 알려주도록 백그라운드 체크.
+            // SUScheduledCheckInterval(24h)과 무관하게 즉시 호출.
+            updater.checkForUpdatesInBackground()
         }
         .onChange(of: viewModel.calendarEvents) {
             updateEventReminders()
@@ -134,6 +148,16 @@ struct MainCalendarView: View {
             if Task.isCancelled { return }
             refreshUserContextAnalysis()
         }
+    }
+
+    /// 업데이트 배너는 (1) 새 버전이 감지되었고 (2) 현재 버전보다 높고
+    /// (3) 사용자가 이 버전에 대해 닫기 누른 적이 없을 때만 표시.
+    private var shouldShowUpdateBanner: Bool {
+        guard updater.updateAvailable,
+              let latest = updater.latestVersion,
+              !latest.isEmpty else { return false }
+        if updateBannerDismissedFor == latest { return false }
+        return latest.compare(updater.currentVersion, options: .numeric) == .orderedDescending
     }
 
     private func refreshUserContextAnalysis() {
