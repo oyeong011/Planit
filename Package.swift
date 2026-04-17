@@ -5,6 +5,10 @@ let package = Package(
     name: "Calen",
     defaultLocalization: "en",
     platforms: [
+        // Multiplatform targets planned, but intentionally inactive until platform-specific
+        // AppKit/Sparkle/menu-bar code is isolated from shared sources.
+        // .iOS(.v17),
+        // .watchOS(.v10),
         .macOS(.v14)
     ],
     dependencies: [
