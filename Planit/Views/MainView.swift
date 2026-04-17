@@ -38,10 +38,14 @@ struct MainCalendarView: View {
     @StateObject private var goalMemoryService = GoalMemoryService()
     @StateObject private var habitService = HabitService()
     @StateObject private var updater = UpdaterService.shared
+    @ObservedObject private var themeService = CalendarThemeService.shared
     @State private var showLeftPanel: Bool = true
     @State private var leftPanelMode: LeftPanelMode = .chat
     @State private var showSettings: Bool = false
     @State private var updateBannerDismissedFor: String?
+    /// updater.checkForUpdatesInBackground()를 세션당 1회로 제한.
+    /// 팝오버를 자주 여닫을 때 Sparkle 체크가 반복 호출되는 부하 방지.
+    @State private var didTriggerUpdateCheckThisSession = false
     /// User context 분석 debounce — 이벤트 배열이 빠르게 바뀔 때 Claude CLI 폭주 방지
     @State private var contextRefreshTask: Task<Void, Never>?
 
@@ -98,7 +102,11 @@ struct MainCalendarView: View {
             }
         }
         .frame(width: showLeftPanel ? 1320 : 1040, height: 860)
-        .background(Color.platformControlBackground)
+        .background(
+            Color.platformControlBackground
+                .overlay(themeService.current.subtleBackgroundTint)
+        )
+        .animation(.easeInOut(duration: 0.28), value: themeService.current.id)
         .onChange(of: authManager.isAuthenticated) {
             viewModel.refreshEvents()
         }
@@ -109,9 +117,12 @@ struct MainCalendarView: View {
             aiService.userContextService = userContextService
             aiService.userProfileProvider = { goalService.profile }
             refreshUserContextAnalysis()
-            // 앱 팝오버가 열릴 때마다 업데이트 존재 여부를 배너로 알려주도록 백그라운드 체크.
-            // SUScheduledCheckInterval(24h)과 무관하게 즉시 호출.
-            updater.checkForUpdatesInBackground()
+            // Sparkle 백그라운드 체크는 세션당 1회만. 팝오버를 자주 여닫는 사용자
+            // 환경에서 반복 호출되어 네트워크/CPU 부하가 누적되는 걸 방지.
+            if !didTriggerUpdateCheckThisSession {
+                didTriggerUpdateCheckThisSession = true
+                updater.checkForUpdatesInBackground()
+            }
         }
         .onChange(of: viewModel.calendarEvents) {
             updateEventReminders()
@@ -544,7 +555,11 @@ struct DayCellView: View {
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(.white)
                     .frame(width: 26, height: 26)
-                    .background(Circle().fill(themeService.current.primary))
+                    .background(
+                        Circle()
+                            .fill(themeService.current.gradient)
+                            .shadow(color: themeService.current.primary.opacity(0.35), radius: 3, x: 0, y: 1)
+                    )
             } else {
                 Text(dayNumber)
                     .font(.system(size: 13, weight: isSelected ? .semibold : .regular))

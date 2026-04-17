@@ -19,6 +19,20 @@ struct CalendarTheme: Identifiable, Equatable, Hashable {
         [primaryHex, secondaryHex, accentHex, eventTintHex, backgroundOverlayHex]
     }
 
+    /// 테마의 대표 그라데이션 (primary → accent).
+    /// 버튼, 오늘 날짜 원형 하이라이트, 배너 등 강조 요소에 사용.
+    var gradient: LinearGradient {
+        LinearGradient(
+            colors: [primary, accent],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    /// 전체 앱 배경에 얹는 옅은 틴트.
+    /// 다크/라이트 모드를 해치지 않도록 opacity를 낮춰서 사용한다.
+    var subtleBackgroundTint: Color { backgroundOverlay.opacity(0.16) }
+
     static let builtIn: [CalendarTheme] = [
         CalendarTheme(
             id: "classic",

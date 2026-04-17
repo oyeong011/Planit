@@ -906,6 +906,11 @@ final class UserContextService: ObservableObject {
 
         do {
             try process.run()
+            // spawn/exit 로그 — CPU/메모리 폭주 조사 시 user context 분석이 과다 호출되는지
+            // 여부를 빠르게 판별하기 위한 진단 채널.
+            PlanitLoggers.ai.info(
+                "UserContext CLI spawn pid=\(process.processIdentifier, privacy: .public) prompt=\(prompt.count, privacy: .public)B"
+            )
             let killQueue = DispatchQueue(label: "planit.user-context.cli.timeout")
             let termTimer = DispatchSource.makeTimerSource(queue: killQueue)
             termTimer.schedule(deadline: .now() + cliTimeout)
@@ -965,6 +970,9 @@ final class UserContextService: ObservableObject {
             process.waitUntilExit()
             termTimer.cancel()
             killTimer.cancel()
+            PlanitLoggers.ai.info(
+                "UserContext CLI exit status=\(process.terminationStatus, privacy: .public)"
+            )
 
             output.fileHandleForReading.readabilityHandler = nil
             errPipe.fileHandleForReading.readabilityHandler = nil

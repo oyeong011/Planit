@@ -518,10 +518,21 @@ final class CalendarViewModel: ObservableObject {
 
         // 현재 보는 월이 오늘이 속한 월과 다르면 오늘 월도 함께 병합한다.
         // 그렇지 않으면 월을 이동할 때마다 리뷰탭 "오늘" 달성률 분모가 바뀐다 (Apple 이벤트가 빠짐).
+        // 5초 캐시로 짧은 시간 내 반복 호출 시 EventKit 쿼리 재실행 방지 (CPU 부하 완화).
         var appleRaw = fetchLocalCalendarEvents(for: month)
         let today = Date()
         if !calendar.isDate(today, equalTo: month, toGranularity: .month) {
-            let todayAppleRaw = fetchLocalCalendarEvents(for: today)
+            let now = Date()
+            let cacheValid = todayAppleCache.flatMap {
+                now.timeIntervalSince($0.fetchedAt) < 5 ? $0.events : nil
+            }
+            let todayAppleRaw: [CalendarEvent]
+            if let cached = cacheValid {
+                todayAppleRaw = cached
+            } else {
+                todayAppleRaw = fetchLocalCalendarEvents(for: today)
+                todayAppleCache = (fetchedAt: now, events: todayAppleRaw)
+            }
             let existingIDs = Set(appleRaw.map { $0.id })
             appleRaw.append(contentsOf: todayAppleRaw.filter { !existingIDs.contains($0.id) })
         }
@@ -565,6 +576,9 @@ final class CalendarViewModel: ObservableObject {
     private var recentlyMutatedGoogleIDs: [String: Date] = [:]
 
     private nonisolated static let recentlyMutatedTTL: TimeInterval = 12
+
+    /// today 월의 Apple 이벤트 5초 캐시 — 월 이동 시 EventKit 중복 쿼리 부하 경감.
+    private var todayAppleCache: (fetchedAt: Date, events: [CalendarEvent])?
 
     private func markRecentlyMutatedGoogle(_ eventID: String,
                                            ttl: TimeInterval = recentlyMutatedTTL) {
