@@ -1,5 +1,6 @@
 import Foundation
 import Sparkle
+import UserNotifications
 
 /// Sparkle 기반 자동 업데이트 래퍼.
 /// appcast.xml을 주기적으로 확인해 업데이트가 감지되면 Sparkle UI가 다운로드/설치/재시작까지 자동 처리한다.
@@ -11,6 +12,9 @@ final class UpdaterService: NSObject, ObservableObject {
     @Published private(set) var latestVersion: String?
 
     private var controller: SPUStandardUpdaterController!
+    private var pollTimer: Timer?
+    /// 같은 버전에 대해 알림이 매 체크마다 재발송되지 않도록 유지.
+    private var lastNotifiedVersion: String?
 
     var currentVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
@@ -65,11 +69,48 @@ final class UpdaterService: NSObject, ObservableObject {
             if latest.compare(current, options: .numeric) == .orderedDescending {
                 self.updateAvailable = true
                 self.latestVersion = latest
+                // 같은 버전에 대해 한 번만 시스템 알림 — 사용자가 앱을 안 열고 있어도
+                // 알림 센터로 새 버전 출시를 알려준다.
+                if self.lastNotifiedVersion != latest {
+                    self.lastNotifiedVersion = latest
+                    self.postUpdateAvailableNotification(version: latest)
+                }
             } else {
                 self.updateAvailable = false
                 self.latestVersion = nil
             }
         }
+    }
+
+    /// 주기적으로 appcast를 폴링해 새 버전을 감지 (기본 30분 간격).
+    /// 앱이 메뉴바에 조용히 떠 있어도 새 버전이 나오면 자동으로 알림/배너를 띄움.
+    func startPeriodicAppcastPolling(interval: TimeInterval = 1800) {
+        stopPeriodicAppcastPolling()
+        // 시작 즉시 한 번 체크
+        Task { await self.pollAppcastForBanner() }
+        pollTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+            Task { await self?.pollAppcastForBanner() }
+        }
+    }
+
+    func stopPeriodicAppcastPolling() {
+        pollTimer?.invalidate()
+        pollTimer = nil
+    }
+
+    private func postUpdateAvailableNotification(version: String) {
+        let content = UNMutableNotificationContent()
+        content.title = String(localized: "update.notification.title",
+                               defaultValue: "Calen 업데이트 가능")
+        content.body = String(localized: "update.notification.body",
+                              defaultValue: "새 버전 v\(version)가 준비됐어요. Calen을 열어 설치하세요.")
+        content.userInfo = ["type": "update-available", "version": version]
+        let request = UNNotificationRequest(
+            identifier: "calen.update.\(version)",
+            content: content,
+            trigger: nil
+        )
+        UNUserNotificationCenter.current().add(request) { _ in }
     }
 }
 
