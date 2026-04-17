@@ -255,12 +255,12 @@ struct MainCalendarView: View {
                 Text(label)
                     .font(.system(size: 11, weight: leftPanelMode == mode ? .semibold : .regular))
             }
-            .foregroundStyle(leftPanelMode == mode ? .purple : .secondary)
+            .foregroundStyle(leftPanelMode == mode ? themeService.current.accent : .secondary)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 5)
             .background(
                 RoundedRectangle(cornerRadius: 5)
-                    .fill(leftPanelMode == mode ? Color.purple.opacity(0.1) : Color.clear)
+                    .fill(leftPanelMode == mode ? themeService.current.accent.opacity(0.1) : Color.clear)
             )
             .contentShape(Rectangle())
         }
@@ -1629,6 +1629,7 @@ struct EventRowView: View {
 struct TodoRowView: View {
     let todo: TodoItem
     let category: TodoCategory
+    @ObservedObject private var themeService = CalendarThemeService.shared
     var isSelected: Bool = false
     var isRescheduled: Bool = false   // Calen이 자동 재배치한 항목
     var onTap: () -> Void = {}
@@ -1684,7 +1685,7 @@ struct TodoRowView: View {
                     if isRescheduled && !todo.isCompleted {
                         Image(systemName: "arrow.uturn.right")
                             .font(.system(size: 9, weight: .semibold))
-                            .foregroundStyle(.purple.opacity(0.7))
+                            .foregroundStyle(themeService.current.accent.opacity(0.7))
                             .help("Calen이 자동으로 재배치한 할 일입니다")
                     }
                 }
