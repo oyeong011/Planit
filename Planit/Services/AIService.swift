@@ -525,8 +525,10 @@ final class AIService: ObservableObject {
         if deleteCount >= 50 {
             return [ChatMessage(role: .toolCall, content: "한 번에 50건 이상 삭제는 안전을 위해 거부되었습니다. 범위를 줄여 재시도해주세요.")]
         }
-        // create/createTodo도 동일한 하드캡 — 캘린더 인젝션으로 대량 일정 생성 방지
-        let createCount = actions.filter { $0.action == "create" || $0.action == "createTodo" }.count
+        // create/createTodo + findFreeSlot/blockTime은 모두 calendar/todo 를 생성하므로 동일 하드캡 적용
+        let createCount = actions.filter {
+            ["create", "createTodo", "findFreeSlot", "blockTime"].contains($0.action)
+        }.count
         if createCount >= 50 {
             return [ChatMessage(role: .toolCall, content: "한 번에 50건 이상 생성은 안전을 위해 거부되었습니다. 범위를 줄여 재시도해주세요.")]
         }
@@ -941,7 +943,7 @@ final class AIService: ObservableObject {
         let rawResponse: String
         switch provider {
         case .claude:
-            guard let path = claudePath else { return [ChatMessage(role: .assistant, content: "Claude Code가 설치되지 않았습니다. /opt/homebrew/bin 또는 ~/.local/bin에 claude가 있는지 확인하세요.")] }
+            guard let path = claudePath else { return [ChatMessage(role: .assistant, content: "Claude Code가 설치되지 않았습니다. Homebrew(/opt/homebrew/bin)로 설치해주세요: brew install claude-code")] }
             // --system-prompt: 시스템 프롬프트 분리, --no-session-persistence: 세션 파일 충돌 방지
             // --image: 이미지 파일 직접 전달 (비전 분석)
             // claude-haiku-4-5 는 응답이 훨씬 빠름 (단순 질의에 적합)
@@ -958,7 +960,7 @@ final class AIService: ObservableObject {
             rawResponse = await sendCLI(executablePath: path, args: claudeArgs,
                                          system: "", userMessage: augmentedMessage, history: history)
         case .codex:
-            guard let path = codexPath else { return [ChatMessage(role: .assistant, content: "Codex CLI가 설치되지 않았습니다. /opt/homebrew/bin 또는 ~/.local/bin에 codex가 있는지 확인하세요.")] }
+            guard let path = codexPath else { return [ChatMessage(role: .assistant, content: "Codex CLI가 설치되지 않았습니다. Homebrew(/opt/homebrew/bin) 또는 npm 글로벌(/usr/local/bin)로 설치해주세요.")] }
             // gpt-4.1-mini + reasoning low → 응답 속도 우선
             // config.toml의 xhigh reasoning을 앱 내에서 low로 오버라이드
             var codexArgs = ["exec",
