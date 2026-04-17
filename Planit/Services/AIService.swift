@@ -210,6 +210,12 @@ final class AIService: ObservableObject {
     /// AI가 이벤트 카테고리를 설정할 때 ViewModel로 위임하는 콜백
     var onEventCategorySet: ((_ eventID: String, _ eventTitle: String, _ categoryID: UUID?) -> Void)?
 
+    /// AI가 이벤트를 삭제할 때 ViewModel로 위임해 이벤트 소스별 CRUD 라우팅을 보존한다.
+    var onEventDelete: ((_ eventID: String, _ calendarID: String) -> Bool)?
+
+    /// AI가 이벤트를 수정할 때 ViewModel로 위임해 이벤트 소스별 CRUD 라우팅을 보존한다.
+    var onEventUpdate: ((_ eventID: String, _ calendarID: String, _ title: String, _ startDate: Date, _ endDate: Date, _ isAllDay: Bool) -> Bool)?
+
     /// 초개인화 컨텍스트 서비스 (외부에서 주입)
     var userContextService: UserContextService?
 
@@ -801,6 +807,13 @@ final class AIService: ObservableObject {
                     results.append(ChatMessage(role: .toolCall, content: "삭제 실패: 유효하지 않은 eventId"))
                     continue
                 }
+                if let existingEvent = cachedCalendarEvents.first(where: { $0.id == eventId }),
+                   let onEventDelete {
+                    let ok = onEventDelete(eventId, existingEvent.calendarID)
+                    if ok { invalidateContextCache() }
+                    results.append(ChatMessage(role: .toolCall, content: ok ? "삭제 완료" : "삭제 실패"))
+                    continue
+                }
                 guard let svc = service else {
                     results.append(ChatMessage(role: .toolCall, content: "삭제 실패: Google 캘린더 미연결"))
                     continue
@@ -818,12 +831,50 @@ final class AIService: ObservableObject {
                     results.append(ChatMessage(role: .toolCall, content: "수정 실패: 유효하지 않은 eventId"))
                     continue
                 }
+                // Only pass title if explicitly provided by the LLM — never overwrite with a placeholder
+                let updateTitle: String? = action.title.flatMap { $0.isEmpty ? nil : $0 }
+                if let existingEvent = cachedCalendarEvents.first(where: { $0.id == eventId }),
+                   let onEventUpdate {
+                    let routedTitle = updateTitle ?? existingEvent.title
+                    let routedStart: Date
+                    let routedEnd: Date
+
+                    if let startStr = action.startDate {
+                        guard let parsedStart = parseDate(startStr) else {
+                            results.append(ChatMessage(role: .toolCall, content: "수정 실패: 날짜 정보 없음"))
+                            continue
+                        }
+                        routedStart = parsedStart
+                        if let endStr = action.endDate, let parsedEnd = parseDate(endStr) {
+                            routedEnd = parsedEnd
+                        } else {
+                            routedEnd = parsedStart.addingTimeInterval(existingEvent.endDate.timeIntervalSince(existingEvent.startDate))
+                        }
+                    } else {
+                        routedStart = existingEvent.startDate
+                        routedEnd = existingEvent.endDate
+                    }
+
+                    guard Self.isPositiveActionInterval(start: routedStart, end: routedEnd) else {
+                        results.append(ChatMessage(role: .toolCall, content: "수정 실패: 종료 시간이 시작 시간보다 늦어야 합니다"))
+                        continue
+                    }
+                    let ok = onEventUpdate(
+                        eventId,
+                        existingEvent.calendarID,
+                        routedTitle,
+                        routedStart,
+                        routedEnd,
+                        action.isAllDay ?? existingEvent.isAllDay
+                    )
+                    if ok { invalidateContextCache() }
+                    results.append(ChatMessage(role: .toolCall, content: ok ? "수정 완료" : "수정 실패"))
+                    continue
+                }
                 guard let svc = service else {
                     results.append(ChatMessage(role: .toolCall, content: "수정 실패: Google 캘린더 미연결"))
                     continue
                 }
-                // Only pass title if explicitly provided by the LLM — never overwrite with a placeholder
-                let updateTitle: String? = action.title.flatMap { $0.isEmpty ? nil : $0 }
                 // 날짜 없이 제목만 변경하는 경우 (이모지 제거 등) → patchEventTitle
                 if action.startDate == nil, let newTitle = updateTitle {
                     do {
