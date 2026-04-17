@@ -516,7 +516,15 @@ final class CalendarViewModel: ObservableObject {
         let now = Date()
         cleanupExpiredAppleMirrorSuppressions(now: now)
 
-        let appleRaw = fetchLocalCalendarEvents(for: month)
+        // 현재 보는 월이 오늘이 속한 월과 다르면 오늘 월도 함께 병합한다.
+        // 그렇지 않으면 월을 이동할 때마다 리뷰탭 "오늘" 달성률 분모가 바뀐다 (Apple 이벤트가 빠짐).
+        var appleRaw = fetchLocalCalendarEvents(for: month)
+        let today = Date()
+        if !calendar.isDate(today, equalTo: month, toGranularity: .month) {
+            let todayAppleRaw = fetchLocalCalendarEvents(for: today)
+            let existingIDs = Set(appleRaw.map { $0.id })
+            appleRaw.append(contentsOf: todayAppleRaw.filter { !existingIDs.contains($0.id) })
+        }
         let filterResult = Self.filteredAppleCalendarEvents(
             appleRaw,
             googleEvents: googleEvents,
