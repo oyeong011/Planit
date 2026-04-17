@@ -82,5 +82,18 @@ brew install --cask calen
 ### 직접 다운로드
 아래 Assets에서 DMG 파일을 받아 설치하세요.]]></description>
     </item>
+            <item>
+        <title>v0.2.2</title>
+        <sparkle:version>202</sparkle:version>
+        <sparkle:shortVersionString>0.2.2</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Fri, 17 Apr 2026 04:27:10 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.2/Calen-0.2.2-universal.zip"
+            sparkle:edSignature="cpmrxxtneH4qIWmOoZBFpZd+GMtTdKeLLAgGj1iUKBQkaQq01ZHW+EmJDgdbLJ3IKY4ud3iDWG2/u6FYdwm7Dg=="
+            length="5370648"
+            type="application/octet-stream" />
+        <description><![CDATA[릴리스 v0.2.2]]></description>
+    </item>
     </channel>
 </rss>
