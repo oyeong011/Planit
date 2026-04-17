@@ -46,12 +46,20 @@ final class UpdaterService: NSObject, ObservableObject {
         request.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
         guard let (data, _) = try? await URLSession.shared.data(for: request),
               let xml = String(data: data, encoding: .utf8) else { return }
-        // appcast 규약상 첫 번째 <item>이 최신. 첫 sparkle:shortVersionString만 보면 충분.
+        // 우리 appcast는 오래된 entry가 앞에 있는 경우가 있어 "첫 item = 최신" 가정은 틀림.
+        // 모든 sparkle:shortVersionString을 추출해 numeric 비교로 최대 버전을 고른다.
         let pattern = #"<sparkle:shortVersionString>([^<]+)</sparkle:shortVersionString>"#
-        guard let regex = try? NSRegularExpression(pattern: pattern),
-              let match = regex.firstMatch(in: xml, range: NSRange(xml.startIndex..., in: xml)),
-              let range = Range(match.range(at: 1), in: xml) else { return }
-        let latest = String(xml[range]).trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return }
+        let nsRange = NSRange(xml.startIndex..., in: xml)
+        let matches = regex.matches(in: xml, range: nsRange)
+        let versions: [String] = matches.compactMap { match in
+            Range(match.range(at: 1), in: xml).map {
+                String(xml[$0]).trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+        }.filter { !$0.isEmpty }
+        guard let latest = versions.max(by: { a, b in
+            a.compare(b, options: .numeric) == .orderedAscending
+        }) else { return }
         let current = currentVersion
         await MainActor.run {
             if latest.compare(current, options: .numeric) == .orderedDescending {
