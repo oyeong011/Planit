@@ -244,8 +244,10 @@
 "settings.section.ai" = "AI Settings";
 "settings.section.integrations" = "Integrations";
 "settings.section.notifications" = "Notifications";
+"settings.section.appearance" = "Appearance";
 "settings.section.advanced" = "Advanced";
 "settings.profile.subtitle" = "Configure your personal rhythm and work style";
+"settings.appearance.subtitle" = "Choose how Calen looks and how calendar colors are applied";
 "settings.energy.card" = "Energy Pattern";
 "settings.energy.desc" = "Select your peak focus time. AI will schedule important tasks during this period.";
 "settings.pace.card" = "Schedule Pace";
