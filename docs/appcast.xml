@@ -20,8 +20,7 @@
                     type="application/octet-stream" />
                 <description><![CDATA[릴리스 노트]]></description>
             </item>
-        -->
-            <item>
+        <item>
         <title>v0.2.0</title>
         <sparkle:version>200</sparkle:version>
         <sparkle:shortVersionString>0.2.0</sparkle:shortVersionString>
@@ -34,7 +33,7 @@
             type="application/octet-stream" />
         <description><![CDATA[릴리스 v0.2.0]]></description>
     </item>
-            <item>
+        <item>
         <title>v0.2.1</title>
         <sparkle:version>201</sparkle:version>
         <sparkle:shortVersionString>0.2.1</sparkle:shortVersionString>
@@ -47,42 +46,7 @@
             type="application/octet-stream" />
         <description><![CDATA[릴리스 v0.2.1]]></description>
     </item>
-            <item>
-        <title>v0.2.2</title>
-        <sparkle:version>202</sparkle:version>
-        <sparkle:shortVersionString>0.2.2</sparkle:shortVersionString>
-        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-        <pubDate>Fri, 17 Apr 2026 04:22:37 +0000</pubDate>
-        <enclosure
-            url="https://github.com/oyeong011/Planit/releases/download/v0.2.2/Calen-0.2.2-universal.zip"
-            sparkle:edSignature="+ORtXqmqsUgnruqPgwJ4xigZ1fb5oS/xRbUmS6Zcg+BJntGZPlRBqzm02X6HdBR6NyeXmG8qN5dxO7er2j9bAQ=="
-            length="5269756"
-            type="application/octet-stream" />
-        <description><![CDATA[릴리스 v0.2.2]]></description>
-    </item>
-            <item>
-        <title>v0.2.2</title>
-        <sparkle:version>202</sparkle:version>
-        <sparkle:shortVersionString>0.2.2</sparkle:shortVersionString>
-        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-        <pubDate>Fri, 17 Apr 2026 04:22:41 +0000</pubDate>
-        <enclosure
-            url="https://github.com/oyeong011/Planit/releases/download/v0.2.2/Calen-0.2.2-universal.zip"
-            sparkle:edSignature="/jF+led4WHZVTIRbOsm6COpNotCTMZgKolCfBrYvcumDhyNhpPcZMmREq7BzHxGG7ivyEjVyjOvLidAk891QDA=="
-            length="5370638"
-            type="application/octet-stream" />
-        <description><![CDATA[## Calen v0.2.2
-
-### 설치 방법 (Homebrew)
-```bash
-brew tap oyeong011/calen
-brew install --cask calen
-```
-
-### 직접 다운로드
-아래 Assets에서 DMG 파일을 받아 설치하세요.]]></description>
-    </item>
-            <item>
+        <item>
         <title>v0.2.2</title>
         <sparkle:version>202</sparkle:version>
         <sparkle:shortVersionString>0.2.2</sparkle:shortVersionString>
