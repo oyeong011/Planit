@@ -26,12 +26,9 @@ final class CalendarViewModel: ObservableObject {
         didSet {
             UserDefaults.standard.set(appleCalendarEnabled, forKey: "planit.appleCalendarEnabled")
             if appleCalendarEnabled {
-                requestAppleCalendarAccess()
+                enableAppleCalendar()
             } else {
-                // Google 인증 상태면 Google 이벤트만 다시 불러오기
-                if authManager.isAuthenticated {
-                    fetchEventsFromGoogle(for: currentMonth)
-                }
+                disableAppleCalendar()
             }
         }
     }
@@ -40,9 +37,9 @@ final class CalendarViewModel: ObservableObject {
         didSet {
             UserDefaults.standard.set(appleRemindersEnabled, forKey: "planit.appleRemindersEnabled")
             if appleRemindersEnabled {
-                requestAppleRemindersAccess()
+                enableAppleReminders()
             } else {
-                appleReminders = []
+                disableAppleReminders()
             }
         }
     }
@@ -128,7 +125,7 @@ final class CalendarViewModel: ObservableObject {
             fetchEventsFromGoogle(for: currentMonth)
             // Apple Calendar도 활성화되어 있으면 병합
             if appleCalendarEnabled {
-                requestAppleCalendarAccess()
+                enableAppleCalendar()
             }
         } else {
             requestCalendarAccess()
@@ -137,7 +134,7 @@ final class CalendarViewModel: ObservableObject {
 
         // Apple Reminders 활성화되어 있으면 접근 요청
         if appleRemindersEnabled {
-            requestAppleRemindersAccess()
+            enableAppleReminders()
         }
     }
 
@@ -195,26 +192,58 @@ final class CalendarViewModel: ObservableObject {
 
     // MARK: - Apple Calendar (EventKit 병합 모드)
 
+    nonisolated static func eventsExcludingAppleCalendar(_ events: [CalendarEvent]) -> [CalendarEvent] {
+        events.filter { $0.source != .apple }
+    }
+
+    func enableAppleCalendar() {
+        requestAppleCalendarAccess()
+    }
+
+    func disableAppleCalendar() {
+        removeCalendarObserver()
+        appleCalendarAccessGranted = false
+        calendarEvents = Self.eventsExcludingAppleCalendar(calendarEvents)
+        applyEventCategoryMappings()
+        cacheEvents(calendarEvents)
+    }
+
     /// Apple Calendar 접근 권한 요청 (Google 인증 상태에서 병합용)
     func requestAppleCalendarAccess() {
         if #available(iOS 17.0, macOS 14.0, *) {
             eventStore.requestFullAccessToEvents { [weak self] granted, error in
                 Task { @MainActor in
-                    self?.appleCalendarAccessGranted = granted && error == nil
-                    if granted {
-                        self?.observeCalendarChanges()
+                    guard let self else { return }
+                    guard self.appleCalendarEnabled else {
+                        self.appleCalendarAccessGranted = false
+                        return
+                    }
+                    self.appleCalendarAccessGranted = granted && error == nil
+                    if self.appleCalendarAccessGranted {
+                        self.observeCalendarChanges()
                         // 현재 Google 이벤트에 Apple Calendar 이벤트 병합
-                        self?.mergeAppleCalendarEvents(for: self?.currentMonth ?? Date())
+                        self.mergeAppleCalendarEvents(for: self.currentMonth)
+                    } else {
+                        self.calendarEvents = Self.eventsExcludingAppleCalendar(self.calendarEvents)
+                        self.cacheEvents(self.calendarEvents)
                     }
                 }
             }
         } else {
             eventStore.requestAccess(to: .event) { [weak self] granted, error in
                 Task { @MainActor in
-                    self?.appleCalendarAccessGranted = granted && error == nil
-                    if granted {
-                        self?.observeCalendarChanges()
-                        self?.mergeAppleCalendarEvents(for: self?.currentMonth ?? Date())
+                    guard let self else { return }
+                    guard self.appleCalendarEnabled else {
+                        self.appleCalendarAccessGranted = false
+                        return
+                    }
+                    self.appleCalendarAccessGranted = granted && error == nil
+                    if self.appleCalendarAccessGranted {
+                        self.observeCalendarChanges()
+                        self.mergeAppleCalendarEvents(for: self.currentMonth)
+                    } else {
+                        self.calendarEvents = Self.eventsExcludingAppleCalendar(self.calendarEvents)
+                        self.cacheEvents(self.calendarEvents)
                     }
                 }
             }
@@ -258,25 +287,49 @@ final class CalendarViewModel: ObservableObject {
 
     // MARK: - Apple Reminders (EventKit)
 
+    func enableAppleReminders() {
+        requestAppleRemindersAccess()
+    }
+
+    func disableAppleReminders() {
+        removeReminderObserver()
+        appleReminders = []
+        appleRemindersAccessGranted = false
+    }
+
     /// Apple Reminders 접근 권한 요청
     func requestAppleRemindersAccess() {
         if #available(iOS 17.0, macOS 14.0, *) {
             eventStore.requestFullAccessToReminders { [weak self] granted, error in
                 Task { @MainActor in
-                    self?.appleRemindersAccessGranted = granted && error == nil
-                    if granted {
-                        self?.fetchAppleReminders(for: self?.selectedDate ?? Date())
-                        self?.observeReminderChanges()
+                    guard let self else { return }
+                    guard self.appleRemindersEnabled else {
+                        self.appleRemindersAccessGranted = false
+                        return
+                    }
+                    self.appleRemindersAccessGranted = granted && error == nil
+                    if self.appleRemindersAccessGranted {
+                        self.observeReminderChanges()
+                        self.fetchAppleReminders(for: self.selectedDate)
+                    } else {
+                        self.appleReminders = []
                     }
                 }
             }
         } else {
             eventStore.requestAccess(to: .reminder) { [weak self] granted, error in
                 Task { @MainActor in
-                    self?.appleRemindersAccessGranted = granted && error == nil
-                    if granted {
-                        self?.fetchAppleReminders(for: self?.selectedDate ?? Date())
-                        self?.observeReminderChanges()
+                    guard let self else { return }
+                    guard self.appleRemindersEnabled else {
+                        self.appleRemindersAccessGranted = false
+                        return
+                    }
+                    self.appleRemindersAccessGranted = granted && error == nil
+                    if self.appleRemindersAccessGranted {
+                        self.observeReminderChanges()
+                        self.fetchAppleReminders(for: self.selectedDate)
+                    } else {
+                        self.appleReminders = []
                     }
                 }
             }
@@ -284,6 +337,13 @@ final class CalendarViewModel: ObservableObject {
     }
 
     private var reminderObserver: Any?
+
+    private func removeReminderObserver() {
+        if let observer = reminderObserver {
+            NotificationCenter.default.removeObserver(observer)
+            reminderObserver = nil
+        }
+    }
 
     private func observeReminderChanges() {
         // EKEventStoreChanged는 reminders 변경도 포함
@@ -322,6 +382,10 @@ final class CalendarViewModel: ObservableObject {
         eventStore.fetchReminders(matching: predicate) { [weak self] reminders in
             Task { @MainActor in
                 guard let self = self, let reminders = reminders else { return }
+                guard self.appleRemindersEnabled, self.appleRemindersAccessGranted else {
+                    self.appleReminders = []
+                    return
+                }
 
                 let targetDay = self.calendar.startOfDay(for: date)
                 let items: [TodoItem] = reminders.compactMap { reminder in
@@ -494,11 +558,16 @@ final class CalendarViewModel: ObservableObject {
 
     // MARK: - EventKit (fallback when not using Google API)
 
+    private func removeCalendarObserver() {
+        if let observer = notificationObserver {
+            NotificationCenter.default.removeObserver(observer)
+            notificationObserver = nil
+        }
+    }
+
     private func observeCalendarChanges() {
         // 기존 observer 제거 후 재등록 — 중복 리스너 누수 방지
-        if let existing = notificationObserver {
-            NotificationCenter.default.removeObserver(existing)
-        }
+        removeCalendarObserver()
         notificationObserver = NotificationCenter.default.addObserver(
             forName: .EKEventStoreChanged,
             object: eventStore,
@@ -1187,7 +1256,7 @@ final class CalendarViewModel: ObservableObject {
     // MARK: - Event Cache (Offline Support)
 
     private func cacheEvents(_ events: [CalendarEvent]) {
-        let cached = events.map { CachedCalendarEvent.from($0) }
+        let cached = Self.eventsExcludingAppleCalendar(events).map { CachedCalendarEvent.from($0) }
         do {
             let data = try JSONEncoder().encode(cached)
             try data.write(to: eventCachePath, options: .atomic)
