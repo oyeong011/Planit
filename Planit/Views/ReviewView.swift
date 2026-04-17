@@ -1060,15 +1060,23 @@ struct ReviewView: View {
 
     // MARK: - Evening View
 
-    // 오늘 이벤트 (Google Calendar + Apple Calendar)
-    private var todayEvents: [CalendarEvent] {
-        viewModel.eventsForDate(Calendar.current.startOfDay(for: Date()))
-            .filter { !$0.isAllDay }
+    // 오늘 날짜를 UI 상태(currentMonth/selectedDate)와 무관하게 실제 현재 시각으로 고정.
+    // itemsForDate가 DailyDetailView(오른쪽 패널)와 동일한 소스라 숫자 불일치/중복 이슈를
+    // 원천적으로 제거한다 (todosForDate는 source 필터가 없어 Apple mirror가 2중 카운트됐음).
+    private var todayItems: [CalendarViewModel.DayItem] {
+        viewModel.itemsForDate(Calendar.current.startOfDay(for: Date()))
+            .filter { item in
+                if case .event(let e) = item { return !e.isAllDay }
+                return true
+            }
     }
 
-    // 오늘 할 일
+    private var todayEvents: [CalendarEvent] {
+        todayItems.compactMap { if case .event(let e) = $0 { return e } else { return nil } }
+    }
+
     private var todayTodos: [TodoItem] {
-        viewModel.todosForDate(Calendar.current.startOfDay(for: Date()))
+        todayItems.compactMap { if case .todo(let t) = $0 { return t } else { return nil } }
     }
 
     // 자동 계산: 완료한 항목 수

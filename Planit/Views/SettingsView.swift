@@ -39,6 +39,7 @@ struct SettingsView: View {
     @State private var selectedSection: SettingsSection = .profile
     @State private var profile: UserProfile
     @ObservedObject private var appearance = AppearanceService.shared
+    @ObservedObject private var calendarThemeService = CalendarThemeService.shared
 
     init(goalService: GoalService, authManager: GoogleAuthManager, aiService: AIService,
          viewModel: CalendarViewModel, userContextService: UserContextService, onDismiss: @escaping () -> Void) {
@@ -809,6 +810,7 @@ struct SettingsView: View {
             sectionHeader(String(localized: "settings.section.advanced"), subtitle: String(localized: "settings.advanced.subtitle"), icon: "wrench.and.screwdriver")
 
             appearanceCard
+            calendarThemeCard
 
             settingsCard(String(localized: "settings.apple.diagnostics.card")) {
                 VStack(alignment: .leading, spacing: 8) {
@@ -963,6 +965,28 @@ struct SettingsView: View {
         }
     }
 
+    private var calendarThemeCard: some View {
+        settingsCard(String(localized: "settings.calendar.theme.card", defaultValue: "캘린더 테마")) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(String(localized: "settings.calendar.theme.desc", defaultValue: "캘린더 그리드, 선택 상태, 이벤트 강조색에 적용됩니다."))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                let columns = [GridItem(.adaptive(minimum: 132), spacing: 10)]
+                LazyVGrid(columns: columns, spacing: 10) {
+                    ForEach(calendarThemeService.themes) { theme in
+                        CalendarThemeTile(
+                            theme: theme,
+                            isSelected: calendarThemeService.current.id == theme.id
+                        ) {
+                            calendarThemeService.selectTheme(theme)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private var languageCard: some View {
         settingsCard(String(localized: "settings.language.card")) {
             VStack(alignment: .leading, spacing: 10) {
@@ -1092,5 +1116,50 @@ struct SettingsView: View {
     private func saveAndDismiss() {
         autosave()
         onDismiss()
+    }
+}
+
+private struct CalendarThemeTile: View {
+    let theme: CalendarTheme
+    let isSelected: Bool
+    let onSelect: () -> Void
+
+    var body: some View {
+        Button(action: onSelect) {
+            VStack(alignment: .leading, spacing: 9) {
+                HStack(spacing: 6) {
+                    Text(theme.name)
+                        .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                    Spacer()
+                    if isSelected {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(theme.accent)
+                    }
+                }
+
+                HStack(spacing: 4) {
+                    ForEach(theme.swatchHexes, id: \.self) { hex in
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(Color(hex: hex) ?? .secondary)
+                            .frame(height: 18)
+                    }
+                }
+            }
+            .padding(10)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isSelected ? theme.backgroundOverlay.opacity(0.7) : Color.platformControl.opacity(0.55))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isSelected ? theme.accent.opacity(0.55) : Color.secondary.opacity(0.12), lineWidth: 1.5)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(theme.name) calendar theme")
     }
 }
