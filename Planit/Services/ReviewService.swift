@@ -22,11 +22,31 @@ final class ReviewService: ObservableObject {
     private let calendarService: GoogleCalendarService?
     private var tomorrowPlanner: TomorrowPlannerService?
     private var reviewAI: ReviewAIService?
+    private static let lastDailyKeyName = "calen.review.lastDailyKey"
+    static let lastEveningKeyName = "calen.review.lastEveningKey"
+    private static let dateKeyFormatter: DateFormatter = {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM-dd"
+        fmt.timeZone = TimeZone(identifier: "Asia/Seoul")
+        return fmt
+    }()
+    private static let timeFormatter: DateFormatter = {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "HH:mm"
+        fmt.timeZone = TimeZone(identifier: "Asia/Seoul")
+        return fmt
+    }()
 
     /// Persisted date key to prevent re-running daily adjustment on same day
     private var lastDailyKey: String {
-        get { UserDefaults.standard.string(forKey: "calen.review.lastDailyKey") ?? "" }
-        set { UserDefaults.standard.set(newValue, forKey: "calen.review.lastDailyKey") }
+        get { UserDefaults.standard.string(forKey: Self.lastDailyKeyName) ?? "" }
+        set { UserDefaults.standard.set(newValue, forKey: Self.lastDailyKeyName) }
+    }
+
+    /// Persisted date key to prevent re-running evening review after restart.
+    private var lastEveningKey: String {
+        get { UserDefaults.standard.string(forKey: Self.lastEveningKeyName) ?? "" }
+        set { UserDefaults.standard.set(newValue, forKey: Self.lastEveningKeyName) }
     }
 
     init(goalService: GoalService, calendarService: GoogleCalendarService?) {
@@ -40,13 +60,13 @@ final class ReviewService: ObservableObject {
         if lastDailyKey == todayKey {
             dailyDoneToday = true
         }
+        if lastEveningKey == todayKey {
+            eveningDoneToday = true
+        }
     }
 
     private static func dateKey(for date: Date) -> String {
-        let fmt = DateFormatter()
-        fmt.dateFormat = "yyyy-MM-dd"
-        fmt.timeZone = TimeZone(identifier: "Asia/Seoul")
-        return fmt.string(from: date)
+        dateKeyFormatter.string(from: date)
     }
 
     // MARK: - Always-On Daily Adjustment
@@ -102,7 +122,10 @@ final class ReviewService: ObservableObject {
             dailyDoneToday = true
             lastDailyKey = Self.dateKey(for: Date())
         }
-        if currentMode == .evening { eveningDoneToday = true }
+        if currentMode == .evening {
+            eveningDoneToday = true
+            lastEveningKey = Self.dateKey(for: Date())
+        }
         currentMode = .none
         suggestions = []
     }
@@ -365,9 +388,6 @@ final class ReviewService: ObservableObject {
     }
 
     private func formatTime(_ date: Date) -> String {
-        let fmt = DateFormatter()
-        fmt.dateFormat = "HH:mm"
-        fmt.timeZone = TimeZone(identifier: "Asia/Seoul")
-        return fmt.string(from: date)
+        Self.timeFormatter.string(from: date)
     }
 }
