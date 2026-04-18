@@ -1937,6 +1937,12 @@ final class CalendarViewModel: ObservableObject {
         var movedEvent = event
         movedEvent.startDate = event.startDate.addingTimeInterval(delta)
         movedEvent.endDate = event.endDate.addingTimeInterval(delta)
+
+        // Apple Calendar eventual consistency: 이동 전 원래 날짜의 Apple 미러도 억제.
+        // suppressAppleMirrorCandidates는 새 날짜만 억제하므로 여기서 옛 날짜 명시 억제.
+        if event.source == .google {
+            suppressAppleMirror(title: event.title, startDate: event.startDate, calendarID: event.calendarID)
+        }
         replaceCalendarEventLocally(movedEvent)
         if event.source == .google {
             markRecentlyMutatedGoogle(id)
