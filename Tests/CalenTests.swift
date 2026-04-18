@@ -2133,3 +2133,30 @@ func cleanCodexOutput(_ raw: String) -> String {
     let facts = svc.recall(keys: ["preferredMorningWork"])
     #expect(!facts.isEmpty)
 }
+
+// TC-66: 저녁에 집중이 잘된다 → preferredEveningWork 추출
+@Test @MainActor func hermesMemory_extract_eveningPositive() {
+    let svc = HermesMemoryService(inMemory: true)
+    svc.clearAll()
+    svc.extractAndRemember(from: "저녁에 집중이 잘 돼요", aiResponse: "")
+
+    let facts = svc.recall(keys: ["preferredEveningWork"])
+    #expect(!facts.isEmpty)
+    #expect(facts.first?.value == "저녁 집중 선호")
+}
+
+// TC-67: 아침 선호 기록 후 저녁 선호 말하면 아침 선호 confidence가 감소한다
+@Test @MainActor func hermesMemory_extract_preferenceShift() {
+    let svc = HermesMemoryService(inMemory: true)
+    svc.clearAll()
+    svc.extractAndRemember(from: "아침에 집중이 잘 돼요", aiResponse: "")
+    let before = svc.recall(keys: ["preferredMorningWork"]).first?.confidence ?? 0
+
+    svc.extractAndRemember(from: "저녁에 집중이 잘 돼요", aiResponse: "")
+    let afterMorning = svc.recall(keys: ["preferredMorningWork"]).first?.confidence ?? 0
+    let evening = svc.recall(keys: ["preferredEveningWork"]).first
+
+    #expect(evening != nil)
+    // 아침 선호는 decay되어 감소하거나 삭제
+    #expect(afterMorning < before)
+}

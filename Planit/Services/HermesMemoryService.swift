@@ -141,14 +141,35 @@ final class HermesMemoryService: ObservableObject {
 
     func extractAndRemember(from userMessage: String, aiResponse: String) {
         var extracted: [MemoryFact] = []
+        var opposingToDecay: [(category: MemoryCategory, key: String)] = []
         let msg = userMessage.lowercased()
 
-        // 시간 선호
-        if msg.contains("아침") || msg.contains("오전") {
-            extracted.append(.init(category: .preference, key: "preferredMorningWork", value: "오전 집중 선호", confidence: 0.6))
+        // 긍정/부정 신호 감지용 헬퍼
+        let positiveWords = ["잘 돼", "잘돼", "잘된다", "잘함", "좋아", "좋다", "집중", "효율", "선호"]
+        let negativeWords = ["싫", "안돼", "안된다", "못해", "피곤", "지쳐", "힘들"]
+        func hasPositive() -> Bool { positiveWords.contains { msg.contains($0) } }
+        func hasNegative() -> Bool { negativeWords.contains { msg.contains($0) } }
+
+        // 시간대 선호 — 긍정/부정 맥락으로 구분하고 상충되는 선호는 decay
+        let mentionsMorning = msg.contains("아침") || msg.contains("오전")
+        let mentionsEvening = msg.contains("저녁") || msg.contains("밤")
+
+        if mentionsMorning && hasPositive() && !hasNegative() {
+            extracted.append(.init(category: .preference, key: "preferredMorningWork", value: "오전 집중 선호", confidence: 0.65))
+            opposingToDecay.append((.preference, "preferredEveningWork"))
         }
-        if msg.contains("저녁") && (msg.contains("싫") || msg.contains("안돼") || msg.contains("못해")) {
+        if mentionsMorning && hasNegative() {
+            extracted.append(.init(category: .preference, key: "avoidsMorningWork", value: "오전 작업 회피", confidence: 0.65))
+            opposingToDecay.append((.preference, "preferredMorningWork"))
+        }
+        if mentionsEvening && hasPositive() && !hasNegative() {
+            extracted.append(.init(category: .preference, key: "preferredEveningWork", value: "저녁 집중 선호", confidence: 0.65))
+            opposingToDecay.append((.preference, "avoidsEveningWork"))
+            opposingToDecay.append((.preference, "preferredMorningWork"))
+        }
+        if mentionsEvening && hasNegative() {
             extracted.append(.init(category: .preference, key: "avoidsEveningWork", value: "저녁 작업 회피", confidence: 0.65))
+            opposingToDecay.append((.preference, "preferredEveningWork"))
         }
 
         // 블록 길이 선호
@@ -174,8 +195,26 @@ final class HermesMemoryService: ObservableObject {
         }
 
         if !extracted.isEmpty {
+            // 상충되는 기존 선호의 confidence를 감소시킨 뒤 새 fact 저장 —
+            // 사용자의 변경된 선호를 따라가고 stale fact는 자연스럽게 만료되게.
+            decayConfidence(for: opposingToDecay, by: 0.25)
             remember(extracted)
         }
+    }
+
+    /// 특정 fact의 confidence를 감소시킴. 0.1 미만으로 떨어지면 삭제.
+    private func decayConfidence(for keys: [(category: MemoryCategory, key: String)], by amount: Double) {
+        for target in keys {
+            guard let record = findRecord(category: target.category, key: target.key) else { continue }
+            let newConf = record.confidence - amount
+            if newConf < 0.1 {
+                context.delete(record)
+            } else {
+                record.confidence = newConf
+                record.updatedAt = Date()
+            }
+        }
+        try? context.save()
     }
 
     // MARK: - Private
