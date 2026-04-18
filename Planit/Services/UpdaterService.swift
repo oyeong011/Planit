@@ -22,11 +22,13 @@ final class UpdaterService: NSObject, ObservableObject {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
     }
 
-    /// 개발 빌드 여부 — `/tmp/Calen.app`로 실행되면 dev.
-    /// run-dev.sh로 실행한 경우만 true가 되어 Sparkle을 완전히 비활성화한다.
+    /// 개발 빌드 여부 — run-dev.sh가 만드는 `/tmp/Calen.app`로 실행되면 dev.
+    /// macOS에서 `/tmp`는 `/private/tmp`의 symlink이므로 Bundle.main.bundlePath는
+    /// 실제 경로인 `/private/tmp/...`로 반환된다. 두 경로 모두 허용한다.
     /// 릴리즈 설치본(`/Applications/Calen.app`)에서는 false.
     static let isDevelopmentBuild: Bool = {
-        Bundle.main.bundlePath.hasPrefix("/tmp/")
+        let path = Bundle.main.bundlePath
+        return path.hasPrefix("/tmp/") || path.hasPrefix("/private/tmp/")
     }()
 
     override init() {
