@@ -489,5 +489,18 @@ brew install --cask oyeong011/calen/calen-ai
             type="application/octet-stream" />
         <description><![CDATA[릴리스 v0.2.23]]></description>
     </item>
+            <item>
+        <title>v0.2.24</title>
+        <sparkle:version>224</sparkle:version>
+        <sparkle:shortVersionString>0.2.24</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Sat, 18 Apr 2026 13:37:43 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.2.24/Calen-0.2.24-universal.zip"
+            sparkle:edSignature="ZLR4lWvpoa3gpIhXQw6Fys5cVOmMXlrGpU4LIWZ3cJ8pLgMBc/eEdAIgQvK33ld+VRVGFAuoB5dmeFtsq22LAA=="
+            length="5691616"
+            type="application/octet-stream" />
+        <description><![CDATA[릴리스 v0.2.24]]></description>
+    </item>
     </channel>
 </rss>
