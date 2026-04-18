@@ -20,22 +20,26 @@ final class HermesMemoryService: ObservableObject {
     private static let staleConfidenceThreshold = 0.3
     private static let staleDays: TimeInterval = 90 * 86400
 
-    init() {
+    /// - Parameter inMemory: true면 디스크에 저장하지 않음. 테스트에서 앱 DB 오염 방지용.
+    init(inMemory: Bool = false) {
         let schema = Schema([MemoryFactRecord.self, PlanningDecisionRecord.self])
-        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        let dir = support.appendingPathComponent("Planit/Memory", isDirectory: true)
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        let storeURL = dir.appendingPathComponent("hermes.sqlite")
-
-        // iOS 앱 빌드 시: ModelConfiguration에 cloudKitDatabase: .automatic 추가하면
-        // 코드 변경 없이 iCloud sync 활성화 가능
-        let config = ModelConfiguration(schema: schema, url: storeURL, allowsSave: true)
+        let config: ModelConfiguration
+        if inMemory {
+            config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        } else {
+            let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            let dir = support.appendingPathComponent("Planit/Memory", isDirectory: true)
+            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            let storeURL = dir.appendingPathComponent("hermes.sqlite")
+            // iOS 앱 빌드 시: cloudKitDatabase: .automatic 추가하면 iCloud sync 활성화
+            config = ModelConfiguration(schema: schema, url: storeURL, allowsSave: true)
+        }
         do {
             container = try ModelContainer(for: schema, configurations: config)
         } catch {
-            // 스키마 변경으로 마이그레이션 실패 시 재생성 (데이터 손실 최소화 후 복구)
-            try? FileManager.default.removeItem(at: storeURL)
-            container = try! ModelContainer(for: schema, configurations: config)
+            // 스키마 변경으로 마이그레이션 실패 시 in-memory fallback
+            let fallback = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+            container = try! ModelContainer(for: schema, configurations: fallback)
         }
         context = ModelContext(container)
         context.autosaveEnabled = true

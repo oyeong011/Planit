@@ -2045,7 +2045,7 @@ func cleanCodexOutput(_ raw: String) -> String {
 
 // TC-59: remember — 같은 key+category면 기존 fact를 업데이트한다
 @Test @MainActor func hermesMemory_remember_updatesExistingKey() {
-    let svc = HermesMemoryService()
+    let svc = HermesMemoryService(inMemory: true)
     svc.clearAll()
 
     svc.remember([MemoryFact(category: .preference, key: "preferredBlockLength", value: "30분", confidence: 0.6)])
@@ -2060,7 +2060,7 @@ func cleanCodexOutput(_ raw: String) -> String {
 
 // TC-60: remember — 다른 key면 별도 fact로 추가된다
 @Test @MainActor func hermesMemory_remember_addsNewKey() {
-    let svc = HermesMemoryService()
+    let svc = HermesMemoryService(inMemory: true)
     svc.clearAll()
 
     svc.remember([
@@ -2074,7 +2074,7 @@ func cleanCodexOutput(_ raw: String) -> String {
 
 // TC-61: forget — 특정 fact만 삭제된다
 @Test @MainActor func hermesMemory_forget_removesOnlyTarget() {
-    let svc = HermesMemoryService()
+    let svc = HermesMemoryService(inMemory: true)
     svc.clearAll()
 
     let factA = MemoryFact(category: .preference, key: "keyA", value: "a")
@@ -2089,7 +2089,7 @@ func cleanCodexOutput(_ raw: String) -> String {
 
 // TC-62: recall — confidence < 0.3이고 90일 지난 fact는 제외된다
 @Test @MainActor func hermesMemory_recall_excludesStaleLoConfidence() {
-    let svc = HermesMemoryService()
+    let svc = HermesMemoryService(inMemory: true)
     svc.clearAll()
 
     let old = MemoryFact(
@@ -2107,14 +2107,14 @@ func cleanCodexOutput(_ raw: String) -> String {
 
 // TC-63: contextForAI — fact가 없으면 빈 문자열 반환
 @Test @MainActor func hermesMemory_contextForAI_emptyWhenNoFacts() {
-    let svc = HermesMemoryService()
+    let svc = HermesMemoryService(inMemory: true)
     svc.clearAll()
     #expect(svc.contextForAI().isEmpty)
 }
 
 // TC-64: contextForAI — fact가 있으면 hermes_memory 블록 포함
 @Test @MainActor func hermesMemory_contextForAI_containsBlock() {
-    let svc = HermesMemoryService()
+    let svc = HermesMemoryService(inMemory: true)
     svc.clearAll()
     svc.remember([MemoryFact(category: .preference, key: "preferredMorningWork", value: "오전 집중 선호", confidence: 0.7)])
 
@@ -2126,7 +2126,7 @@ func cleanCodexOutput(_ raw: String) -> String {
 
 // TC-65: extractAndRemember — "아침" 키워드에서 preferredMorningWork 추출
 @Test @MainActor func hermesMemory_extract_morningKeyword() {
-    let svc = HermesMemoryService()
+    let svc = HermesMemoryService(inMemory: true)
     svc.clearAll()
     svc.extractAndRemember(from: "아침에 집중이 잘 돼요", aiResponse: "네, 오전 시간대에 배치해드릴게요.")
 
