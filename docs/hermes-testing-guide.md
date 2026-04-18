@@ -218,6 +218,99 @@ swift test --filter "hermes"
 
 ---
 
+## 11. 실전 체크리스트 — 이것들을 한 번씩 돌려보세요
+
+각 시나리오마다 **입력 문장**과 **기대 결과**를 표시했습니다. 설정 → Hermes 카드에서 확인.
+
+### 📘 시나리오 1: 시간대 선호 점진 학습
+
+| # | 입력 | 기대 fact |
+|---|---|---|
+| 1-1 | `아침에 집중이 잘 돼요` | preferredMorningWork 65% |
+| 1-2 | `오전이 제일 좋아` | preferredMorningWork 70%+ (가중) |
+| 1-3 | `아침엔 진짜 집중 잘됨` | preferredMorningWork 75%+ |
+
+### 📘 시나리오 2: 선호 번복 (Hermes 핵심 — 사용자는 변한다)
+
+| # | 입력 | 기대 동작 |
+|---|---|---|
+| 2-1 | `아침에 집중 잘돼요` | preferredMorningWork 65% |
+| 2-2 | `저녁에 집중이 잘 돼요` | preferredEveningWork 65% **생성**, preferredMorningWork **40%로 감소** |
+| 2-3 | 다시 `저녁이 좋아` | preferredEveningWork 70%+, preferredMorningWork **15%로 더 감소** |
+| 2-4 | 다시 `저녁이 최고` | preferredMorningWork **삭제** (0.1 미만 → 자동 소멸) |
+
+### 📘 시나리오 3: 부정 감지
+
+| # | 입력 | 기대 fact |
+|---|---|---|
+| 3-1 | `아침엔 피곤해서 못해요` | avoidsMorningWork 65% |
+| 3-2 | `저녁엔 집중 안돼요` | avoidsEveningWork 65% |
+| 3-3 | `밤에 힘들어` | avoidsEveningWork 65% |
+
+### 📘 시나리오 4: 블록 길이 선호
+
+| # | 입력 | 기대 fact |
+|---|---|---|
+| 4-1 | `30분 정도 짧게 하고 싶어` | preferredBlockLength = "30분 내외" |
+| 4-2 | `집중할 땐 2시간 정도가 좋아` | preferredBlockLength = "90~120분 딥워크" (덮어씀) |
+| 4-3 | `90분 블록 선호` | preferredBlockLength 신뢰도 상승 |
+
+### 📘 시나리오 5: 회의 과밀
+
+| # | 입력 | 기대 fact |
+|---|---|---|
+| 5-1 | `오늘 회의가 너무 많아서 지쳐` | meetingFatigue 70% |
+| 5-2 | `회의가 힘들어` | meetingFatigue 신뢰도 상승 |
+
+### 📘 시나리오 6: 빈 시간 자동 제안 의향
+
+| # | 입력 | 기대 fact |
+|---|---|---|
+| 6-1 | `빈 시간 있으면 알아서 추천해줘` | wantsSlotSuggestions 75% |
+| 6-2 | `여유 시간에 운동 넣어줘` | wantsSlotSuggestions 유지 |
+| 6-3 | `남는 시간 공부에 써줘` | wantsSlotSuggestions 유지 |
+
+### 📘 시나리오 7: 급한 일정 패턴
+
+| # | 입력 | 기대 fact |
+|---|---|---|
+| 7-1 | `갑자기 회의 잡혔어` | urgentReschedulingNeeds 70% |
+| 7-2 | `급하게 내일 발표 준비해야 돼` | urgentReschedulingNeeds 신뢰도 상승 |
+
+### 📘 시나리오 8: AI가 실제로 기억을 반영하는지 (최종 목표)
+
+**준비:** `저녁에 집중이 잘 돼요` + `90분 블록이 좋아` 두 문장으로 학습
+
+**검증 질문:**
+```
+내일 공부 시간 잡아줘
+```
+
+**기대 응답:**
+- 시작 시간이 **18:00~22:00 사이**
+- 길이가 **90분 (1시간 30분)**
+
+✅ 둘 다 맞으면 Hermes가 제대로 동작  
+❌ 오전 9시, 1시간 배치하면 기억이 프롬프트에 주입 안 된 것
+
+---
+
+### 📘 시나리오 9: 재시작 영속성
+
+1. 시나리오 1~7 중 5개 이상 학습
+2. 메뉴바 아이콘 우클릭 → 종료
+3. `./scripts/run-dev.sh` 다시 실행
+4. 설정 → Hermes 카드 → 모든 fact 그대로 있어야 함
+
+---
+
+### 📘 시나리오 10: 개별/전체 삭제
+
+1. 특정 fact 우측 `x` 버튼 → 그 행만 사라짐
+2. 상단 "전체 삭제" → 모든 fact + decisions 삭제
+
+---
+
 ## 부록 — 새 키워드 추출 규칙 추가하기
 
 `Planit/Services/HermesMemoryService.swift`의 `extractAndRemember` 함수에서 패턴 추가:
