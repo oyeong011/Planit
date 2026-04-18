@@ -8,6 +8,7 @@ struct ChatView: View {
     @ObservedObject private var themeService = CalendarThemeService.shared
     var goalMemoryService: GoalMemoryService? = nil
     var habitService: HabitService? = nil          // 습관 — 목표와 완전히 분리
+    var hermesMemoryService: HermesMemoryService? = nil
     // aiService.chatMessages 사용 — 탭 전환 후에도 유지
     @State private var inputText: String = ""
     @State private var attachments: [ChatAttachment] = []
@@ -880,10 +881,16 @@ struct ChatView: View {
             }
         }
 
+        let capturedText = text
         Task {
-            let response = await aiService.sendMessage(text, attachments: currentAttachments, history: Array(aiService.chatMessages.dropLast()))
+            let response = await aiService.sendMessage(capturedText, attachments: currentAttachments, history: Array(aiService.chatMessages.dropLast()))
             aiService.chatMessages.append(contentsOf: response)
             viewModel.refreshEvents()
+            // Hermes: AI 응답에서 사용자 패턴 자동 추출
+            if let hms = hermesMemoryService {
+                let aiText = response.first(where: { $0.role == .assistant })?.content ?? ""
+                hms.extractAndRemember(from: capturedText, aiResponse: aiText)
+            }
         }
     }
 }

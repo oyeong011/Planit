@@ -38,6 +38,7 @@ struct MainCalendarView: View {
     @StateObject private var userContextService = UserContextService()
     @StateObject private var goalMemoryService = GoalMemoryService()
     @StateObject private var habitService = HabitService()
+    @StateObject private var hermesMemoryService = HermesMemoryService()
     @StateObject private var updater = UpdaterService.shared
     @ObservedObject private var themeService = CalendarThemeService.shared
     @State private var showLeftPanel: Bool = true
@@ -113,6 +114,7 @@ struct MainCalendarView: View {
             scheduleNotifications()
             // 초개인화: aiService에 컨텍스트 서비스 주입
             aiService.userContextService = userContextService
+            aiService.hermesMemoryService = hermesMemoryService
             aiService.userProfileProvider = { goalService.profile }
             refreshUserContextAnalysis()
             // 업데이트 배너용 appcast 직접 폴링 — Sparkle의 background check가
@@ -241,7 +243,8 @@ struct MainCalendarView: View {
             case .chat:
                 ChatView(aiService: aiService, viewModel: viewModel,
                          goalMemoryService: goalMemoryService,
-                         habitService: habitService)
+                         habitService: habitService,
+                         hermesMemoryService: hermesMemoryService)
             }
         }
     }

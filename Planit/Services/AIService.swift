@@ -220,6 +220,9 @@ final class AIService: ObservableObject {
     /// 초개인화 컨텍스트 서비스 (외부에서 주입)
     var userContextService: UserContextService?
 
+    /// Hermes 장기 기억 서비스 (외부에서 주입) — UserContextService와 병렬 동작
+    @MainActor var hermesMemoryService: HermesMemoryService?
+
     /// 현재 설정 프로필. SmartScheduler와 시스템 프롬프트에 설정값을 반영한다.
     var userProfileProvider: (() -> UserProfile)?
 
@@ -539,6 +542,7 @@ final class AIService: ObservableObject {
 
         let categoryContext = buildCategoryContext()
         let userContext = userContextService?.contextForAI() ?? ""
+        let hermesContext = hermesMemoryService?.contextForAI() ?? ""
         let profile = userProfileProvider?()
         let focusRule: String
         if let profile {
@@ -556,6 +560,7 @@ final class AIService: ObservableObject {
         \(focusRule)
 
         \(userContext.isEmpty ? "" : userContext + "\n")
+        \(hermesContext.isEmpty ? "" : hermesContext + "\n")
 
         ## 개인화 컨텍스트 활용 규칙
         - 사용자 개인 컨텍스트가 있으면 시간 제안, 작업 분량, 우선순위, 되묻기 여부에 반영해.
