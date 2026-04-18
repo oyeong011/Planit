@@ -143,6 +143,7 @@ struct MainCalendarView: View {
                 aiService: aiService,
                 viewModel: viewModel,
                 userContextService: userContextService,
+                hermesMemoryService: hermesMemoryService,
                 onDismiss: { showSettings = false }
             )
         }
