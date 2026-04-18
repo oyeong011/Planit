@@ -2031,16 +2031,16 @@ func cleanCodexOutput(_ raw: String) -> String {
     #expect(under.confidence == 0.0)
 }
 
-// TC-58: MemoryFact Codable 라운드트립
-@Test func hermesMemoryFact_codableRoundtrip() throws {
+// TC-58: MemoryFactRecord SwiftData 레코드 라운드트립
+@Test func hermesMemoryFact_recordRoundtrip() {
     let fact = MemoryFact(category: .schedulePattern, key: "meetingFatigue", value: "높음", confidence: 0.8)
-    let data = try JSONEncoder().encode(fact)
-    let decoded = try JSONDecoder().decode(MemoryFact.self, from: data)
-    #expect(decoded.id == fact.id)
-    #expect(decoded.key == fact.key)
-    #expect(decoded.value == fact.value)
-    #expect(decoded.confidence == fact.confidence)
-    #expect(decoded.category == fact.category)
+    let record = MemoryFactRecord(fact)
+    let recovered = record.toDomain()
+    #expect(recovered.id == fact.id)
+    #expect(recovered.key == fact.key)
+    #expect(recovered.value == fact.value)
+    #expect(recovered.confidence == fact.confidence)
+    #expect(recovered.category == fact.category)
 }
 
 // TC-59: remember — 같은 key+category면 기존 fact를 업데이트한다
