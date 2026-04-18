@@ -1938,10 +1938,27 @@ final class CalendarViewModel: ObservableObject {
         movedEvent.startDate = event.startDate.addingTimeInterval(delta)
         movedEvent.endDate = event.endDate.addingTimeInterval(delta)
 
-        // Apple Calendar eventual consistency: 이동 전 원래 날짜의 Apple 미러도 억제.
-        // suppressAppleMirrorCandidates는 새 날짜만 억제하므로 여기서 옛 날짜 명시 억제.
+        // Apple Calendar eventual consistency: replaceCalendarEventLocally 호출 전에
+        // 옛 위치의 Apple 미러를 억제해야 함. suppressAppleMirror(calendarID:)에 Google ID를
+        // 넘기면 Apple 이벤트의 실제 calendarID와 불일치하여 suppress가 무효화된다.
+        // suppressAppleMirrorCandidates는 실제 Apple 이벤트를 검색해 올바른 calendarID를 추출한다.
         if event.source == .google {
-            suppressAppleMirror(title: event.title, startDate: event.startDate, calendarID: event.calendarID)
+            let appleCandidates = (appleCalendarEnabled && appleCalendarAccessGranted)
+                ? fetchLocalCalendarEvents(for: currentMonth)
+                : calendarEvents.filter { $0.source == .apple }
+            let suppressKeys = suppressAppleMirrorCandidates(
+                eventID: id,
+                title: event.title,
+                startDate: event.startDate,
+                endDate: event.endDate,
+                isAllDay: event.isAllDay,
+                appleCandidates: appleCandidates
+            )
+            // Apple 미러 즉시 제거 (suppressed 상태로 다음 merge까지 기다리지 않음)
+            calendarEvents.removeAll { ev in
+                ev.source == .apple
+                    && suppressKeys.contains(Self.appleMirrorSuppressKey(for: ev))
+            }
         }
         replaceCalendarEventLocally(movedEvent)
         if event.source == .google {
