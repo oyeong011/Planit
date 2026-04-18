@@ -875,6 +875,7 @@ struct SettingsView: View {
                         buttonLabel: String(localized: "settings.review.reset.button"),
                         action: {
                             UserDefaults.standard.removeObject(forKey: "calen.review.lastDailyKey")
+                            UserDefaults.standard.removeObject(forKey: ReviewService.lastEveningKeyName)
                         }
                     )
                     Divider()
