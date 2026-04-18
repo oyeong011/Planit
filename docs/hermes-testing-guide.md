@@ -5,18 +5,24 @@
 ```bash
 cd /Users/oy/Projects/Planit
 git checkout feat/planning-memory-sidecar
-swift build -c release    # 릴리즈 빌드 (성능 확인용)
-# 또는 디버그 빌드
-swift build
 ```
 
-앱 실행:
+### ⚠️ 실행은 반드시 `run-dev.sh` 사용
+
+`swift run Calen`은 **절대 안 됩니다**.
+UNUserNotificationCenter가 .app 번들을 요구하므로 크래시합니다.
 
 ```bash
-swift run Calen
+./scripts/run-dev.sh
 ```
 
-메뉴바에 Calen 아이콘이 뜨면 클릭해서 팝오버를 엽니다.
+이 스크립트는:
+1. 릴리즈 빌드
+2. `/tmp/Calen.app` 번들 생성 (리소스, Sparkle 포함)
+3. 개발 서명 적용 (있으면)
+4. 기존 Calen 프로세스 종료 + 새 번들 실행
+
+완료되면 메뉴바에 Calen 아이콘이 나타납니다. (기존 릴리즈 버전과 별개 프로세스)
 
 ---
 
