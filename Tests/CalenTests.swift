@@ -220,6 +220,34 @@ struct TestTodo: Codable {
     #expect(mode == "none")
 }
 
+@MainActor
+@Test func reviewService_initializesEveningDoneFromPersistedDateKey() {
+    let key = "calen.review.lastEveningKey"
+    let today = GoalService.dateKey(Date())
+    UserDefaults.standard.removeObject(forKey: key)
+    defer { UserDefaults.standard.removeObject(forKey: key) }
+
+    UserDefaults.standard.set(today, forKey: key)
+    let service = ReviewService(goalService: GoalService(), calendarService: nil)
+
+    #expect(service.eveningDoneToday)
+}
+
+@MainActor
+@Test func reviewService_dismissEveningPersistsDateKey() {
+    let key = "calen.review.lastEveningKey"
+    let today = GoalService.dateKey(Date())
+    UserDefaults.standard.removeObject(forKey: key)
+    defer { UserDefaults.standard.removeObject(forKey: key) }
+
+    let service = ReviewService(goalService: GoalService(), calendarService: nil)
+    service.currentMode = .evening
+    service.dismissReview()
+
+    #expect(service.eveningDoneToday)
+    #expect(UserDefaults.standard.string(forKey: key) == today)
+}
+
 @Test func reviewMode_eveningOutOfRange_none() {
     // 저녁 시간 범위 밖 (eveningStart + 3 이상)
     let mode = determineReviewMode(dailyDoneToday: true, eveningDoneToday: false, hour: 18, eveningStart: 21)

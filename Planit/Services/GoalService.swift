@@ -9,6 +9,12 @@ final class GoalService: ObservableObject {
     @Published var dailyMetrics: [String: DailyMetrics] = [:]     // "yyyy-MM-dd" → metrics
 
     private let dataDir: URL
+    private static let dateKeyFormatter: DateFormatter = {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM-dd"
+        fmt.timeZone = TimeZone(identifier: "Asia/Seoul")
+        return fmt
+    }()
 
     init() {
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
@@ -118,10 +124,7 @@ final class GoalService: ObservableObject {
     }
 
     static func dateKey(_ date: Date) -> String {
-        let fmt = DateFormatter()
-        fmt.dateFormat = "yyyy-MM-dd"
-        fmt.timeZone = TimeZone(identifier: "Asia/Seoul")
-        return fmt.string(from: date)
+        dateKeyFormatter.string(from: date)
     }
 
     // MARK: - Progress
