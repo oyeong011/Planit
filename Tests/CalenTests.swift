@@ -2018,3 +2018,118 @@ func cleanCodexOutput(_ raw: String) -> String {
     let value = NSLocalizedString("common.save", bundle: .module, comment: "")
     #expect(value == "Save")
 }
+
+// ============================================================================
+// MARK: - TC-57~65: HermesMemoryService 단위 테스트
+// ============================================================================
+
+// TC-57: MemoryFact confidence는 0~1 범위로 클램핑된다
+@Test func hermesMemoryFact_confidenceClamped() {
+    let over = MemoryFact(category: .preference, key: "k", value: "v", confidence: 1.5)
+    let under = MemoryFact(category: .preference, key: "k", value: "v", confidence: -0.3)
+    #expect(over.confidence == 1.0)
+    #expect(under.confidence == 0.0)
+}
+
+// TC-58: MemoryFact Codable 라운드트립
+@Test func hermesMemoryFact_codableRoundtrip() throws {
+    let fact = MemoryFact(category: .schedulePattern, key: "meetingFatigue", value: "높음", confidence: 0.8)
+    let data = try JSONEncoder().encode(fact)
+    let decoded = try JSONDecoder().decode(MemoryFact.self, from: data)
+    #expect(decoded.id == fact.id)
+    #expect(decoded.key == fact.key)
+    #expect(decoded.value == fact.value)
+    #expect(decoded.confidence == fact.confidence)
+    #expect(decoded.category == fact.category)
+}
+
+// TC-59: remember — 같은 key+category면 기존 fact를 업데이트한다
+@Test @MainActor func hermesMemory_remember_updatesExistingKey() {
+    let svc = HermesMemoryService()
+    svc.clearAll()
+
+    svc.remember([MemoryFact(category: .preference, key: "preferredBlockLength", value: "30분", confidence: 0.6)])
+    svc.remember([MemoryFact(category: .preference, key: "preferredBlockLength", value: "45분", confidence: 0.8)])
+
+    let matches = svc.recall(keys: ["preferredBlockLength"])
+    #expect(matches.count == 1)
+    #expect(matches.first?.value == "45분")
+    // confidence는 가중 평균 + 0.05 → (0.6+0.8)/2 + 0.05 = 0.75
+    #expect((matches.first?.confidence ?? 0) > 0.7)
+}
+
+// TC-60: remember — 다른 key면 별도 fact로 추가된다
+@Test @MainActor func hermesMemory_remember_addsNewKey() {
+    let svc = HermesMemoryService()
+    svc.clearAll()
+
+    svc.remember([
+        MemoryFact(category: .preference, key: "keyA", value: "a", confidence: 0.7),
+        MemoryFact(category: .preference, key: "keyB", value: "b", confidence: 0.7)
+    ])
+
+    let all = svc.recall()
+    #expect(all.count == 2)
+}
+
+// TC-61: forget — 특정 fact만 삭제된다
+@Test @MainActor func hermesMemory_forget_removesOnlyTarget() {
+    let svc = HermesMemoryService()
+    svc.clearAll()
+
+    let factA = MemoryFact(category: .preference, key: "keyA", value: "a")
+    let factB = MemoryFact(category: .preference, key: "keyB", value: "b")
+    svc.remember([factA, factB])
+    svc.forget(id: factA.id)
+
+    let remaining = svc.recall()
+    #expect(remaining.count == 1)
+    #expect(remaining.first?.key == "keyB")
+}
+
+// TC-62: recall — confidence < 0.3이고 90일 지난 fact는 제외된다
+@Test @MainActor func hermesMemory_recall_excludesStaleLoConfidence() {
+    let svc = HermesMemoryService()
+    svc.clearAll()
+
+    let old = MemoryFact(
+        category: .preference, key: "stale", value: "old",
+        confidence: 0.2, source: "chat",
+        updatedAt: Date(timeIntervalSinceNow: -91 * 86400)
+    )
+    let fresh = MemoryFact(category: .preference, key: "fresh", value: "new", confidence: 0.8)
+    svc.remember([old, fresh])
+
+    let result = svc.recall()
+    #expect(result.contains { $0.key == "fresh" })
+    #expect(!result.contains { $0.key == "stale" })
+}
+
+// TC-63: contextForAI — fact가 없으면 빈 문자열 반환
+@Test @MainActor func hermesMemory_contextForAI_emptyWhenNoFacts() {
+    let svc = HermesMemoryService()
+    svc.clearAll()
+    #expect(svc.contextForAI().isEmpty)
+}
+
+// TC-64: contextForAI — fact가 있으면 hermes_memory 블록 포함
+@Test @MainActor func hermesMemory_contextForAI_containsBlock() {
+    let svc = HermesMemoryService()
+    svc.clearAll()
+    svc.remember([MemoryFact(category: .preference, key: "preferredMorningWork", value: "오전 집중 선호", confidence: 0.7)])
+
+    let ctx = svc.contextForAI()
+    #expect(ctx.contains("<hermes_memory>"))
+    #expect(ctx.contains("preferredMorningWork"))
+    #expect(ctx.contains("오전 집중 선호"))
+}
+
+// TC-65: extractAndRemember — "아침" 키워드에서 preferredMorningWork 추출
+@Test @MainActor func hermesMemory_extract_morningKeyword() {
+    let svc = HermesMemoryService()
+    svc.clearAll()
+    svc.extractAndRemember(from: "아침에 집중이 잘 돼요", aiResponse: "네, 오전 시간대에 배치해드릴게요.")
+
+    let facts = svc.recall(keys: ["preferredMorningWork"])
+    #expect(!facts.isEmpty)
+}
