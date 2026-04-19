@@ -50,6 +50,8 @@ struct MainCalendarView: View {
     @State private var didTriggerUpdateCheckThisSession = false
     /// User context 분석 debounce — 이벤트 배열이 빠르게 바뀔 때 Claude CLI 폭주 방지
     @State private var contextRefreshTask: Task<Void, Never>?
+    /// Hermes → CloudKit 단방향 업로드 sync. planit.hermesCloudKitSyncEnabled 플래그가 켜지면 자동 시작.
+    @State private var hermesSync: HermesMemorySync?
 
     init(authManager: GoogleAuthManager, newTodoTitle: Binding<String>) {
         self.authManager = authManager
@@ -104,6 +106,13 @@ struct MainCalendarView: View {
             }
         }
         .frame(width: showLeftPanel ? 1320 : 1040, height: 860)
+        .task {
+            // Hermes CloudKit upstream sync 시작 (UserDefaults 플래그 기반).
+            // 활성화 안 돼 있으면 startIfEnabled가 nil 반환 → no-op.
+            if hermesSync == nil {
+                hermesSync = HermesMemorySync.startIfEnabled(service: hermesMemoryService)
+            }
+        }
         .background(
             ZStack {
                 Color.platformControlBackground

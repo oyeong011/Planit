@@ -24,10 +24,13 @@ import CalenShared
 // macOS의 `SharedKeychainHelper`와 동일 스키마를 iOS에서도 쓸 수 있도록 복제한다.
 // (SharedKeychainHelper는 `Calen` 타깃에 속해서 iOS 타깃에서는 import 불가.)
 enum IOSSharedKeychain {
-    /// App Group id — RELEASE 팀장이 Team ID prefix 가 필요하면 주입.
+    /// App Group id — entitlement의 keychain-access-groups와 일치해야 함.
+    /// App Group ID(`group.`로 시작)는 Team ID prefix가 자동 부여되지 않으므로 리터럴 그대로 사용.
     static let accessGroup: String = "group.com.oy.planit"
     static let service: String = "com.oy.planit"
-    static let tokenAccount: String = "planit.auth.tokens"
+    // iOS는 macOS와 다른 OAuth 클라이언트(custom URL scheme + PKCE)를 사용하므로
+    // 토큰 키를 플랫폼별로 분리한다. 같은 키를 쓰면 client_id 불일치로 refresh가 깨짐.
+    static let tokenAccount: String = "planit.auth.tokens.ios"
     static let credentialsAccount: String = "planit.auth.credentials"
 
     struct AuthTokens: Codable, Equatable {

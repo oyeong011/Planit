@@ -10,11 +10,11 @@
         <string>group.com.oy.planit</string>
     </array>
 
-    <!-- Keychain 공유: reversed-client-ID 기반 OAuth 토큰을 macOS와 공유한다. -->
-    <!-- `$(AppIdentifierPrefix)`는 빌드 시 Team ID.로 치환된다 (xcodebuild 자동). -->
+    <!-- Keychain 공유: App Group ID로 공유하면 Team ID prefix가 자동 붙지 않는다. -->
+    <!-- 코드는 `group.com.oy.planit` 리터럴을 `kSecAttrAccessGroup`에 사용. -->
     <key>keychain-access-groups</key>
     <array>
-        <string>$(AppIdentifierPrefix)group.com.oy.planit</string>
+        <string>group.com.oy.planit</string>
     </array>
 
     <!-- iCloud (CloudKit): macOS가 write한 Hermes 메모리 레코드를 iOS가 read한다. -->

@@ -20,11 +20,22 @@
         <string>group.com.oy.planit</string>
     </array>
 
-    <!-- Keychain 공유: macOS OAuth 토큰을 iOS가 읽을 수 있도록. -->
-    <!-- `$(AppIdentifierPrefix)`는 Team ID로 치환된다. -->
+    <!-- Keychain 공유: App Group ID로 공유하면 Team ID prefix 자동 미부여. -->
+    <!-- 코드는 `group.com.oy.planit` 리터럴을 사용. -->
     <key>keychain-access-groups</key>
     <array>
-        <string>$(AppIdentifierPrefix)group.com.oy.planit</string>
+        <string>group.com.oy.planit</string>
+    </array>
+
+    <!-- iCloud (CloudKit): Hermes 메모리를 iOS로 단방향 동기화. -->
+    <!-- HermesMemoryFactV1 CKRecord를 private DB default zone에 write. -->
+    <key>com.apple.developer.icloud-container-identifiers</key>
+    <array>
+        <string>iCloud.com.oy.planit</string>
+    </array>
+    <key>com.apple.developer.icloud-services</key>
+    <array>
+        <string>CloudKit</string>
     </array>
 </dict>
 </plist>
