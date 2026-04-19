@@ -61,6 +61,20 @@ extension Color {
         })
         #endif
     }
+
+    /// 같은 hue/saturation을 유지하고 brightness만 덮어쓴 색을 반환.
+    /// 다크 모드 배경용 — "검정에 가깝지만 테마 hue가 살짝 보이는" 색 만들 때 사용.
+    /// 예: accent.withBrightness(0.10) → 거의 검정 + 미세한 accent hue.
+    func withBrightness(_ newBrightness: Double) -> Color {
+        #if os(macOS)
+        guard let converted = NSColor(self).usingColorSpace(.sRGB) else { return self }
+        var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        converted.getHue(&h, saturation: &s, brightness: &b, alpha: &a)
+        return Color(hue: Double(h), saturation: Double(s), brightness: newBrightness, opacity: Double(a))
+        #else
+        return self
+        #endif
+    }
 }
 
 // Available color presets for category picker

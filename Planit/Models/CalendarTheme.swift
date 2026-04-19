@@ -33,21 +33,25 @@ struct CalendarTheme: Identifiable, Equatable, Hashable {
     /// 다크/라이트 모드를 해치지 않도록 opacity를 낮춰서 사용한다.
     var subtleBackgroundTint: Color { backgroundOverlay.opacity(0.16) }
 
-    /// 패널(일정 리스트, 월간 그리드) 배경에 얹는 아주 옅은 accent 틴트.
-    /// 라이트 모드에서는 더 강하게 (0.08), 다크 모드에서는 약하게 (0.04) 적용해
-    /// 가독성을 유지하면서 테마 정체성이 드러나게 한다.
+    /// 패널(일정 리스트, 월간 그리드) 배경에 얹는 테마 틴트.
+    /// - 라이트 모드: 테마의 `backgroundOverlay` pastel 색을 40% opacity로 적용
+    ///   → Classic=연블루, Rose=연분홍 등 테마별로 분명히 다른 배경
+    /// - 다크 모드: accent의 brightness를 0.10으로 낮춰서 "거의 검정 + 테마 hue 살짝"
+    ///   → Teal=검정+청록감, Rose=검정+분홍감 등 미묘하지만 구분 가능
+    ///   opacity 0.7로 너무 진하지 않게 조정
     var paneTint: Color {
         Color(
-            light: accent.opacity(0.08),
-            dark:  accent.opacity(0.04)
+            light: backgroundOverlay.opacity(0.4),
+            dark:  accent.withBrightness(0.10).opacity(0.7)
         )
     }
 
     /// 카드(설정, 리뷰 카드) 배경에 얹는 옅은 테마 틴트.
+    /// paneTint보다 약한 강도 — 카드 경계가 배경과 구분되게.
     var cardTint: Color {
         Color(
-            light: accent.opacity(0.06),
-            dark:  accent.opacity(0.03)
+            light: backgroundOverlay.opacity(0.25),
+            dark:  accent.withBrightness(0.14).opacity(0.5)
         )
     }
 
