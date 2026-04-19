@@ -104,7 +104,12 @@ struct MainCalendarView: View {
             }
         }
         .frame(width: showLeftPanel ? 1320 : 1040, height: 860)
-        .background(Color.platformControlBackground)
+        .background(
+            ZStack {
+                Color.platformControlBackground
+                themeService.current.paneTint
+            }
+        )
         .animation(.easeInOut(duration: 0.28), value: themeService.current.id)
         .onChange(of: authManager.isAuthenticated) {
             viewModel.refreshEvents()
@@ -857,7 +862,12 @@ struct DailyDetailView: View {
                 .animation(.easeInOut(duration: 0.2), value: tappedEvent?.id)
             }
         }
-        .background(Color.platformWindowBackground.opacity(0.5))
+        .background(
+            ZStack {
+                Color.platformWindowBackground.opacity(0.5)
+                themeService.current.paneTint
+            }
+        )
         .popover(isPresented: $showCategoryManager) {
             CategoryManagerView(viewModel: viewModel)
         }
