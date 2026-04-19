@@ -531,6 +531,29 @@ struct ChatView: View {
             .disabled(isPlanning || !aiService.isConfigured || hermesMemoryService == nil)
             .help(aiService.isConfigured ? "Hermes 기억을 반영해 오늘 일정을 재배치" : "AI CLI가 설정되지 않았습니다")
 
+            // 빈 시간 채우기
+            Button {
+                Task { await runFillFreeSlots() }
+            } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: "plus.rectangle.on.rectangle")
+                        .font(.system(size: 11))
+                    Text("빈 시간 채우기")
+                        .font(.system(size: 11, weight: .medium))
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(aiService.isConfigured ? Color.blue.opacity(0.12) : Color.gray.opacity(0.08))
+                )
+                .foregroundStyle(aiService.isConfigured ? .blue : .secondary)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(isPlanning || !aiService.isConfigured || hermesMemoryService == nil)
+            .help("Hermes 기억을 반영해 오늘 빈 시간에 적합한 활동을 제안합니다")
+
             // 미분류 일정 분류
             Button {
                 Task { await runCategorizeUntagged() }
@@ -661,6 +684,52 @@ struct ChatView: View {
         }
 
         planningError = "완료 · 성공 \(totalApplied), 실패 \(totalFailed), 경고 \(allWarnings.count)개"
+    }
+
+    @MainActor
+    private func runFillFreeSlots() async {
+        guard let hermes = hermesMemoryService else { return }
+        planningError = nil
+        isPlanning = true
+        defer { isPlanning = false }
+
+        let orchestrator = PlanningOrchestratorService(ai: aiService, hermes: hermes)
+
+        // 오늘 빈 슬롯 계산 — SmartScheduler 사용
+        let today = Calendar.current.startOfDay(for: Date())
+        let slots = aiService.scheduler
+            .findFreeSlots(in: viewModel.calendarEvents, on: today, minDurationMinutes: 30)
+            .filter { $0.start > Date() }   // 지금 이후 슬롯만
+            .map { (start: $0.start, end: $0.end) }
+
+        if slots.isEmpty {
+            planningError = "오늘 남은 빈 시간이 없습니다."
+            return
+        }
+
+        let todayEnd = Calendar.current.date(byAdding: .day, value: 1, to: today) ?? today
+        let todayEvents = viewModel.calendarEvents.filter {
+            $0.startDate >= today && $0.startDate < todayEnd
+        }
+
+        let context = PlanningContext(
+            currentDate: Date(),
+            todayEvents: todayEvents,
+            todos: viewModel.todos.filter { !$0.isCompleted },
+            recalledMemories: hermes.recall(),
+            freeSlots: slots
+        )
+
+        do {
+            let suggestion = try await orchestrator.handle(intent: .fillFreeSlots, context: context)
+            if suggestion.actions.isEmpty {
+                planningError = suggestion.warnings.first ?? "제안할 활동이 없습니다."
+            } else {
+                planningSuggestion = suggestion
+            }
+        } catch {
+            planningError = error.localizedDescription
+        }
     }
 
     @MainActor
