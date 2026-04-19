@@ -18,7 +18,8 @@ public enum HermesMemoryFactV1 {
         case factId         = "factId"          // UUID String — MemoryFact.id.uuidString
         case text           = "text"            // `key`와 `value`를 `\u{001F}` 구분자로 이어붙인 단일 문자열
         case category       = "category"        // MemoryCategory.rawValue
-        case createdAt      = "createdAt"       // Date (updatedAt 용도로 사용)
+        case source         = "source"          // String — MemoryFact.source (예: "chat", "planning")
+        case updatedAt      = "updatedAt"       // Date — MemoryFact.updatedAt
         case weight         = "weight"          // Double — MemoryFact.confidence
         case schemaVersion  = "schemaVersion"   // Int — 현재 1
     }
@@ -50,16 +51,21 @@ public enum HermesMemoryFactV1 {
         record[Field.factId.rawValue]        = fact.id.uuidString as NSString
         record[Field.text.rawValue]          = joinText(key: fact.key, value: fact.value) as NSString
         record[Field.category.rawValue]      = fact.category.rawValue as NSString
-        record[Field.createdAt.rawValue]     = fact.updatedAt as NSDate
+        record[Field.source.rawValue]        = fact.source as NSString
+        record[Field.updatedAt.rawValue]     = fact.updatedAt as NSDate
         record[Field.weight.rawValue]        = fact.confidence as NSNumber
         record[Field.schemaVersion.rawValue] = currentSchemaVersion as NSNumber
     }
 
     // MARK: - Decode
 
-    /// CKRecord → MemoryFact. 필수 필드 누락 시 nil 반환 (UI에 빈 fact를 표시하지 않도록).
+    /// CKRecord → MemoryFact. 필수 필드 누락 또는 미지원 schemaVersion 시 nil 반환.
     public static func decode(record: CKRecord) -> MemoryFact? {
         guard record.recordType == recordType else { return nil }
+
+        // 미래 schema에서 온 레코드는 silent-drop — 상위 버전의 필드를 해석할 수 없음.
+        let recordSchema = (record[Field.schemaVersion.rawValue] as? Int) ?? currentSchemaVersion
+        guard recordSchema <= currentSchemaVersion else { return nil }
 
         let factIdString = (record[Field.factId.rawValue] as? String) ?? record.recordID.recordName
         guard let factId = UUID(uuidString: factIdString) else { return nil }
@@ -70,7 +76,8 @@ public enum HermesMemoryFactV1 {
         let categoryRaw = (record[Field.category.rawValue] as? String) ?? MemoryCategory.preference.rawValue
         let category = MemoryCategory(rawValue: categoryRaw) ?? .preference
 
-        let updatedAt = (record[Field.createdAt.rawValue] as? Date) ?? Date()
+        let source = (record[Field.source.rawValue] as? String) ?? "cloudkit"
+        let updatedAt = (record[Field.updatedAt.rawValue] as? Date) ?? Date()
         let weight = (record[Field.weight.rawValue] as? Double) ?? 0.5
 
         return MemoryFact(
@@ -79,7 +86,7 @@ public enum HermesMemoryFactV1 {
             key: key,
             value: value,
             confidence: weight,
-            source: "cloudkit",
+            source: source,
             updatedAt: updatedAt
         )
     }
@@ -87,12 +94,18 @@ public enum HermesMemoryFactV1 {
     // MARK: - Text packing helpers
 
     public static func joinText(key: String, value: String) -> String {
-        return key + String(textSeparator) + value
+        // key/value 안에 구분자가 있으면 split이 왜곡됨 → 입력 시 제거.
+        // 실전 데이터(사용자 메모)에 US(\u{001F})가 자연 발생할 확률은 0에 가깝지만
+        // 안전하게 방어한다. value는 원문 보존을 위해 split 후 재조합하지 않도록 first-only.
+        let sep = String(textSeparator)
+        let cleanKey = key.replacingOccurrences(of: sep, with: "")
+        return cleanKey + sep + value
     }
 
     public static func splitText(_ text: String) -> (key: String, value: String) {
+        // 구분자가 여러 개 있을 수 있으므로 **첫 구분자만** 기준으로 split.
+        // joinText에서 key의 구분자는 제거했으므로, 남아있다면 value 안의 것.
         guard let sepRange = text.range(of: String(textSeparator)) else {
-            // 구분자 없으면 전체를 key 로 간주하고 value 는 빈 문자열.
             return (key: text, value: "")
         }
         let key = String(text[..<sepRange.lowerBound])

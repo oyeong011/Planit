@@ -59,7 +59,7 @@ public struct MemoryFact: Sendable, Identifiable, Equatable, Codable {
 // MARK: - PlanningDecision
 
 /// Planning orchestrator가 내린 한 번의 결정 (accept/reject/partial).
-public struct PlanningDecision: Sendable, Identifiable {
+public struct PlanningDecision: Sendable, Identifiable, Equatable, Codable {
     public let id: UUID
     public let intent: String
     public let summary: String
