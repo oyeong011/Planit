@@ -12,9 +12,17 @@
     .subtitle { font-size: 1.2rem; color: #aaa; margin-bottom: 40px; line-height: 1.6; }
     .badges { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 48px; }
     .badge { background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 10px 20px; font-size: 0.9rem; color: #ddd; }
-    .install { background: #1a1a1a; border: 1px solid #444; border-radius: 12px; padding: 24px; text-align: left; margin-bottom: 40px; }
+    .install { background: #1a1a1a; border: 1px solid #444; border-radius: 12px; padding: 24px; text-align: left; margin-bottom: 24px; }
     .install h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 12px; }
     .install code { font-family: "SF Mono", Monaco, monospace; font-size: 0.95rem; color: #7dd3fc; }
+    .download-btns { display: flex; gap: 12px; justify-content: center; margin-bottom: 32px; flex-wrap: wrap; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: 10px; font-size: 0.95rem; font-weight: 600; text-decoration: none; transition: transform 0.15s ease, background 0.15s ease; }
+    .btn-primary { background: #2563eb; color: #fff; }
+    .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); }
+    .btn-secondary { background: #1f2937; color: #e5e7eb; border: 1px solid #374151; }
+    .btn-secondary:hover { background: #374151; transform: translateY(-1px); }
+    .version-hint { text-align: center; font-size: 0.8rem; color: #6b7280; margin-bottom: 40px; }
+    .or-divider { text-align: center; color: #666; font-size: 0.85rem; margin: 20px 0 16px; letter-spacing: 2px; }
     .links { display: flex; gap: 20px; justify-content: center; }
     .links a { color: #888; text-decoration: none; font-size: 0.9rem; border-bottom: 1px solid #333; padding-bottom: 2px; }
     .links a:hover { color: #f0f0f0; border-color: #f0f0f0; }
@@ -31,14 +39,27 @@
       <span class="badge">Google Calendar</span>
     </div>
 
+    <div class="download-btns">
+      <a class="btn btn-primary" href="https://github.com/oyeong011/Planit/releases/latest/download/Calen-0.3.0-universal.dmg">
+        ⬇️ Download .dmg
+      </a>
+      <a class="btn btn-secondary" href="https://github.com/oyeong011/Planit/releases/latest/download/Calen-0.3.0-universal.zip">
+        Download .zip
+      </a>
+    </div>
+    <div class="version-hint">v0.3.0 · Universal (Apple Silicon + Intel) · Signed &amp; Notarized</div>
+
+    <div class="or-divider">— OR —</div>
+
     <div class="install">
       <h3>Install via Homebrew</h3>
-      <code>brew install --cask oyeong011/calen/calen</code>
+      <code>brew tap oyeong011/calen</code><br>
+      <code>brew install --cask calen-ai</code>
     </div>
 
     <div class="links">
       <a href="https://github.com/oyeong011/Planit">GitHub</a>
-      <a href="https://github.com/oyeong011/Planit/releases">Releases</a>
+      <a href="https://github.com/oyeong011/Planit/releases">All Releases</a>
       <a href="privacy.html">Privacy Policy</a>
     </div>
   </div>
