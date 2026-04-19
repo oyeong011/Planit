@@ -13,29 +13,10 @@
     <key>com.apple.security.personal-information.reminders</key>
     <true/>
 
-    <!-- App Group: iOS CaleniOS와 Keychain/파일 공유 (M2 AUTH). -->
-    <!-- RELEASE 팀장이 Apple Developer 콘솔에 App Group 등록 후 활성화. -->
-    <key>com.apple.security.application-groups</key>
-    <array>
-        <string>group.com.oy.planit</string>
-    </array>
-
-    <!-- Keychain 공유: App Group ID로 공유하면 Team ID prefix 자동 미부여. -->
-    <!-- 코드는 `group.com.oy.planit` 리터럴을 사용. -->
-    <key>keychain-access-groups</key>
-    <array>
-        <string>group.com.oy.planit</string>
-    </array>
-
-    <!-- iCloud (CloudKit): Hermes 메모리를 iOS로 단방향 동기화. -->
-    <!-- HermesMemoryFactV1 CKRecord를 private DB default zone에 write. -->
-    <key>com.apple.developer.icloud-container-identifiers</key>
-    <array>
-        <string>iCloud.com.oy.planit</string>
-    </array>
-    <key>com.apple.developer.icloud-services</key>
-    <array>
-        <string>CloudKit</string>
-    </array>
+    <!-- ⚠️ iOS 공유용 entitlement들은 macOS App ID (com.oy.planit) 에
+         Apple Developer Console 에서 capability 등록 전까지는 포함 금지.
+         등록 없이 넣으면 런타임 validator가 SIGKILL (v0.4.5 사고 사례, exit 137).
+         registration 완료 후 application-groups / keychain-access-groups /
+         icloud-container-identifiers / icloud-services 를 다시 추가할 것. -->
 </dict>
 </plist>

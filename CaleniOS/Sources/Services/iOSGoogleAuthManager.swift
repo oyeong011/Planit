@@ -268,12 +268,12 @@ public final class iOSGoogleAuthManager: NSObject, ObservableObject, CalendarAut
         if let existing = refreshTask {
             return try await existing.value
         }
-        let task = Task<String, Error> { [weak self] in
-            defer { Task { @MainActor in self?.refreshTask = nil } }
+        let task = Task<String, Error> { @MainActor [weak self] in
+            defer { self?.refreshTask = nil }
             guard let self else { throw IOSAuthError.notAuthenticated }
-            guard let rt = await self.refreshToken else { throw IOSAuthError.notAuthenticated }
+            guard let rt = self.refreshToken else { throw IOSAuthError.notAuthenticated }
             try await self.performRefresh(refreshToken: rt)
-            guard let token = await self.accessToken else { throw IOSAuthError.notAuthenticated }
+            guard let token = self.accessToken else { throw IOSAuthError.notAuthenticated }
             return token
         }
         refreshTask = task
