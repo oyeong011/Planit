@@ -40,14 +40,32 @@
     </div>
 
     <div class="download-btns">
-      <a class="btn btn-primary" href="https://github.com/oyeong011/Planit/releases/latest/download/Calen-0.3.0-universal.dmg">
+      <a id="download-dmg" class="btn btn-primary" href="https://github.com/oyeong011/Planit/releases/latest">
         ⬇️ Download .dmg
       </a>
-      <a class="btn btn-secondary" href="https://github.com/oyeong011/Planit/releases/latest/download/Calen-0.3.0-universal.zip">
+      <a id="download-zip" class="btn btn-secondary" href="https://github.com/oyeong011/Planit/releases/latest">
         Download .zip
       </a>
     </div>
-    <div class="version-hint">v0.3.0 · Universal (Apple Silicon + Intel) · Signed &amp; Notarized</div>
+    <div class="version-hint" id="version-hint">Latest · Universal (Apple Silicon + Intel) · Signed &amp; Notarized</div>
+
+    <script>
+      // GitHub API에서 최신 릴리즈의 .dmg/.zip direct 링크 자동 연결.
+      // 실패 시 위 release-latest 페이지로 fallback.
+      fetch('https://api.github.com/repos/oyeong011/Planit/releases/latest')
+        .then(function(r) { return r.ok ? r.json() : Promise.reject(r.status); })
+        .then(function(release) {
+          var dmg = (release.assets || []).find(function(a) { return a.name.endsWith('.dmg'); });
+          var zip = (release.assets || []).find(function(a) { return a.name.endsWith('.zip'); });
+          if (dmg) document.getElementById('download-dmg').href = dmg.browser_download_url;
+          if (zip) document.getElementById('download-zip').href = zip.browser_download_url;
+          var hint = document.getElementById('version-hint');
+          if (hint && release.tag_name) {
+            hint.textContent = release.tag_name + ' · Universal (Apple Silicon + Intel) · Signed & Notarized';
+          }
+        })
+        .catch(function() {});
+    </script>
 
     <div class="or-divider">— OR —</div>
 
