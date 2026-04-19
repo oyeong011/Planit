@@ -587,15 +587,16 @@ struct ChatView: View {
                 Text(label)
                     .font(.system(size: 11, weight: .medium))
                     .lineLimit(1)
-                    .fixedSize(horizontal: true, vertical: false)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(RoundedRectangle(cornerRadius: 6).fill(enabled ? tint.opacity(0.12) : Color.gray.opacity(0.08)))
             .foregroundStyle(enabled ? tint : .secondary)
             .contentShape(Rectangle())
+            .fixedSize(horizontal: true, vertical: false)
         }
         .buttonStyle(.plain)
+        .fixedSize(horizontal: true, vertical: false)
         .disabled(!enabled)
         .help(help)
     }
