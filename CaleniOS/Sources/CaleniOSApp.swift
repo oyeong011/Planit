@@ -31,15 +31,76 @@ struct CaleniOSApp: App {
     }
 }
 
+// MARK: - RootTabView
+//
+// iOS v0.1.0 P0 — **3탭 레이아웃**.
+//   0. 오늘  — `CalendarTabView`
+//   1. 할일  — `TodoTabView`
+//   2. 설정  — `SettingsView`
+//
+// iPad(regular horizontal size class)는 `NavigationSplitView`로 자동 적응.
+// (이전 Home / Memory 2탭 구조는 재배치됨. Home 기능은 Calendar에 통합,
+//  Memory는 설정 → "기억 조회" 네비게이션 하위로 이동.)
 struct RootTabView: View {
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @State private var selectedTab: Int = 0
+
     var body: some View {
-        TabView {
-            HomeView()
-                .tabItem { Label("오늘", systemImage: "house.fill") }
-            MemoryView()
-                .tabItem { Label("기억", systemImage: "brain.head.profile") }
+        if horizontalSizeClass == .regular {
+            // iPad / 큰 화면 — sidebar 스타일.
+            iPadLayout
+        } else {
+            // iPhone / compact — 하단 탭바.
+            iPhoneLayout
+        }
+    }
+
+    // MARK: iPhone (compact)
+
+    private var iPhoneLayout: some View {
+        TabView(selection: $selectedTab) {
+            CalendarTabView(selectedTab: $selectedTab)
+                .tabItem { Label("오늘", systemImage: "calendar") }
+                .tag(0)
+
+            TodoTabView()
+                .tabItem { Label("할일", systemImage: "checklist") }
+                .tag(1)
+
             SettingsView()
                 .tabItem { Label("설정", systemImage: "gearshape.fill") }
+                .tag(2)
+        }
+        .tint(Color(red: 0.30, green: 0.67, blue: 0.98))
+    }
+
+    // MARK: iPad (regular)
+
+    private var iPadLayout: some View {
+        // iOS 17 `List(selection:)`는 optional binding을 요구하므로
+        // 내부 optional 프로퍼티를 거쳐 `selectedTab`과 동기화한다.
+        NavigationSplitView {
+            List(selection: Binding<Int?>(
+                get: { selectedTab },
+                set: { selectedTab = $0 ?? 0 }
+            )) {
+                Label("오늘", systemImage: "calendar").tag(0)
+                Label("할일", systemImage: "checklist").tag(1)
+                Label("설정", systemImage: "gearshape.fill").tag(2)
+            }
+            .listStyle(.sidebar)
+            .navigationTitle("Calen")
+        } detail: {
+            switch selectedTab {
+            case 0:
+                CalendarTabView(selectedTab: $selectedTab)
+            case 1:
+                TodoTabView()
+            case 2:
+                SettingsView()
+            default:
+                CalendarTabView(selectedTab: $selectedTab)
+            }
         }
         .tint(Color(red: 0.30, green: 0.67, blue: 0.98))
     }
