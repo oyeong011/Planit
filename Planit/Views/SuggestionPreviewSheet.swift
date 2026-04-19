@@ -115,6 +115,17 @@ struct SuggestionPreviewSheet: View {
                         .font(.system(size: 11, design: .monospaced))
                         .foregroundStyle(.secondary)
                 }
+                // categorize 전용: 어떤 카테고리로 배정되는지 표시
+                if action.kind == .categorize, let catID = action.categoryID,
+                   let cat = viewModel.categories.first(where: { $0.id == catID }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 9))
+                        Text(cat.name)
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(cat.color)
+                    }
+                }
                 if !action.reason.isEmpty {
                     Text(verbatim: action.reason)
                         .font(.system(size: 10))
@@ -190,6 +201,23 @@ struct SuggestionPreviewSheet: View {
         isApplying = true
         var applied = 0
 
+        // categorize intent는 bulk API로 처리 (rate-limit 보호)
+        if suggestion.intent == .categorizeUntagged {
+            let mappings = suggestion.actions
+                .filter { acceptedIDs.contains($0.id) && $0.kind == .categorize }
+                .compactMap { a -> (eventID: String, categoryID: UUID)? in
+                    guard let eid = a.eventID, let cid = a.categoryID else { return nil }
+                    return (eid, cid)
+                }
+            let result = await viewModel.applyBulkCategories(mappings)
+            applied = result.applied
+            appliedCount = applied
+            recordDecision(applied: applied, total: mappings.count)
+            isApplying = false
+            dismiss()
+            return
+        }
+
         for action in suggestion.actions where acceptedIDs.contains(action.id) {
             guard revalidate(action) else { continue }
             guard applyIfValid(action) else { continue }
@@ -214,6 +242,10 @@ struct SuggestionPreviewSheet: View {
         case .moveTodo, .updateTodo:
             guard let tid = action.todoID else { return false }
             return viewModel.todos.contains(where: { $0.id == tid })
+        case .categorize:
+            // bulk apply 경로로 처리되므로 여기서는 호출되지 않지만 안전 처리
+            guard let eid = action.eventID, let ev = viewModel.calendarEvents.first(where: { $0.id == eid }) else { return false }
+            return ev.categoryID == nil && viewModel.eventCategoryMappings[eid] == nil
         }
     }
 
@@ -249,6 +281,12 @@ struct SuggestionPreviewSheet: View {
             guard let tid = action.todoID,
                   let existing = viewModel.todos.first(where: { $0.id == tid }) else { return false }
             viewModel.updateTodo(id: tid, title: action.title, categoryID: existing.categoryID, date: existing.date)
+            return true
+        case .categorize:
+            // categorize는 applyBulkCategories 경로에서 처리. 여기 도달하면 fallback으로 단일 적용.
+            guard let eid = action.eventID, let catID = action.categoryID,
+                  let ev = viewModel.calendarEvents.first(where: { $0.id == eid }) else { return false }
+            viewModel.setEventCategory(eventID: eid, eventTitle: ev.title, categoryID: catID)
             return true
         }
     }

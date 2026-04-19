@@ -2299,6 +2299,84 @@ func emptyPlanningContext() -> PlanningContext {
     #expect(suggestion.actions.first?.title == "운동")
 }
 
+// TC-76: categorize intent — 알 수 없는 카테고리명 거부
+@Test @MainActor func planning_categorize_unknownCategoryRejected() async throws {
+    let event = CalendarEvent(
+        id: "evt-1", title: "운동",
+        startDate: Date(), endDate: Date().addingTimeInterval(3600),
+        color: .blue, isAllDay: false,
+        calendarName: "test", calendarID: "cal-1", source: .google
+    )
+    let cat = TodoCategory(name: "건강", colorHex: "#00FF00")
+    let json = #"""
+    {"summary":"test","actions":[
+      {"kind":"categorize","title":"운동","eventID":"evt-1","categoryName":"헬스","reason":"헬스"}
+    ]}
+    """#
+    let context = PlanningContext(
+        currentDate: Date(),
+        untaggedEvents: [event],
+        availableCategories: [cat]
+    )
+    let (orch, _, _) = makeOrchestrator(response: json)
+    let suggestion = try await orch.handle(intent: .categorizeUntagged, context: context)
+    #expect(suggestion.actions.isEmpty)
+    #expect(suggestion.warnings.contains(where: { $0.contains("알 수 없는 카테고리") }))
+}
+
+// TC-77: categorize intent — 정확한 카테고리명 매칭 시 resolvedCategoryID 채움
+@Test @MainActor func planning_categorize_exactMatch_resolves() async throws {
+    let event = CalendarEvent(
+        id: "evt-1", title: "운동",
+        startDate: Date(), endDate: Date().addingTimeInterval(3600),
+        color: .blue, isAllDay: false,
+        calendarName: "test", calendarID: "cal-1", source: .google
+    )
+    let cat = TodoCategory(name: "건강", colorHex: "#00FF00")
+    let json = #"""
+    {"summary":"test","actions":[
+      {"kind":"categorize","title":"운동","eventID":"evt-1","categoryName":"건강","reason":"운동은 건강"}
+    ]}
+    """#
+    let context = PlanningContext(
+        currentDate: Date(),
+        untaggedEvents: [event],
+        availableCategories: [cat]
+    )
+    let (orch, _, _) = makeOrchestrator(response: json)
+    let suggestion = try await orch.handle(intent: .categorizeUntagged, context: context)
+    #expect(suggestion.actions.count == 1)
+    #expect(suggestion.actions.first?.categoryID == cat.id)
+    #expect(suggestion.actions.first?.kind == .categorize)
+}
+
+// TC-78: categorize intent — 30개 cap (나머지 intent의 5개 cap이 아닌)
+@Test @MainActor func planning_categorize_honors30Cap() async throws {
+    let cat = TodoCategory(name: "업무", colorHex: "#FF0000")
+    var events: [CalendarEvent] = []
+    var actionJsons: [String] = []
+    for i in 0..<35 {
+        let ev = CalendarEvent(
+            id: "evt-\(i)", title: "회의\(i)",
+            startDate: Date(), endDate: Date().addingTimeInterval(3600),
+            color: .blue, isAllDay: false,
+            calendarName: "test", calendarID: "cal-1", source: .google
+        )
+        events.append(ev)
+        actionJsons.append(#"{"kind":"categorize","title":"회의\#(i)","eventID":"evt-\#(i)","categoryName":"업무"}"#)
+    }
+    let json = #"{"summary":"bulk","actions":[\#(actionJsons.joined(separator: ","))]}"#
+
+    let context = PlanningContext(
+        currentDate: Date(),
+        untaggedEvents: events,
+        availableCategories: [cat]
+    )
+    let (orch, _, _) = makeOrchestrator(response: json)
+    let suggestion = try await orch.handle(intent: .categorizeUntagged, context: context)
+    #expect(suggestion.actions.count == 30)
+}
+
 // TC-75: markdown 코드펜스 안의 JSON도 파싱
 @Test @MainActor func planning_markdownJSON_parsed() async throws {
     let future = Date().addingTimeInterval(3600)
