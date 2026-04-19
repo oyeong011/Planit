@@ -16,13 +16,22 @@ public final class iOSMemoryFetcher: MemoryFetching {
 
     // MARK: Dependencies
 
-    private let container: CKContainer
-    private let database: CKDatabase
+    // CKContainer 생성은 entitlement에 iCloud가 선언돼 있지 않으면 앱이
+    // EXC_BREAKPOINT로 즉사한다. init에서 eager로 만들면 SettingsView가
+    // body 평가하는 순간 크래시 → lazy로 fetch 시점까지 지연한다.
+    private let containerIdentifier: String
+    private lazy var container: CKContainer = CKContainer(identifier: containerIdentifier)
+    private lazy var database: CKDatabase = container.privateCloudDatabase
     private let logger = Logger(subsystem: "com.oy.planit.ios", category: "hermes.fetch")
 
-    public init(container: CKContainer = CKContainer(identifier: "iCloud.com.oy.planit")) {
+    public init(containerIdentifier: String = "iCloud.com.oy.planit") {
+        self.containerIdentifier = containerIdentifier
+    }
+
+    /// 기존 호출처 호환용 — CKContainer 직접 주입 경로.
+    public convenience init(container: CKContainer) {
+        self.init(containerIdentifier: container.containerIdentifier ?? "iCloud.com.oy.planit")
         self.container = container
-        self.database = container.privateCloudDatabase
     }
 
     // MARK: - MemoryFetching
