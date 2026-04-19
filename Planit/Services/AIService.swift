@@ -184,6 +184,11 @@ final class AIService: ObservableObject {
     /// 채팅 히스토리 — 탭 전환 후에도 유지
     @Published var chatMessages: [ChatMessage] = []
 
+    // Planning 진행 상태 — 탭 unmount 후에도 유지
+    @Published var planningInProgress: Bool = false
+    @Published var planningProgressText: String?
+    @Published var planningLastError: String?
+
     private let authManager: GoogleAuthManager
     private let calendarService: GoogleCalendarService?
 
@@ -1594,7 +1599,12 @@ final class AIService: ObservableObject {
     // isLoading/externalContextPreview를 절대 건드리지 않음. raw text만 반환.
 
     /// PlanningAIClient conformance — side-effect-free CLI runner.
+    ///
+    /// runCLIDirect는 Process API를 사용하므로 macOS 전용. iOS에서 컴파일될 가능성은
+    /// 현재 없지만(Calen target은 Sparkle 의존으로 macOS-only), 방어적으로 guard.
+    /// M2 이후 Shared로 이동하면서 PlanningAIProvider protocol로 대체 예정.
     func sendPlanningRequest(prompt: String) async throws -> String {
+        #if os(macOS)
         let isCodex: Bool
         let execPath: String?
         switch provider {
@@ -1620,6 +1630,9 @@ final class AIService: ObservableObject {
         return await Task.detached(priority: .userInitiated) {
             Self.runCLIDirect(executablePath: path, args: args, input: prompt, isCodex: isCodex)
         }.value
+        #else
+        throw PlanningError.cliUnavailable
+        #endif
     }
 
 }

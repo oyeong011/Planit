@@ -11,9 +11,6 @@ struct ChatView: View {
     var hermesMemoryService: HermesMemoryService? = nil
 
     @State private var planningSuggestion: PlanningSuggestion? = nil
-    @State private var isPlanning: Bool = false
-    @State private var planningError: String? = nil
-    @State private var planningProgressText: String? = nil
     // aiService.chatMessages 사용 — 탭 전환 후에도 유지
     @State private var inputText: String = ""
     @State private var attachments: [ChatAttachment] = []
@@ -503,97 +500,53 @@ struct ChatView: View {
     }
 
     private var planningActionBar: some View {
-        HStack(spacing: 8) {
-            // 오늘 다시 짜기
-            Button {
-                Task { await runReplanDay() }
-            } label: {
-                HStack(spacing: 5) {
-                    if isPlanning {
-                        ProgressView().controlSize(.small)
-                    } else {
-                        Image(systemName: "sparkles")
-                            .font(.system(size: 11))
-                    }
-                    Text("오늘 다시 짜기")
-                        .font(.system(size: 11, weight: .medium))
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(aiService.isConfigured ? Color.purple.opacity(0.12) : Color.gray.opacity(0.08))
-                )
-                .foregroundStyle(aiService.isConfigured ? .purple : .secondary)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .disabled(isPlanning || !aiService.isConfigured || hermesMemoryService == nil)
-            .help(aiService.isConfigured ? "Hermes 기억을 반영해 오늘 일정을 재배치" : "AI CLI가 설정되지 않았습니다")
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                planningButton(
+                    icon: aiService.planningInProgress ? nil : "sparkles",
+                    showProgress: aiService.planningInProgress,
+                    label: "오늘 재계획",
+                    tint: .purple,
+                    enabled: !aiService.planningInProgress && aiService.isConfigured && hermesMemoryService != nil,
+                    help: aiService.isConfigured ? "Hermes 기억 반영해 오늘 일정을 재배치" : "AI CLI 미설정"
+                ) { Task { await runReplanDay() } }
 
-            // 빈 시간 채우기
-            Button {
-                Task { await runFillFreeSlots() }
-            } label: {
-                HStack(spacing: 5) {
-                    Image(systemName: "plus.rectangle.on.rectangle")
-                        .font(.system(size: 11))
-                    Text("빈 시간 채우기")
-                        .font(.system(size: 11, weight: .medium))
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(aiService.isConfigured ? Color.blue.opacity(0.12) : Color.gray.opacity(0.08))
-                )
-                .foregroundStyle(aiService.isConfigured ? .blue : .secondary)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .disabled(isPlanning || !aiService.isConfigured || hermesMemoryService == nil)
-            .help("Hermes 기억을 반영해 오늘 빈 시간에 적합한 활동을 제안합니다")
+                planningButton(
+                    icon: "plus.rectangle.on.rectangle",
+                    label: "빈 시간",
+                    tint: .blue,
+                    enabled: !aiService.planningInProgress && aiService.isConfigured && hermesMemoryService != nil,
+                    help: "빈 시간에 활동 제안"
+                ) { Task { await runFillFreeSlots() } }
 
-            // 미분류 일정 분류
-            Button {
-                Task { await runCategorizeUntagged() }
-            } label: {
-                HStack(spacing: 5) {
-                    Image(systemName: "tag.circle")
-                        .font(.system(size: 11))
-                    Text("미분류 분류 (\(untaggedEventCount))")
-                        .font(.system(size: 11, weight: .medium))
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(canCategorize ? Color.teal.opacity(0.12) : Color.gray.opacity(0.08))
-                )
-                .foregroundStyle(canCategorize ? .teal : .secondary)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .disabled(!canCategorize)
-            .help(untaggedEventCount == 0 ? "미분류 Google 일정이 없습니다" : "AI가 카테고리를 일괄 제안합니다")
-            .accessibilityIdentifier("categorizeUntaggedButton")
+                planningButton(
+                    icon: "tag.circle",
+                    label: "분류 (\(untaggedEventCount))",
+                    tint: .teal,
+                    enabled: canCategorize,
+                    help: untaggedEventCount == 0 ? "미분류 Google 일정 없음" : "AI가 카테고리 일괄 제안"
+                ) { Task { await runCategorizeUntagged() } }
+                .accessibilityIdentifier("categorizeUntaggedButton")
 
-            Spacer()
-
-            if let progress = planningProgressText {
+                if let progress = aiService.planningProgressText {
                 Text(progress)
                     .font(.system(size: 10, design: .monospaced))
                     .foregroundStyle(.teal)
                     .lineLimit(1)
-            } else if let err = planningError {
-                Text(err)
-                    .font(.system(size: 10))
-                    .foregroundStyle(err.hasPrefix("완료") ? .green : .red)
-                    .lineLimit(1)
+                    .fixedSize()
+                } else if let err = aiService.planningLastError {
+                    Text(err)
+                        .font(.system(size: 10))
+                        .foregroundStyle(err.hasPrefix("완료") ? .green : .red)
+                        .lineLimit(1)
+                        .fixedSize()
+                }
+
+                Spacer(minLength: 8)
             }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
         .sheet(item: $planningSuggestion) { suggestion in
             if let hms = hermesMemoryService {
                 SuggestionPreviewSheet(
@@ -606,8 +559,42 @@ struct ChatView: View {
         }
     }
 
+    /// 공용 planning 버튼 — 텍스트 한 줄 고정, 가로 스크롤 시 wrap 방지
+    @ViewBuilder
+    private func planningButton(
+        icon: String?,
+        showProgress: Bool = false,
+        label: String,
+        tint: Color,
+        enabled: Bool,
+        help: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                if showProgress {
+                    ProgressView().controlSize(.small)
+                } else if let icon {
+                    Image(systemName: icon).font(.system(size: 11))
+                }
+                Text(label)
+                    .font(.system(size: 11, weight: .medium))
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(RoundedRectangle(cornerRadius: 6).fill(enabled ? tint.opacity(0.12) : Color.gray.opacity(0.08)))
+            .foregroundStyle(enabled ? tint : .secondary)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
+        .help(help)
+    }
+
     private var canCategorize: Bool {
-        !isPlanning
+        !aiService.planningInProgress
             && aiService.isConfigured
             && hermesMemoryService != nil
             && untaggedEventCount > 0
@@ -616,11 +603,11 @@ struct ChatView: View {
     @MainActor
     private func runCategorizeUntagged() async {
         guard let hermes = hermesMemoryService else { return }
-        planningError = nil
-        isPlanning = true
+        aiService.planningLastError = nil
+        aiService.planningInProgress = true
         defer {
-            isPlanning = false
-            planningProgressText = nil
+            aiService.planningInProgress = false
+            aiService.planningProgressText = nil
         }
 
         let orchestrator = PlanningOrchestratorService(ai: aiService, hermes: hermes)
@@ -640,12 +627,12 @@ struct ChatView: View {
             do {
                 let suggestion = try await orchestrator.handle(intent: .categorizeUntagged, context: context)
                 if suggestion.actions.isEmpty {
-                    planningError = suggestion.warnings.first ?? "분류 제안이 없습니다."
+                    aiService.planningLastError = suggestion.warnings.first ?? "분류 제안이 없습니다."
                 } else {
                     planningSuggestion = suggestion
                 }
             } catch {
-                planningError = error.localizedDescription
+                aiService.planningLastError = error.localizedDescription
             }
             return
         }
@@ -661,7 +648,7 @@ struct ChatView: View {
         }
 
         for (idx, chunk) in chunks.enumerated() {
-            planningProgressText = "\(min((idx+1)*30, totalCount))/\(totalCount) 분류 중..."
+            aiService.planningProgressText = "\(min((idx+1)*30, totalCount))/\(totalCount) 분류 중..."
             let context = PlanningContext(
                 currentDate: Date(),
                 untaggedEvents: chunk,
@@ -683,15 +670,15 @@ struct ChatView: View {
             }
         }
 
-        planningError = "완료 · 성공 \(totalApplied), 실패 \(totalFailed), 경고 \(allWarnings.count)개"
+        aiService.planningLastError = "완료 · 성공 \(totalApplied), 실패 \(totalFailed), 경고 \(allWarnings.count)개"
     }
 
     @MainActor
     private func runFillFreeSlots() async {
         guard let hermes = hermesMemoryService else { return }
-        planningError = nil
-        isPlanning = true
-        defer { isPlanning = false }
+        aiService.planningLastError = nil
+        aiService.planningInProgress = true
+        defer { aiService.planningInProgress = false }
 
         let orchestrator = PlanningOrchestratorService(ai: aiService, hermes: hermes)
 
@@ -703,7 +690,7 @@ struct ChatView: View {
             .map { (start: $0.start, end: $0.end) }
 
         if slots.isEmpty {
-            planningError = "오늘 남은 빈 시간이 없습니다."
+            aiService.planningLastError = "오늘 남은 빈 시간이 없습니다."
             return
         }
 
@@ -723,21 +710,21 @@ struct ChatView: View {
         do {
             let suggestion = try await orchestrator.handle(intent: .fillFreeSlots, context: context)
             if suggestion.actions.isEmpty {
-                planningError = suggestion.warnings.first ?? "제안할 활동이 없습니다."
+                aiService.planningLastError = suggestion.warnings.first ?? "제안할 활동이 없습니다."
             } else {
                 planningSuggestion = suggestion
             }
         } catch {
-            planningError = error.localizedDescription
+            aiService.planningLastError = error.localizedDescription
         }
     }
 
     @MainActor
     private func runReplanDay() async {
         guard let hermes = hermesMemoryService else { return }
-        planningError = nil
-        isPlanning = true
-        defer { isPlanning = false }
+        aiService.planningLastError = nil
+        aiService.planningInProgress = true
+        defer { aiService.planningInProgress = false }
 
         let orchestrator = PlanningOrchestratorService(ai: aiService, hermes: hermes)
         let today = Calendar.current.startOfDay(for: Date())
@@ -761,12 +748,12 @@ struct ChatView: View {
         do {
             let suggestion = try await orchestrator.handle(intent: .replanDay, context: context)
             if suggestion.actions.isEmpty {
-                planningError = suggestion.warnings.first ?? "제안할 변경사항이 없습니다."
+                aiService.planningLastError = suggestion.warnings.first ?? "제안할 변경사항이 없습니다."
             } else {
                 planningSuggestion = suggestion
             }
         } catch {
-            planningError = error.localizedDescription
+            aiService.planningLastError = error.localizedDescription
         }
     }
 
