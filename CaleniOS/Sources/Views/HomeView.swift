@@ -1,3 +1,4 @@
+#if os(iOS)
 import SwiftUI
 import SwiftData
 
@@ -119,3 +120,4 @@ struct ActionButton: View {
         .buttonStyle(.plain)
     }
 }
+#endif

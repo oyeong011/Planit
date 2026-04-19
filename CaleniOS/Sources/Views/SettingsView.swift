@@ -1,3 +1,4 @@
+#if os(iOS)
 import SwiftUI
 import SwiftData
 
@@ -51,3 +52,4 @@ struct LabelRow: View {
         }
     }
 }
+#endif

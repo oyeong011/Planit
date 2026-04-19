@@ -1,16 +1,25 @@
+#if !os(iOS)
+// macOS/Linux 빌드에서는 CaleniOS target을 빌드해도 실제 앱은 생성하지 않음.
+// (SwiftPM은 per-platform target 제외를 지원하지 않으므로 placeholder main을 둠.)
+// 실제 iOS 앱은 xcodebuild -scheme CaleniOS -destination 'generic/platform=iOS Simulator'로 빌드.
+@main
+struct CaleniOSPlaceholder {
+    static func main() {
+        // no-op: iOS 전용 target — macOS에서는 실행되지 않아야 함
+    }
+}
+#else
 import SwiftUI
 import SwiftData
 
 @main
 struct CaleniOSApp: App {
-    /// macOS 앱과 동일한 SwiftData 스키마 — CloudKit을 통해 같은 iCloud 컨테이너에서 sync
-    /// Xcode target 설정에서 iCloud capability + "iCloud.com.oy.planit" container 추가 필요
+    /// 로컬 SwiftData 캐시만 사용. iCloud sync는 SwiftData cloudKitDatabase가 아니라
+    /// custom CKRecord(`HermesMemoryFactV1`)를 통해 M2(SYNC 팀장)에서 구현 예정.
+    /// (자동 CloudKit 동기화는 macOS 스키마와 해시 충돌 위험이 있어 의도적으로 꺼둠.)
     let container: ModelContainer = {
         let schema = Schema([MemoryFactRecord.self, PlanningDecisionRecord.self])
-        let config = ModelConfiguration(
-            schema: schema,
-            cloudKitDatabase: .automatic
-        )
+        let config = ModelConfiguration(schema: schema)
         return try! ModelContainer(for: schema, configurations: config)
     }()
 
@@ -35,3 +44,4 @@ struct RootTabView: View {
         .tint(Color(red: 0.30, green: 0.67, blue: 0.98))
     }
 }
+#endif

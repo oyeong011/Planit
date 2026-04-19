@@ -14,7 +14,8 @@ let package = Package(
         .iOS(.v17)
     ],
     products: [
-        .library(name: "CalenShared", targets: ["CalenShared"])
+        .library(name: "CalenShared", targets: ["CalenShared"]),
+        .executable(name: "CaleniOS", targets: ["CaleniOS"])
     ],
     dependencies: [
         .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.6.0")
@@ -69,6 +70,11 @@ let package = Package(
                 .process("Resources/he.lproj")
             ],
             swiftSettings: hasBundledCredentials ? [.define("HAS_BUNDLED_CREDENTIALS")] : []
+        ),
+        .executableTarget(
+            name: "CaleniOS",
+            dependencies: ["CalenShared"],
+            path: "CaleniOS/Sources"
         ),
         .testTarget(
             name: "CalenTests",
