@@ -88,7 +88,7 @@ struct ChatView: View {
                             .foregroundStyle(.secondary)
                     }
                     .buttonStyle(.plain)
-                    .help("채팅 기록 지우기")
+                    .help(String(localized: "chat.history.clear.tooltip"))
                 }
             }
             .padding(.horizontal, 12)
@@ -512,26 +512,26 @@ struct ChatView: View {
                 planningButton(
                     icon: aiService.planningInProgress ? nil : "sparkles",
                     showProgress: aiService.planningInProgress,
-                    label: "오늘 재계획",
+                    label: String(localized: "chat.action.replan-day"),
                     tint: .purple,
                     enabled: !aiService.planningInProgress && aiService.isConfigured && hermesMemoryService != nil,
-                    help: aiService.isConfigured ? "Hermes 기억 반영해 오늘 일정을 재배치" : "AI CLI 미설정"
+                    help: String(localized: "chat.action.replan-day.tooltip")
                 ) { Task { await runReplanDay() } }
 
                 planningButton(
                     icon: "plus.rectangle.on.rectangle",
-                    label: "빈 시간",
+                    label: String(localized: "chat.action.fill-slots"),
                     tint: .blue,
                     enabled: !aiService.planningInProgress && aiService.isConfigured && hermesMemoryService != nil,
-                    help: "빈 시간에 활동 제안"
+                    help: String(localized: "chat.action.fill-slots.tooltip")
                 ) { Task { await runFillFreeSlots() } }
 
                 planningButton(
                     icon: "tag.circle",
-                    label: "분류 (\(untaggedEventCount))",
+                    label: String(format: NSLocalizedString("chat.action.categorize", comment: ""), untaggedEventCount),
                     tint: .teal,
                     enabled: canCategorize,
-                    help: untaggedEventCount == 0 ? "미분류 Google 일정 없음" : "AI가 카테고리 일괄 제안"
+                    help: untaggedEventCount == 0 ? String(localized: "chat.action.categorize.tooltip.empty") : String(localized: "chat.action.categorize.tooltip")
                 ) { Task { await runCategorizeUntagged() } }
                 .accessibilityIdentifier("categorizeUntaggedButton")
 
@@ -544,7 +544,7 @@ struct ChatView: View {
                 } else if let err = aiService.planningLastError {
                     Text(err)
                         .font(.system(size: 10))
-                        .foregroundStyle(err.hasPrefix("완료") ? .green : .red)
+                        .foregroundStyle((err.hasPrefix(String(localized: "common.done")) || err.hasPrefix("Done") || err.hasPrefix("완료")) ? .green : .red)
                         .lineLimit(1)
                         .fixedSize()
                 }
@@ -635,7 +635,7 @@ struct ChatView: View {
             do {
                 let suggestion = try await orchestrator.handle(intent: .categorizeUntagged, context: context)
                 if suggestion.actions.isEmpty {
-                    aiService.planningLastError = suggestion.warnings.first ?? "분류 제안이 없습니다."
+                    aiService.planningLastError = suggestion.warnings.first ?? String(localized: "chat.planning.error.no-categorize")
                 } else {
                     planningSuggestion = suggestion
                 }
@@ -678,7 +678,7 @@ struct ChatView: View {
             }
         }
 
-        aiService.planningLastError = "완료 · 성공 \(totalApplied), 실패 \(totalFailed), 경고 \(allWarnings.count)개"
+        aiService.planningLastError = String(format: NSLocalizedString("chat.planning.result.done", comment: ""), totalApplied, totalFailed, allWarnings.count)
     }
 
     @MainActor
@@ -698,7 +698,7 @@ struct ChatView: View {
             .map { (start: $0.start, end: $0.end) }
 
         if slots.isEmpty {
-            aiService.planningLastError = "오늘 남은 빈 시간이 없습니다."
+            aiService.planningLastError = String(localized: "chat.planning.error.no-free-slots")
             return
         }
 
@@ -718,7 +718,7 @@ struct ChatView: View {
         do {
             let suggestion = try await orchestrator.handle(intent: .fillFreeSlots, context: context)
             if suggestion.actions.isEmpty {
-                aiService.planningLastError = suggestion.warnings.first ?? "제안할 활동이 없습니다."
+                aiService.planningLastError = suggestion.warnings.first ?? String(localized: "chat.planning.error.no-suggestion")
             } else {
                 planningSuggestion = suggestion
             }
@@ -756,7 +756,7 @@ struct ChatView: View {
         do {
             let suggestion = try await orchestrator.handle(intent: .replanDay, context: context)
             if suggestion.actions.isEmpty {
-                aiService.planningLastError = suggestion.warnings.first ?? "제안할 변경사항이 없습니다."
+                aiService.planningLastError = suggestion.warnings.first ?? String(localized: "chat.planning.error.no-replan")
             } else {
                 planningSuggestion = suggestion
             }

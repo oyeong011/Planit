@@ -811,7 +811,7 @@ struct ReviewView: View {
                 Spacer()
                 let weekly = habitsWeeklyAverage
                 if weekly > 0 {
-                    Text("이번 주 평균 \(Int(weekly * 100))%")
+                    Text(String(format: NSLocalizedString("review.habit.weekly.average", comment: ""), Int(weekly * 100)))
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(weekly >= 0.8 ? .green : weekly >= 0.5 ? .orange : .secondary)
                 }
@@ -823,7 +823,7 @@ struct ReviewView: View {
                     Image(systemName: "sparkles")
                         .foregroundStyle(.yellow)
                         .font(.system(size: 10))
-                    Text("오늘 첫 체크인으로 시작해보세요 🌱")
+                    Text(String(localized: "review.habit.empty.encourage"))
                         .font(.system(size: 10))
                         .foregroundStyle(.secondary)
                 }
@@ -1093,7 +1093,7 @@ struct ReviewView: View {
                                         replan()
                                         declineSuggestion(at: index)
                                     } label: {
-                                        Text("재계획")
+                                        Text(String(localized: "review.focusQuota.replan"))
                                             .font(.system(size: 10, weight: .semibold))
                                             .foregroundStyle(.white)
                                             .padding(.horizontal, 10)
@@ -1105,7 +1105,7 @@ struct ReviewView: View {
                                 }
                                 Button { declineSuggestion(at: index) } label: {
                                     Text(s.type == .focusQuota && onRequestReplanDay != nil
-                                         ? "무시"
+                                         ? String(localized: "review.focusQuota.ignore")
                                          : String(localized: "common.confirm", defaultValue: "확인"))
                                         .font(.system(size: 10, weight: s.type == .focusQuota ? .regular : .semibold))
                                         .foregroundStyle(s.type == .focusQuota && onRequestReplanDay != nil ? Color.secondary : Color.white)
@@ -1376,7 +1376,7 @@ struct ReviewView: View {
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
                         VStack(spacing: 4) {
-                            Text("예시")
+                            Text(String(localized: "review.goal.empty.example"))
                                 .font(.system(size: 9, weight: .semibold))
                                 .foregroundStyle(.tertiary)
                             ForEach(["\"정보처리기사 취득하기\"", "\"올해 10kg 감량\"", "\"3개월 안에 토익 900점\""], id: \.self) { ex in
@@ -1389,7 +1389,7 @@ struct ReviewView: View {
                             editTitle = ""; editTargets = ""; editTimeline = .thisYear
                             sheetRoute = .addGoal
                         } label: {
-                            Label("목표 직접 추가", systemImage: "plus.circle.fill")
+                            Label(String(localized: "review.goal.empty.add"), systemImage: "plus.circle.fill")
                                 .font(.system(size: 11, weight: .medium))
                         }
                         .buttonStyle(.borderedProminent)
@@ -1481,7 +1481,7 @@ struct ReviewView: View {
                                 .fill(Color.secondary.opacity(0.07))
                         )
                         .textFieldStyle(.plain)
-                    Text("쉼표(,)로 여러 개 입력")
+                    Text(String(localized: "review.goal.multi.hint"))
                         .font(.system(size: 9))
                         .foregroundStyle(.tertiary)
                 }

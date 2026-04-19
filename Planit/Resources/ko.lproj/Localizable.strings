@@ -503,3 +503,46 @@
 "habit.graph.2weeksago" = "2주 전";
 "habit.graph.3weeksago" = "3주 전";
 "habit.graph.4weeksago" = "4주 전";
+
+// MARK: - Chat action bar (v0.4.x additions)
+"chat.action.replan-day" = "오늘 재계획";
+"chat.action.fill-slots" = "빈 시간";
+"chat.action.categorize" = "분류 (%d)";
+"chat.action.replan-day.tooltip" = "Hermes 기억을 반영해 오늘 일정을 재배치";
+"chat.action.fill-slots.tooltip" = "빈 시간에 활동 제안";
+"chat.action.categorize.tooltip.empty" = "미분류 Google 일정 없음";
+"chat.action.categorize.tooltip" = "AI가 카테고리 일괄 제안";
+"chat.history.clear.tooltip" = "채팅 기록 지우기";
+"chat.planning.error.no-categorize" = "분류 제안이 없습니다.";
+"chat.planning.error.no-free-slots" = "오늘 남은 빈 시간이 없습니다.";
+"chat.planning.error.no-suggestion" = "제안할 활동이 없습니다.";
+"chat.planning.error.no-replan" = "제안할 변경사항이 없습니다.";
+"chat.planning.result.done" = "완료 · 성공 %d, 실패 %d, 경고 %d개";
+
+// MARK: - Review focusQuota + buttons
+"review.focusQuota.title" = "오늘 일정 초과 (+%d분)";
+"review.focusQuota.description" = "용량 %d분 대비 %d분 예정. 조정이 필요해요.";
+"review.focusQuota.replan" = "재계획";
+"review.focusQuota.ignore" = "무시";
+"review.missed.title" = "미완료: '%@'";
+"review.missed.description" = "오늘 %@에 다시 잡을까요?";
+
+// MARK: - Habit & Goal UI
+"review.habit.weekly.average" = "이번 주 평균 %d%%";
+"review.habit.empty.encourage" = "오늘 첫 체크인으로 시작해보세요 🌱";
+"review.goal.empty.example" = "예시";
+"review.goal.empty.add" = "목표 직접 추가";
+"review.goal.multi.hint" = "쉼표(,)로 여러 개 입력";
+
+// MARK: - Settings Hermes memory card
+"settings.hermes.patterns.count" = "대화와 행동에서 학습한 사용자 패턴 (%d개)";
+"settings.hermes.clear.all" = "전체 삭제";
+"settings.hermes.empty" = "아직 기억된 패턴이 없습니다.";
+"settings.hermes.empty.hint" = "채팅에서 '아침에 집중이 잘 돼요', '저녁엔 못해요', '30분 단위 블록 선호' 같은 문장을 말하면 자동으로 학습합니다.";
+"settings.hermes.decisions.recent" = "최근 계획 결정";
+"settings.hermes.forget.tooltip" = "이 기억 삭제";
+
+// MARK: - Settings app info buttons
+"settings.update.check" = "업데이트 확인";
+"settings.update.check.tooltip" = "GitHub 최신 appcast에서 새 버전을 즉시 확인";
+"settings.feedback.send" = "피드백 보내기";

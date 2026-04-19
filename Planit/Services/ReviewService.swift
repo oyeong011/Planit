@@ -181,8 +181,8 @@ final class ReviewService: ObservableObject {
             if let slot = bestSlot(for: 60, from: freeSlots, goalId: goalId) {
                 items.append(ReviewSuggestion(
                     type: .carryover,
-                    title: "미완료: '\(eventTitle)'",
-                    description: "오늘 \(formatTime(slot.0))에 다시 잡을까요?",
+                    title: String(format: NSLocalizedString("review.missed.title", comment: ""), eventTitle),
+                    description: String(format: NSLocalizedString("review.missed.description", comment: ""), formatTime(slot.0)),
                     goalId: goalId,
                     proposedStart: slot.0,
                     proposedEnd: slot.1,
@@ -246,8 +246,8 @@ final class ReviewService: ObservableObject {
             let overMinutes = scheduledMinutes - capacityMinutes
             items.insert(ReviewSuggestion(
                 type: .focusQuota,
-                title: "오늘 일정 초과 (+\(overMinutes)분)",
-                description: "용량 \(capacityMinutes)분 대비 \(scheduledMinutes)분 예정. 조정이 필요해요.",
+                title: String(format: NSLocalizedString("review.focusQuota.title", comment: ""), overMinutes),
+                description: String(format: NSLocalizedString("review.focusQuota.description", comment: ""), capacityMinutes, scheduledMinutes),
                 goalId: nil
             ), at: 0)
         }
