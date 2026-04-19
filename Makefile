@@ -1,4 +1,4 @@
-.PHONY: dev kill run build
+.PHONY: dev kill run build test ci-ios
 
 # 개발 빌드 + 재시작 (가장 자주 쓰는 명령)
 dev:
@@ -22,3 +22,7 @@ build:
 # 테스트
 test:
 	swift test
+
+# dual-SDK (macOS + iOS) CI 체크 — swift build/test + xcodebuild CaleniOS
+ci-ios:
+	bash scripts/ci-dual-sdk.sh
