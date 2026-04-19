@@ -186,14 +186,14 @@ struct SuggestionPreviewSheet: View {
     }
 
     private func applySelected() async {
+        guard !isApplying else { return }   // Codex HIGH 1: double-click race-gate
         isApplying = true
         var applied = 0
 
         for action in suggestion.actions where acceptedIDs.contains(action.id) {
             guard revalidate(action) else { continue }
-            apply(action)
+            guard applyIfValid(action) else { continue }
             applied += 1
-            // 순차 적용 — race 방지
             try? await Task.sleep(nanoseconds: 100_000_000)
         }
 
@@ -217,32 +217,39 @@ struct SuggestionPreviewSheet: View {
         }
     }
 
-    private func apply(_ action: SuggestedAction) {
+    /// 성공적으로 apply를 호출하면 true. guard 실패(필수 필드 없음)면 false → count 증가 방지.
+    private func applyIfValid(_ action: SuggestedAction) -> Bool {
         switch action.kind {
         case .create:
-            guard let s = action.startDate, let e = action.endDate else { return }
+            guard let s = action.startDate, let e = action.endDate else { return false }
             viewModel.addEventToGoogleCalendar(title: action.title, startDate: s, endDate: e, isAllDay: false)
+            return true
         case .move:
-            guard let eid = action.eventID, let s = action.startDate else { return }
+            guard let eid = action.eventID, let s = action.startDate else { return false }
             viewModel.moveCalendarEvent(id: eid, toStartDate: s)
+            return true
         case .delete:
             guard let eid = action.eventID,
-                  let ev = viewModel.calendarEvents.first(where: { $0.id == eid }) else { return }
+                  let ev = viewModel.calendarEvents.first(where: { $0.id == eid }) else { return false }
             if ev.source == .google {
                 viewModel.deleteGoogleEvent(eventID: eid, calendarID: ev.calendarID)
             } else {
                 _ = viewModel.deleteCalendarEvent(eventID: eid, calendarID: ev.calendarID)
             }
+            return true
         case .createTodo:
+            // nil date 허용 — TodoItem은 date 없는 상태를 지원함
             viewModel.addTodo(title: action.title, date: action.startDate)
+            return true
         case .moveTodo:
-            guard let tid = action.todoID, let s = action.startDate else { return }
+            guard let tid = action.todoID, let s = action.startDate else { return false }
             viewModel.moveTodo(id: tid, toDate: s)
+            return true
         case .updateTodo:
-            // categoryID 정보 없음 — 기존 category 유지. title만 변경.
             guard let tid = action.todoID,
-                  let existing = viewModel.todos.first(where: { $0.id == tid }) else { return }
+                  let existing = viewModel.todos.first(where: { $0.id == tid }) else { return false }
             viewModel.updateTodo(id: tid, title: action.title, categoryID: existing.categoryID, date: existing.date)
+            return true
         }
     }
 

@@ -1611,7 +1611,8 @@ final class AIService: ObservableObject {
 
         let args: [String]
         if isCodex {
-            args = ["exec", "--skip-git-repo-check", "-"]
+            // Codex 실행 자체의 부작용 방지 — read-only sandbox, git repo check skip
+            args = ["exec", "--sandbox", "read-only", "--skip-git-repo-check", "-"]
         } else {
             args = ["-p", "--output-format", "text", "--no-session-persistence"]
         }
