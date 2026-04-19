@@ -74,7 +74,13 @@ let package = Package(
         .executableTarget(
             name: "CaleniOS",
             dependencies: ["CalenShared"],
-            path: "CaleniOS/Sources"
+            path: "CaleniOS/Sources",
+            exclude: [
+                // Info.plist + entitlements는 xcodebuild(.xcodeproj/project.yml)이 직접 사용.
+                // SwiftPM executableTarget에서는 unhandled resources가 되지 않도록 제외.
+                "Info.plist",
+                "Resources/CaleniOS.entitlements"
+            ]
         ),
         .testTarget(
             name: "CalenTests",

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- iOS 앱 기본 메타 — RELEASE 팀장이 project.yml 작성 시 최종 값 정리. -->
+    <key>CFBundleDisplayName</key>
+    <string>Calen</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.oy.planit.ios</string>
+    <key>CFBundleName</key>
+    <string>Calen</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>0.1.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+    <key>UILaunchScreen</key>
+    <dict/>
+    <key>UISupportedInterfaceOrientations</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+    <key>UISupportedInterfaceOrientations~ipad</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationPortraitUpsideDown</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+
+    <!-- Google OAuth client ID — RELEASE 팀장이 실제 값 주입. -->
+    <!-- 비어 있으면 사용자가 설정 화면에서 직접 입력해야 한다. -->
+    <key>GoogleClientID</key>
+    <string></string>
+
+    <!-- URL Types: Google OAuth reversed-client-ID 콜백 scheme. -->
+    <!-- 실제 배포 시 `com.googleusercontent.apps.<CLIENT_ID_PREFIX>` 형태로 RELEASE 팀장이 치환. -->
+    <!-- 현재는 placeholder — 실제 값 없이도 빌드는 통과하지만 런타임 OAuth는 실패한다. -->
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleURLName</key>
+            <string>com.oy.planit.ios.google-oauth</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <!-- RELEASE 팀장: 이 placeholder를 실제 reversed-client-ID로 교체 -->
+                <!-- 예: com.googleusercontent.apps.1234567890-abcdefghijkl -->
+                <string>com.googleusercontent.apps.REPLACE_WITH_REVERSED_CLIENT_ID</string>
+            </array>
+        </dict>
+    </array>
+</dict>
+</plist>

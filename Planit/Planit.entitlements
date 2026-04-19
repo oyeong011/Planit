@@ -12,5 +12,19 @@
     <true/>
     <key>com.apple.security.personal-information.reminders</key>
     <true/>
+
+    <!-- App Group: iOS CaleniOS와 Keychain/파일 공유 (M2 AUTH). -->
+    <!-- RELEASE 팀장이 Apple Developer 콘솔에 App Group 등록 후 활성화. -->
+    <key>com.apple.security.application-groups</key>
+    <array>
+        <string>group.com.oy.planit</string>
+    </array>
+
+    <!-- Keychain 공유: macOS OAuth 토큰을 iOS가 읽을 수 있도록. -->
+    <!-- `$(AppIdentifierPrefix)`는 Team ID로 치환된다. -->
+    <key>keychain-access-groups</key>
+    <array>
+        <string>$(AppIdentifierPrefix)group.com.oy.planit</string>
+    </array>
 </dict>
 </plist>
