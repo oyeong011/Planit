@@ -2,6 +2,8 @@
 import SwiftUI
 import SwiftData
 
+/// iOS Hermes 기억 탭 — **read-only**. 추가/수정/삭제는 macOS에서만.
+/// Mac에서 CloudKit으로 동기화된 기억을 최신순으로 표시한다.
 struct MemoryView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \MemoryFactRecord.updatedAt, order: .reverse) private var facts: [MemoryFactRecord]
@@ -15,19 +17,9 @@ struct MemoryView: View {
                     ForEach(facts, id: \.id) { fact in
                         MemoryRowView(fact: fact)
                     }
-                    .onDelete(perform: deleteFacts)
                 }
             }
             .navigationTitle("Hermes 기억")
-            .toolbar {
-                if !facts.isEmpty {
-                    Button(role: .destructive) {
-                        clearAll()
-                    } label: {
-                        Image(systemName: "trash")
-                    }
-                }
-            }
         }
     }
 
@@ -36,10 +28,11 @@ struct MemoryView: View {
             Image(systemName: "brain.head.profile")
                 .font(.system(size: 48))
                 .foregroundStyle(.tertiary)
-            Text("아직 학습된 패턴이 없습니다")
+            Text("Mac에서 학습된 기억이 여기에 표시됩니다")
                 .font(.headline)
                 .foregroundStyle(.secondary)
-            Text("Mac에서 대화하면 이곳에 자동 동기화됩니다 (iCloud).")
+                .multilineTextAlignment(.center)
+            Text("iCloud 동기화가 완료되면 최신순으로 나타납니다.")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
                 .multilineTextAlignment(.center)
@@ -47,18 +40,6 @@ struct MemoryView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 40)
         .listRowBackground(Color.clear)
-    }
-
-    private func deleteFacts(at offsets: IndexSet) {
-        for idx in offsets {
-            context.delete(facts[idx])
-        }
-        try? context.save()
-    }
-
-    private func clearAll() {
-        try? context.delete(model: MemoryFactRecord.self)
-        try? context.save()
     }
 }
 

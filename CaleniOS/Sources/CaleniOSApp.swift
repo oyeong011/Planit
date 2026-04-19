@@ -14,14 +14,12 @@ import SwiftData
 
 @main
 struct CaleniOSApp: App {
-    /// macOS 앱과 동일한 SwiftData 스키마 — CloudKit을 통해 같은 iCloud 컨테이너에서 sync
-    /// Xcode target 설정에서 iCloud capability + "iCloud.com.oy.planit" container 추가 필요
+    /// 로컬 SwiftData 캐시만 사용. iCloud sync는 SwiftData cloudKitDatabase가 아니라
+    /// custom CKRecord(`HermesMemoryFactV1`)를 통해 M2(SYNC 팀장)에서 구현 예정.
+    /// (자동 CloudKit 동기화는 macOS 스키마와 해시 충돌 위험이 있어 의도적으로 꺼둠.)
     let container: ModelContainer = {
         let schema = Schema([MemoryFactRecord.self, PlanningDecisionRecord.self])
-        let config = ModelConfiguration(
-            schema: schema,
-            cloudKitDatabase: .automatic
-        )
+        let config = ModelConfiguration(schema: schema)
         return try! ModelContainer(for: schema, configurations: config)
     }()
 
