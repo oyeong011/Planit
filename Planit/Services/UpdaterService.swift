@@ -111,10 +111,18 @@ final class UpdaterService: NSObject, ObservableObject {
     /// 짧은 간격으로 당긴다. 목표 URL은 GitHub Pages CDN이라 부하는 미미함.
     func startPeriodicAppcastPolling(interval: TimeInterval = 300) {
         guard !Self.isDevelopmentBuild else { return }
+        // 테스트 기기에서는 UserDefaults로 1분 폴링 강제 가능
+        // 활성화: defaults write com.oy.planit planit.dev.fastUpdateCheck -bool YES
+        let actualInterval: TimeInterval
+        if UserDefaults.standard.bool(forKey: "planit.dev.fastUpdateCheck") {
+            actualInterval = 60
+        } else {
+            actualInterval = interval
+        }
         stopPeriodicAppcastPolling()
         // 시작 즉시 한 번 체크
         Task { await self.pollAppcastForBanner() }
-        pollTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+        pollTimer = Timer.scheduledTimer(withTimeInterval: actualInterval, repeats: true) { [weak self] _ in
             Task { await self?.pollAppcastForBanner() }
         }
     }
