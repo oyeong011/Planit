@@ -14,7 +14,8 @@ let package = Package(
         .iOS(.v17)
     ],
     products: [
-        .library(name: "CalenShared", targets: ["CalenShared"])
+        .library(name: "CalenShared", targets: ["CalenShared"]),
+        .executable(name: "CaleniOS", targets: ["CaleniOS"])
     ],
     dependencies: [
         .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.6.0")
@@ -69,6 +70,17 @@ let package = Package(
                 .process("Resources/he.lproj")
             ],
             swiftSettings: hasBundledCredentials ? [.define("HAS_BUNDLED_CREDENTIALS")] : []
+        ),
+        .executableTarget(
+            name: "CaleniOS",
+            dependencies: ["CalenShared"],
+            path: "CaleniOS/Sources",
+            exclude: [
+                // Info.plist + entitlements는 xcodebuild(.xcodeproj/project.yml)이 직접 사용.
+                // SwiftPM executableTarget에서는 unhandled resources가 되지 않도록 제외.
+                "Info.plist",
+                "Resources/CaleniOS.entitlements"
+            ]
         ),
         .testTarget(
             name: "CalenTests",

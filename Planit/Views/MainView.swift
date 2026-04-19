@@ -50,6 +50,8 @@ struct MainCalendarView: View {
     @State private var didTriggerUpdateCheckThisSession = false
     /// User context 분석 debounce — 이벤트 배열이 빠르게 바뀔 때 Claude CLI 폭주 방지
     @State private var contextRefreshTask: Task<Void, Never>?
+    /// Hermes → CloudKit 단방향 업로드 sync. planit.hermesCloudKitSyncEnabled 플래그가 켜지면 자동 시작.
+    @State private var hermesSync: HermesMemorySync?
 
     init(authManager: GoogleAuthManager, newTodoTitle: Binding<String>) {
         self.authManager = authManager
@@ -104,6 +106,13 @@ struct MainCalendarView: View {
             }
         }
         .frame(width: showLeftPanel ? 1320 : 1040, height: 860)
+        .task {
+            // Hermes CloudKit upstream sync 시작 (UserDefaults 플래그 기반).
+            // 활성화 안 돼 있으면 startIfEnabled가 nil 반환 → no-op.
+            if hermesSync == nil {
+                hermesSync = HermesMemorySync.startIfEnabled(service: hermesMemoryService)
+            }
+        }
         .background(
             ZStack {
                 Color.platformControlBackground
@@ -642,6 +651,29 @@ struct DailyDetailView: View {
     @State private var addCategoryID: UUID?
     @State private var addType: TodoType = .normal
 
+    /// 빈 하루 아이콘/메시지 — 오늘/과거/미래에 따라 변화
+    private var isTodaySelected: Bool {
+        Calendar.current.isDateInToday(viewModel.selectedDate)
+    }
+    private var isPastSelected: Bool {
+        viewModel.selectedDate < Calendar.current.startOfDay(for: Date())
+    }
+    private var emptyDayIcon: String {
+        if isTodaySelected { return "sparkles" }
+        if isPastSelected { return "moon.stars" }
+        return "sun.max"
+    }
+    private var emptyDayMessage: String {
+        if isTodaySelected { return "오늘은 여유로운 하루" }
+        if isPastSelected { return "기록된 일정 없음" }
+        return "비어있는 하루"
+    }
+    private var emptyDayHint: String {
+        if isTodaySelected { return "채팅으로 계획을 세워보거나\n아래 '할 일 추가'를 눌러보세요" }
+        if isPastSelected { return "" }
+        return "채팅으로 미리 준비하거나\n직접 일정을 추가해보세요"
+    }
+
     // 통합 드래그 재배치 상태 (events + todos 한 리스트)
     @State private var draggingItemID: String? = nil
     @State private var dragOffset: CGFloat = 0
@@ -784,11 +816,21 @@ struct DailyDetailView: View {
                         }
 
                         if items.isEmpty && !showAddForm {
-                            Text(String(localized: "detail.no.events"))
-                                .font(.system(size: 13))
-                                .foregroundStyle(.tertiary)
-                                .frame(maxWidth: .infinity)
-                                .padding(.top, 40)
+                            VStack(spacing: 10) {
+                                Image(systemName: emptyDayIcon)
+                                    .font(.system(size: 32))
+                                    .foregroundStyle(themeService.current.accent.opacity(0.4))
+                                Text(emptyDayMessage)
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundStyle(.secondary)
+                                    .multilineTextAlignment(.center)
+                                Text(emptyDayHint)
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.tertiary)
+                                    .multilineTextAlignment(.center)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 40)
                         }
                     }
                     .padding(.horizontal, 16)

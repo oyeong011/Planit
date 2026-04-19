@@ -50,8 +50,8 @@
     <div class="version-hint" id="version-hint">Latest · Universal (Apple Silicon + Intel) · Signed &amp; Notarized</div>
 
     <script>
-      // GitHub API에서 최신 릴리즈의 .dmg/.zip direct 링크 자동 연결.
-      // 실패 시 위 release-latest 페이지로 fallback.
+      // GitHub API에서 최신 릴리즈의 .dmg/.zip 직접 링크 자동 연결.
+      // 실패 시 버튼은 릴리즈 페이지로 fallback (이미 설정됨).
       fetch('https://api.github.com/repos/oyeong011/Planit/releases/latest')
         .then(function(r) { return r.ok ? r.json() : Promise.reject(r.status); })
         .then(function(release) {

@@ -338,7 +338,7 @@ struct ReviewView: View {
             .frame(height: 56)
         }
         .padding(12)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground))
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground).overlay(RoundedRectangle(cornerRadius: 10).fill(themeService.current.cardTint)))
     }
 
     private func weekDayBar(_ day: Date) -> some View {
@@ -459,7 +459,7 @@ struct ReviewView: View {
             }
         }
         .padding(12)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground))
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground).overlay(RoundedRectangle(cornerRadius: 10).fill(themeService.current.cardTint)))
     }
 
     private func habitCard(_ habit: Habit) -> some View {
@@ -837,7 +837,7 @@ struct ReviewView: View {
             }
         }
         .padding(12)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground))
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground).overlay(RoundedRectangle(cornerRadius: 10).fill(themeService.current.cardTint)))
     }
 
     private func habitAdherenceRow(_ habit: Habit) -> some View {
@@ -996,7 +996,7 @@ struct ReviewView: View {
             }
         }
         .padding(12)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground))
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground).overlay(RoundedRectangle(cornerRadius: 10).fill(themeService.current.cardTint)))
     }
 
     // MARK: - Suggestions Section
@@ -1243,7 +1243,7 @@ struct ReviewView: View {
             }
         }
         .padding(12)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground))
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground).overlay(RoundedRectangle(cornerRadius: 10).fill(themeService.current.cardTint)))
     }
 
     private func categoryStat(_ stat: CategoryStat) -> some View {
@@ -1402,7 +1402,7 @@ struct ReviewView: View {
             }
         }
         .padding(12)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground))
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground).overlay(RoundedRectangle(cornerRadius: 10).fill(themeService.current.cardTint)))
         .task(id: refreshMatchKey(events: events, todos: todos)) {
             await goalMemoryService.refreshMatches(events: events, todos: todos)
         }

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- iOS .ipa 로컬 개발 빌드용 export 옵션.
+         TestFlight/AppStore 업로드 시에는 method=app-store-connect 로 별도 plist 작성. -->
+    <key>method</key>
+    <string>development</string>
+
+    <!-- 로컬 빌드 시 DEVELOPMENT_TEAM 환경변수 주입 → build-ios-app.sh 가 이 placeholder 를 치환. -->
+    <key>teamID</key>
+    <string>$(DEVELOPMENT_TEAM)</string>
+
+    <key>signingStyle</key>
+    <string>automatic</string>
+
+    <key>uploadBitcode</key>
+    <false/>
+    <key>compileBitcode</key>
+    <false/>
+    <key>stripSwiftSymbols</key>
+    <true/>
+</dict>
+</plist>

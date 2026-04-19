@@ -116,30 +116,24 @@ enum PlanningMemoryService {
         return "집중 시간대: \(profile.energyType.rawValue) (\(fmt(start))~\(fmt(end)))"
     }
 
-    struct WeeklyTendency {
-        let completionRate: Double
-        let moveFraction: Double
-        let skipFraction: Double
-    }
+    typealias WeeklyTendency = PlanningSummaryMath.WeeklyTendency
 
     static func weeklyTendency(dailyMetrics: [String: DailyMetrics]) -> WeeklyTendency {
         let cal = Calendar.current
         let today = cal.startOfDay(for: Date())
         guard let weekAgo = cal.date(byAdding: .day, value: -7, to: today) else {
-            return WeeklyTendency(completionRate: 0, moveFraction: 0, skipFraction: 0)
+            return .empty
         }
         let recent = dailyMetrics.values.filter { $0.date >= weekAgo }
         let totalPlanned = recent.reduce(0) { $0 + $1.plannedCount }
-        guard totalPlanned > 0 else {
-            return WeeklyTendency(completionRate: 0, moveFraction: 0, skipFraction: 0)
-        }
         let done    = recent.reduce(0) { $0 + $1.completedCount }
         let moved   = recent.reduce(0) { $0 + $1.movedCount }
         let skipped = recent.reduce(0) { $0 + $1.skippedCount }
-        return WeeklyTendency(
-            completionRate: Double(done) / Double(totalPlanned),
-            moveFraction:   Double(moved) / Double(totalPlanned),
-            skipFraction:   Double(skipped) / Double(totalPlanned)
+        return PlanningSummaryMath.weeklyTendency(
+            totalPlanned: totalPlanned,
+            totalDone: done,
+            totalMoved: moved,
+            totalSkipped: skipped
         )
     }
 
@@ -149,9 +143,13 @@ enum PlanningMemoryService {
 
         let targetMins = active.compactMap { $0.targetHours }.reduce(0.0) { $0 + $1 * 60 }
         let capacity = Double(profile.weekdayCapacityMinutes * 5 + profile.weekendCapacityMinutes * 2)
+        let load = PlanningSummaryMath.weeklyLoadPercent(
+            activeGoalMinutes: targetMins,
+            weeklyCapacityMinutes: capacity
+        )
 
-        if capacity > 0, targetMins > capacity * 0.8 {
-            return "부하 신호: 과부하 (목표 \(active.count)개, 용량 \(Int((targetMins / capacity) * 100))%)"
+        if load > 0.8 {
+            return "부하 신호: 과부하 (목표 \(active.count)개, 용량 \(Int(load * 100))%)"
         }
         if active.count >= 6 {
             return "부하 신호: 활성 목표 \(active.count)개"
