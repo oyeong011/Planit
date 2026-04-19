@@ -91,13 +91,15 @@ enum PlanningIntent: String, Codable, Sendable {
     case fillFreeSlots
     case rescheduleUrgent
     case buildWeekPlan
+    case categorizeUntagged   // 카테고리 없는 이벤트 일괄 분류
 
     var displayName: String {
         switch self {
-        case .replanDay:        return "오늘 다시 짜기"
-        case .fillFreeSlots:    return "빈 시간 채우기"
-        case .rescheduleUrgent: return "급한 일정 재배치"
-        case .buildWeekPlan:    return "이번 주 계획"
+        case .replanDay:          return "오늘 다시 짜기"
+        case .fillFreeSlots:      return "빈 시간 채우기"
+        case .rescheduleUrgent:   return "급한 일정 재배치"
+        case .buildWeekPlan:      return "이번 주 계획"
+        case .categorizeUntagged: return "미분류 일정 분류"
         }
     }
 }
@@ -111,6 +113,27 @@ struct PlanningContext {
     let todos: [TodoItem]
     let recalledMemories: [MemoryFact]
     let userProfile: UserProfile?
+    // categorizeUntagged intent 전용
+    let untaggedEvents: [CalendarEvent]
+    let availableCategories: [TodoCategory]
+
+    init(currentDate: Date,
+         todayEvents: [CalendarEvent] = [],
+         nearbyEvents: [CalendarEvent] = [],
+         todos: [TodoItem] = [],
+         recalledMemories: [MemoryFact] = [],
+         userProfile: UserProfile? = nil,
+         untaggedEvents: [CalendarEvent] = [],
+         availableCategories: [TodoCategory] = []) {
+        self.currentDate = currentDate
+        self.todayEvents = todayEvents
+        self.nearbyEvents = nearbyEvents
+        self.todos = todos
+        self.recalledMemories = recalledMemories
+        self.userProfile = userProfile
+        self.untaggedEvents = untaggedEvents
+        self.availableCategories = availableCategories
+    }
 }
 
 // AI 응답 파싱용 DTO — 전부 optional, validation은 Orchestrator에서.
@@ -132,6 +155,7 @@ struct SuggestedActionDTO: Decodable {
     let reason: String?
     let oldStartDate: String?
     let oldTitle: String?
+    let categoryName: String?   // categorize action 전용
 }
 
 struct PlanningSuggestion: Identifiable {
@@ -168,6 +192,7 @@ struct SuggestedAction: Identifiable {
     enum ActionKind: String, Codable, Sendable, CaseIterable {
         case create, move, delete
         case createTodo, moveTodo, updateTodo
+        case categorize   // 기존 이벤트에 카테고리 부여 (제목/시간 변경 없음)
 
         var displayName: String {
             switch self {
@@ -177,6 +202,7 @@ struct SuggestedAction: Identifiable {
             case .createTodo: return "할 일 추가"
             case .moveTodo:   return "할 일 이동"
             case .updateTodo: return "할 일 수정"
+            case .categorize: return "카테고리"
             }
         }
 
@@ -188,15 +214,20 @@ struct SuggestedAction: Identifiable {
             case .createTodo: return "checklist"
             case .moveTodo:   return "arrow.right.square"
             case .updateTodo: return "pencil.circle"
+            case .categorize: return "tag.circle"
             }
         }
     }
+
+    /// categorize action 전용 — 검증된 카테고리 ID (이름 재해석 없이 바로 적용)
+    let categoryID: UUID?
 
     init(id: UUID = UUID(), kind: ActionKind, title: String,
          startDate: Date? = nil, endDate: Date? = nil,
          eventID: String? = nil, todoID: UUID? = nil,
          calendarID: String? = nil, reason: String = "",
-         oldStartDate: Date? = nil, oldTitle: String? = nil) {
+         oldStartDate: Date? = nil, oldTitle: String? = nil,
+         categoryID: UUID? = nil) {
         self.id = id
         self.kind = kind
         self.title = title
@@ -208,6 +239,7 @@ struct SuggestedAction: Identifiable {
         self.reason = reason
         self.oldStartDate = oldStartDate
         self.oldTitle = oldTitle
+        self.categoryID = categoryID
     }
 }
 

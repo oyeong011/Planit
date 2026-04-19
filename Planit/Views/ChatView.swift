@@ -495,8 +495,15 @@ struct ChatView: View {
 
     // MARK: - Planning Action Bar
 
+    private var untaggedEventCount: Int {
+        viewModel.calendarEvents.filter { ev in
+            ev.source == .google && ev.categoryID == nil && viewModel.eventCategoryMappings[ev.id] == nil
+        }.count
+    }
+
     private var planningActionBar: some View {
         HStack(spacing: 8) {
+            // 오늘 다시 짜기
             Button {
                 Task { await runReplanDay() }
             } label: {
@@ -523,6 +530,30 @@ struct ChatView: View {
             .disabled(isPlanning || !aiService.isConfigured || hermesMemoryService == nil)
             .help(aiService.isConfigured ? "Hermes 기억을 반영해 오늘 일정을 재배치" : "AI CLI가 설정되지 않았습니다")
 
+            // 미분류 일정 분류
+            Button {
+                Task { await runCategorizeUntagged() }
+            } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: "tag.circle")
+                        .font(.system(size: 11))
+                    Text("미분류 분류 (\(untaggedEventCount))")
+                        .font(.system(size: 11, weight: .medium))
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(canCategorize ? Color.teal.opacity(0.12) : Color.gray.opacity(0.08))
+                )
+                .foregroundStyle(canCategorize ? .teal : .secondary)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(!canCategorize)
+            .help(untaggedEventCount == 0 ? "미분류 Google 일정이 없습니다" : "AI가 카테고리를 일괄 제안합니다")
+            .accessibilityIdentifier("categorizeUntaggedButton")
+
             Spacer()
 
             if let err = planningError {
@@ -543,6 +574,48 @@ struct ChatView: View {
                     onDismiss: { planningSuggestion = nil }
                 )
             }
+        }
+    }
+
+    private var canCategorize: Bool {
+        !isPlanning
+            && aiService.isConfigured
+            && hermesMemoryService != nil
+            && untaggedEventCount > 0
+    }
+
+    @MainActor
+    private func runCategorizeUntagged() async {
+        guard let hermes = hermesMemoryService else { return }
+        planningError = nil
+        isPlanning = true
+        defer { isPlanning = false }
+
+        let orchestrator = PlanningOrchestratorService(ai: aiService, hermes: hermes)
+        // 로컬 매핑 + Google extendedProperties 모두 없는 이벤트만 수집 (최대 30개)
+        let untagged = viewModel.calendarEvents
+            .filter { ev in
+                ev.source == .google
+                    && ev.categoryID == nil
+                    && viewModel.eventCategoryMappings[ev.id] == nil
+            }
+            .prefix(30)
+
+        let context = PlanningContext(
+            currentDate: Date(),
+            untaggedEvents: Array(untagged),
+            availableCategories: viewModel.categories
+        )
+
+        do {
+            let suggestion = try await orchestrator.handle(intent: .categorizeUntagged, context: context)
+            if suggestion.actions.isEmpty {
+                planningError = suggestion.warnings.first ?? "분류 제안이 없습니다."
+            } else {
+                planningSuggestion = suggestion
+            }
+        } catch {
+            planningError = error.localizedDescription
         }
     }
 

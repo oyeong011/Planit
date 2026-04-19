@@ -10,15 +10,26 @@ let package = Package(
     name: "Calen",
     defaultLocalization: "en",
     platforms: [
-        .macOS(.v14)
+        .macOS(.v14),
+        .iOS(.v17)
+    ],
+    products: [
+        .library(name: "CalenShared", targets: ["CalenShared"])
     ],
     dependencies: [
         .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.6.0")
     ],
     targets: [
+        // macOS/iOS/iPadOS 공통 도메인 — Models, Memory, Planning, Networking
+        // 플랫폼 의존성 없는 순수 Swift + SwiftData + Foundation만 사용
+        .target(
+            name: "CalenShared",
+            path: "Shared/Sources/CalenShared"
+        ),
         .executableTarget(
             name: "Calen",
             dependencies: [
+                "CalenShared",
                 .product(name: "Sparkle", package: "Sparkle")
             ],
             path: "Planit",

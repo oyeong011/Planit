@@ -2074,6 +2074,59 @@ final class CalendarViewModel: ObservableObject {
         }
     }
 
+    /// 일괄 카테고리 분류 적용 — Google PATCH는 순차 실행 (rate-limit 보호).
+    /// 로컬 매핑은 optimistic하게 바로 반영 후 Google에 점진 적용.
+    /// Returns: (applied, failed) 개수 튜플.
+    func applyBulkCategories(_ mappings: [(eventID: String, categoryID: UUID)]) async -> (applied: Int, failed: Int) {
+        var applied = 0
+        var failed = 0
+
+        // Google 이벤트별 매핑 필터
+        let googleMappings = mappings.compactMap { m -> (CalendarEvent, UUID)? in
+            guard let ev = calendarEvents.first(where: { $0.id == m.eventID }),
+                  ev.source == .google,
+                  ev.categoryID == nil,                        // 여전히 미분류인지 재검증
+                  eventCategoryMappings[m.eventID] == nil else { return nil }
+            return (ev, m.categoryID)
+        }
+
+        // 로컬 매핑을 일괄 적용 (optimistic)
+        for (ev, catID) in googleMappings {
+            eventCategoryMappings[ev.id] = EventCategoryMapping(
+                eventID: ev.id,
+                eventTitle: ev.title,
+                categoryID: catID
+            )
+        }
+        saveEventCategoryMappings()
+        applyEventCategoryMappings()
+
+        // Google에 순차적으로 PATCH — rate limit 보호
+        for (ev, catID) in googleMappings {
+            do {
+                let ok = try await googleService.patchEventCategory(
+                    eventID: ev.id,
+                    calendarID: ev.calendarID,
+                    categoryID: catID
+                )
+                if ok {
+                    applied += 1
+                } else {
+                    failed += 1
+                }
+            } catch {
+                failed += 1
+                PlanitLoggers.sync.error(
+                    "Bulk categorize PATCH failed id=\(ev.id, privacy: .public) error=\(Self.sanitizedErrorSummary(error), privacy: .public)"
+                )
+            }
+            // API 부담 경감 — 연속 PATCH 사이 100ms
+            try? await Task.sleep(nanoseconds: 100_000_000)
+        }
+
+        return (applied, failed)
+    }
+
     /// Google fetch 후 extendedProperties로부터 카테고리 자동 복원.
     /// 로컬에 매핑 없지만 Google 이벤트에 planit_category가 있으면 매핑 자동 생성.
     fileprivate func restoreCategoryMappingsFromGoogle() {

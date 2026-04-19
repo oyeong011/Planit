@@ -39,6 +39,10 @@ final class PlanningOrchestratorService: ObservableObject {
     // MARK: - Prompt
 
     func buildPrompt(intent: PlanningIntent, context: PlanningContext, memories: [MemoryFact]) -> String {
+        // categorize intent는 전용 prompt — memory/today events 제외, untagged events + categories만
+        if intent == .categorizeUntagged {
+            return buildCategorizePrompt(context: context)
+        }
         var sections: [String] = []
         sections.append("당신은 Calen 캘린더 앱의 Planning 에이전트입니다.")
         sections.append("사용자가 '\(intent.displayName)'을 요청했습니다.")
@@ -114,7 +118,15 @@ final class PlanningOrchestratorService: ObservableObject {
         var validActions: [SuggestedAction] = []
         var warnings: [String] = dto.warnings ?? []
 
-        for actionDTO in (dto.actions ?? []).prefix(5) {
+        // categorize intent는 30개, 나머지는 5개
+        let actionCap = (intent == .categorizeUntagged) ? 30 : 5
+        // 카테고리명 → UUID 매핑 (공백/대소문자 정규화)
+        let categoryLookup = Dictionary(uniqueKeysWithValues: context.availableCategories.map {
+            ($0.name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(), $0.id)
+        })
+        var categorizedEventIDs = Set<String>()
+
+        for actionDTO in (dto.actions ?? []).prefix(actionCap) {
             guard let kindRaw = actionDTO.kind,
                   let kind = SuggestedAction.ActionKind(rawValue: kindRaw) else {
                 warnings.append("알 수 없는 action kind: \(actionDTO.kind ?? "nil")")
@@ -127,6 +139,7 @@ final class PlanningOrchestratorService: ObservableObject {
             let start = actionDTO.startDate.flatMap { Self.parseISO($0) }
             let end   = actionDTO.endDate.flatMap { Self.parseISO($0) }
             let oldStart = actionDTO.oldStartDate.flatMap { Self.parseISO($0) }
+            var resolvedCategoryID: UUID? = nil
 
             switch kind {
             case .create:
@@ -178,6 +191,31 @@ final class PlanningOrchestratorService: ObservableObject {
                     warnings.append("updateTodo 거부: todo 없음")
                     continue
                 }
+            case .categorize:
+                guard let eid = actionDTO.eventID,
+                      let event = context.untaggedEvents.first(where: { $0.id == eid }) else {
+                    warnings.append("categorize 거부: 미분류 이벤트에 없음")
+                    continue
+                }
+                // apply 직전 재검증 — 이미 카테고리 있으면 skip
+                if event.categoryID != nil {
+                    warnings.append("categorize 거부: 이미 카테고리 있음 (\(event.title))")
+                    continue
+                }
+                guard let catName = actionDTO.categoryName?
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                        .lowercased(),
+                      let catID = categoryLookup[catName] else {
+                    warnings.append("categorize 거부: 알 수 없는 카테고리 '\(actionDTO.categoryName ?? "nil")' (\(event.title))")
+                    continue
+                }
+                // 중복 제거 — 같은 이벤트에 여러 categorize action 오면 첫 번째만
+                if categorizedEventIDs.contains(eid) {
+                    warnings.append("categorize 중복 — 첫 번째만 유지 (\(event.title))")
+                    continue
+                }
+                categorizedEventIDs.insert(eid)
+                resolvedCategoryID = catID
             }
 
             validActions.append(SuggestedAction(
@@ -190,7 +228,8 @@ final class PlanningOrchestratorService: ObservableObject {
                 calendarID: actionDTO.calendarID,
                 reason: Self.sanitize(actionDTO.reason ?? ""),
                 oldStartDate: oldStart,
-                oldTitle: actionDTO.oldTitle
+                oldTitle: actionDTO.oldTitle,
+                categoryID: resolvedCategoryID
             ))
         }
 
@@ -218,6 +257,51 @@ final class PlanningOrchestratorService: ObservableObject {
             actions: validActions,
             warnings: warnings
         )
+    }
+
+    // MARK: - Categorize Prompt
+
+    /// categorizeUntagged 전용 prompt — untaggedEvents + availableCategories만 주입.
+    /// Hermes 메모리, todayEvents, todos는 불필요하므로 제외 (토큰 절약).
+    private func buildCategorizePrompt(context: PlanningContext) -> String {
+        let categoryNames = context.availableCategories.map { $0.name }.joined(separator: ", ")
+        let eventList = context.untaggedEvents.prefix(30).map { ev in
+            let time = Self.iso8601Basic.string(from: ev.startDate)
+            return "- [\(ev.id)] \(Self.sanitize(ev.title, maxLength: 100)) (\(time))"
+        }.joined(separator: "\n")
+
+        return """
+        당신은 Calen 캘린더 앱의 카테고리 분류 에이전트입니다.
+        아래 미분류 이벤트를 사용 가능한 카테고리 목록에 분류해주세요.
+
+        ## 사용 가능한 카테고리 (이 이름 중 하나만 사용 가능)
+        \(categoryNames)
+
+        ## 미분류 이벤트 (\(context.untaggedEvents.count)개)
+        \(eventList)
+
+        ## 응답 형식 (엄격한 JSON만)
+        {
+          "summary": "N개의 이벤트를 분류했습니다",
+          "rationale": "제목과 시간대 기반 추론",
+          "actions": [
+            {
+              "kind": "categorize",
+              "title": "이벤트 제목 (참고용)",
+              "eventID": "위 목록의 ID",
+              "categoryName": "사용 가능한 카테고리 중 하나 (정확히 같은 이름)",
+              "reason": "왜 이 카테고리로 분류했는지 (한 줄)"
+            }
+          ],
+          "warnings": []
+        }
+
+        ## 제약
+        - 최대 30개 action. 확신이 없으면 warnings에 적고 skip.
+        - 카테고리 목록에 없는 이름은 절대 만들지 마세요.
+        - 제목이나 시간은 절대 변경 지시하지 마세요 — 오직 kind="categorize"만.
+        - 모든 미분류 이벤트를 분류할 필요 없음. 애매하면 skip.
+        """
     }
 
     // MARK: - Helpers
