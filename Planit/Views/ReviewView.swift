@@ -1013,26 +1013,45 @@ struct ReviewView: View {
 
                 if s.status != .accepted {
                     HStack(spacing: 6) {
-                        Button { acceptSuggestion(at: index) } label: {
-                            Text(String(localized: "review.add.button"))
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 3)
-                                .background(RoundedRectangle(cornerRadius: 5).fill(colorFor(s.type)))
-                                .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
+                        // 생성 가능한 제안(proposed* 있음)만 "추가" 버튼 표시.
+                        // 경고성 suggestion(focusQuota 등 proposed가 nil)은 "확인"만.
+                        let isActionable = s.proposedStart != nil
+                            && s.proposedEnd != nil
+                            && s.proposedTitle != nil
 
-                        Button { declineSuggestion(at: index) } label: {
-                            Text(String(localized: "review.skip.button"))
-                                .font(.system(size: 10))
-                                .foregroundStyle(.secondary)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 3)
-                                .contentShape(Rectangle())
+                        if isActionable {
+                            Button { acceptSuggestion(at: index) } label: {
+                                Text(String(localized: "review.add.button"))
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 3)
+                                    .background(RoundedRectangle(cornerRadius: 5).fill(colorFor(s.type)))
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+
+                            Button { declineSuggestion(at: index) } label: {
+                                Text(String(localized: "review.skip.button"))
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(.secondary)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 3)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                        } else {
+                            Button { declineSuggestion(at: index) } label: {
+                                Text(String(localized: "common.confirm", defaultValue: "확인"))
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 3)
+                                    .background(RoundedRectangle(cornerRadius: 5).fill(colorFor(s.type)))
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                     }
                     .padding(.top, 2)
                 }
