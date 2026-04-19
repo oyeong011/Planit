@@ -1022,32 +1022,52 @@ struct SettingsView: View {
             languageCard
 
             settingsCard(String(localized: "settings.app.info.card")) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("Calen")
-                            .font(.system(size: 14, weight: .semibold))
-                        let bundleVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"
-                        let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
-                        Text("v\(bundleVersion) (\(buildNumber)) · Personal AI Calendar Assistant")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Button {
-                        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
-                        let osVersion = ProcessInfo.processInfo.operatingSystemVersionString
-                        let subject = "Calen v\(version) 피드백"
-                        let body = "\n\n---\n앱 버전: \(version)\nmacOS: \(osVersion)"
-                        let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-                        let encodedBody = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-                        if let url = URL(string: "mailto:oyeong011@gmail.com?subject=\(encodedSubject)&body=\(encodedBody)") {
-                            NSWorkspace.shared.open(url)
+                VStack(spacing: 12) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("Calen")
+                                .font(.system(size: 14, weight: .semibold))
+                            let bundleVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"
+                            let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
+                            Text("v\(bundleVersion) (\(buildNumber)) · Personal AI Calendar Assistant")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
-                    } label: {
-                        Label("피드백 보내기", systemImage: "envelope")
-                            .font(.system(size: 12))
+                        Spacer()
                     }
-                    .buttonStyle(.bordered)
+
+                    Divider()
+
+                    HStack(spacing: 8) {
+                        // 업데이트 수동 체크 (Sparkle 자동 폴링 기다리지 않고 즉시)
+                        Button {
+                            UpdaterService.shared.checkForUpdates()
+                        } label: {
+                            Label("업데이트 확인", systemImage: "arrow.triangle.2.circlepath")
+                                .font(.system(size: 12))
+                        }
+                        .buttonStyle(.bordered)
+                        .help("GitHub 최신 appcast에서 새 버전을 즉시 확인")
+
+                        // 피드백
+                        Button {
+                            let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
+                            let osVersion = ProcessInfo.processInfo.operatingSystemVersionString
+                            let subject = "Calen v\(version) 피드백"
+                            let body = "\n\n---\n앱 버전: \(version)\nmacOS: \(osVersion)"
+                            let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+                            let encodedBody = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+                            if let url = URL(string: "mailto:oyeong011@gmail.com?subject=\(encodedSubject)&body=\(encodedBody)") {
+                                NSWorkspace.shared.open(url)
+                            }
+                        } label: {
+                            Label("피드백 보내기", systemImage: "envelope")
+                                .font(.system(size: 12))
+                        }
+                        .buttonStyle(.bordered)
+
+                        Spacer()
+                    }
                 }
             }
         }
