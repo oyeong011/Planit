@@ -42,6 +42,25 @@ extension Color {
             blue: Double(num & 0xFF) / 255.0
         )
     }
+
+    /// 라이트/다크 모드에 따라 다른 Color 반환.
+    /// 테마 tint 등 환경별로 강도를 다르게 주고 싶을 때 사용.
+    init(light: Color, dark: Color) {
+        #if os(macOS)
+        self.init(nsColor: NSColor(name: nil) { appearance in
+            switch appearance.name {
+            case .darkAqua, .vibrantDark, .accessibilityHighContrastDarkAqua, .accessibilityHighContrastVibrantDark:
+                return NSColor(dark)
+            default:
+                return NSColor(light)
+            }
+        })
+        #else
+        self.init(uiColor: UIColor { trait in
+            trait.userInterfaceStyle == .dark ? UIColor(dark) : UIColor(light)
+        })
+        #endif
+    }
 }
 
 // Available color presets for category picker

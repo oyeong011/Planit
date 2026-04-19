@@ -34,11 +34,22 @@ struct CalendarTheme: Identifiable, Equatable, Hashable {
     var subtleBackgroundTint: Color { backgroundOverlay.opacity(0.16) }
 
     /// 패널(일정 리스트, 월간 그리드) 배경에 얹는 아주 옅은 accent 틴트.
-    /// 시스템 기본 배경 위에 추가로 오버레이하는 용도 — opacity 0.035로 가독성 보존.
-    var paneTint: Color { accent.opacity(0.04) }
+    /// 라이트 모드에서는 더 강하게 (0.08), 다크 모드에서는 약하게 (0.04) 적용해
+    /// 가독성을 유지하면서 테마 정체성이 드러나게 한다.
+    var paneTint: Color {
+        Color(
+            light: accent.opacity(0.08),
+            dark:  accent.opacity(0.04)
+        )
+    }
 
     /// 카드(설정, 리뷰 카드) 배경에 얹는 옅은 테마 틴트.
-    var cardTint: Color { accent.opacity(0.03) }
+    var cardTint: Color {
+        Color(
+            light: accent.opacity(0.06),
+            dark:  accent.opacity(0.03)
+        )
+    }
 
     static let builtIn: [CalendarTheme] = [
         CalendarTheme(
