@@ -1,3 +1,4 @@
+#if os(iOS)
 import SwiftUI
 import SwiftData
 
@@ -94,3 +95,4 @@ struct MemoryRowView: View {
         return .secondary
     }
 }
+#endif

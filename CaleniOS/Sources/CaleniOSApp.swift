@@ -1,3 +1,14 @@
+#if !os(iOS)
+// macOS/Linux 빌드에서는 CaleniOS target을 빌드해도 실제 앱은 생성하지 않음.
+// (SwiftPM은 per-platform target 제외를 지원하지 않으므로 placeholder main을 둠.)
+// 실제 iOS 앱은 xcodebuild -scheme CaleniOS -destination 'generic/platform=iOS Simulator'로 빌드.
+@main
+struct CaleniOSPlaceholder {
+    static func main() {
+        // no-op: iOS 전용 target — macOS에서는 실행되지 않아야 함
+    }
+}
+#else
 import SwiftUI
 import SwiftData
 
@@ -35,3 +46,4 @@ struct RootTabView: View {
         .tint(Color(red: 0.30, green: 0.67, blue: 0.98))
     }
 }
+#endif

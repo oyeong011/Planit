@@ -1,3 +1,4 @@
+#if os(iOS)
 import Foundation
 import SwiftData
 
@@ -122,3 +123,4 @@ public final class PlanningDecisionRecord {
         self.learnedFactsJSON = learnedFactsJSON
     }
 }
+#endif
