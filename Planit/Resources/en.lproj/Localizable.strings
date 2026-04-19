@@ -503,3 +503,46 @@
 "habit.graph.2weeksago" = "2 Wks";
 "habit.graph.3weeksago" = "3 Wks";
 "habit.graph.4weeksago" = "4 Wks";
+
+// MARK: - Chat action bar (v0.4.x additions)
+"chat.action.replan-day" = "Replan today";
+"chat.action.fill-slots" = "Fill slots";
+"chat.action.categorize" = "Categorize (%d)";
+"chat.action.replan-day.tooltip" = "Reorganize today using Hermes memory";
+"chat.action.fill-slots.tooltip" = "Suggest activities for open time";
+"chat.action.categorize.tooltip.empty" = "No uncategorized Google events";
+"chat.action.categorize.tooltip" = "AI will batch-categorize events";
+"chat.history.clear.tooltip" = "Clear chat history";
+"chat.planning.error.no-categorize" = "No categorization suggestions.";
+"chat.planning.error.no-free-slots" = "No free slots remaining today.";
+"chat.planning.error.no-suggestion" = "No activities to suggest.";
+"chat.planning.error.no-replan" = "No changes to propose.";
+"chat.planning.result.done" = "Done · %d applied, %d failed, %d warnings";
+
+// MARK: - Review focusQuota + buttons
+"review.focusQuota.title" = "Today overbooked (+%d min)";
+"review.focusQuota.description" = "Capacity %d min vs %d min scheduled. Adjustment needed.";
+"review.focusQuota.replan" = "Replan";
+"review.focusQuota.ignore" = "Ignore";
+"review.missed.title" = "Missed: '%@'";
+"review.missed.description" = "Reschedule for today at %@?";
+
+// MARK: - Habit & Goal UI
+"review.habit.weekly.average" = "This week avg %d%%";
+"review.habit.empty.encourage" = "Start with your first check-in today 🌱";
+"review.goal.empty.example" = "Examples";
+"review.goal.empty.add" = "Add goal manually";
+"review.goal.multi.hint" = "Comma-separated";
+
+// MARK: - Settings Hermes memory card
+"settings.hermes.patterns.count" = "User patterns learned from chat & actions (%d)";
+"settings.hermes.clear.all" = "Clear all";
+"settings.hermes.empty" = "No patterns learned yet.";
+"settings.hermes.empty.hint" = "Hermes auto-learns when you chat things like 'I focus best in mornings', 'no work in evenings', '30-min blocks only'.";
+"settings.hermes.decisions.recent" = "Recent plan decisions";
+"settings.hermes.forget.tooltip" = "Forget this memory";
+
+// MARK: - Settings app info buttons
+"settings.update.check" = "Check for updates";
+"settings.update.check.tooltip" = "Check GitHub appcast for new version now";
+"settings.feedback.send" = "Send feedback";

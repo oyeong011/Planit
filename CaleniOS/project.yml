@@ -14,7 +14,11 @@ options:
   deploymentTarget:
     iOS: "17.0"
   bundleIdPrefix: com.oy.planit
-  createIntermediateGroups: true
+  # createIntermediateGroups=false: xcodegen이 packages.Calen.path(`..`)의 중간 부모
+  # ("Planit" 폴더)를 auto-group으로 추가하는 현상 방지. 같은 `..` 경로가
+  # XCLocalSwiftPackageReference로도 참조되어 Xcode가 "Couldn't load Planit, already opened"
+  # 충돌을 일으킴.
+  createIntermediateGroups: false
   # 생성된 xcodeproj 내부 스킴을 공유해야 xcodebuild -scheme 으로 접근 가능
   schemePathPrefix: ../
   generateEmptyDirectories: true
@@ -43,11 +47,10 @@ targets:
     sources:
       - path: Sources
         excludes:
-          # Info.plist / entitlements는 build settings 로 별도 지정.
+          # Info.plist은 INFOPLIST_KEY_* 빌드 설정으로 Xcode가 auto-generate (GENERATE_INFOPLIST_FILE=YES).
+          # 커스텀 Info.plist 파일을 두면 UILaunchScreen 누락으로 compat mode(iPhone 4 스케일) 발생.
           - Info.plist
           - Resources/CaleniOS.entitlements
-    info:
-      path: Sources/Info.plist
     entitlements:
       path: Sources/Resources/CaleniOS.entitlements
     dependencies:
@@ -56,8 +59,12 @@ targets:
     settings:
       base:
         ENABLE_HARDENED_RUNTIME: YES
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Calen
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
         TARGETED_DEVICE_FAMILY: "1,2"
         SUPPORTS_MACCATALYST: NO
         CODE_SIGN_ENTITLEMENTS: Sources/Resources/CaleniOS.entitlements

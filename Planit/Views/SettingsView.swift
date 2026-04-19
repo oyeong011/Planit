@@ -792,14 +792,14 @@ struct SettingsView: View {
                     Image(systemName: "sparkles")
                         .foregroundStyle(.purple)
                         .font(.system(size: 13))
-                    Text("대화와 행동에서 학습한 사용자 패턴 (\(hermesMemoryService.facts.count)개)")
+                    Text(String(format: NSLocalizedString("settings.hermes.patterns.count", comment: ""), hermesMemoryService.facts.count))
                         .font(.system(size: 12, weight: .medium))
                     Spacer()
                     if !hermesMemoryService.facts.isEmpty {
                         Button(role: .destructive) {
                             hermesMemoryService.clearAll()
                         } label: {
-                            Label("전체 삭제", systemImage: "trash")
+                            Label(String(localized: "settings.hermes.clear.all"), systemImage: "trash")
                                 .font(.system(size: 11))
                         }
                         .buttonStyle(.bordered)
@@ -809,10 +809,10 @@ struct SettingsView: View {
 
                 if hermesMemoryService.facts.isEmpty {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("아직 기억된 패턴이 없습니다.")
+                        Text(String(localized: "settings.hermes.empty"))
                             .font(.system(size: 11))
                             .foregroundStyle(.secondary)
-                        Text("채팅에서 '아침에 집중이 잘 돼요', '저녁엔 못해요', '30분 단위 블록 선호' 같은 문장을 말하면 자동으로 학습합니다.")
+                        Text(String(localized: "settings.hermes.empty.hint"))
                             .font(.system(size: 10))
                             .foregroundStyle(.tertiary)
                     }
@@ -826,7 +826,7 @@ struct SettingsView: View {
 
                 if !hermesMemoryService.decisions.isEmpty {
                     Divider()
-                    Text("최근 계획 결정")
+                    Text(String(localized: "settings.hermes.decisions.recent"))
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(.secondary)
                     ForEach(hermesMemoryService.decisions.prefix(5)) { decision in
@@ -885,7 +885,7 @@ struct SettingsView: View {
                     .font(.system(size: 12))
             }
             .buttonStyle(.plain)
-            .help("이 기억 삭제")
+            .help(String(localized: "settings.hermes.forget.tooltip"))
         }
         .padding(.vertical, 4)
     }
@@ -1043,11 +1043,11 @@ struct SettingsView: View {
                         Button {
                             UpdaterService.shared.checkForUpdates()
                         } label: {
-                            Label("업데이트 확인", systemImage: "arrow.triangle.2.circlepath")
+                            Label(String(localized: "settings.update.check"), systemImage: "arrow.triangle.2.circlepath")
                                 .font(.system(size: 12))
                         }
                         .buttonStyle(.bordered)
-                        .help("GitHub 최신 appcast에서 새 버전을 즉시 확인")
+                        .help(String(localized: "settings.update.check.tooltip"))
 
                         // 피드백
                         Button {
@@ -1061,7 +1061,7 @@ struct SettingsView: View {
                                 NSWorkspace.shared.open(url)
                             }
                         } label: {
-                            Label("피드백 보내기", systemImage: "envelope")
+                            Label(String(localized: "settings.feedback.send"), systemImage: "envelope")
                                 .font(.system(size: 12))
                         }
                         .buttonStyle(.bordered)
