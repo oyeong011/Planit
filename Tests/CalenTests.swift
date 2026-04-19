@@ -1,5 +1,6 @@
 import Foundation
 import AppKit
+import CloudKit
 import Testing
 import Security
 import CommonCrypto
@@ -2391,4 +2392,51 @@ func emptyPlanningContext() -> PlanningContext {
     let (orch, _, _) = makeOrchestrator(response: json)
     let suggestion = try await orch.handle(intent: .replanDay, context: emptyPlanningContext())
     #expect(suggestion.actions.count == 1)
+}
+
+// ============================================================================
+// MARK: - TC-76~77: HermesMemoryFactV1 CKRecord round-trip
+// ============================================================================
+// encode → decode 가 MemoryFact 원본과 동등해야 CloudKit sync 호환성 보장.
+
+@Test func hermesMemoryFactV1_roundTrip_preservesAllFields() {
+    let original = MemoryFact(
+        id: UUID(),
+        category: .schedulePattern,
+        key: "meetingFatigue",
+        value: "오후 회의 피로",
+        confidence: 0.82,
+        source: "chat",
+        updatedAt: Date(timeIntervalSince1970: 1_700_000_000)
+    )
+    let record = HermesMemoryFactV1.encode(fact: original)
+    guard let decoded = HermesMemoryFactV1.decode(record: record) else {
+        Issue.record("decode returned nil")
+        return
+    }
+    #expect(decoded == original)
+    #expect(record.recordType == HermesMemoryFactV1.recordType)
+    #expect(record.recordID.recordName == original.id.uuidString)
+}
+
+@Test func hermesMemoryFactV1_roundTrip_preservesValueContainingSeparator() {
+    // joinText는 key의 US 구분자만 제거하고 value는 원문 보존 — split은 첫 구분자만 사용.
+    let valueWithControlChar = "a\u{001F}b"
+    let original = MemoryFact(
+        category: .preference,
+        key: "weirdKey",
+        value: valueWithControlChar,
+        confidence: 0.5,
+        source: "test"
+    )
+    let record = HermesMemoryFactV1.encode(fact: original)
+    guard let decoded = HermesMemoryFactV1.decode(record: record) else {
+        Issue.record("decode returned nil")
+        return
+    }
+    #expect(decoded.key == original.key)
+    #expect(decoded.value == original.value)
+    #expect(decoded.category == original.category)
+    #expect(decoded.confidence == original.confidence)
+    #expect(decoded.source == original.source)
 }
