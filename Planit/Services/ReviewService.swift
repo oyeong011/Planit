@@ -212,9 +212,16 @@ final class ReviewService: ObservableObject {
             }
         }
 
-        // 3. Weekly habit gap
+        // 3. Weekly habit gap — 주간 반복 추적 알림
+        // 단, 장기 goal(deadline 30일+ 또는 .year/.decade 레벨)은 제외.
+        // 이유: "대학원입학" 같은 장기 목표에 매일 "20시에 60분" 제안이 뜨면 부적절.
+        // 반복 활동은 별도 '습관' 기능으로 추적.
         for goal in activeGoals {
             guard let rec = goal.recurrence else { continue }
+            let daysUntil = goalService.daysUntilDeadline(goal)
+            let isLongTerm = goal.level == .year || daysUntil > 30
+            if isLongTerm { continue }
+
             let thisWeekSessions = countThisWeekSessions(goalId: goal.id)
             if thisWeekSessions < rec.weeklyTargetSessions {
                 let remaining = rec.weeklyTargetSessions - thisWeekSessions

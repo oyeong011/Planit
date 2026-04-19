@@ -5,19 +5,18 @@ import SwiftUI
 enum SettingsSection: String, CaseIterable {
     case profile       = "profile"
     case ai            = "ai"
-    case schedule      = "schedule"
     case context       = "context"
     case integrations  = "integrations"
     case notifications = "notifications"
     case appearance    = "appearance"
     case advanced      = "advanced"
+    // schedule 섹션은 profile과 통합됨 — 사이드바에서 제외 (일반 사용자 피로도 감소)
 
     var localizedTitle: String { NSLocalizedString("settings.section.\(rawValue)", comment: "") }
 
     var icon: String {
         switch self {
         case .profile:       return "person.circle"
-        case .schedule:      return "clock"
         case .ai:            return "sparkles"
         case .context:       return "brain.head.profile"
         case .integrations:  return "link"
@@ -143,9 +142,11 @@ struct SettingsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
                 switch selectedSection {
-                case .profile:       profileSection
+                case .profile:
+                    profileSection
+                    // 기존 schedule(업무/점심/통근/용량) 카드를 profile에 통합
+                    scheduleSection
                 case .ai:            aiSection
-                case .schedule:      scheduleSection
                 case .context:       contextSection
                 case .integrations:  integrationsSection
                 case .notifications: notificationsSection

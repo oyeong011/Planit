@@ -670,16 +670,16 @@ struct OnboardingView: View {
 
     private func completeOnboarding() {
         for (title, due) in goalInputs {
+            // 온보딩에서 받는 목표는 대부분 장기성(대학원, 취업, 자격증 등).
+            // 주간 반복 스케줄(recurrence)를 자동으로 붙이지 않음 — 붙이면 매일
+            // "이번주 0/4회, 20시에 60분?" 알림이 뜨는 UX 문제 발생.
+            // 반복 활동은 별도 '습관' 기능으로 추가하게 안내.
             let goal = Goal(
                 level: .year,
                 title: title,
                 dueDate: due,
                 weight: 4,
-                recurrence: RecurrencePlan(
-                    weeklyTargetSessions: 4,
-                    perSessionMinutes: 60,
-                    allowedDays: [1, 2, 3, 4, 5]
-                )
+                recurrence: nil
             )
             goalService.addGoal(goal)
         }
