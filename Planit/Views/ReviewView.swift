@@ -373,8 +373,10 @@ struct ReviewView: View {
         let todoEventIds = Set(viewModel.todos.compactMap { $0.googleEventId })
         let completedIDs = viewModel.completedEventIDs
 
+        // all-day 이벤트도 포함 — 사용자가 만든 종일 일정(예: "캘린 데모영상촬영", "렌즈수령")도
+        // 할 일로 카운트되어야 우측 DailyDetailView와 총 개수가 일치한다.
         let events = viewModel.calendarEvents.filter { ev in
-            !ev.isAllDay && !todoEventIds.contains(ev.id) &&
+            !todoEventIds.contains(ev.id) &&
             ev.startDate >= interval.start && ev.startDate < interval.end
         }
         let localTodos = viewModel.todos.filter {
@@ -1080,11 +1082,8 @@ struct ReviewView: View {
     // itemsForDate가 DailyDetailView(오른쪽 패널)와 동일한 소스라 숫자 불일치/중복 이슈를
     // 원천적으로 제거한다 (todosForDate는 source 필터가 없어 Apple mirror가 2중 카운트됐음).
     private var todayItems: [CalendarViewModel.DayItem] {
+        // all-day 이벤트도 포함 — DailyDetailView와 동일 기준
         viewModel.itemsForDate(Calendar.current.startOfDay(for: Date()))
-            .filter { item in
-                if case .event(let e) = item { return !e.isAllDay }
-                return true
-            }
     }
 
     private var todayEvents: [CalendarEvent] {
@@ -1135,7 +1134,8 @@ struct ReviewView: View {
         guard let interval = cal.dateInterval(of: component, for: Date()) else { return [] }
 
         for event in viewModel.calendarEvents {
-            guard !event.isAllDay, !todoEventIds.contains(event.id) else { continue }
+            // all-day 이벤트도 포함 (종일 일정도 달성률 카운트)
+            guard !todoEventIds.contains(event.id) else { continue }
             guard event.startDate >= interval.start && event.startDate < interval.end else { continue }
             let rawName = event.calendarName
             // 이메일 주소가 캘린더 이름으로 표시되면 "기본 캘린더"로 대체
@@ -1934,11 +1934,8 @@ struct ReviewView: View {
         // 이전 구현은 viewModel.todos 전체 + appleReminders + all-day events까지
         // 합산해 중복/과다 카운트(3/7 현상)를 만들었다.
         if period == .day {
+            // all-day 이벤트도 포함 — DailyDetailView와 동일 기준
             let items = viewModel.itemsForDate(Calendar.current.startOfDay(for: Date()))
-                .filter { item in
-                    if case .event(let e) = item { return !e.isAllDay }
-                    return true
-                }
             let done = items.filter { item in
                 switch item {
                 case .event(let e): return viewModel.isEventCompleted(e.id)

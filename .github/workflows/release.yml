@@ -245,10 +245,25 @@ jobs:
 
           export PUB_DATE=$(date -u +"%a, %d %b %Y %H:%M:%S +0000")
           export DOWNLOAD_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/v${VERSION}/Calen-${VERSION}-universal.zip"
-          NOTES_FILE=$(mktemp)
-          gh release view "v${VERSION}" --repo "$GITHUB_REPOSITORY" --json body --jq '.body' > "$NOTES_FILE" 2>/dev/null || echo "릴리스 v${VERSION}" > "$NOTES_FILE"
-          export NOTES=$(cat "$NOTES_FILE")
-          rm -f "$NOTES_FILE"
+
+          # 이전 태그부터 현재 태그까지의 커밋을 Sparkle 릴리즈 노트에 포함
+          PREV_TAG=$(git describe --tags --abbrev=0 "v${VERSION}^" 2>/dev/null || echo "")
+          if [ -n "$PREV_TAG" ]; then
+            CHANGELOG=$(git log --pretty=format:"- %s" "${PREV_TAG}..v${VERSION}" \
+              | grep -vE '^- (chore|release|Merge|docs\(site\)):' \
+              | head -15)
+          else
+            CHANGELOG="- Initial release"
+          fi
+
+          export NOTES="## Calen v${VERSION}
+
+          ### 이번 버전 변경사항
+          ${CHANGELOG}
+
+          ### 업그레이드
+          Sparkle이 자동으로 설치합니다. '지금 업데이트' 버튼을 누르면 바로 적용됩니다.
+          "
 
           python3 - <<PYEOF
           import os, re
@@ -283,9 +298,19 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.VERSION }}
         run: |
-          gh release create "v${VERSION}" \
-            --title "Calen v${VERSION}" \
-            --notes "## Calen v${VERSION}
+          # 이전 태그부터 이번 태그까지의 커밋을 릴리즈 노트 본문에 포함
+          PREV_TAG=$(git describe --tags --abbrev=0 "v${VERSION}^" 2>/dev/null || echo "")
+          if [ -n "$PREV_TAG" ]; then
+            CHANGELOG=$(git log --pretty=format:"- %s" "${PREV_TAG}..v${VERSION}" | grep -vE '^- (chore|release|Merge|docs\(site\)):' | head -20)
+          else
+            CHANGELOG="- Initial release"
+          fi
+
+          NOTES_BODY=$(cat <<EOF
+          ## Calen v${VERSION}
+
+          ### 이번 버전 변경사항
+          ${CHANGELOG}
 
           ### 설치 방법 (Homebrew, 권장)
           \`\`\`bash
@@ -298,7 +323,13 @@ jobs:
           이미 \`calen\` cask로 설치했다면 그대로 \`brew upgrade --cask calen\` 로도 갱신됩니다 (하위 호환 유지).
 
           ### 직접 다운로드
-          아래 Assets에서 DMG 파일을 받아 설치하세요." \
+          아래 Assets에서 DMG 파일을 받아 설치하세요.
+          EOF
+          )
+
+          gh release create "v${VERSION}" \
+            --title "Calen v${VERSION}" \
+            --notes "$NOTES_BODY" \
             "$ZIP_PATH" \
             "$DMG_PATH"
 
