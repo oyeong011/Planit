@@ -49,6 +49,7 @@ struct ReviewView: View {
     @ObservedObject var goalMemoryService: GoalMemoryService
     @ObservedObject var habitService: HabitService
     @ObservedObject var viewModel: CalendarViewModel
+    @ObservedObject private var themeService = CalendarThemeService.shared
     let onCreateEvent: (String, Date, Date) -> Void
     let onDismiss: () -> Void
     /// "오늘 재계획" CTA — focusQuota 같은 경고 suggestion에서 채팅 탭으로 이동 후 재계획 트리거.
