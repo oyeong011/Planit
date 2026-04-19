@@ -21,7 +21,9 @@ final class HermesMemoryService: ObservableObject {
     private static let staleDays: TimeInterval = 90 * 86400
 
     /// - Parameter inMemory: true면 디스크에 저장하지 않음. 테스트에서 앱 DB 오염 방지용.
-    init(inMemory: Bool = false) {
+    /// - Parameter useCloudKit: iCloud 동기화 활성화 여부. 기본 false (사용자 옵션).
+    ///   true면 macOS/iOS/iPad 간 Hermes 기억이 자동 동기화된다. 앱에 iCloud entitlement 필요.
+    init(inMemory: Bool = false, useCloudKit: Bool = false) {
         let schema = Schema([MemoryFactRecord.self, PlanningDecisionRecord.self])
         let config: ModelConfiguration
         if inMemory {
@@ -31,8 +33,18 @@ final class HermesMemoryService: ObservableObject {
             let dir = support.appendingPathComponent("Planit/Memory", isDirectory: true)
             try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
             let storeURL = dir.appendingPathComponent("hermes.sqlite")
-            // iOS 앱 빌드 시: cloudKitDatabase: .automatic 추가하면 iCloud sync 활성화
-            config = ModelConfiguration(schema: schema, url: storeURL, allowsSave: true)
+            // iCloud sync: ModelConfiguration의 cloudKitDatabase를 .automatic으로 지정하면
+            // 사용자의 iCloud 컨테이너에 자동 미러링. 서버 운영 필요 없음.
+            if useCloudKit {
+                config = ModelConfiguration(
+                    schema: schema,
+                    url: storeURL,
+                    allowsSave: true,
+                    cloudKitDatabase: .automatic
+                )
+            } else {
+                config = ModelConfiguration(schema: schema, url: storeURL, allowsSave: true)
+            }
         }
         do {
             container = try ModelContainer(for: schema, configurations: config)
