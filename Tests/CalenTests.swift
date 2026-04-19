@@ -2160,3 +2160,157 @@ func cleanCodexOutput(_ raw: String) -> String {
     // 아침 선호는 decay되어 감소하거나 삭제
     #expect(afterMorning < before)
 }
+
+// ============================================================================
+// MARK: - TC-68~75: PlanningOrchestratorService 단위 테스트
+// ============================================================================
+
+// Planning 테스트용 fake AI client — CLI를 호출하지 않고 미리 정한 응답 반환.
+@MainActor
+final class FakePlanningAIClient: PlanningAIClient {
+    var response: String = "{}"
+    func sendPlanningRequest(prompt: String) async throws -> String { response }
+}
+
+@MainActor
+func makeOrchestrator(response: String) -> (PlanningOrchestratorService, HermesMemoryService, FakePlanningAIClient) {
+    let hermes = HermesMemoryService(inMemory: true)
+    let fake = FakePlanningAIClient()
+    fake.response = response
+    return (PlanningOrchestratorService(ai: fake, hermes: hermes), hermes, fake)
+}
+
+@MainActor
+func emptyPlanningContext() -> PlanningContext {
+    PlanningContext(
+        currentDate: Date(),
+        todayEvents: [],
+        nearbyEvents: [],
+        todos: [],
+        recalledMemories: [],
+        userProfile: nil
+    )
+}
+
+// TC-68: PlanningIntent Codable roundtrip
+@Test func planningIntent_codable() throws {
+    let intent = PlanningIntent.replanDay
+    let data = try JSONEncoder().encode(intent)
+    let decoded = try JSONDecoder().decode(PlanningIntent.self, from: data)
+    #expect(decoded == intent)
+}
+
+// TC-69: 잘못된 JSON → 빈 suggestion + warning
+@Test @MainActor func planning_invalidJSON_returnsWarning() async throws {
+    let (orch, _, _) = makeOrchestrator(response: "not json at all")
+    let suggestion = try await orch.handle(intent: .replanDay, context: emptyPlanningContext())
+    #expect(suggestion.actions.isEmpty)
+    #expect(!suggestion.warnings.isEmpty)
+}
+
+// TC-70: action count > 5면 앞 5개만
+@Test @MainActor func planning_tooManyActions_trimmedTo5() async throws {
+    let future = Date().addingTimeInterval(3600)
+    let end = Date().addingTimeInterval(7200)
+    let iso = ISO8601DateFormatter()
+    let futureStr = iso.string(from: future)
+    let endStr = iso.string(from: end)
+
+    var actions: [String] = []
+    for i in 0..<7 {
+        actions.append(#"{"kind":"create","title":"일정 \#(i)","startDate":"\#(futureStr)","endDate":"\#(endStr)"}"#)
+    }
+    let json = #"{"summary":"테스트","actions":[\#(actions.joined(separator: ","))]}"#
+
+    let (orch, _, _) = makeOrchestrator(response: json)
+    let suggestion = try await orch.handle(intent: .replanDay, context: emptyPlanningContext())
+    #expect(suggestion.actions.count <= 5)
+}
+
+// TC-71: 과거 startDate의 create는 제외
+@Test @MainActor func planning_pastStartDate_rejected() async throws {
+    let iso = ISO8601DateFormatter()
+    let past = iso.string(from: Date().addingTimeInterval(-3600))
+    let pastEnd = iso.string(from: Date().addingTimeInterval(-1800))
+    let json = #"""
+    {"summary":"test","actions":[{"kind":"create","title":"과거 일정","startDate":"\#(past)","endDate":"\#(pastEnd)"}]}
+    """#
+    let (orch, _, _) = makeOrchestrator(response: json)
+    let suggestion = try await orch.handle(intent: .replanDay, context: emptyPlanningContext())
+    #expect(suggestion.actions.isEmpty)
+    #expect(suggestion.warnings.contains(where: { $0.contains("create") }))
+}
+
+// TC-72: 중복 eventID에 여러 액션 → 전부 제외
+@Test @MainActor func planning_duplicateTarget_allRejected() async throws {
+    let event = CalendarEvent(
+        id: "evt-123", title: "회의",
+        startDate: Date().addingTimeInterval(3600),
+        endDate: Date().addingTimeInterval(7200),
+        color: .blue, isAllDay: false,
+        calendarName: "test", calendarID: "cal-1", source: .google
+    )
+    let future = ISO8601DateFormatter().string(from: Date().addingTimeInterval(10800))
+    let futureEnd = ISO8601DateFormatter().string(from: Date().addingTimeInterval(14400))
+    let json = #"""
+    {"summary":"test","actions":[
+      {"kind":"move","title":"회의","eventID":"evt-123","startDate":"\#(future)","endDate":"\#(futureEnd)"},
+      {"kind":"delete","title":"회의","eventID":"evt-123"}
+    ]}
+    """#
+    let context = PlanningContext(
+        currentDate: Date(),
+        todayEvents: [event],
+        nearbyEvents: [],
+        todos: [],
+        recalledMemories: [],
+        userProfile: nil
+    )
+    let (orch, _, _) = makeOrchestrator(response: json)
+    let suggestion = try await orch.handle(intent: .replanDay, context: context)
+    #expect(suggestion.actions.isEmpty)
+    #expect(suggestion.warnings.contains(where: { $0.contains("중복") }))
+}
+
+// TC-73: context에 없는 eventID는 제외
+@Test @MainActor func planning_unknownEventID_rejected() async throws {
+    let json = #"""
+    {"summary":"test","actions":[{"kind":"delete","title":"없는 이벤트","eventID":"does-not-exist"}]}
+    """#
+    let (orch, _, _) = makeOrchestrator(response: json)
+    let suggestion = try await orch.handle(intent: .replanDay, context: emptyPlanningContext())
+    #expect(suggestion.actions.isEmpty)
+}
+
+// TC-74: 정상 create action 파싱
+@Test @MainActor func planning_validCreate_accepted() async throws {
+    let future = Date().addingTimeInterval(3600)
+    let end = Date().addingTimeInterval(7200)
+    let iso = ISO8601DateFormatter()
+    let json = #"""
+    {"summary":"운동 추가","rationale":"저녁 선호 반영","actions":[
+      {"kind":"create","title":"운동","startDate":"\#(iso.string(from: future))","endDate":"\#(iso.string(from: end))","reason":"저녁 집중 선호"}
+    ]}
+    """#
+    let (orch, _, _) = makeOrchestrator(response: json)
+    let suggestion = try await orch.handle(intent: .replanDay, context: emptyPlanningContext())
+    #expect(suggestion.actions.count == 1)
+    #expect(suggestion.actions.first?.kind == .create)
+    #expect(suggestion.actions.first?.title == "운동")
+}
+
+// TC-75: markdown 코드펜스 안의 JSON도 파싱
+@Test @MainActor func planning_markdownJSON_parsed() async throws {
+    let future = Date().addingTimeInterval(3600)
+    let end = Date().addingTimeInterval(7200)
+    let iso = ISO8601DateFormatter()
+    let json = """
+    여기 제안입니다:
+    ```json
+    {"summary":"test","actions":[{"kind":"create","title":"공부","startDate":"\(iso.string(from: future))","endDate":"\(iso.string(from: end))"}]}
+    ```
+    """
+    let (orch, _, _) = makeOrchestrator(response: json)
+    let suggestion = try await orch.handle(intent: .replanDay, context: emptyPlanningContext())
+    #expect(suggestion.actions.count == 1)
+}

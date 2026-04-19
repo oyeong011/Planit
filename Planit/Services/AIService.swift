@@ -1402,7 +1402,7 @@ final class AIService: ObservableObject {
     }
 
     /// Run CLI tool directly without shell — stdin pipe for input, timeout enforced, streamed output cap
-    nonisolated private static func runCLIDirect(executablePath: String, args: [String],
+    nonisolated fileprivate static func runCLIDirect(executablePath: String, args: [String],
                                                   input: String, isCodex: Bool) -> String {
         let proc = Process()
         proc.executableURL = URL(fileURLWithPath: executablePath)
@@ -1588,4 +1588,45 @@ final class AIService: ObservableObject {
         return resultLines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    // MARK: - Planning (side-effect-free CLI)
+    //
+    // PlanningOrchestratorService에서 호출. sendMessage와 달리 chatMessages/pendingActions/
+    // isLoading/externalContextPreview를 절대 건드리지 않음. raw text만 반환.
+
+    /// PlanningAIClient conformance — side-effect-free CLI runner.
+    func sendPlanningRequest(prompt: String) async throws -> String {
+        let isCodex: Bool
+        let execPath: String?
+        switch provider {
+        case .claude:
+            isCodex = false
+            execPath = claudePath
+        case .codex:
+            isCodex = true
+            execPath = codexPath
+        }
+        guard let path = execPath else {
+            throw PlanningError.cliUnavailable
+        }
+
+        let args: [String]
+        if isCodex {
+            args = ["exec", "--skip-git-repo-check", "-"]
+        } else {
+            args = ["-p", "--output-format", "text", "--no-session-persistence"]
+        }
+
+        return await Task.detached(priority: .userInitiated) {
+            Self.runCLIDirect(executablePath: path, args: args, input: prompt, isCodex: isCodex)
+        }.value
+    }
+
 }
+
+// MARK: - PlanningAIClient Protocol
+
+protocol PlanningAIClient: AnyObject {
+    @MainActor func sendPlanningRequest(prompt: String) async throws -> String
+}
+
+extension AIService: PlanningAIClient {}

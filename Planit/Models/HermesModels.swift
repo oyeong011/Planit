@@ -84,6 +84,147 @@ struct PlanningDecision: Sendable, Identifiable {
     }
 }
 
+// MARK: - Planning Intent / Context / Suggestion / Action
+
+enum PlanningIntent: String, Codable, Sendable {
+    case replanDay
+    case fillFreeSlots
+    case rescheduleUrgent
+    case buildWeekPlan
+
+    var displayName: String {
+        switch self {
+        case .replanDay:        return "오늘 다시 짜기"
+        case .fillFreeSlots:    return "빈 시간 채우기"
+        case .rescheduleUrgent: return "급한 일정 재배치"
+        case .buildWeekPlan:    return "이번 주 계획"
+        }
+    }
+}
+
+/// @MainActor 격리 — Sendable 선언하지 않음 (nested model들이 아직 Sendable 아님).
+@MainActor
+struct PlanningContext {
+    let currentDate: Date
+    let todayEvents: [CalendarEvent]
+    let nearbyEvents: [CalendarEvent]
+    let todos: [TodoItem]
+    let recalledMemories: [MemoryFact]
+    let userProfile: UserProfile?
+}
+
+// AI 응답 파싱용 DTO — 전부 optional, validation은 Orchestrator에서.
+struct PlanningSuggestionDTO: Decodable {
+    let summary: String?
+    let rationale: String?
+    let actions: [SuggestedActionDTO]?
+    let warnings: [String]?
+}
+
+struct SuggestedActionDTO: Decodable {
+    let kind: String?
+    let title: String?
+    let startDate: String?
+    let endDate: String?
+    let eventID: String?
+    let todoID: String?
+    let calendarID: String?
+    let reason: String?
+    let oldStartDate: String?
+    let oldTitle: String?
+}
+
+struct PlanningSuggestion: Identifiable {
+    let id: UUID
+    let intent: PlanningIntent
+    let summary: String
+    let rationale: String
+    let actions: [SuggestedAction]
+    let warnings: [String]
+
+    init(id: UUID = UUID(), intent: PlanningIntent, summary: String, rationale: String, actions: [SuggestedAction], warnings: [String]) {
+        self.id = id
+        self.intent = intent
+        self.summary = summary
+        self.rationale = rationale
+        self.actions = actions
+        self.warnings = warnings
+    }
+}
+
+struct SuggestedAction: Identifiable {
+    let id: UUID
+    let kind: ActionKind
+    let title: String
+    let startDate: Date?
+    let endDate: Date?
+    let eventID: String?
+    let todoID: UUID?
+    let calendarID: String?
+    let reason: String
+    let oldStartDate: Date?
+    let oldTitle: String?
+
+    enum ActionKind: String, Codable, Sendable, CaseIterable {
+        case create, move, delete
+        case createTodo, moveTodo, updateTodo
+
+        var displayName: String {
+            switch self {
+            case .create:     return "새 일정"
+            case .move:       return "일정 이동"
+            case .delete:     return "일정 삭제"
+            case .createTodo: return "할 일 추가"
+            case .moveTodo:   return "할 일 이동"
+            case .updateTodo: return "할 일 수정"
+            }
+        }
+
+        var icon: String {
+            switch self {
+            case .create:     return "plus.circle"
+            case .move:       return "arrow.right.circle"
+            case .delete:     return "minus.circle"
+            case .createTodo: return "checklist"
+            case .moveTodo:   return "arrow.right.square"
+            case .updateTodo: return "pencil.circle"
+            }
+        }
+    }
+
+    init(id: UUID = UUID(), kind: ActionKind, title: String,
+         startDate: Date? = nil, endDate: Date? = nil,
+         eventID: String? = nil, todoID: UUID? = nil,
+         calendarID: String? = nil, reason: String = "",
+         oldStartDate: Date? = nil, oldTitle: String? = nil) {
+        self.id = id
+        self.kind = kind
+        self.title = title
+        self.startDate = startDate
+        self.endDate = endDate
+        self.eventID = eventID
+        self.todoID = todoID
+        self.calendarID = calendarID
+        self.reason = reason
+        self.oldStartDate = oldStartDate
+        self.oldTitle = oldTitle
+    }
+}
+
+enum PlanningError: LocalizedError {
+    case cliUnavailable
+    case invalidResponse
+    case noActionsProposed
+
+    var errorDescription: String? {
+        switch self {
+        case .cliUnavailable:    return "AI CLI가 설정되지 않았습니다. 설정에서 Claude 또는 Codex를 연결하세요."
+        case .invalidResponse:   return "AI 응답을 해석할 수 없습니다."
+        case .noActionsProposed: return "제안할 변경사항이 없습니다."
+        }
+    }
+}
+
 // MARK: - SwiftData Persistence Models
 
 /// SwiftData 영속 레이어 — MemoryFact 도메인 모델에 대응
