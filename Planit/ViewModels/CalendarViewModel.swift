@@ -1928,6 +1928,17 @@ final class CalendarViewModel: ObservableObject {
         MidnightRolloverService.shared.performIfNeeded(viewModel: self)
     }
 
+    /// 같은 날 시간대 이동 (예: 10:00 → 14:00). Planning apply 경로에서 사용.
+    /// 기존 duration을 유지하며 startDate를 toStartDate로 이동.
+    func moveCalendarEvent(id: String, toStartDate: Date) {
+        guard let event = calendarEvents.first(where: { $0.id == id }) else { return }
+        let duration = event.endDate.timeIntervalSince(event.startDate)
+        var movedEvent = event
+        movedEvent.startDate = toStartDate
+        movedEvent.endDate = toStartDate.addingTimeInterval(duration)
+        applyMove(event: event, movedEvent: movedEvent, id: id)
+    }
+
     func moveCalendarEvent(id: String, toDate: Date) {
         guard let event = calendarEvents.first(where: { $0.id == id }) else { return }
         let cal = Calendar.current
@@ -1937,11 +1948,13 @@ final class CalendarViewModel: ObservableObject {
         var movedEvent = event
         movedEvent.startDate = event.startDate.addingTimeInterval(delta)
         movedEvent.endDate = event.endDate.addingTimeInterval(delta)
+        applyMove(event: event, movedEvent: movedEvent, id: id)
+    }
 
+    /// 공통 이동 로직 — moveCalendarEvent(id:toDate:) 와 moveCalendarEvent(id:toStartDate:) 모두 사용.
+    private func applyMove(event: CalendarEvent, movedEvent: CalendarEvent, id: String) {
         // Apple Calendar eventual consistency: replaceCalendarEventLocally 호출 전에
-        // 옛 위치의 Apple 미러를 억제해야 함. suppressAppleMirror(calendarID:)에 Google ID를
-        // 넘기면 Apple 이벤트의 실제 calendarID와 불일치하여 suppress가 무효화된다.
-        // suppressAppleMirrorCandidates는 실제 Apple 이벤트를 검색해 올바른 calendarID를 추출한다.
+        // 옛 위치의 Apple 미러를 억제해야 함.
         if event.source == .google {
             let appleCandidates = (appleCalendarEnabled && appleCalendarAccessGranted)
                 ? fetchLocalCalendarEvents(for: currentMonth)
@@ -1954,7 +1967,6 @@ final class CalendarViewModel: ObservableObject {
                 isAllDay: event.isAllDay,
                 appleCandidates: appleCandidates
             )
-            // Apple 미러 즉시 제거 (suppressed 상태로 다음 merge까지 기다리지 않음)
             calendarEvents.removeAll { ev in
                 ev.source == .apple
                     && suppressKeys.contains(Self.appleMirrorSuppressKey(for: ev))

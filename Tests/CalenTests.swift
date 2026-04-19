@@ -2018,3 +2018,299 @@ func cleanCodexOutput(_ raw: String) -> String {
     let value = NSLocalizedString("common.save", bundle: .module, comment: "")
     #expect(value == "Save")
 }
+
+// ============================================================================
+// MARK: - TC-57~65: HermesMemoryService 단위 테스트
+// ============================================================================
+
+// TC-57: MemoryFact confidence는 0~1 범위로 클램핑된다
+@Test func hermesMemoryFact_confidenceClamped() {
+    let over = MemoryFact(category: .preference, key: "k", value: "v", confidence: 1.5)
+    let under = MemoryFact(category: .preference, key: "k", value: "v", confidence: -0.3)
+    #expect(over.confidence == 1.0)
+    #expect(under.confidence == 0.0)
+}
+
+// TC-58: MemoryFactRecord SwiftData 레코드 라운드트립
+@Test func hermesMemoryFact_recordRoundtrip() {
+    let fact = MemoryFact(category: .schedulePattern, key: "meetingFatigue", value: "높음", confidence: 0.8)
+    let record = MemoryFactRecord(fact)
+    let recovered = record.toDomain()
+    #expect(recovered.id == fact.id)
+    #expect(recovered.key == fact.key)
+    #expect(recovered.value == fact.value)
+    #expect(recovered.confidence == fact.confidence)
+    #expect(recovered.category == fact.category)
+}
+
+// TC-59: remember — 같은 key+category면 기존 fact를 업데이트한다
+@Test @MainActor func hermesMemory_remember_updatesExistingKey() {
+    let svc = HermesMemoryService(inMemory: true)
+    svc.clearAll()
+
+    svc.remember([MemoryFact(category: .preference, key: "preferredBlockLength", value: "30분", confidence: 0.6)])
+    svc.remember([MemoryFact(category: .preference, key: "preferredBlockLength", value: "45분", confidence: 0.8)])
+
+    let matches = svc.recall(keys: ["preferredBlockLength"])
+    #expect(matches.count == 1)
+    #expect(matches.first?.value == "45분")
+    // confidence는 가중 평균 + 0.05 → (0.6+0.8)/2 + 0.05 = 0.75
+    #expect((matches.first?.confidence ?? 0) > 0.7)
+}
+
+// TC-60: remember — 다른 key면 별도 fact로 추가된다
+@Test @MainActor func hermesMemory_remember_addsNewKey() {
+    let svc = HermesMemoryService(inMemory: true)
+    svc.clearAll()
+
+    svc.remember([
+        MemoryFact(category: .preference, key: "keyA", value: "a", confidence: 0.7),
+        MemoryFact(category: .preference, key: "keyB", value: "b", confidence: 0.7)
+    ])
+
+    let all = svc.recall()
+    #expect(all.count == 2)
+}
+
+// TC-61: forget — 특정 fact만 삭제된다
+@Test @MainActor func hermesMemory_forget_removesOnlyTarget() {
+    let svc = HermesMemoryService(inMemory: true)
+    svc.clearAll()
+
+    let factA = MemoryFact(category: .preference, key: "keyA", value: "a")
+    let factB = MemoryFact(category: .preference, key: "keyB", value: "b")
+    svc.remember([factA, factB])
+    svc.forget(id: factA.id)
+
+    let remaining = svc.recall()
+    #expect(remaining.count == 1)
+    #expect(remaining.first?.key == "keyB")
+}
+
+// TC-62: recall — confidence < 0.3이고 90일 지난 fact는 제외된다
+@Test @MainActor func hermesMemory_recall_excludesStaleLoConfidence() {
+    let svc = HermesMemoryService(inMemory: true)
+    svc.clearAll()
+
+    let old = MemoryFact(
+        category: .preference, key: "stale", value: "old",
+        confidence: 0.2, source: "chat",
+        updatedAt: Date(timeIntervalSinceNow: -91 * 86400)
+    )
+    let fresh = MemoryFact(category: .preference, key: "fresh", value: "new", confidence: 0.8)
+    svc.remember([old, fresh])
+
+    let result = svc.recall()
+    #expect(result.contains { $0.key == "fresh" })
+    #expect(!result.contains { $0.key == "stale" })
+}
+
+// TC-63: contextForAI — fact가 없으면 빈 문자열 반환
+@Test @MainActor func hermesMemory_contextForAI_emptyWhenNoFacts() {
+    let svc = HermesMemoryService(inMemory: true)
+    svc.clearAll()
+    #expect(svc.contextForAI().isEmpty)
+}
+
+// TC-64: contextForAI — fact가 있으면 hermes_memory 블록 포함
+@Test @MainActor func hermesMemory_contextForAI_containsBlock() {
+    let svc = HermesMemoryService(inMemory: true)
+    svc.clearAll()
+    svc.remember([MemoryFact(category: .preference, key: "preferredMorningWork", value: "오전 집중 선호", confidence: 0.7)])
+
+    let ctx = svc.contextForAI()
+    #expect(ctx.contains("<hermes_memory>"))
+    #expect(ctx.contains("preferredMorningWork"))
+    #expect(ctx.contains("오전 집중 선호"))
+}
+
+// TC-65: extractAndRemember — "아침" 키워드에서 preferredMorningWork 추출
+@Test @MainActor func hermesMemory_extract_morningKeyword() {
+    let svc = HermesMemoryService(inMemory: true)
+    svc.clearAll()
+    svc.extractAndRemember(from: "아침에 집중이 잘 돼요", aiResponse: "네, 오전 시간대에 배치해드릴게요.")
+
+    let facts = svc.recall(keys: ["preferredMorningWork"])
+    #expect(!facts.isEmpty)
+}
+
+// TC-66: 저녁에 집중이 잘된다 → preferredEveningWork 추출
+@Test @MainActor func hermesMemory_extract_eveningPositive() {
+    let svc = HermesMemoryService(inMemory: true)
+    svc.clearAll()
+    svc.extractAndRemember(from: "저녁에 집중이 잘 돼요", aiResponse: "")
+
+    let facts = svc.recall(keys: ["preferredEveningWork"])
+    #expect(!facts.isEmpty)
+    #expect(facts.first?.value == "저녁 집중 선호")
+}
+
+// TC-67: 아침 선호 기록 후 저녁 선호 말하면 아침 선호 confidence가 감소한다
+@Test @MainActor func hermesMemory_extract_preferenceShift() {
+    let svc = HermesMemoryService(inMemory: true)
+    svc.clearAll()
+    svc.extractAndRemember(from: "아침에 집중이 잘 돼요", aiResponse: "")
+    let before = svc.recall(keys: ["preferredMorningWork"]).first?.confidence ?? 0
+
+    svc.extractAndRemember(from: "저녁에 집중이 잘 돼요", aiResponse: "")
+    let afterMorning = svc.recall(keys: ["preferredMorningWork"]).first?.confidence ?? 0
+    let evening = svc.recall(keys: ["preferredEveningWork"]).first
+
+    #expect(evening != nil)
+    // 아침 선호는 decay되어 감소하거나 삭제
+    #expect(afterMorning < before)
+}
+
+// ============================================================================
+// MARK: - TC-68~75: PlanningOrchestratorService 단위 테스트
+// ============================================================================
+
+// Planning 테스트용 fake AI client — CLI를 호출하지 않고 미리 정한 응답 반환.
+@MainActor
+final class FakePlanningAIClient: PlanningAIClient {
+    var response: String = "{}"
+    func sendPlanningRequest(prompt: String) async throws -> String { response }
+}
+
+@MainActor
+func makeOrchestrator(response: String) -> (PlanningOrchestratorService, HermesMemoryService, FakePlanningAIClient) {
+    let hermes = HermesMemoryService(inMemory: true)
+    let fake = FakePlanningAIClient()
+    fake.response = response
+    return (PlanningOrchestratorService(ai: fake, hermes: hermes), hermes, fake)
+}
+
+@MainActor
+func emptyPlanningContext() -> PlanningContext {
+    PlanningContext(
+        currentDate: Date(),
+        todayEvents: [],
+        nearbyEvents: [],
+        todos: [],
+        recalledMemories: [],
+        userProfile: nil
+    )
+}
+
+// TC-68: PlanningIntent Codable roundtrip
+@Test func planningIntent_codable() throws {
+    let intent = PlanningIntent.replanDay
+    let data = try JSONEncoder().encode(intent)
+    let decoded = try JSONDecoder().decode(PlanningIntent.self, from: data)
+    #expect(decoded == intent)
+}
+
+// TC-69: 잘못된 JSON → 빈 suggestion + warning
+@Test @MainActor func planning_invalidJSON_returnsWarning() async throws {
+    let (orch, _, _) = makeOrchestrator(response: "not json at all")
+    let suggestion = try await orch.handle(intent: .replanDay, context: emptyPlanningContext())
+    #expect(suggestion.actions.isEmpty)
+    #expect(!suggestion.warnings.isEmpty)
+}
+
+// TC-70: action count > 5면 앞 5개만
+@Test @MainActor func planning_tooManyActions_trimmedTo5() async throws {
+    let future = Date().addingTimeInterval(3600)
+    let end = Date().addingTimeInterval(7200)
+    let iso = ISO8601DateFormatter()
+    let futureStr = iso.string(from: future)
+    let endStr = iso.string(from: end)
+
+    var actions: [String] = []
+    for i in 0..<7 {
+        actions.append(#"{"kind":"create","title":"일정 \#(i)","startDate":"\#(futureStr)","endDate":"\#(endStr)"}"#)
+    }
+    let json = #"{"summary":"테스트","actions":[\#(actions.joined(separator: ","))]}"#
+
+    let (orch, _, _) = makeOrchestrator(response: json)
+    let suggestion = try await orch.handle(intent: .replanDay, context: emptyPlanningContext())
+    #expect(suggestion.actions.count <= 5)
+}
+
+// TC-71: 과거 startDate의 create는 제외
+@Test @MainActor func planning_pastStartDate_rejected() async throws {
+    let iso = ISO8601DateFormatter()
+    let past = iso.string(from: Date().addingTimeInterval(-3600))
+    let pastEnd = iso.string(from: Date().addingTimeInterval(-1800))
+    let json = #"""
+    {"summary":"test","actions":[{"kind":"create","title":"과거 일정","startDate":"\#(past)","endDate":"\#(pastEnd)"}]}
+    """#
+    let (orch, _, _) = makeOrchestrator(response: json)
+    let suggestion = try await orch.handle(intent: .replanDay, context: emptyPlanningContext())
+    #expect(suggestion.actions.isEmpty)
+    #expect(suggestion.warnings.contains(where: { $0.contains("create") }))
+}
+
+// TC-72: 중복 eventID에 여러 액션 → 전부 제외
+@Test @MainActor func planning_duplicateTarget_allRejected() async throws {
+    let event = CalendarEvent(
+        id: "evt-123", title: "회의",
+        startDate: Date().addingTimeInterval(3600),
+        endDate: Date().addingTimeInterval(7200),
+        color: .blue, isAllDay: false,
+        calendarName: "test", calendarID: "cal-1", source: .google
+    )
+    let future = ISO8601DateFormatter().string(from: Date().addingTimeInterval(10800))
+    let futureEnd = ISO8601DateFormatter().string(from: Date().addingTimeInterval(14400))
+    let json = #"""
+    {"summary":"test","actions":[
+      {"kind":"move","title":"회의","eventID":"evt-123","startDate":"\#(future)","endDate":"\#(futureEnd)"},
+      {"kind":"delete","title":"회의","eventID":"evt-123"}
+    ]}
+    """#
+    let context = PlanningContext(
+        currentDate: Date(),
+        todayEvents: [event],
+        nearbyEvents: [],
+        todos: [],
+        recalledMemories: [],
+        userProfile: nil
+    )
+    let (orch, _, _) = makeOrchestrator(response: json)
+    let suggestion = try await orch.handle(intent: .replanDay, context: context)
+    #expect(suggestion.actions.isEmpty)
+    #expect(suggestion.warnings.contains(where: { $0.contains("중복") }))
+}
+
+// TC-73: context에 없는 eventID는 제외
+@Test @MainActor func planning_unknownEventID_rejected() async throws {
+    let json = #"""
+    {"summary":"test","actions":[{"kind":"delete","title":"없는 이벤트","eventID":"does-not-exist"}]}
+    """#
+    let (orch, _, _) = makeOrchestrator(response: json)
+    let suggestion = try await orch.handle(intent: .replanDay, context: emptyPlanningContext())
+    #expect(suggestion.actions.isEmpty)
+}
+
+// TC-74: 정상 create action 파싱
+@Test @MainActor func planning_validCreate_accepted() async throws {
+    let future = Date().addingTimeInterval(3600)
+    let end = Date().addingTimeInterval(7200)
+    let iso = ISO8601DateFormatter()
+    let json = #"""
+    {"summary":"운동 추가","rationale":"저녁 선호 반영","actions":[
+      {"kind":"create","title":"운동","startDate":"\#(iso.string(from: future))","endDate":"\#(iso.string(from: end))","reason":"저녁 집중 선호"}
+    ]}
+    """#
+    let (orch, _, _) = makeOrchestrator(response: json)
+    let suggestion = try await orch.handle(intent: .replanDay, context: emptyPlanningContext())
+    #expect(suggestion.actions.count == 1)
+    #expect(suggestion.actions.first?.kind == .create)
+    #expect(suggestion.actions.first?.title == "운동")
+}
+
+// TC-75: markdown 코드펜스 안의 JSON도 파싱
+@Test @MainActor func planning_markdownJSON_parsed() async throws {
+    let future = Date().addingTimeInterval(3600)
+    let end = Date().addingTimeInterval(7200)
+    let iso = ISO8601DateFormatter()
+    let json = """
+    여기 제안입니다:
+    ```json
+    {"summary":"test","actions":[{"kind":"create","title":"공부","startDate":"\(iso.string(from: future))","endDate":"\(iso.string(from: end))"}]}
+    ```
+    """
+    let (orch, _, _) = makeOrchestrator(response: json)
+    let suggestion = try await orch.handle(intent: .replanDay, context: emptyPlanningContext())
+    #expect(suggestion.actions.count == 1)
+}

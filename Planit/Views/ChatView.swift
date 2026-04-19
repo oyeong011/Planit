@@ -8,6 +8,11 @@ struct ChatView: View {
     @ObservedObject private var themeService = CalendarThemeService.shared
     var goalMemoryService: GoalMemoryService? = nil
     var habitService: HabitService? = nil          // 습관 — 목표와 완전히 분리
+    var hermesMemoryService: HermesMemoryService? = nil
+
+    @State private var planningSuggestion: PlanningSuggestion? = nil
+    @State private var isPlanning: Bool = false
+    @State private var planningError: String? = nil
     // aiService.chatMessages 사용 — 탭 전환 후에도 유지
     @State private var inputText: String = ""
     @State private var attachments: [ChatAttachment] = []
@@ -438,6 +443,11 @@ struct ChatView: View {
 
             Divider()
 
+            // Planning action bar — Hermes 기반 원클릭 재계획
+            planningActionBar
+
+            Divider()
+
             // 첨부파일 미리보기
             if !attachments.isEmpty {
                 attachmentPreviewStrip
@@ -481,6 +491,97 @@ struct ChatView: View {
 
     private var canSend: Bool {
         (!inputText.isEmpty || !attachments.isEmpty) && !aiService.isLoading
+    }
+
+    // MARK: - Planning Action Bar
+
+    private var planningActionBar: some View {
+        HStack(spacing: 8) {
+            Button {
+                Task { await runReplanDay() }
+            } label: {
+                HStack(spacing: 5) {
+                    if isPlanning {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 11))
+                    }
+                    Text("오늘 다시 짜기")
+                        .font(.system(size: 11, weight: .medium))
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(aiService.isConfigured ? Color.purple.opacity(0.12) : Color.gray.opacity(0.08))
+                )
+                .foregroundStyle(aiService.isConfigured ? .purple : .secondary)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(isPlanning || !aiService.isConfigured || hermesMemoryService == nil)
+            .help(aiService.isConfigured ? "Hermes 기억을 반영해 오늘 일정을 재배치" : "AI CLI가 설정되지 않았습니다")
+
+            Spacer()
+
+            if let err = planningError {
+                Text(err)
+                    .font(.system(size: 10))
+                    .foregroundStyle(.red)
+                    .lineLimit(1)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .sheet(item: $planningSuggestion) { suggestion in
+            if let hms = hermesMemoryService {
+                SuggestionPreviewSheet(
+                    suggestion: suggestion,
+                    viewModel: viewModel,
+                    hermesMemoryService: hms,
+                    onDismiss: { planningSuggestion = nil }
+                )
+            }
+        }
+    }
+
+    @MainActor
+    private func runReplanDay() async {
+        guard let hermes = hermesMemoryService else { return }
+        planningError = nil
+        isPlanning = true
+        defer { isPlanning = false }
+
+        let orchestrator = PlanningOrchestratorService(ai: aiService, hermes: hermes)
+        let today = Calendar.current.startOfDay(for: Date())
+        let todayEnd = Calendar.current.date(byAdding: .day, value: 1, to: today) ?? today
+        let todayEvents = viewModel.calendarEvents.filter { $0.startDate >= today && $0.startDate < todayEnd }
+        let nearbyStart = Calendar.current.date(byAdding: .day, value: -3, to: today) ?? today
+        let nearbyEnd = Calendar.current.date(byAdding: .day, value: 4, to: today) ?? today
+        let nearbyEvents = viewModel.calendarEvents.filter {
+            $0.startDate >= nearbyStart && $0.startDate < nearbyEnd && ($0.startDate < today || $0.startDate >= todayEnd)
+        }
+
+        let context = PlanningContext(
+            currentDate: Date(),
+            todayEvents: todayEvents,
+            nearbyEvents: nearbyEvents,
+            todos: viewModel.todos.filter { !$0.isCompleted },
+            recalledMemories: hermes.recall(),
+            userProfile: nil
+        )
+
+        do {
+            let suggestion = try await orchestrator.handle(intent: .replanDay, context: context)
+            if suggestion.actions.isEmpty {
+                planningError = suggestion.warnings.first ?? "제안할 변경사항이 없습니다."
+            } else {
+                planningSuggestion = suggestion
+            }
+        } catch {
+            planningError = error.localizedDescription
+        }
     }
 
     // MARK: - Empty State
@@ -880,10 +981,16 @@ struct ChatView: View {
             }
         }
 
+        let capturedText = text
         Task {
-            let response = await aiService.sendMessage(text, attachments: currentAttachments, history: Array(aiService.chatMessages.dropLast()))
+            let response = await aiService.sendMessage(capturedText, attachments: currentAttachments, history: Array(aiService.chatMessages.dropLast()))
             aiService.chatMessages.append(contentsOf: response)
             viewModel.refreshEvents()
+            // Hermes: AI 응답에서 사용자 패턴 자동 추출
+            if let hms = hermesMemoryService {
+                let aiText = response.first(where: { $0.role == .assistant })?.content ?? ""
+                hms.extractAndRemember(from: capturedText, aiResponse: aiText)
+            }
         }
     }
 }
