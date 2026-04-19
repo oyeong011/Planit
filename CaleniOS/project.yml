@@ -1,0 +1,63 @@
+# xcodegen 입력 스펙 — CaleniOS iOS 앱 .xcodeproj 생성용.
+#
+# 사용법:
+#   brew install xcodegen        # 최초 1회 (없을 경우)
+#   cd CaleniOS && xcodegen generate
+#
+# 본 프로젝트는 SwiftPM executableTarget(CaleniOS)와 별개로,
+# iOS archive/.ipa 배포용 xcodeproj 를 동적 생성하기 위한 설정이다.
+# 생성된 `CaleniOS.xcodeproj`는 **.gitignore 대상**이며 로컬 빌드 산출물로만 취급한다.
+
+name: CaleniOS
+
+options:
+  deploymentTarget:
+    iOS: "17.0"
+  bundleIdPrefix: com.oy.planit
+  createIntermediateGroups: true
+  # 생성된 xcodeproj 내부 스킴을 공유해야 xcodebuild -scheme 으로 접근 가능
+  schemePathPrefix: ../
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    PRODUCT_BUNDLE_IDENTIFIER: com.oy.planit.ios
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.9"
+    CODE_SIGN_STYLE: Automatic
+    # 로컬 빌드 시 `DEVELOPMENT_TEAM` 환경변수로 Apple Developer Team ID 주입.
+    # 예: `export DEVELOPMENT_TEAM=ABCD1234EF` 후 xcodegen generate → xcodebuild archive
+    DEVELOPMENT_TEAM: $(DEVELOPMENT_TEAM)
+
+packages:
+  # SwiftPM 루트를 로컬 패키지로 참조 → CalenShared 라이브러리 의존성 제공.
+  Calen:
+    path: ../
+
+targets:
+  CaleniOS:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: Sources
+        excludes:
+          # Info.plist / entitlements는 build settings 로 별도 지정.
+          - Info.plist
+          - Resources/CaleniOS.entitlements
+    info:
+      path: Sources/Info.plist
+    entitlements:
+      path: Sources/Resources/CaleniOS.entitlements
+    dependencies:
+      - package: Calen
+        product: CalenShared
+    settings:
+      base:
+        ENABLE_HARDENED_RUNTIME: YES
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SUPPORTS_MACCATALYST: NO
+        CODE_SIGN_ENTITLEMENTS: Sources/Resources/CaleniOS.entitlements

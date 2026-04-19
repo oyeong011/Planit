@@ -8,3 +8,5 @@ google_credentials.json
 *credentials*.json
 .omx/
 Planit/Services/BundledCredentials.local.swift
+# xcodegen이 생성하는 일회성 iOS 프로젝트 — 빌드 시 재생성
+CaleniOS/CaleniOS.xcodeproj/
