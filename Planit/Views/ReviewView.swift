@@ -387,6 +387,13 @@ struct ReviewView: View {
 
         let doneEvents = events.filter { completedIDs.contains($0.id) }.count
         let doneTodos = allTodos.filter { $0.isCompleted }.count
+
+        // 진단 로그 — 7일 차트가 all-or-nothing으로 보이는 버그 추적
+        let fmt = DateFormatter(); fmt.dateFormat = "MM-dd(E)"; fmt.locale = Locale(identifier: "ko_KR")
+        PlanitLoggers.review.info(
+            "dayStats \(fmt.string(from: date), privacy: .public) events=\(events.count, privacy: .public) todos=\(localTodos.count, privacy: .public) reminders=\(reminderTodos.count, privacy: .public) doneEv=\(doneEvents, privacy: .public) doneTd=\(doneTodos, privacy: .public)"
+        )
+
         return (doneEvents + doneTodos, events.count + allTodos.count)
     }
 

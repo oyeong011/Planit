@@ -367,6 +367,37 @@ final class GoogleCalendarService {
         return true
     }
 
+    /// Google 이벤트의 extendedProperties.private.planit_category를 PATCH.
+    /// categoryID == nil이면 필드 삭제 (null로 설정).
+    /// 재설치해도 Google 서버에 카테고리 정보가 유지되어 자동 복원된다.
+    func patchEventCategory(eventID: String, calendarID: String = "primary", categoryID: UUID?) async throws -> Bool {
+        let token = try await auth.getValidToken()
+        let rawCalID = rawGoogleCalendarID(from: calendarID)
+        guard let encCal = Self.percentEncodedPathSegment(rawCalID),
+              let encEv = Self.percentEncodedPathSegment(eventID),
+              let url = URL(string: "\(baseURL)/calendars/\(encCal)/events/\(encEv)") else { return false }
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        // null로 보내야 Google이 필드를 실제로 제거함
+        let categoryValue: Any = categoryID?.uuidString ?? NSNull()
+        let body: [String: Any] = [
+            "extendedProperties": [
+                "private": ["planit_category": categoryValue]
+            ]
+        ]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let (_, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+        }
+        PlanitLoggers.sync.info(
+            "Google event category PATCH eventID=\(eventID, privacy: .public) categoryID=\(categoryID?.uuidString ?? "nil", privacy: .public) status=\(httpResponse.statusCode, privacy: .public)"
+        )
+        return (200...299).contains(httpResponse.statusCode)
+    }
+
     func updateEvent(eventID: String, calendarID: String = "primary", title: String?, startDate: Date, endDate: Date, isAllDay: Bool) async throws -> Bool {
         let token = try await auth.getValidToken()
         let rawCalID = rawGoogleCalendarID(from: calendarID)
@@ -480,7 +511,18 @@ final class GoogleCalendarService {
         let calName = calInfo?.name ?? "Google"
         let calID = calInfo.map { "google:\($0.id)" } ?? "google:primary"
 
-        return CalendarEvent(
+        // Planit 카테고리 ID가 Google extendedProperties.private.planit_category에 저장되어 있으면 읽기.
+        // 재설치 후에도 Google 이벤트에 붙어다녀서 카테고리가 자동 복원된다.
+        let categoryID: UUID? = {
+            if let ext = json["extendedProperties"] as? [String: Any],
+               let priv = ext["private"] as? [String: Any],
+               let raw = priv["planit_category"] as? String {
+                return UUID(uuidString: raw)
+            }
+            return nil
+        }()
+
+        var event = CalendarEvent(
             id: id,
             title: title,
             startDate: startDate,
@@ -490,6 +532,8 @@ final class GoogleCalendarService {
             calendarName: calName,
             calendarID: calID
         )
+        event.categoryID = categoryID
+        return event
     }
 
     nonisolated static func parseGoogleAllDayDate(_ raw: String?) -> Date? {

@@ -976,6 +976,8 @@ final class CalendarViewModel: ObservableObject {
                 self.isOffline = false
                 self.needsReauth = googleService.needsReauth
                 cacheEvents(deduped)
+                // Google extendedProperties에 저장된 카테고리 매핑을 로컬로 복원 (재설치 후 자동 복구)
+                restoreCategoryMappingsFromGoogle()
                 // Apple Calendar 이벤트 병합
                 mergeAppleCalendarEvents(for: month)
                 applyEventCategoryMappings()
@@ -2045,6 +2047,7 @@ final class CalendarViewModel: ObservableObject {
     }
 
     /// 이벤트에 카테고리 매핑 설정 (categoryID == nil이면 매핑 제거)
+    /// Google 이벤트는 extendedProperties로 서버에도 저장 — 재설치 후 자동 복원.
     func setEventCategory(eventID: String, eventTitle: String, categoryID: UUID?) {
         if let catID = categoryID {
             eventCategoryMappings[eventID] = EventCategoryMapping(
@@ -2057,6 +2060,39 @@ final class CalendarViewModel: ObservableObject {
         }
         saveEventCategoryMappings()
         applyEventCategoryMappings()
+
+        // Google 이벤트라면 서버에도 카테고리 태그 저장 (재설치 후 복원 가능하게)
+        if let ev = calendarEvents.first(where: { $0.id == eventID }),
+           ev.source == .google {
+            Task {
+                _ = try? await googleService.patchEventCategory(
+                    eventID: eventID,
+                    calendarID: ev.calendarID,
+                    categoryID: categoryID
+                )
+            }
+        }
+    }
+
+    /// Google fetch 후 extendedProperties로부터 카테고리 자동 복원.
+    /// 로컬에 매핑 없지만 Google 이벤트에 planit_category가 있으면 매핑 자동 생성.
+    fileprivate func restoreCategoryMappingsFromGoogle() {
+        let validCategoryIDs = Set(categories.map { $0.id })
+        var changed = false
+        for event in calendarEvents where event.source == .google {
+            guard let catID = event.categoryID,
+                  validCategoryIDs.contains(catID),
+                  eventCategoryMappings[event.id] == nil else { continue }
+            eventCategoryMappings[event.id] = EventCategoryMapping(
+                eventID: event.id,
+                eventTitle: event.title,
+                categoryID: catID
+            )
+            changed = true
+        }
+        if changed {
+            saveEventCategoryMappings()
+        }
     }
 
     /// 현재 로드된 이벤트에 매핑 적용 (존재하지 않는 카테고리는 무시)
