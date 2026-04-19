@@ -51,6 +51,9 @@ struct ReviewView: View {
     @ObservedObject var viewModel: CalendarViewModel
     let onCreateEvent: (String, Date, Date) -> Void
     let onDismiss: () -> Void
+    /// "오늘 재계획" CTA — focusQuota 같은 경고 suggestion에서 채팅 탭으로 이동 후 재계획 트리거.
+    /// MainView에서 leftPanelMode = .chat + 채팅의 runReplanDay() 호출로 연결.
+    var onRequestReplanDay: (() -> Void)? = nil
 
     @State private var isGenerating = false
     @State private var showPlanResult = false
@@ -1082,16 +1085,50 @@ struct ReviewView: View {
                             }
                             .buttonStyle(.plain)
                         } else {
-                            Button { declineSuggestion(at: index) } label: {
-                                Text(String(localized: "common.confirm", defaultValue: "확인"))
-                                    .font(.system(size: 10, weight: .semibold))
-                                    .foregroundStyle(.white)
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 3)
-                                    .background(RoundedRectangle(cornerRadius: 5).fill(colorFor(s.type)))
-                                    .contentShape(Rectangle())
+                            // 경고형 suggestion (예: focusQuota) — 재계획 CTA 제공
+                            HStack(spacing: 6) {
+                                if s.type == .focusQuota, let replan = onRequestReplanDay {
+                                    Button {
+                                        replan()
+                                        declineSuggestion(at: index)
+                                    } label: {
+                                        Text("재계획")
+                                            .font(.system(size: 10, weight: .semibold))
+                                            .foregroundStyle(.white)
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 3)
+                                            .background(RoundedRectangle(cornerRadius: 5).fill(colorFor(s.type)))
+                                            .contentShape(Rectangle())
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                                Button { declineSuggestion(at: index) } label: {
+                                    Text(s.type == .focusQuota && onRequestReplanDay != nil
+                                         ? "무시"
+                                         : String(localized: "common.confirm", defaultValue: "확인"))
+                                        .font(.system(size: 10, weight: s.type == .focusQuota ? .regular : .semibold))
+                                        .foregroundStyle(s.type == .focusQuota && onRequestReplanDay != nil ? Color.secondary : Color.white)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 3)
+                                        .background(
+                                            s.type == .focusQuota && onRequestReplanDay != nil
+                                                ? Color.clear
+                                                : colorFor(s.type)
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 5)
+                                                .stroke(
+                                                    s.type == .focusQuota && onRequestReplanDay != nil
+                                                        ? Color.secondary.opacity(0.3)
+                                                        : Color.clear,
+                                                    lineWidth: 1
+                                                )
+                                        )
+                                        .clipShape(RoundedRectangle(cornerRadius: 5))
+                                        .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
                             }
-                            .buttonStyle(.plain)
                         }
                     }
                     .padding(.top, 2)

@@ -238,6 +238,11 @@ struct MainCalendarView: View {
                     onDismiss: {
                         reviewService.dismissReview()
                         leftPanelMode = .chat
+                    },
+                    onRequestReplanDay: {
+                        // 리뷰탭에서 경고형 suggestion 누르면 채팅으로 전환.
+                        // 사용자가 채팅에서 "오늘 재계획" 버튼을 의식적으로 눌러 실행하게 함.
+                        leftPanelMode = .chat
                     }
                 )
 
