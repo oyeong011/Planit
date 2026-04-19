@@ -4,6 +4,9 @@ import SwiftUI
 
 /// iOS Hermes 기억 탭 — **read-only**. 추가/수정/삭제는 macOS에서만.
 /// macOS에서 CloudKit `HermesMemoryFactV1`으로 업로드한 기억을 최신순으로 표시.
+///
+/// UI 스타일은 디자인 토큰(`Color.calenBlue` + `calenCardShadow`) 기반으로 소폭 조정되어
+/// SettingsView / CalendarTabView 와 룩 앤 필이 일치함. 기능/데이터 경로는 변경 없음.
 struct MemoryView: View {
 
     // MARK: State
@@ -19,7 +22,6 @@ struct MemoryView: View {
     // MARK: Init
 
     init(fetcher: (any MemoryFetching)? = nil, fetchLimit: Int = 50) {
-        // 기본값은 실제 iOS fetcher. 프리뷰/테스트에서는 대체 구현 주입 가능.
         self.fetcher = fetcher ?? iOSMemoryFetcher()
         self.fetchLimit = fetchLimit
     }
@@ -27,21 +29,22 @@ struct MemoryView: View {
     // MARK: Body
 
     var body: some View {
-        NavigationStack {
-            content
-                .navigationTitle("Hermes 기억")
-                .refreshable { await load() }
-                .task {
-                    guard !didLoadOnce else { return }
-                    didLoadOnce = true
-                    await load()
-                }
-        }
+        content
+            .navigationTitle("Hermes 기억")
+            .navigationBarTitleDisplayMode(.inline)
+            .refreshable { await load() }
+            .task {
+                guard !didLoadOnce else { return }
+                didLoadOnce = true
+                await load()
+            }
     }
 
     @ViewBuilder
     private var content: some View {
-        List {
+        ZStack {
+            Color(.systemGroupedBackground).ignoresSafeArea()
+
             if isLoading && memories.isEmpty {
                 loadingState
             } else if let errorMessage, memories.isEmpty {
@@ -49,8 +52,14 @@ struct MemoryView: View {
             } else if memories.isEmpty {
                 emptyState
             } else {
-                ForEach(memories) { fact in
-                    MemoryRowView(fact: fact)
+                ScrollView {
+                    LazyVStack(spacing: 10) {
+                        ForEach(memories) { fact in
+                            MemoryRowView(fact: fact)
+                                .padding(.horizontal, 16)
+                        }
+                    }
+                    .padding(.vertical, 12)
                 }
             }
         }
@@ -59,54 +68,54 @@ struct MemoryView: View {
     // MARK: - States
 
     private var loadingState: some View {
-        HStack {
-            Spacer()
+        VStack(spacing: 12) {
             ProgressView()
-                .padding(.vertical, 40)
-            Spacer()
+                .scaleEffect(1.1)
+            Text("불러오는 중…")
+                .font(.system(size: 13))
+                .foregroundStyle(.secondary)
         }
-        .listRowBackground(Color.clear)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var emptyState: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 14) {
             Image(systemName: "brain.head.profile")
-                .font(.system(size: 48))
-                .foregroundStyle(.tertiary)
+                .font(.system(size: 52))
+                .foregroundStyle(Color.calenBlue.opacity(0.4))
             Text("Mac에서 학습된 기억이 여기에 표시됩니다")
-                .font(.headline)
-                .foregroundStyle(.secondary)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(.primary)
                 .multilineTextAlignment(.center)
             Text("iCloud 동기화가 완료되면 최신순으로 나타납니다.")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
+                .font(.system(size: 13))
+                .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 40)
-        .listRowBackground(Color.clear)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(24)
     }
 
     private func errorState(_ message: String) -> some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 12) {
             Image(systemName: "exclamationmark.icloud")
                 .font(.system(size: 44))
                 .foregroundStyle(.orange)
             Text("기억을 불러오지 못했습니다")
-                .font(.headline)
+                .font(.system(size: 16, weight: .semibold))
             Text(message)
-                .font(.caption)
+                .font(.system(size: 13))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             Button("다시 시도") {
                 Task { await load() }
             }
             .buttonStyle(.bordered)
+            .tint(Color.calenBlue)
             .padding(.top, 4)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 32)
-        .listRowBackground(Color.clear)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(24)
     }
 
     // MARK: - Load
@@ -131,35 +140,50 @@ struct MemoryRowView: View {
     let fact: MemoryFact
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
                 Text(fact.category.displayName)
-                    .font(.caption2.weight(.semibold))
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(Color.purple.opacity(0.15))
-                    .foregroundStyle(.purple)
-                    .cornerRadius(4)
+                    .font(.system(size: 11, weight: .semibold))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(
+                        Capsule().fill(Color.cardPersonal.opacity(0.15))
+                    )
+                    .foregroundStyle(Color.cardPersonal)
+
                 Spacer()
+
                 Text(fact.updatedAt.formatted(.relative(presentation: .named)))
-                    .font(.caption2)
+                    .font(.system(size: 11))
                     .foregroundStyle(.tertiary)
+
                 Text("\(Int(fact.confidence * 100))%")
-                    .font(.caption.monospaced())
+                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
                     .foregroundStyle(confidenceColor)
             }
+
             Text(fact.key)
-                .font(.system(size: 13, weight: .medium, design: .monospaced))
+                .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                .foregroundStyle(Color.calenPrimary)
+
             Text(fact.value)
-                .font(.caption)
+                .font(.system(size: 13))
                 .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.vertical, 4)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            Color(.systemBackground),
+            in: RoundedRectangle(cornerRadius: CalenRadius.medium, style: .continuous)
+        )
+        .calenCardShadow()
     }
 
     private var confidenceColor: Color {
-        if fact.confidence >= 0.75 { return .green }
-        if fact.confidence >= 0.5 { return .orange }
+        if fact.confidence >= 0.75 { return Color.cardExercise }
+        if fact.confidence >= 0.5  { return Color.cardMeal }
         return .secondary
     }
 }
