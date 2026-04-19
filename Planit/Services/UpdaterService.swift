@@ -12,7 +12,7 @@ final class UpdaterService: NSObject, ObservableObject {
     @Published private(set) var updateAvailable: Bool = false
     @Published private(set) var latestVersion: String?
 
-    private var controller: SPUStandardUpdaterController!
+    private var controller: SPUStandardUpdaterController?
     private var pollTimer: Timer?
     private var isPollingAppcast = false
     /// 같은 버전에 대해 알림이 매 체크마다 재발송되지 않도록 유지.
@@ -22,8 +22,19 @@ final class UpdaterService: NSObject, ObservableObject {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
     }
 
+    /// 개발 빌드 여부 — run-dev.sh가 만드는 `/tmp/Calen.app`로 실행되면 dev.
+    /// macOS에서 `/tmp`는 `/private/tmp`의 symlink이므로 Bundle.main.bundlePath는
+    /// 실제 경로인 `/private/tmp/...`로 반환된다. 두 경로 모두 허용한다.
+    /// 릴리즈 설치본(`/Applications/Calen.app`)에서는 false.
+    static let isDevelopmentBuild: Bool = {
+        let path = Bundle.main.bundlePath
+        return path.hasPrefix("/tmp/") || path.hasPrefix("/private/tmp/")
+    }()
+
     override init() {
         super.init()
+        // 개발 빌드에서는 Sparkle 컨트롤러를 아예 구성하지 않음 — appcast 폴링도, 다이얼로그도 없음.
+        guard !Self.isDevelopmentBuild else { return }
         controller = SPUStandardUpdaterController(
             startingUpdater: true,
             updaterDelegate: self,
@@ -33,6 +44,7 @@ final class UpdaterService: NSObject, ObservableObject {
 
     /// 사용자 수동 체크 — Sparkle 다이얼로그 표시
     func checkForUpdates() {
+        guard !Self.isDevelopmentBuild, let controller else { return }
         // LSUIElement(.accessory) 앱은 기본적으로 비활성 상태이므로
         // Sparkle 윈도우가 생성돼도 앞에 나타나지 않는다. 먼저 앱을 활성화.
         NSApp.activate(ignoringOtherApps: true)
@@ -41,6 +53,7 @@ final class UpdaterService: NSObject, ObservableObject {
 
     /// 백그라운드 체크 트리거 (사용자 UI 없이)
     func checkForUpdatesInBackground() {
+        guard !Self.isDevelopmentBuild, let controller else { return }
         controller.updater.checkForUpdatesInBackground()
     }
 
@@ -49,6 +62,7 @@ final class UpdaterService: NSObject, ObservableObject {
     /// `didFindValidUpdate` delegate를 호출하지 않는 케이스가 있어 배너가 안 뜬다.
     /// 이 경로는 Sparkle에 의존하지 않고 직접 XML을 파싱해 Publisher를 갱신한다.
     func pollAppcastForBanner() async {
+        guard !Self.isDevelopmentBuild else { return }
         guard !isPollingAppcast else { return }
         // Periodic polling and popover onAppear can overlap; keep only one appcast request active.
         isPollingAppcast = true
@@ -96,6 +110,7 @@ final class UpdaterService: NSObject, ObservableObject {
     /// 서버 기반 push가 없는 환경에서 "릴리즈 직후 체감 즉시 알림"에 가깝도록
     /// 짧은 간격으로 당긴다. 목표 URL은 GitHub Pages CDN이라 부하는 미미함.
     func startPeriodicAppcastPolling(interval: TimeInterval = 300) {
+        guard !Self.isDevelopmentBuild else { return }
         stopPeriodicAppcastPolling()
         // 시작 즉시 한 번 체크
         Task { await self.pollAppcastForBanner() }

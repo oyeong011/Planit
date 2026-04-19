@@ -36,6 +36,7 @@ struct SettingsView: View {
     @ObservedObject var aiService: AIService
     @ObservedObject var viewModel: CalendarViewModel
     @ObservedObject var userContextService: UserContextService
+    @ObservedObject var hermesMemoryService: HermesMemoryService
     var onDismiss: () -> Void
 
     @State private var selectedSection: SettingsSection = .profile
@@ -44,12 +45,15 @@ struct SettingsView: View {
     @ObservedObject private var calendarThemeService = CalendarThemeService.shared
 
     init(goalService: GoalService, authManager: GoogleAuthManager, aiService: AIService,
-         viewModel: CalendarViewModel, userContextService: UserContextService, onDismiss: @escaping () -> Void) {
+         viewModel: CalendarViewModel, userContextService: UserContextService,
+         hermesMemoryService: HermesMemoryService,
+         onDismiss: @escaping () -> Void) {
         self.goalService = goalService
         self.authManager = authManager
         self.aiService = aiService
         self.viewModel = viewModel
         self.userContextService = userContextService
+        self.hermesMemoryService = hermesMemoryService
         self.onDismiss = onDismiss
         self._profile = State(initialValue: goalService.profile)
     }
@@ -771,8 +775,130 @@ struct SettingsView: View {
                         desc: String(localized: "settings.context.how.style.desc"))
                 }
             }
+
+            // Hermes 장기 기억 카드
+            hermesMemoryCard
         }
         .padding(24)
+    }
+
+    // MARK: - Hermes 기억 카드
+
+    private var hermesMemoryCard: some View {
+        settingsCard("🧠 Hermes 장기 기억") {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
+                    Image(systemName: "sparkles")
+                        .foregroundStyle(.purple)
+                        .font(.system(size: 13))
+                    Text("대화와 행동에서 학습한 사용자 패턴 (\(hermesMemoryService.facts.count)개)")
+                        .font(.system(size: 12, weight: .medium))
+                    Spacer()
+                    if !hermesMemoryService.facts.isEmpty {
+                        Button(role: .destructive) {
+                            hermesMemoryService.clearAll()
+                        } label: {
+                            Label("전체 삭제", systemImage: "trash")
+                                .font(.system(size: 11))
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    }
+                }
+
+                if hermesMemoryService.facts.isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("아직 기억된 패턴이 없습니다.")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                        Text("채팅에서 '아침에 집중이 잘 돼요', '저녁엔 못해요', '30분 단위 블록 선호' 같은 문장을 말하면 자동으로 학습합니다.")
+                            .font(.system(size: 10))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(.vertical, 6)
+                } else {
+                    Divider()
+                    ForEach(hermesMemoryService.facts) { fact in
+                        hermesMemoryRow(fact)
+                    }
+                }
+
+                if !hermesMemoryService.decisions.isEmpty {
+                    Divider()
+                    Text("최근 계획 결정")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                    ForEach(hermesMemoryService.decisions.prefix(5)) { decision in
+                        HStack(spacing: 8) {
+                            Text(decision.intent)
+                                .font(.system(size: 10, design: .monospaced))
+                                .foregroundStyle(.blue)
+                            Text(decision.summary)
+                                .font(.system(size: 11))
+                                .lineLimit(1)
+                            Spacer()
+                            Text(decision.outcome.rawValue)
+                                .font(.system(size: 10))
+                                .foregroundStyle(decision.outcome == .accepted ? .green : .secondary)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func hermesMemoryRow(_ fact: MemoryFact) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Text(fact.category.displayName)
+                .font(.system(size: 9, weight: .semibold))
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(RoundedRectangle(cornerRadius: 4).fill(Color.purple.opacity(0.12)))
+                .foregroundStyle(.purple)
+                .frame(minWidth: 52, alignment: .leading)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(fact.key)
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                Text(fact.value)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("\(Int(fact.confidence * 100))%")
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .foregroundStyle(confidenceColor(fact.confidence))
+                Text(relativeDate(fact.updatedAt))
+                    .font(.system(size: 9))
+                    .foregroundStyle(.tertiary)
+            }
+
+            Button {
+                hermesMemoryService.forget(id: fact.id)
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundStyle(.tertiary)
+                    .font(.system(size: 12))
+            }
+            .buttonStyle(.plain)
+            .help("이 기억 삭제")
+        }
+        .padding(.vertical, 4)
+    }
+
+    private func confidenceColor(_ c: Double) -> Color {
+        if c >= 0.75 { return .green }
+        if c >= 0.5 { return .orange }
+        return .secondary
+    }
+
+    private func relativeDate(_ date: Date) -> String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter.localizedString(for: date, relativeTo: Date())
     }
 
     /// 현재 로케일에 맞는 시험/자격증 목록 반환
