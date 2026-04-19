@@ -116,6 +116,8 @@ struct PlanningContext {
     // categorizeUntagged intent 전용
     let untaggedEvents: [CalendarEvent]
     let availableCategories: [TodoCategory]
+    // fillFreeSlots intent 전용 — 오늘 남은 빈 시간대
+    let freeSlots: [(start: Date, end: Date)]
 
     init(currentDate: Date,
          todayEvents: [CalendarEvent] = [],
@@ -124,7 +126,8 @@ struct PlanningContext {
          recalledMemories: [MemoryFact] = [],
          userProfile: UserProfile? = nil,
          untaggedEvents: [CalendarEvent] = [],
-         availableCategories: [TodoCategory] = []) {
+         availableCategories: [TodoCategory] = [],
+         freeSlots: [(start: Date, end: Date)] = []) {
         self.currentDate = currentDate
         self.todayEvents = todayEvents
         self.nearbyEvents = nearbyEvents
@@ -133,6 +136,7 @@ struct PlanningContext {
         self.userProfile = userProfile
         self.untaggedEvents = untaggedEvents
         self.availableCategories = availableCategories
+        self.freeSlots = freeSlots
     }
 }
 

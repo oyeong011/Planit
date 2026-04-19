@@ -380,6 +380,12 @@ final class CalendarViewModel: ObservableObject {
 
     nonisolated static func appleMirrorFingerprint(_ event: CalendarEvent) -> String {
         let title = SuppressKey.normalizedTitle(event.title)
+        if event.isAllDay {
+            // all-day는 시작 '날짜'만 비교 (minute/duration은 Apple↔Google 다름)
+            let day = Calendar.current.startOfDay(for: event.startDate)
+            let dayKey = Int(day.timeIntervalSince1970)
+            return "allday|\(title)|\(dayKey)"
+        }
         let minute = startMinute(event.startDate)
         return "\(title)|\(minute)|\(durationMinutes(event))|\(event.isAllDay)"
     }
@@ -533,12 +539,21 @@ final class CalendarViewModel: ObservableObject {
     /// EventKit에서 이벤트를 가져와 로컬 Apple Calendar 이벤트 목록 반환
     func fetchLocalCalendarEvents(for month: Date) -> [CalendarEvent] {
         guard let monthInterval = calendar.dateInterval(of: .month, for: month) else { return [] }
+        // all-day 이벤트 누락 방지 — 월 경계 ±1일로 확장해서 fetch.
+        // EKEventStore.predicateForEvents는 주어진 범위에 '걸친' 이벤트를 반환하지만,
+        // timezone 경계 이슈로 월 첫날/마지막날 all-day를 놓치는 경우가 보고됨.
+        let expandedStart = calendar.date(byAdding: .day, value: -1, to: monthInterval.start) ?? monthInterval.start
+        let expandedEnd = calendar.date(byAdding: .day, value: 1, to: monthInterval.end) ?? monthInterval.end
         let predicate = eventStore.predicateForEvents(
-            withStart: monthInterval.start,
-            end: monthInterval.end,
+            withStart: expandedStart,
+            end: expandedEnd,
             calendars: nil
         )
         let ekEvents = eventStore.events(matching: predicate)
+        let allDayCount = ekEvents.filter { $0.isAllDay }.count
+        PlanitLoggers.sync.info(
+            "EventKit fetch month=\(Self.logDate(month), privacy: .public) total=\(ekEvents.count, privacy: .public) allDay=\(allDayCount, privacy: .public)"
+        )
         return ekEvents.map { event in
             let cgColor = event.calendar.cgColor ?? CGColor(red: 0.4, green: 0.6, blue: 1.0, alpha: 1.0)
             return CalendarEvent(

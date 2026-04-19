@@ -787,12 +787,44 @@ struct ReviewView: View {
         "habit.graph.thisweek",
     ]
 
+    /// 모든 습관의 이번 주 전체 평균 달성률
+    private var habitsWeeklyAverage: Double {
+        guard !habitService.habits.isEmpty else { return 0 }
+        let rates = habitService.habits.map { habit in
+            let rates = weeklyRates(for: habit)
+            return rates.last ?? 0  // 이번 주
+        }
+        return rates.reduce(0, +) / Double(rates.count)
+    }
+
     private var habitGraphSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // 헤더
-            Label(String(localized: "habit.graph.title"), systemImage: "chart.bar.fill")
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(.secondary)
+            // 헤더 + 주간 요약
+            HStack {
+                Label(String(localized: "habit.graph.title"), systemImage: "chart.bar.fill")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                Spacer()
+                let weekly = habitsWeeklyAverage
+                if weekly > 0 {
+                    Text("이번 주 평균 \(Int(weekly * 100))%")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(weekly >= 0.8 ? .green : weekly >= 0.5 ? .orange : .secondary)
+                }
+            }
+
+            // 첫 주 격려 메시지 — 전체 평균 0%일 때
+            if habitsWeeklyAverage == 0 {
+                HStack(spacing: 6) {
+                    Image(systemName: "sparkles")
+                        .foregroundStyle(.yellow)
+                        .font(.system(size: 10))
+                    Text("오늘 첫 체크인으로 시작해보세요 🌱")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.vertical, 2)
+            }
 
             VStack(spacing: 10) {
                 ForEach(habitService.habits) { habit in
@@ -1295,13 +1327,39 @@ struct ReviewView: View {
                 ForEach(goalMemoryService.goals) { goal in
                     goalCard(goal, events: events, completedIDs: completedIDs)
                 }
-                // 목표 없을 때 힌트
+                // 목표 없을 때 — 예시 제시 + 직접 추가 버튼
                 if goalMemoryService.goals.isEmpty {
-                    Text(String(localized: "goal.empty.hint"))
-                        .font(.system(size: 11))
-                        .foregroundStyle(.tertiary)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.vertical, 8)
+                    VStack(spacing: 10) {
+                        Image(systemName: "flag.circle")
+                            .font(.system(size: 28))
+                            .foregroundStyle(.tertiary)
+                        Text(String(localized: "goal.empty.hint"))
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                        VStack(spacing: 4) {
+                            Text("예시")
+                                .font(.system(size: 9, weight: .semibold))
+                                .foregroundStyle(.tertiary)
+                            ForEach(["\"정보처리기사 취득하기\"", "\"올해 10kg 감량\"", "\"3개월 안에 토익 900점\""], id: \.self) { ex in
+                                Text(ex)
+                                    .font(.system(size: 10, design: .monospaced))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        Button {
+                            editTitle = ""; editTargets = ""; editTimeline = .thisYear
+                            sheetRoute = .addGoal
+                        } label: {
+                            Label("목표 직접 추가", systemImage: "plus.circle.fill")
+                                .font(.system(size: 11, weight: .medium))
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.indigo)
+                        .controlSize(.small)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
                 }
             }
         }

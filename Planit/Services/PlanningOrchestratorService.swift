@@ -43,6 +43,10 @@ final class PlanningOrchestratorService: ObservableObject {
         if intent == .categorizeUntagged {
             return buildCategorizePrompt(context: context)
         }
+        // fillFreeSlots — 빈 슬롯 + Hermes 기억 + 미완료 투두 기반
+        if intent == .fillFreeSlots {
+            return buildFillFreeSlotsPrompt(context: context, memories: memories)
+        }
         var sections: [String] = []
         sections.append("당신은 Calen 캘린더 앱의 Planning 에이전트입니다.")
         sections.append("사용자가 '\(intent.displayName)'을 요청했습니다.")
@@ -257,6 +261,75 @@ final class PlanningOrchestratorService: ObservableObject {
             actions: validActions,
             warnings: warnings
         )
+    }
+
+    // MARK: - Fill Free Slots Prompt
+
+    /// fillFreeSlots 전용 prompt — 빈 슬롯에 어떤 활동을 제안할지
+    /// Hermes 기억(선호 시간대, 블록 길이)과 미완료 투두를 반영
+    private func buildFillFreeSlotsPrompt(context: PlanningContext, memories: [MemoryFact]) -> String {
+        var sections: [String] = []
+        sections.append("당신은 Calen의 빈 시간 추천 에이전트입니다.")
+        sections.append("오늘 남은 빈 시간대에 무엇을 넣으면 좋을지 제안해주세요.")
+        sections.append("오늘 날짜: \(ISO8601DateFormatter().string(from: context.currentDate))")
+
+        if !memories.isEmpty {
+            let memLines = memories.prefix(8).map { m in
+                "- [\(m.category.displayName)] \(Self.sanitize(m.key, maxLength: 60)): \(Self.sanitize(m.value, maxLength: 120))"
+            }.joined(separator: "\n")
+            sections.append("## Hermes 기억 (선호 반영용)\n\(memLines)")
+        }
+
+        if !context.freeSlots.isEmpty {
+            let slotLines = context.freeSlots.prefix(10).map { s in
+                let dur = Int(s.end.timeIntervalSince(s.start) / 60)
+                return "- \(Self.iso8601Basic.string(from: s.start)) ~ \(Self.iso8601Basic.string(from: s.end)) (\(dur)분)"
+            }.joined(separator: "\n")
+            sections.append("## 오늘 남은 빈 시간\n\(slotLines)")
+        }
+
+        if !context.todos.isEmpty {
+            let todoLines = context.todos.prefix(15).filter { !$0.isCompleted }.map {
+                "- [\($0.id.uuidString)] \(Self.sanitize($0.title, maxLength: 100))"
+            }.joined(separator: "\n")
+            if !todoLines.isEmpty {
+                sections.append("## 미완료 할 일 (이동/배치 대상)\n\(todoLines)")
+            }
+        }
+
+        sections.append("""
+        ## 응답 형식 (엄격한 JSON만)
+        {
+          "summary": "N개 빈 시간에 활동 제안",
+          "rationale": "사용자 선호 패턴 반영 이유",
+          "actions": [
+            {
+              "kind": "create",
+              "title": "짧고 실행 가능한 제목 (예: '운동 30분', '영어 공부')",
+              "startDate": "ISO8601 (빈 시간 내 한 시각)",
+              "endDate": "ISO8601 (startDate + 실제 지속)",
+              "reason": "이 시간대에 이 활동을 제안한 이유"
+            },
+            {
+              "kind": "moveTodo",
+              "title": "기존 todo 제목",
+              "todoID": "UUID",
+              "startDate": "ISO8601 (할일을 언제로 옮길지)",
+              "reason": "왜 이 빈 시간에 배치"
+            }
+          ],
+          "warnings": []
+        }
+
+        ## 제약
+        - actions는 1~4개만. 빈 시간을 다 채울 필요 없음 — 여유 중요.
+        - create/moveTodo만 사용 (delete/move는 사용 금지).
+        - Hermes 기억에 '오전 집중 선호'가 있으면 오전 슬롯 우선.
+        - '저녁 작업 회피'가 있으면 저녁 슬롯 건너뛰기.
+        - 짧은 블록(30분 이하)에는 가벼운 활동, 긴 블록에는 집중 작업.
+        """)
+
+        return sections.joined(separator: "\n\n")
     }
 
     // MARK: - Categorize Prompt
