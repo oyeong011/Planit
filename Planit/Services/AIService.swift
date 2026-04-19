@@ -9,10 +9,21 @@ enum AIProvider: String, CaseIterable, Codable {
     case claude = "Claude Code"
     case codex = "Codex"
 
+    /// SF Symbol — 브랜드 특성 반영
+    /// Claude: sparkle (Anthropic의 별 로고 연상)
+    /// Codex: atom.fill (OpenAI의 순환 로고 연상)
     var icon: String {
         switch self {
-        case .claude: return "c.circle.fill"
-        case .codex: return "o.circle.fill"
+        case .claude: return "sparkle"
+        case .codex:  return "atom"
+        }
+    }
+
+    /// 브랜드 색상 — Anthropic 오렌지 #D97757 / OpenAI 민트그린 #10A37F
+    var brandColorHex: String {
+        switch self {
+        case .claude: return "#D97757"
+        case .codex:  return "#10A37F"
         }
     }
 

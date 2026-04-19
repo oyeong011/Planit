@@ -43,25 +43,32 @@ struct ChatView: View {
                 Text("AI")
                     .font(.system(size: 13, weight: .bold))
 
-                // Provider 세그먼트 칩
+                // Provider 세그먼트 칩 — 각 provider의 브랜드 색 반영
                 HStack(spacing: 2) {
                     ForEach(AIProvider.allCases, id: \.self) { p in
                         let isSelected = aiService.provider == p
+                        let brand = Color(hex: p.brandColorHex) ?? .secondary
                         Button {
                             aiService.provider = p
                             aiService.saveSettings()
                         } label: {
                             HStack(spacing: 4) {
-                                Image(systemName: p.icon).font(.system(size: 10))
+                                Image(systemName: p.icon)
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundStyle(brand)
                                 Text(p.rawValue.components(separatedBy: " ").first ?? p.rawValue)
                                     .font(.system(size: 11, weight: isSelected ? .semibold : .regular))
                             }
                             .padding(.horizontal, 8).padding(.vertical, 4)
                             .background(
                                 RoundedRectangle(cornerRadius: 6)
-                                    .fill(isSelected ? themeService.current.accent.opacity(0.18) : Color.clear)
+                                    .fill(isSelected ? brand.opacity(0.18) : Color.clear)
                             )
-                            .foregroundStyle(isSelected ? themeService.current.accent : Color.secondary)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .strokeBorder(isSelected ? brand.opacity(0.4) : Color.clear, lineWidth: 1)
+                            )
+                            .foregroundStyle(isSelected ? brand : Color.secondary)
                         }
                         .buttonStyle(.plain)
                     }
