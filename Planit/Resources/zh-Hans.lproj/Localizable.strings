@@ -493,3 +493,23 @@
 "habit.graph.2weeksago" = "2周前";
 "habit.graph.3weeksago" = "3周前";
 "habit.graph.4weeksago" = "4周前";
+
+// Auto-added missing keys (v0.3.3 localization fix)
+"chat.action.unknown" = "(Unknown event)";
+"settings.ai.tone.card" = "Response Tone";
+"settings.ai.tone.coaching.desc" = "Explains goals and energy flow together.";
+"settings.ai.tone.coaching" = "Coaching";
+"settings.ai.tone.concise.desc" = "Short responses focused on next actions.";
+"settings.ai.tone.concise" = "Concise";
+"settings.ai.tone.direct.desc" = "States priorities and action plans directly.";
+"settings.ai.tone.direct" = "Direct";
+"settings.appearance.subtitle" = "Configure Calen display style and calendar colors";
+"settings.apple.diagnostics.accessibility" = "Apple Calendar diagnostics. Duplicate filter: %d external IDs, %d fingerprints, %d suppressed. Last updated %@.";
+"settings.apple.diagnostics.card" = "Apple Calendar Diagnostics";
+"settings.apple.diagnostics.help" = "Number of duplicate events automatically removed when the same event exists in both Google and Apple calendars";
+"settings.apple.diagnostics.never" = "Never";
+"settings.apple.diagnostics.summary" = "Duplicate filter: ext %d / fingerprint %d / suppress %d · Last updated %@";
+"settings.focus.windows.card" = "Focus-Time-Based Scheduling";
+"settings.focus.windows.desc" = "Prioritizes morning/evening preferences when AI picks free time slots.";
+"settings.focus.windows.title" = "Use energy-type focus windows";
+"settings.section.appearance" = "Appearance";

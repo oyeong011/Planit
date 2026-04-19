@@ -246,24 +246,76 @@ jobs:
           export PUB_DATE=$(date -u +"%a, %d %b %Y %H:%M:%S +0000")
           export DOWNLOAD_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/v${VERSION}/Calen-${VERSION}-universal.zip"
 
-          # 이전 태그부터 현재 태그까지의 커밋을 Sparkle 릴리즈 노트에 포함
+          # 이전 태그부터 현재 태그까지의 커밋을 prefix별로 카테고리화한 HTML 릴리즈 노트 생성
           PREV_TAG=$(git describe --tags --abbrev=0 "v${VERSION}^" 2>/dev/null || echo "")
           if [ -n "$PREV_TAG" ]; then
-            CHANGELOG=$(git log --pretty=format:"- %s" "${PREV_TAG}..v${VERSION}" \
-              | grep -vE '^- (chore|release|Merge|docs\(site\)):' \
-              | head -15)
+            RAW_LOG=$(git log --pretty=format:"%s" "${PREV_TAG}..v${VERSION}" \
+              | grep -vE '^(chore|release|Merge|docs\(site\)|docs:)' || true)
           else
-            CHANGELOG="- Initial release"
+            RAW_LOG=""
           fi
 
-          export NOTES="## Calen v${VERSION}
+          # HTML 빌드 — 다른 앱들(1Password, Raycast)처럼 카테고리별로 정리
+          NOTES_HTML=$(python3 <<PYEOF
+          import os, re, html
+          raw = """${RAW_LOG}"""
+          lines = [l.strip() for l in raw.split("\n") if l.strip()]
 
-          ### 이번 버전 변경사항
-          ${CHANGELOG}
+          categories = {
+              "✨ 새 기능": [],
+              "🐛 수정": [],
+              "⚡ 성능/개선": [],
+              "🔧 기타": [],
+          }
+          mapping = {
+              r"^feat(\([^)]*\))?[:!]": "✨ 새 기능",
+              r"^fix(\([^)]*\))?[:!]": "🐛 수정",
+              r"^perf(\([^)]*\))?[:!]": "⚡ 성능/개선",
+              r"^refactor(\([^)]*\))?[:!]": "⚡ 성능/개선",
+              r"^style(\([^)]*\))?[:!]": "⚡ 성능/개선",
+          }
 
-          ### 업그레이드
-          Sparkle이 자동으로 설치합니다. '지금 업데이트' 버튼을 누르면 바로 적용됩니다.
-          "
+          for line in lines:
+              # Merge 커밋 무시
+              if line.startswith("Merge "):
+                  continue
+              bucket = None
+              cleaned = line
+              for pat, cat in mapping.items():
+                  if re.match(pat, line):
+                      bucket = cat
+                      cleaned = re.sub(pat, "", line).strip()
+                      break
+              if bucket is None:
+                  bucket = "🔧 기타"
+              # 첫 글자 대문자화/마침표 제거 등 약간의 청소
+              cleaned = cleaned.lstrip(":").strip()
+              if cleaned:
+                  categories[bucket].append(cleaned)
+
+          parts = [
+              f'<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v{os.environ["VERSION"]}</h2>'
+          ]
+          any_items = False
+          for cat, items in categories.items():
+              if not items:
+                  continue
+              any_items = True
+              parts.append(f'<h3 style="margin:14px 0 6px 0;font-size:14px;color:#444;">{cat}</h3>')
+              parts.append('<ul style="margin:0 0 10px 18px;padding:0;line-height:1.6;">')
+              for it in items:
+                  parts.append(f"<li>{html.escape(it)}</li>")
+              parts.append("</ul>")
+          if not any_items:
+              parts.append('<p style="color:#666;">이번 빌드의 세부 변경사항은 GitHub 릴리즈 페이지를 확인하세요.</p>')
+          parts.append(
+              '<hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/>'
+              '<p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>'
+          )
+          print("".join(parts))
+          PYEOF
+          )
+          export NOTES="$NOTES_HTML"
 
           python3 - <<PYEOF
           import os, re

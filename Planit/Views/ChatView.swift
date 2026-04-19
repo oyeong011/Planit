@@ -13,6 +13,7 @@ struct ChatView: View {
     @State private var planningSuggestion: PlanningSuggestion? = nil
     @State private var isPlanning: Bool = false
     @State private var planningError: String? = nil
+    @State private var planningProgressText: String? = nil
     // aiService.chatMessages 사용 — 탭 전환 후에도 유지
     @State private var inputText: String = ""
     @State private var attachments: [ChatAttachment] = []
@@ -556,10 +557,15 @@ struct ChatView: View {
 
             Spacer()
 
-            if let err = planningError {
+            if let progress = planningProgressText {
+                Text(progress)
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundStyle(.teal)
+                    .lineLimit(1)
+            } else if let err = planningError {
                 Text(err)
                     .font(.system(size: 10))
-                    .foregroundStyle(.red)
+                    .foregroundStyle(err.hasPrefix("완료") ? .green : .red)
                     .lineLimit(1)
             }
         }
@@ -589,34 +595,72 @@ struct ChatView: View {
         guard let hermes = hermesMemoryService else { return }
         planningError = nil
         isPlanning = true
-        defer { isPlanning = false }
+        defer {
+            isPlanning = false
+            planningProgressText = nil
+        }
 
         let orchestrator = PlanningOrchestratorService(ai: aiService, hermes: hermes)
-        // 로컬 매핑 + Google extendedProperties 모두 없는 이벤트만 수집 (최대 30개)
-        let untagged = viewModel.calendarEvents
-            .filter { ev in
-                ev.source == .google
-                    && ev.categoryID == nil
-                    && viewModel.eventCategoryMappings[ev.id] == nil
-            }
-            .prefix(30)
-
-        let context = PlanningContext(
-            currentDate: Date(),
-            untaggedEvents: Array(untagged),
-            availableCategories: viewModel.categories
-        )
-
-        do {
-            let suggestion = try await orchestrator.handle(intent: .categorizeUntagged, context: context)
-            if suggestion.actions.isEmpty {
-                planningError = suggestion.warnings.first ?? "분류 제안이 없습니다."
-            } else {
-                planningSuggestion = suggestion
-            }
-        } catch {
-            planningError = error.localizedDescription
+        let allUntagged = viewModel.calendarEvents.filter { ev in
+            ev.source == .google
+                && ev.categoryID == nil
+                && viewModel.eventCategoryMappings[ev.id] == nil
         }
+
+        // 30개 이하면 기존 preview 플로우
+        if allUntagged.count <= 30 {
+            let context = PlanningContext(
+                currentDate: Date(),
+                untaggedEvents: Array(allUntagged),
+                availableCategories: viewModel.categories
+            )
+            do {
+                let suggestion = try await orchestrator.handle(intent: .categorizeUntagged, context: context)
+                if suggestion.actions.isEmpty {
+                    planningError = suggestion.warnings.first ?? "분류 제안이 없습니다."
+                } else {
+                    planningSuggestion = suggestion
+                }
+            } catch {
+                planningError = error.localizedDescription
+            }
+            return
+        }
+
+        // 30개 초과 — 배치로 자동 분할. 각 배치는 Preview 없이 바로 적용.
+        // 사용자는 진행률만 보면서 완료 대기. 비확실한 건 AI가 warning에 남김.
+        var totalApplied = 0
+        var totalFailed = 0
+        var allWarnings: [String] = []
+        let totalCount = allUntagged.count
+        let chunks = stride(from: 0, to: allUntagged.count, by: 30).map {
+            Array(allUntagged[$0..<min($0 + 30, allUntagged.count)])
+        }
+
+        for (idx, chunk) in chunks.enumerated() {
+            planningProgressText = "\(min((idx+1)*30, totalCount))/\(totalCount) 분류 중..."
+            let context = PlanningContext(
+                currentDate: Date(),
+                untaggedEvents: chunk,
+                availableCategories: viewModel.categories
+            )
+            do {
+                let suggestion = try await orchestrator.handle(intent: .categorizeUntagged, context: context)
+                let mappings = suggestion.actions.compactMap { a -> (eventID: String, categoryID: UUID)? in
+                    guard a.kind == .categorize, let eid = a.eventID, let cid = a.categoryID else { return nil }
+                    return (eid, cid)
+                }
+                let result = await viewModel.applyBulkCategories(mappings)
+                totalApplied += result.applied
+                totalFailed += result.failed
+                allWarnings.append(contentsOf: suggestion.warnings)
+            } catch {
+                totalFailed += chunk.count
+                allWarnings.append("배치 \(idx+1) 실패: \(error.localizedDescription)")
+            }
+        }
+
+        planningError = "완료 · 성공 \(totalApplied), 실패 \(totalFailed), 경고 \(allWarnings.count)개"
     }
 
     @MainActor
