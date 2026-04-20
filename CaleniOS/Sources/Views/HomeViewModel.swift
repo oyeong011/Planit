@@ -339,12 +339,30 @@ final class HomeViewModel: ObservableObject {
             )
         }
 
+        // UI v7: 단일일 + 다일간 이벤트 혼합 — TimeBlocks 스타일 가로 바 시각 검증용.
+        // multi-day 이벤트는 `dur`(분) 대신 직접 end date를 지정하는 helper 경유.
+        func multi(_ startOffset: Int, _ endOffset: Int, _ title: String, _ cat: ScheduleCategory,
+                   startHour: Int = 10, endHour: Int = 18) -> ScheduleDisplayItem {
+            let s = cal.date(byAdding: .day, value: startOffset, to: today) ?? today
+            let e = cal.date(byAdding: .day, value: endOffset, to: today) ?? today
+            let start = cal.date(bySettingHour: startHour, minute: 0, second: 0, of: s) ?? s
+            let end = cal.date(bySettingHour: endHour, minute: 0, second: 0, of: e) ?? e
+            return ScheduleDisplayItem(title: title, category: cat, startTime: start, endTime: end)
+        }
+
         return [
+            // 단일일 이벤트
             make(0,  9,  0, 60, "팀 스탠드업", .meeting),
             make(0, 12, 30, 60, "점심 식사", .meal),
             make(2, 10,  0, 90, "기획 리뷰", .work),
             make(4, 19,  0, 60, "헬스장", .exercise),
             make(-2, 15, 0, 60, "개인 독서", .personal),
+            make(-7, 14, 0, 60, "치과", .general),
+            // 다일간 이벤트 (TimeBlocks 스타일 가로 바)
+            multi(1,  3, "제주도 가족 여행", .personal),
+            multi(6,  9, "웹디자인 프로젝트", .work),
+            multi(-3, -1, "호텔+렌트카 예약", .general),
+            multi(8,  8, "월간 보고", .work),
         ]
     }
 
