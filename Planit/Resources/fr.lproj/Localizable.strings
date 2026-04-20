@@ -558,8 +558,23 @@
 "settings.feedback.send" = "Send feedback";
 
 // MARK: - Review Todo Grass
-"review.todo.grass.title" = "Jandi des tâches (30j)";
-"review.todo.grass.total" = "%d/%d faits";
+"review.todo.grass.title" = "Suivi 30 jours";
+"review.todo.grass.total" = "%d/%d terminés";
 "review.todo.grass.best" = "Meilleur jour";
 "review.todo.grass.streak" = "Série";
-"review.todo.grass.days" = "%d jour(s)";
+"review.todo.grass.days" = "%d jours";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes Mémoire longue";
+"settings.hermes.outcome.accepted" = "accepté";
+"settings.hermes.outcome.rejected" = "refusé";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "Apparence";
+"settings.appearance.title" = "Thème";
+"settings.appearance.desc" = "Mode clair/sombre ou suivre les paramètres système.";
+"settings.calendar.theme.card" = "Thème calendrier";
+"settings.calendar.theme.desc" = "Appliqué à la grille du calendrier, la sélection et les couleurs d'accent.";
+"settings.appearance.mode.system" = "Système";
+"settings.appearance.mode.light" = "Clair";
+"settings.appearance.mode.dark" = "Sombre";

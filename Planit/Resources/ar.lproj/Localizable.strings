@@ -559,8 +559,23 @@
 "settings.feedback.send" = "Send feedback";
 
 // MARK: - Review Todo Grass
-"review.todo.grass.title" = "30-Day Task Jandi";
-"review.todo.grass.total" = "%d/%d done";
-"review.todo.grass.best" = "Best Day";
-"review.todo.grass.streak" = "Streak";
-"review.todo.grass.days" = "%d day(s)";
+"review.todo.grass.title" = "متابعة 30 يوماً";
+"review.todo.grass.total" = "%d/%d مكتمل";
+"review.todo.grass.best" = "أفضل يوم";
+"review.todo.grass.streak" = "سلسلة";
+"review.todo.grass.days" = "%d أيام";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes الذاكرة طويلة المدى";
+"settings.hermes.outcome.accepted" = "مقبول";
+"settings.hermes.outcome.rejected" = "مرفوض";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "المظهر";
+"settings.appearance.title" = "السمة";
+"settings.appearance.desc" = "الوضع الفاتح/الداكن أو اتباع إعدادات النظام.";
+"settings.calendar.theme.card" = "سمة التقويم";
+"settings.calendar.theme.desc" = "يُطبَّق على شبكة التقويم والتحديد وألوان التمييز.";
+"settings.appearance.mode.system" = "النظام";
+"settings.appearance.mode.light" = "فاتح";
+"settings.appearance.mode.dark" = "داكن";

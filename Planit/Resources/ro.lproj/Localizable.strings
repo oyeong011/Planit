@@ -559,8 +559,23 @@
 "settings.feedback.send" = "Send feedback";
 
 // MARK: - Review Todo Grass
-"review.todo.grass.title" = "30-Day Task Jandi";
-"review.todo.grass.total" = "%d/%d done";
-"review.todo.grass.best" = "Best Day";
-"review.todo.grass.streak" = "Streak";
-"review.todo.grass.days" = "%d day(s)";
+"review.todo.grass.title" = "Urmărire 30 zile";
+"review.todo.grass.total" = "%d/%d finalizate";
+"review.todo.grass.best" = "Ziua cea mai bună";
+"review.todo.grass.streak" = "Serie";
+"review.todo.grass.days" = "%d zile";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes Memorie pe termen lung";
+"settings.hermes.outcome.accepted" = "acceptat";
+"settings.hermes.outcome.rejected" = "respins";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "Aspect";
+"settings.appearance.title" = "Temă";
+"settings.appearance.desc" = "Mod luminos/întunecat sau urmați setările sistemului.";
+"settings.calendar.theme.card" = "Tema calendarului";
+"settings.calendar.theme.desc" = "Aplicat la grila calendarului, selecție și culori de accent.";
+"settings.appearance.mode.system" = "Sistem";
+"settings.appearance.mode.light" = "Luminos";
+"settings.appearance.mode.dark" = "Întunecat";

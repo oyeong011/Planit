@@ -559,8 +559,23 @@
 "settings.feedback.send" = "Send feedback";
 
 // MARK: - Review Todo Grass
-"review.todo.grass.title" = "30-Day Task Jandi";
-"review.todo.grass.total" = "%d/%d done";
-"review.todo.grass.best" = "Best Day";
-"review.todo.grass.streak" = "Streak";
-"review.todo.grass.days" = "%d day(s)";
+"review.todo.grass.title" = "30 дней задач";
+"review.todo.grass.total" = "%d/%d выполнено";
+"review.todo.grass.best" = "Лучший день";
+"review.todo.grass.streak" = "Серия";
+"review.todo.grass.days" = "%d дн.";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes Долгая память";
+"settings.hermes.outcome.accepted" = "принято";
+"settings.hermes.outcome.rejected" = "отклонено";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "Внешний вид";
+"settings.appearance.title" = "Тема";
+"settings.appearance.desc" = "Светлый/тёмный режим или следовать настройкам системы.";
+"settings.calendar.theme.card" = "Тема календаря";
+"settings.calendar.theme.desc" = "Применяется к сетке календаря, выделению и акцентным цветам.";
+"settings.appearance.mode.system" = "Система";
+"settings.appearance.mode.light" = "Светлый";
+"settings.appearance.mode.dark" = "Тёмный";

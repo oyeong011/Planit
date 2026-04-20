@@ -559,8 +559,23 @@
 "settings.feedback.send" = "Send feedback";
 
 // MARK: - Review Todo Grass
-"review.todo.grass.title" = "30-Day Task Jandi";
-"review.todo.grass.total" = "%d/%d done";
-"review.todo.grass.best" = "Best Day";
-"review.todo.grass.streak" = "Streak";
-"review.todo.grass.days" = "%d day(s)";
+"review.todo.grass.title" = "Theo dõi 30 ngày";
+"review.todo.grass.total" = "%d/%d hoàn thành";
+"review.todo.grass.best" = "Ngày tốt nhất";
+"review.todo.grass.streak" = "Chuỗi liên tiếp";
+"review.todo.grass.days" = "%d ngày";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes Bộ nhớ dài hạn";
+"settings.hermes.outcome.accepted" = "đã chấp nhận";
+"settings.hermes.outcome.rejected" = "đã từ chối";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "Giao diện";
+"settings.appearance.title" = "Chủ đề";
+"settings.appearance.desc" = "Chế độ sáng/tối hoặc theo cài đặt hệ thống.";
+"settings.calendar.theme.card" = "Chủ đề lịch";
+"settings.calendar.theme.desc" = "Áp dụng cho lưới lịch, lựa chọn và màu nhấn.";
+"settings.appearance.mode.system" = "Hệ thống";
+"settings.appearance.mode.light" = "Sáng";
+"settings.appearance.mode.dark" = "Tối";

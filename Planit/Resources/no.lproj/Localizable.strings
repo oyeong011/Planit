@@ -559,8 +559,23 @@
 "settings.feedback.send" = "Send feedback";
 
 // MARK: - Review Todo Grass
-"review.todo.grass.title" = "30-Day Task Jandi";
-"review.todo.grass.total" = "%d/%d done";
-"review.todo.grass.best" = "Best Day";
-"review.todo.grass.streak" = "Streak";
-"review.todo.grass.days" = "%d day(s)";
+"review.todo.grass.title" = "30 dagers sporing";
+"review.todo.grass.total" = "%d/%d fullført";
+"review.todo.grass.best" = "Beste dag";
+"review.todo.grass.streak" = "Rekke";
+"review.todo.grass.days" = "%d dager";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes Langtidsminne";
+"settings.hermes.outcome.accepted" = "akseptert";
+"settings.hermes.outcome.rejected" = "avvist";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "Utseende";
+"settings.appearance.title" = "Tema";
+"settings.appearance.desc" = "Lyst/mørkt modus eller følg systeminnstillinger.";
+"settings.calendar.theme.card" = "Kalendertema";
+"settings.calendar.theme.desc" = "Brukes på kalenderrutenett, valg og aksentfarger.";
+"settings.appearance.mode.system" = "System";
+"settings.appearance.mode.light" = "Lyst";
+"settings.appearance.mode.dark" = "Mørkt";

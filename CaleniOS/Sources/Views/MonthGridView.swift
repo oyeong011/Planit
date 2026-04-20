@@ -47,12 +47,19 @@ struct MonthGridView: View {
 
     // MARK: - Dimensions
 
-    private let rowDateAreaHeight: CGFloat = 22    // 날짜 숫자 영역 (축소)
-    private let barHeight: CGFloat = 20            // 바 높이 증가 (읽힘)
+    // UX Critic 지적 해결:
+    // 현재 588pt 그리드 높이(HomeView.monthGridHeight = 92*6+36)에 6주 × 104pt = 624pt로
+    // 36pt overflow → 마지막 주 숫자 희미해짐. rowHeight를 92pt에 맞추도록 lane 수 축소.
+    //
+    // 계산: 22(date) + maxLanes*(barH+spacing) + overflow + 4(margin) ≤ 92
+    //      → 22 + 2*(20+2) + 12 + 4 = 82pt ≤ 92 ✓ (maxLanes=2)
+    //      → 22 + 3*(20+2) + 12 + 4 = 104pt > 92 ✗ (이전 값)
+    private let rowDateAreaHeight: CGFloat = 22    // 날짜 숫자 영역
+    private let barHeight: CGFloat = 18            // 20→18 (공간 절약 + 여전히 readable)
     private let barSpacing: CGFloat = 2
-    private let maxLanes: Int = 3                  // 공간 확보 — 4번째부터 "+N"
+    private let maxLanes: Int = 2                  // 3→2 (overflow 방지). 초과는 "+N"
     private let overflowBadgeHeight: CGFloat = 12
-    private let cellHorizontalPadding: CGFloat = 1  // 1pt만 양끝 간격 — 바가 cell 거의 꽉 채움
+    private let cellHorizontalPadding: CGFloat = 1
 
     private var laneArea: CGFloat {
         CGFloat(maxLanes) * (barHeight + barSpacing)

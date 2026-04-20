@@ -558,8 +558,23 @@
 "settings.feedback.send" = "Send feedback";
 
 // MARK: - Review Todo Grass
-"review.todo.grass.title" = "30天任务草坪";
-"review.todo.grass.total" = "%d/%d 完成";
+"review.todo.grass.title" = "30天待办追踪";
+"review.todo.grass.total" = "%d/%d 已完成";
 "review.todo.grass.best" = "最佳日";
 "review.todo.grass.streak" = "连续完成";
 "review.todo.grass.days" = "%d天";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes 长期记忆";
+"settings.hermes.outcome.accepted" = "已接受";
+"settings.hermes.outcome.rejected" = "已拒绝";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "外观";
+"settings.appearance.title" = "主题";
+"settings.appearance.desc" = "浅色/深色模式或跟随系统设置。";
+"settings.calendar.theme.card" = "日历主题";
+"settings.calendar.theme.desc" = "应用于日历网格、选择状态和事件强调色。";
+"settings.appearance.mode.system" = "系统";
+"settings.appearance.mode.light" = "浅色";
+"settings.appearance.mode.dark" = "深色";

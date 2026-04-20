@@ -559,8 +559,23 @@
 "settings.feedback.send" = "Send feedback";
 
 // MARK: - Review Todo Grass
-"review.todo.grass.title" = "30-Day Task Jandi";
-"review.todo.grass.total" = "%d/%d done";
-"review.todo.grass.best" = "Best Day";
-"review.todo.grass.streak" = "Streak";
-"review.todo.grass.days" = "%d day(s)";
+"review.todo.grass.title" = "30 Gün Takibi";
+"review.todo.grass.total" = "%d/%d tamamlandı";
+"review.todo.grass.best" = "En iyi gün";
+"review.todo.grass.streak" = "Seri";
+"review.todo.grass.days" = "%d gün";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes Uzun süreli bellek";
+"settings.hermes.outcome.accepted" = "kabul edildi";
+"settings.hermes.outcome.rejected" = "reddedildi";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "Görünüm";
+"settings.appearance.title" = "Tema";
+"settings.appearance.desc" = "Açık/koyu mod veya sistem ayarlarını takip edin.";
+"settings.calendar.theme.card" = "Takvim teması";
+"settings.calendar.theme.desc" = "Takvim ızgarası, seçim ve vurgu renklerine uygulanır.";
+"settings.appearance.mode.system" = "Sistem";
+"settings.appearance.mode.light" = "Açık";
+"settings.appearance.mode.dark" = "Koyu";

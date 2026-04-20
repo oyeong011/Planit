@@ -153,27 +153,29 @@ func timeGridLayout_yForNow_returns_nil_for_different_day() {
 // MARK: - v6 dayColumn / dayColumnWidth
 
 @Test
-func timeGridLayout_dayColumnWidth_enforces_120pt_min_on_narrow_screens() {
+func timeGridLayout_dayColumnWidth_enforces_52pt_min_on_narrow_screens() {
+    // UX Critic 권고 반영 — 7일 전체 표시 우선, min 120→52.
     let layout = TimeGridLayout()
-    // iPhone 17 Pro 세로 (393pt) - leading gutter 48 = 345 / 7 ≈ 49.3 → 120으로 올라가야 함
-    #expect(layout.dayColumnWidth(availableWidth: 345, dayCount: 7) == 120)
-    // iPhone SE 세로 (320 - 48 = 272) → 272/7 ≈ 38.9 → 120
-    #expect(layout.dayColumnWidth(availableWidth: 272, dayCount: 7) == 120)
-    // 0 가까운 입력도 120 floor
-    #expect(layout.dayColumnWidth(availableWidth: 0, dayCount: 7) == 120)
+    // iPhone 17 Pro 세로 (393pt) - leading gutter 48 = 345 / 7 ≈ 49.3 → 52 floor
+    #expect(layout.dayColumnWidth(availableWidth: 345, dayCount: 7) == 52)
+    // iPhone SE 세로 (320 - 48 = 272) → 272/7 ≈ 38.9 → 52 floor
+    #expect(layout.dayColumnWidth(availableWidth: 272, dayCount: 7) == 52)
+    // 0 가까운 입력도 52 floor
+    #expect(layout.dayColumnWidth(availableWidth: 0, dayCount: 7) == 52)
 }
 
 @Test
 func timeGridLayout_dayColumnWidth_scales_on_wide_screens() {
     let layout = TimeGridLayout()
-    // iPad mini 세로 약 744pt - 48 gutter ≈ 696 / 7 ≈ 99.4 → 120
-    #expect(layout.dayColumnWidth(availableWidth: 696, dayCount: 7) == 120)
-    // iPad 12.9" 세로 (1024 - 48 = 976) → 976/7 ≈ 139.4 → 139.4 (120 이상이라 비례)
+    // iPad mini 세로 약 744pt - 48 gutter ≈ 696 / 7 ≈ 99.4 → 99.4 (52 이상이라 비례)
+    let iPadMini = layout.dayColumnWidth(availableWidth: 696, dayCount: 7)
+    #expect(iPadMini >= 99 && iPadMini <= 100)
+    // iPad 12.9" 세로 (1024 - 48 = 976) → 976/7 ≈ 139.4
     let iPadLarge = layout.dayColumnWidth(availableWidth: 976, dayCount: 7)
     #expect(iPadLarge >= 139 && iPadLarge <= 140)
-    // 7 * 120 = 840 경계 — availableWidth = 840 이면 정확히 120
-    #expect(layout.dayColumnWidth(availableWidth: 840, dayCount: 7) == 120)
-    // dayCount 0/음수 → 1로 클램프, availableWidth 그대로(혹은 120 중 큰 값)
+    // 7 * 52 = 364 경계 — availableWidth = 364 이면 정확히 52
+    #expect(layout.dayColumnWidth(availableWidth: 364, dayCount: 7) == 52)
+    // dayCount 0/음수 → 1로 클램프, availableWidth 그대로(혹은 52 중 큰 값)
     #expect(layout.dayColumnWidth(availableWidth: 300, dayCount: 0) == 300)
 }
 

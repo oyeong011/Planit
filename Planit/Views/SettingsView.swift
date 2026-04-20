@@ -786,7 +786,7 @@ struct SettingsView: View {
     // MARK: - Hermes 기억 카드
 
     private var hermesMemoryCard: some View {
-        settingsCard("🧠 Hermes 장기 기억") {
+        settingsCard(String(localized: "settings.hermes.card.title")) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 8) {
                     Image(systemName: "sparkles")
@@ -838,7 +838,9 @@ struct SettingsView: View {
                                 .font(.system(size: 11))
                                 .lineLimit(1)
                             Spacer()
-                            Text(decision.outcome.rawValue)
+                            Text(decision.outcome == .accepted
+                                 ? String(localized: "settings.hermes.outcome.accepted")
+                                 : String(localized: "settings.hermes.outcome.rejected"))
                                 .font(.system(size: 10))
                                 .foregroundStyle(decision.outcome == .accepted ? .green : .secondary)
                         }
@@ -1112,7 +1114,7 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 22) {
             sectionHeader(
                 String(localized: "settings.section.appearance"),
-                subtitle: String(localized: "settings.appearance.subtitle", defaultValue: "앱 표시 방식과 캘린더 색상을 설정합니다"),
+                subtitle: String(localized: "settings.appearance.subtitle"),
                 icon: "paintpalette"
             )
 
@@ -1122,12 +1124,12 @@ struct SettingsView: View {
     }
 
     private var appearanceCard: some View {
-        settingsCard(String(localized: "settings.appearance.card", defaultValue: "외관")) {
+        settingsCard(String(localized: "settings.appearance.card")) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(String(localized: "settings.appearance.title", defaultValue: "테마"))
+                    Text(String(localized: "settings.appearance.title"))
                         .font(.system(size: 13, weight: .medium))
-                    Text(String(localized: "settings.appearance.desc", defaultValue: "라이트/다크 모드 또는 시스템 설정을 따릅니다."))
+                    Text(String(localized: "settings.appearance.desc"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -1145,9 +1147,9 @@ struct SettingsView: View {
     }
 
     private var calendarThemeCard: some View {
-        settingsCard(String(localized: "settings.calendar.theme.card", defaultValue: "캘린더 테마")) {
+        settingsCard(String(localized: "settings.calendar.theme.card")) {
             VStack(alignment: .leading, spacing: 12) {
-                Text(String(localized: "settings.calendar.theme.desc", defaultValue: "캘린더 그리드, 선택 상태, 이벤트 강조색에 적용됩니다."))
+                Text(String(localized: "settings.calendar.theme.desc"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
 

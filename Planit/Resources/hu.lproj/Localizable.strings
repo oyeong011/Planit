@@ -559,8 +559,23 @@
 "settings.feedback.send" = "Send feedback";
 
 // MARK: - Review Todo Grass
-"review.todo.grass.title" = "30-Day Task Jandi";
-"review.todo.grass.total" = "%d/%d done";
-"review.todo.grass.best" = "Best Day";
-"review.todo.grass.streak" = "Streak";
-"review.todo.grass.days" = "%d day(s)";
+"review.todo.grass.title" = "30 napos követés";
+"review.todo.grass.total" = "%d/%d kész";
+"review.todo.grass.best" = "Legjobb nap";
+"review.todo.grass.streak" = "Sorozat";
+"review.todo.grass.days" = "%d nap";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes Hosszú távú memória";
+"settings.hermes.outcome.accepted" = "elfogadva";
+"settings.hermes.outcome.rejected" = "elutasítva";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "Megjelenés";
+"settings.appearance.title" = "Téma";
+"settings.appearance.desc" = "Világos/sötét mód vagy rendszerbeállítások követése.";
+"settings.calendar.theme.card" = "Naptár téma";
+"settings.calendar.theme.desc" = "Alkalmazva a naptárrácsra, kijelölésre és kiemelési színekre.";
+"settings.appearance.mode.system" = "Rendszer";
+"settings.appearance.mode.light" = "Világos";
+"settings.appearance.mode.dark" = "Sötét";

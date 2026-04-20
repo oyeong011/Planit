@@ -559,8 +559,23 @@
 "settings.feedback.send" = "Send feedback";
 
 // MARK: - Review Todo Grass
-"review.todo.grass.title" = "30-Day Task Jandi";
-"review.todo.grass.total" = "%d/%d done";
-"review.todo.grass.best" = "Best Day";
-"review.todo.grass.streak" = "Streak";
-"review.todo.grass.days" = "%d day(s)";
+"review.todo.grass.title" = "מעקב 30 ימים";
+"review.todo.grass.total" = "%d/%d הושלמו";
+"review.todo.grass.best" = "יום הטוב ביותר";
+"review.todo.grass.streak" = "רצף";
+"review.todo.grass.days" = "%d ימים";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes זיכרון ארוך טווח";
+"settings.hermes.outcome.accepted" = "התקבל";
+"settings.hermes.outcome.rejected" = "נדחה";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "מראה";
+"settings.appearance.title" = "ערכת נושא";
+"settings.appearance.desc" = "מצב בהיר/כהה או עקוב אחר הגדרות המערכת.";
+"settings.calendar.theme.card" = "ערכת נושא לוח שנה";
+"settings.calendar.theme.desc" = "מוחל על רשת לוח השנה, בחירה וצבעי הדגשה.";
+"settings.appearance.mode.system" = "מערכת";
+"settings.appearance.mode.light" = "בהיר";
+"settings.appearance.mode.dark" = "כהה";

@@ -559,8 +559,23 @@
 "settings.feedback.send" = "Send feedback";
 
 // MARK: - Review Todo Grass
-"review.todo.grass.title" = "30-Day Task Jandi";
-"review.todo.grass.total" = "%d/%d done";
-"review.todo.grass.best" = "Best Day";
-"review.todo.grass.streak" = "Streak";
-"review.todo.grass.days" = "%d day(s)";
+"review.todo.grass.title" = "Pelacak 30 hari";
+"review.todo.grass.total" = "%d/%d selesai";
+"review.todo.grass.best" = "Hari terbaik";
+"review.todo.grass.streak" = "Rangkaian";
+"review.todo.grass.days" = "%d hari";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes Memori jangka panjang";
+"settings.hermes.outcome.accepted" = "diterima";
+"settings.hermes.outcome.rejected" = "ditolak";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "Tampilan";
+"settings.appearance.title" = "Tema";
+"settings.appearance.desc" = "Mode terang/gelap atau ikuti pengaturan sistem.";
+"settings.calendar.theme.card" = "Tema kalender";
+"settings.calendar.theme.desc" = "Diterapkan pada kisi kalender, pilihan, dan warna aksen.";
+"settings.appearance.mode.system" = "Sistem";
+"settings.appearance.mode.light" = "Terang";
+"settings.appearance.mode.dark" = "Gelap";

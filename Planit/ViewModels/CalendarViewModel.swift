@@ -10,6 +10,11 @@ struct MirrorFilterStats: Equatable {
     var lastUpdated: Date?
 }
 
+struct HistoryCalendarSyncState: Codable {
+    var syncToken: String
+    var lastFullSyncAt: Date
+}
+
 @MainActor
 final class CalendarViewModel: ObservableObject {
 
@@ -25,6 +30,8 @@ final class CalendarViewModel: ObservableObject {
     @Published var currentMonth: Date = Date()
     @Published var todos: [TodoItem] = []
     @Published var calendarEvents: [CalendarEvent] = []
+    @Published var historyEvents: [CalendarEvent] = []
+    @Published var isLoadingHistory: Bool = false
     @Published var completedEventIDs: Set<String> = []
     @Published var categories: [TodoCategory] = []
     @Published var eventCategoryMappings: [String: EventCategoryMapping] = [:]  // eventID → mapping
@@ -106,8 +113,10 @@ final class CalendarViewModel: ObservableObject {
     private var completedEventsPath: URL { appSupportDir.appendingPathComponent("completed_events.json") }
     private var categoriesPath: URL { appSupportDir.appendingPathComponent("categories.json") }
     private var eventCachePath: URL { appSupportDir.appendingPathComponent("events_cache.json") }
+    private var historyEventsCachePath: URL { appSupportDir.appendingPathComponent("events_history_cache.json") }
     private var pendingEditsPath: URL { appSupportDir.appendingPathComponent("pending_edits.json") }
     private var eventCategoryMappingsPath: URL { appSupportDir.appendingPathComponent("event_category_mappings.json") }
+    private let historySyncStatesKey = "planit.calendarHistorySyncStates"
     private let pendingEditsIntegrityMigratedKey = "planit.pendingEditsIntegrityMigrated.v1"
 
     // MARK: - Init
@@ -192,11 +201,14 @@ final class CalendarViewModel: ObservableObject {
             if !authenticated {
                 // 로그아웃: 캐시 클리어
                 self.googleService.clearCache()
+            } else {
+                self.loadHistory()
             }
         }
 
         // Load cached events first (instant display), then try network
         loadCachedEvents()
+        loadHistory()
 
         if authManager.isAuthenticated {
             fetchEventsFromGoogle(for: currentMonth)
@@ -2292,6 +2304,161 @@ final class CalendarViewModel: ObservableObject {
                 applyEventCategoryMappings()
             }
         } catch { print("[Calen] Failed to load cached events") }
+    }
+
+    // MARK: - History Event Cache
+
+    func loadHistory() {
+        loadHistoryCache()
+
+        guard authManager.isAuthenticated else { return }
+        Task { [weak self] in
+            await self?.syncHistory()
+        }
+    }
+
+    private func syncHistory() async {
+        guard !isOffline, authManager.isAuthenticated else { return }
+
+        let calendars: [GoogleCalendarService.GoogleCalendarInfo]
+        do {
+            calendars = try await googleService.fetchCalendarList()
+        } catch {
+            PlanitLoggers.sync.error("Google history calendar list failed error=\(Self.sanitizedErrorSummary(error), privacy: .public)")
+            return
+        }
+        guard !calendars.isEmpty else { return }
+
+        isLoadingHistory = true
+        defer { isLoadingHistory = false }
+
+        var syncStates = loadHistorySyncStates()
+        var updatedByCalendar = Dictionary(grouping: historyEvents, by: Self.historyCalendarKey)
+
+        let today = calendar.startOfDay(for: Date())
+        guard let from = calendar.date(byAdding: .day, value: -364, to: today),
+              let to = calendar.date(byAdding: .day, value: 1, to: today) else { return }
+
+        for calInfo in calendars {
+            if let state = syncStates[calInfo.id] {
+                do {
+                    let result = try await googleService.fetchDeltaForCalendar(
+                        calInfo: calInfo,
+                        syncToken: state.syncToken
+                    )
+
+                    if result.fullSyncRequired {
+                        let full = try await fetchFullHistoryCalendar(calInfo, from: from, to: to)
+                        updatedByCalendar[calInfo.id] = full.events
+                        if let state = full.syncState {
+                            syncStates[calInfo.id] = state
+                        } else {
+                            syncStates.removeValue(forKey: calInfo.id)
+                        }
+                    } else {
+                        var existing = updatedByCalendar[calInfo.id] ?? []
+                        let deletedIDs = Set(result.deletedIDs)
+                        existing.removeAll { deletedIDs.contains($0.id) }
+
+                        var eventByID = Dictionary(uniqueKeysWithValues: existing.map { ($0.id, $0) })
+                        for event in result.upserts where event.startDate >= from && event.startDate < to {
+                            eventByID[event.id] = event
+                        }
+                        updatedByCalendar[calInfo.id] = Array(eventByID.values)
+
+                        if let nextSyncToken = result.nextSyncToken {
+                            var updatedState = state
+                            updatedState.syncToken = nextSyncToken
+                            syncStates[calInfo.id] = updatedState
+                        }
+                    }
+                } catch {
+                    PlanitLoggers.sync.error("Google history delta failed calendarID=\(calInfo.id, privacy: .public) error=\(Self.sanitizedErrorSummary(error), privacy: .public)")
+                }
+            } else {
+                do {
+                    let full = try await fetchFullHistoryCalendar(calInfo, from: from, to: to)
+                    updatedByCalendar[calInfo.id] = full.events
+                    if let state = full.syncState {
+                        syncStates[calInfo.id] = state
+                    } else {
+                        syncStates.removeValue(forKey: calInfo.id)
+                    }
+                } catch {
+                    PlanitLoggers.sync.error("Google history full sync failed calendarID=\(calInfo.id, privacy: .public) error=\(Self.sanitizedErrorSummary(error), privacy: .public)")
+                }
+            }
+        }
+
+        historyEvents = updatedByCalendar.values
+            .flatMap { $0 }
+            .sorted { $0.startDate < $1.startDate }
+        saveHistorySyncStates(syncStates)
+        saveHistoryCache()
+    }
+
+    private func fetchFullHistoryCalendar(
+        _ calInfo: GoogleCalendarService.GoogleCalendarInfo,
+        from: Date,
+        to: Date
+    ) async throws -> (events: [CalendarEvent], syncState: HistoryCalendarSyncState?) {
+        let full = try await googleService.fetchHistoryForCalendar(
+            calInfo: calInfo,
+            from: from,
+            to: to
+        )
+        if let syncToken = full.syncToken {
+            return (
+                full.events,
+                HistoryCalendarSyncState(
+                    syncToken: syncToken,
+                    lastFullSyncAt: Date()
+                )
+            )
+        }
+        return (full.events, nil)
+    }
+
+    private func saveHistoryCache() {
+        let cached = Self.eventsExcludingAppleCalendar(historyEvents).map { CachedCalendarEvent.from($0) }
+        do {
+            let data = try JSONEncoder().encode(cached)
+            try data.write(to: historyEventsCachePath, options: .atomic)
+            try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: historyEventsCachePath.path)
+        } catch { print("[Calen] Failed to cache history events") }
+    }
+
+    private func loadHistoryCache() {
+        guard fileManager.fileExists(atPath: historyEventsCachePath.path) else { return }
+        do {
+            let data = try Data(contentsOf: historyEventsCachePath)
+            let cached = try JSONDecoder().decode([CachedCalendarEvent].self, from: data)
+            historyEvents = cached.map { $0.toCalendarEvent() }
+        } catch { print("[Calen] Failed to load history event cache") }
+    }
+
+    private func loadHistorySyncStates() -> [String: HistoryCalendarSyncState] {
+        guard let data = UserDefaults.standard.data(forKey: historySyncStatesKey) else { return [:] }
+        do {
+            return try JSONDecoder().decode([String: HistoryCalendarSyncState].self, from: data)
+        } catch {
+            print("[Calen] Failed to load history sync states")
+            return [:]
+        }
+    }
+
+    private func saveHistorySyncStates(_ states: [String: HistoryCalendarSyncState]) {
+        do {
+            let data = try JSONEncoder().encode(states)
+            UserDefaults.standard.set(data, forKey: historySyncStatesKey)
+        } catch { print("[Calen] Failed to save history sync states") }
+    }
+
+    private nonisolated static func historyCalendarKey(for event: CalendarEvent) -> String {
+        if event.calendarID.hasPrefix("google:") {
+            return String(event.calendarID.dropFirst("google:".count))
+        }
+        return event.calendarID
     }
 
     // MARK: - Pending Edits Queue (Offline Sync)

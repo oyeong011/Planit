@@ -559,8 +559,23 @@
 "settings.feedback.send" = "Send feedback";
 
 // MARK: - Review Todo Grass
-"review.todo.grass.title" = "30-Day Task Jandi";
-"review.todo.grass.total" = "%d/%d done";
-"review.todo.grass.best" = "Best Day";
-"review.todo.grass.streak" = "Streak";
-"review.todo.grass.days" = "%d day(s)";
+"review.todo.grass.title" = "30 dagen tracker";
+"review.todo.grass.total" = "%d/%d voltooid";
+"review.todo.grass.best" = "Beste dag";
+"review.todo.grass.streak" = "Reeks";
+"review.todo.grass.days" = "%d dagen";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes Langetermijngeheugen";
+"settings.hermes.outcome.accepted" = "geaccepteerd";
+"settings.hermes.outcome.rejected" = "afgewezen";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "Uiterlijk";
+"settings.appearance.title" = "Thema";
+"settings.appearance.desc" = "Lichte/donkere modus of systeeminstellingen volgen.";
+"settings.calendar.theme.card" = "Kalenderthema";
+"settings.calendar.theme.desc" = "Toegepast op kalenderraster, selectie en accentkleuren.";
+"settings.appearance.mode.system" = "Systeem";
+"settings.appearance.mode.light" = "Licht";
+"settings.appearance.mode.dark" = "Donker";

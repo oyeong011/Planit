@@ -17,9 +17,9 @@ final class AppearanceService: ObservableObject {
 
         var title: String {
             switch self {
-            case .system: return String(localized: "settings.appearance.mode.system", defaultValue: "시스템")
-            case .light:  return String(localized: "settings.appearance.mode.light",  defaultValue: "라이트")
-            case .dark:   return String(localized: "settings.appearance.mode.dark",   defaultValue: "다크")
+            case .system: return String(localized: "settings.appearance.mode.system")
+            case .light:  return String(localized: "settings.appearance.mode.light")
+            case .dark:   return String(localized: "settings.appearance.mode.dark")
             }
         }
 

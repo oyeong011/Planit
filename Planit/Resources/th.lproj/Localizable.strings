@@ -559,8 +559,23 @@
 "settings.feedback.send" = "Send feedback";
 
 // MARK: - Review Todo Grass
-"review.todo.grass.title" = "30-Day Task Jandi";
-"review.todo.grass.total" = "%d/%d done";
-"review.todo.grass.best" = "Best Day";
-"review.todo.grass.streak" = "Streak";
-"review.todo.grass.days" = "%d day(s)";
+"review.todo.grass.title" = "ติดตาม 30 วัน";
+"review.todo.grass.total" = "%d/%d เสร็จแล้ว";
+"review.todo.grass.best" = "วันที่ดีที่สุด";
+"review.todo.grass.streak" = "ต่อเนื่อง";
+"review.todo.grass.days" = "%d วัน";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes หน่วยความจำระยะยาว";
+"settings.hermes.outcome.accepted" = "ยอมรับ";
+"settings.hermes.outcome.rejected" = "ปฏิเสธ";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "รูปลักษณ์";
+"settings.appearance.title" = "ธีม";
+"settings.appearance.desc" = "โหมดสว่าง/มืด หรือตามการตั้งค่าระบบ";
+"settings.calendar.theme.card" = "ธีมปฏิทิน";
+"settings.calendar.theme.desc" = "ใช้กับตารางปฏิทิน การเลือก และสีเน้น";
+"settings.appearance.mode.system" = "ระบบ";
+"settings.appearance.mode.light" = "สว่าง";
+"settings.appearance.mode.dark" = "มืด";

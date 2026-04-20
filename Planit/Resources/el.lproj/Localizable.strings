@@ -559,8 +559,23 @@
 "settings.feedback.send" = "Send feedback";
 
 // MARK: - Review Todo Grass
-"review.todo.grass.title" = "30-Day Task Jandi";
-"review.todo.grass.total" = "%d/%d done";
-"review.todo.grass.best" = "Best Day";
-"review.todo.grass.streak" = "Streak";
-"review.todo.grass.days" = "%d day(s)";
+"review.todo.grass.title" = "Παρακολούθηση 30 ημερών";
+"review.todo.grass.total" = "%d/%d ολοκληρώθηκαν";
+"review.todo.grass.best" = "Καλύτερη ημέρα";
+"review.todo.grass.streak" = "Σερί";
+"review.todo.grass.days" = "%d ημέρες";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes Μακροπρόθεσμη μνήμη";
+"settings.hermes.outcome.accepted" = "αποδεκτό";
+"settings.hermes.outcome.rejected" = "απορρίφθηκε";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "Εμφάνιση";
+"settings.appearance.title" = "Θέμα";
+"settings.appearance.desc" = "Φωτεινή/σκοτεινή λειτουργία ή ακολουθήστε τις ρυθμίσεις συστήματος.";
+"settings.calendar.theme.card" = "Θέμα ημερολογίου";
+"settings.calendar.theme.desc" = "Εφαρμόζεται στο πλέγμα ημερολογίου, επιλογή και χρώματα έμφασης.";
+"settings.appearance.mode.system" = "Σύστημα";
+"settings.appearance.mode.light" = "Φωτεινό";
+"settings.appearance.mode.dark" = "Σκοτεινό";

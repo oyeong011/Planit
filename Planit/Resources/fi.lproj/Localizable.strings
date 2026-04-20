@@ -559,8 +559,23 @@
 "settings.feedback.send" = "Send feedback";
 
 // MARK: - Review Todo Grass
-"review.todo.grass.title" = "30-Day Task Jandi";
-"review.todo.grass.total" = "%d/%d done";
-"review.todo.grass.best" = "Best Day";
-"review.todo.grass.streak" = "Streak";
-"review.todo.grass.days" = "%d day(s)";
+"review.todo.grass.title" = "30 päivän seuranta";
+"review.todo.grass.total" = "%d/%d valmis";
+"review.todo.grass.best" = "Paras päivä";
+"review.todo.grass.streak" = "Putki";
+"review.todo.grass.days" = "%d päivää";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes Pitkäkestoinen muisti";
+"settings.hermes.outcome.accepted" = "hyväksytty";
+"settings.hermes.outcome.rejected" = "hylätty";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "Ulkoasu";
+"settings.appearance.title" = "Teema";
+"settings.appearance.desc" = "Vaalea/tumma tila tai seuraa järjestelmäasetuksia.";
+"settings.calendar.theme.card" = "Kalenteriteema";
+"settings.calendar.theme.desc" = "Käytetty kalenteriruudukkoon, valintaan ja korostusvärehin.";
+"settings.appearance.mode.system" = "Järjestelmä";
+"settings.appearance.mode.light" = "Vaalea";
+"settings.appearance.mode.dark" = "Tumma";

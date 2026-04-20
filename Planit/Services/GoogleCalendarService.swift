@@ -298,6 +298,125 @@ final class GoogleCalendarService {
         return allItems.compactMap { parseEvent($0, calInfo: calInfo) }
     }
 
+    func fetchHistoryForCalendar(
+        calInfo: GoogleCalendarInfo,
+        from: Date,
+        to: Date
+    ) async throws -> (events: [CalendarEvent], syncToken: String?) {
+        guard let encoded = Self.percentEncodedPathSegment(calInfo.id) else { return ([], nil) }
+
+        let token = try await auth.getValidToken()
+        let fmt = ISO8601DateFormatter()
+        fmt.formatOptions = [.withInternetDateTime]
+        let timeMin = fmt.string(from: from)
+        let timeMax = fmt.string(from: to)
+
+        var allItems: [[String: Any]] = []
+        var pageToken: String? = nil
+        var nextSyncToken: String? = nil
+
+        repeat {
+            var comps = URLComponents(string: "\(baseURL)/calendars/\(encoded)/events")!
+            var queryItems: [URLQueryItem] = [
+                URLQueryItem(name: "timeMin", value: timeMin),
+                URLQueryItem(name: "timeMax", value: timeMax),
+                URLQueryItem(name: "singleEvents", value: "true"),
+                URLQueryItem(name: "orderBy", value: "startTime"),
+                URLQueryItem(name: "maxResults", value: "2500"),
+                URLQueryItem(name: "timeZone", value: TimeZone.current.identifier),
+            ]
+            if let pageToken {
+                queryItems.append(URLQueryItem(name: "pageToken", value: pageToken))
+            }
+            comps.queryItems = queryItems
+
+            var request = URLRequest(url: comps.url!)
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw URLError(.badServerResponse)
+            }
+            guard (200...299).contains(httpResponse.statusCode) else {
+                throw GoogleCalendarError.httpStatus(httpResponse.statusCode)
+            }
+            guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { break }
+
+            if let items = json["items"] as? [[String: Any]] {
+                allItems.append(contentsOf: items)
+            }
+            pageToken = json["nextPageToken"] as? String
+            if let token = json["nextSyncToken"] as? String {
+                nextSyncToken = token
+            }
+        } while pageToken != nil
+
+        let events = allItems
+            .filter { ($0["status"] as? String) != "cancelled" }
+            .compactMap { parseEvent($0, calInfo: calInfo) }
+        return (events, nextSyncToken)
+    }
+
+    func fetchDeltaForCalendar(
+        calInfo: GoogleCalendarInfo,
+        syncToken: String
+    ) async throws -> (upserts: [CalendarEvent], deletedIDs: [String], nextSyncToken: String?, fullSyncRequired: Bool) {
+        guard let encoded = Self.percentEncodedPathSegment(calInfo.id) else {
+            return ([], [], nil, false)
+        }
+
+        let token = try await auth.getValidToken()
+        var upserts: [CalendarEvent] = []
+        var deletedIDs: [String] = []
+        var pageToken: String? = nil
+        var nextSyncToken: String? = nil
+
+        repeat {
+            var comps = URLComponents(string: "\(baseURL)/calendars/\(encoded)/events")!
+            var queryItems: [URLQueryItem] = [
+                URLQueryItem(name: "syncToken", value: syncToken),
+                URLQueryItem(name: "maxResults", value: "2500"),
+            ]
+            if let pageToken {
+                queryItems.append(URLQueryItem(name: "pageToken", value: pageToken))
+            }
+            comps.queryItems = queryItems
+
+            var request = URLRequest(url: comps.url!)
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw URLError(.badServerResponse)
+            }
+            if httpResponse.statusCode == 410 {
+                return ([], [], nil, true)
+            }
+            guard (200...299).contains(httpResponse.statusCode) else {
+                throw GoogleCalendarError.httpStatus(httpResponse.statusCode)
+            }
+            guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { break }
+
+            if let items = json["items"] as? [[String: Any]] {
+                for item in items {
+                    if (item["status"] as? String) == "cancelled" {
+                        if let id = item["id"] as? String {
+                            deletedIDs.append(id)
+                        }
+                    } else if let event = parseEvent(item, calInfo: calInfo) {
+                        upserts.append(event)
+                    }
+                }
+            }
+            pageToken = json["nextPageToken"] as? String
+            if let token = json["nextSyncToken"] as? String {
+                nextSyncToken = token
+            }
+        } while pageToken != nil
+
+        return (upserts, deletedIDs, nextSyncToken, false)
+    }
+
     // MARK: - Create Event
 
     func createEvent(title: String, startDate: Date, endDate: Date, isAllDay: Bool, recurrence: String? = nil) async throws -> CalendarEvent? {
