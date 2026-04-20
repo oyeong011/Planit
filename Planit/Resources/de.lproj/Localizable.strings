@@ -568,3 +568,13 @@
 "settings.hermes.card.title" = "🧠 Hermes Langzeitgedächtnis";
 "settings.hermes.outcome.accepted" = "akzeptiert";
 "settings.hermes.outcome.rejected" = "abgelehnt";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "Darstellung";
+"settings.appearance.title" = "Thema";
+"settings.appearance.desc" = "Hell-/Dunkelmodus oder Systemeinstellungen folgen.";
+"settings.calendar.theme.card" = "Kalender-Thema";
+"settings.calendar.theme.desc" = "Wird auf Kalenderraster, Auswahl und Akzentfarben angewendet.";
+"settings.appearance.mode.system" = "System";
+"settings.appearance.mode.light" = "Hell";
+"settings.appearance.mode.dark" = "Dunkel";

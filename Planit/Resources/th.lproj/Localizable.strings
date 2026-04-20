@@ -569,3 +569,13 @@
 "settings.hermes.card.title" = "🧠 Hermes หน่วยความจำระยะยาว";
 "settings.hermes.outcome.accepted" = "ยอมรับ";
 "settings.hermes.outcome.rejected" = "ปฏิเสธ";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "รูปลักษณ์";
+"settings.appearance.title" = "ธีม";
+"settings.appearance.desc" = "โหมดสว่าง/มืด หรือตามการตั้งค่าระบบ";
+"settings.calendar.theme.card" = "ธีมปฏิทิน";
+"settings.calendar.theme.desc" = "ใช้กับตารางปฏิทิน การเลือก และสีเน้น";
+"settings.appearance.mode.system" = "ระบบ";
+"settings.appearance.mode.light" = "สว่าง";
+"settings.appearance.mode.dark" = "มืด";

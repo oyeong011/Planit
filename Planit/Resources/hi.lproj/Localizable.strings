@@ -569,3 +569,13 @@
 "settings.hermes.card.title" = "🧠 Hermes दीर्घकालिक स्मृति";
 "settings.hermes.outcome.accepted" = "स्वीकृत";
 "settings.hermes.outcome.rejected" = "अस्वीकृत";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "स्वरूप";
+"settings.appearance.title" = "थीम";
+"settings.appearance.desc" = "लाइट/डार्क मोड या सिस्टम सेटिंग का अनुसरण करें।";
+"settings.calendar.theme.card" = "कैलेंडर थीम";
+"settings.calendar.theme.desc" = "कैलेंडर ग्रिड, चयन और एक्सेंट रंगों पर लागू।";
+"settings.appearance.mode.system" = "सिस्टम";
+"settings.appearance.mode.light" = "लाइट";
+"settings.appearance.mode.dark" = "डार्क";

@@ -569,3 +569,13 @@
 "settings.hermes.card.title" = "🧠 Hermes Langetermijngeheugen";
 "settings.hermes.outcome.accepted" = "geaccepteerd";
 "settings.hermes.outcome.rejected" = "afgewezen";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "Uiterlijk";
+"settings.appearance.title" = "Thema";
+"settings.appearance.desc" = "Lichte/donkere modus of systeeminstellingen volgen.";
+"settings.calendar.theme.card" = "Kalenderthema";
+"settings.calendar.theme.desc" = "Toegepast op kalenderraster, selectie en accentkleuren.";
+"settings.appearance.mode.system" = "Systeem";
+"settings.appearance.mode.light" = "Licht";
+"settings.appearance.mode.dark" = "Donker";

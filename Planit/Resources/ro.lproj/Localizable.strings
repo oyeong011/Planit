@@ -569,3 +569,13 @@
 "settings.hermes.card.title" = "🧠 Hermes Memorie pe termen lung";
 "settings.hermes.outcome.accepted" = "acceptat";
 "settings.hermes.outcome.rejected" = "respins";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "Aspect";
+"settings.appearance.title" = "Temă";
+"settings.appearance.desc" = "Mod luminos/întunecat sau urmați setările sistemului.";
+"settings.calendar.theme.card" = "Tema calendarului";
+"settings.calendar.theme.desc" = "Aplicat la grila calendarului, selecție și culori de accent.";
+"settings.appearance.mode.system" = "Sistem";
+"settings.appearance.mode.light" = "Luminos";
+"settings.appearance.mode.dark" = "Întunecat";

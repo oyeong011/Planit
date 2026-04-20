@@ -569,3 +569,13 @@
 "settings.hermes.card.title" = "🧠 Hermes الذاكرة طويلة المدى";
 "settings.hermes.outcome.accepted" = "مقبول";
 "settings.hermes.outcome.rejected" = "مرفوض";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "المظهر";
+"settings.appearance.title" = "السمة";
+"settings.appearance.desc" = "الوضع الفاتح/الداكن أو اتباع إعدادات النظام.";
+"settings.calendar.theme.card" = "سمة التقويم";
+"settings.calendar.theme.desc" = "يُطبَّق على شبكة التقويم والتحديد وألوان التمييز.";
+"settings.appearance.mode.system" = "النظام";
+"settings.appearance.mode.light" = "فاتح";
+"settings.appearance.mode.dark" = "داكن";

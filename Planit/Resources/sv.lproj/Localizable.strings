@@ -569,3 +569,13 @@
 "settings.hermes.card.title" = "🧠 Hermes Långtidsminne";
 "settings.hermes.outcome.accepted" = "accepterad";
 "settings.hermes.outcome.rejected" = "avvisad";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "Utseende";
+"settings.appearance.title" = "Tema";
+"settings.appearance.desc" = "Ljust/mörkt läge eller följ systeminställningar.";
+"settings.calendar.theme.card" = "Kalendertema";
+"settings.calendar.theme.desc" = "Tillämpas på kalenderrutnät, val och accentfärger.";
+"settings.appearance.mode.system" = "System";
+"settings.appearance.mode.light" = "Ljust";
+"settings.appearance.mode.dark" = "Mörkt";

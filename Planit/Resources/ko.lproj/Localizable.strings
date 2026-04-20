@@ -558,3 +558,13 @@
 "settings.hermes.card.title" = "🧠 Hermes 장기 기억";
 "settings.hermes.outcome.accepted" = "수락됨";
 "settings.hermes.outcome.rejected" = "거절됨";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "외관";
+"settings.appearance.title" = "테마";
+"settings.appearance.desc" = "라이트/다크 모드 또는 시스템 설정을 따릅니다.";
+"settings.calendar.theme.card" = "캘린더 테마";
+"settings.calendar.theme.desc" = "캘린더 그리드, 선택 상태, 이벤트 강조색에 적용됩니다.";
+"settings.appearance.mode.system" = "시스템";
+"settings.appearance.mode.light" = "라이트";
+"settings.appearance.mode.dark" = "다크";

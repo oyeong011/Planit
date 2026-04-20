@@ -569,3 +569,13 @@
 "settings.hermes.card.title" = "🧠 Hermes זיכרון ארוך טווח";
 "settings.hermes.outcome.accepted" = "התקבל";
 "settings.hermes.outcome.rejected" = "נדחה";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "מראה";
+"settings.appearance.title" = "ערכת נושא";
+"settings.appearance.desc" = "מצב בהיר/כהה או עקוב אחר הגדרות המערכת.";
+"settings.calendar.theme.card" = "ערכת נושא לוח שנה";
+"settings.calendar.theme.desc" = "מוחל על רשת לוח השנה, בחירה וצבעי הדגשה.";
+"settings.appearance.mode.system" = "מערכת";
+"settings.appearance.mode.light" = "בהיר";
+"settings.appearance.mode.dark" = "כהה";

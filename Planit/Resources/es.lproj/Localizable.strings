@@ -568,3 +568,13 @@
 "settings.hermes.card.title" = "🧠 Hermes Memoria larga";
 "settings.hermes.outcome.accepted" = "aceptado";
 "settings.hermes.outcome.rejected" = "rechazado";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "Apariencia";
+"settings.appearance.title" = "Tema";
+"settings.appearance.desc" = "Modo claro/oscuro o seguir la configuración del sistema.";
+"settings.calendar.theme.card" = "Tema de calendario";
+"settings.calendar.theme.desc" = "Se aplica a la cuadrícula del calendario, la selección y los colores de acento.";
+"settings.appearance.mode.system" = "Sistema";
+"settings.appearance.mode.light" = "Claro";
+"settings.appearance.mode.dark" = "Oscuro";

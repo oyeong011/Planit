@@ -569,3 +569,13 @@
 "settings.hermes.card.title" = "🧠 Hermes Memori jangka panjang";
 "settings.hermes.outcome.accepted" = "diterima";
 "settings.hermes.outcome.rejected" = "ditolak";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "Tampilan";
+"settings.appearance.title" = "Tema";
+"settings.appearance.desc" = "Mode terang/gelap atau ikuti pengaturan sistem.";
+"settings.calendar.theme.card" = "Tema kalender";
+"settings.calendar.theme.desc" = "Diterapkan pada kisi kalender, pilihan, dan warna aksen.";
+"settings.appearance.mode.system" = "Sistem";
+"settings.appearance.mode.light" = "Terang";
+"settings.appearance.mode.dark" = "Gelap";

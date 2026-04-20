@@ -569,3 +569,13 @@
 "settings.hermes.card.title" = "🧠 Hermes Долгая память";
 "settings.hermes.outcome.accepted" = "принято";
 "settings.hermes.outcome.rejected" = "отклонено";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "Внешний вид";
+"settings.appearance.title" = "Тема";
+"settings.appearance.desc" = "Светлый/тёмный режим или следовать настройкам системы.";
+"settings.calendar.theme.card" = "Тема календаря";
+"settings.calendar.theme.desc" = "Применяется к сетке календаря, выделению и акцентным цветам.";
+"settings.appearance.mode.system" = "Система";
+"settings.appearance.mode.light" = "Светлый";
+"settings.appearance.mode.dark" = "Тёмный";

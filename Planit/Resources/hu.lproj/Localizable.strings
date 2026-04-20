@@ -569,3 +569,13 @@
 "settings.hermes.card.title" = "🧠 Hermes Hosszú távú memória";
 "settings.hermes.outcome.accepted" = "elfogadva";
 "settings.hermes.outcome.rejected" = "elutasítva";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "Megjelenés";
+"settings.appearance.title" = "Téma";
+"settings.appearance.desc" = "Világos/sötét mód vagy rendszerbeállítások követése.";
+"settings.calendar.theme.card" = "Naptár téma";
+"settings.calendar.theme.desc" = "Alkalmazva a naptárrácsra, kijelölésre és kiemelési színekre.";
+"settings.appearance.mode.system" = "Rendszer";
+"settings.appearance.mode.light" = "Világos";
+"settings.appearance.mode.dark" = "Sötét";

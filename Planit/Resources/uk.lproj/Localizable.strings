@@ -569,3 +569,13 @@
 "settings.hermes.card.title" = "🧠 Hermes Довгострокова пам'ять";
 "settings.hermes.outcome.accepted" = "прийнято";
 "settings.hermes.outcome.rejected" = "відхилено";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "Вигляд";
+"settings.appearance.title" = "Тема";
+"settings.appearance.desc" = "Світлий/темний режим або слідувати налаштуванням системи.";
+"settings.calendar.theme.card" = "Тема календаря";
+"settings.calendar.theme.desc" = "Застосовується до сітки календаря, виділення та акцентних кольорів.";
+"settings.appearance.mode.system" = "Система";
+"settings.appearance.mode.light" = "Світлий";
+"settings.appearance.mode.dark" = "Темний";

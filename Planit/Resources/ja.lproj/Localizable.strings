@@ -568,3 +568,13 @@
 "settings.hermes.card.title" = "🧠 Hermes 長期記憶";
 "settings.hermes.outcome.accepted" = "承認済み";
 "settings.hermes.outcome.rejected" = "却下済み";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "外観";
+"settings.appearance.title" = "テーマ";
+"settings.appearance.desc" = "ライト/ダークモードまたはシステム設定に従います。";
+"settings.calendar.theme.card" = "カレンダーテーマ";
+"settings.calendar.theme.desc" = "カレンダーグリッド、選択状態、イベントのアクセントカラーに適用されます。";
+"settings.appearance.mode.system" = "システム";
+"settings.appearance.mode.light" = "ライト";
+"settings.appearance.mode.dark" = "ダーク";

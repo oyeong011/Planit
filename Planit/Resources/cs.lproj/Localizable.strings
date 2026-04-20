@@ -569,3 +569,13 @@
 "settings.hermes.card.title" = "🧠 Hermes Dlouhodobá paměť";
 "settings.hermes.outcome.accepted" = "přijato";
 "settings.hermes.outcome.rejected" = "odmítnuto";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "Vzhled";
+"settings.appearance.title" = "Téma";
+"settings.appearance.desc" = "Světlý/tmavý režim nebo řídit se nastavením systému.";
+"settings.calendar.theme.card" = "Téma kalendáře";
+"settings.calendar.theme.desc" = "Použito na mřížku kalendáře, výběr a barvy akcentu.";
+"settings.appearance.mode.system" = "Systém";
+"settings.appearance.mode.light" = "Světlý";
+"settings.appearance.mode.dark" = "Tmavý";

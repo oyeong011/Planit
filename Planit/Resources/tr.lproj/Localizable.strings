@@ -569,3 +569,13 @@
 "settings.hermes.card.title" = "🧠 Hermes Uzun süreli bellek";
 "settings.hermes.outcome.accepted" = "kabul edildi";
 "settings.hermes.outcome.rejected" = "reddedildi";
+
+// MARK: - Appearance section
+"settings.appearance.card" = "Görünüm";
+"settings.appearance.title" = "Tema";
+"settings.appearance.desc" = "Açık/koyu mod veya sistem ayarlarını takip edin.";
+"settings.calendar.theme.card" = "Takvim teması";
+"settings.calendar.theme.desc" = "Takvim ızgarası, seçim ve vurgu renklerine uygulanır.";
+"settings.appearance.mode.system" = "Sistem";
+"settings.appearance.mode.light" = "Açık";
+"settings.appearance.mode.dark" = "Koyu";
