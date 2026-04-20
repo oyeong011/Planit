@@ -102,10 +102,9 @@ final class GoogleCalendarService {
         let (data, response) = try await URLSession.shared.data(for: request)
         let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
 
-        // 스코프 없으면 (403) primary만 반환 — 재로그인 필요 플래그 설정
+        // calendarList 스코프가 없으면 primary만 반환 — 재로그인 루프 유발하지 않음
         if statusCode == 403 || statusCode == 401 {
-            PlanitLoggers.sync.warning("Google calendarList scope unavailable status=\(statusCode, privacy: .public); using primary calendar")
-            needsReauth = true
+            PlanitLoggers.sync.warning("Google calendarList scope unavailable status=\(statusCode, privacy: .public); using primary calendar silently")
             let primary = GoogleCalendarInfo(id: "primary", name: "Google", color: Self.defaultColor, accessRole: "owner")
             cachedCalendars = [primary]
             return [primary]
