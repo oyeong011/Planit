@@ -67,5 +67,30 @@ struct WallpaperPreset: Identifiable, Equatable, Hashable {
             colorHexes: ["#00B09B", "#96C93D"],
             startPoint: .topLeading, endPoint: .bottomTrailing
         ),
+        // MARK: - 계절 배경
+        WallpaperPreset(
+            id: "spring",
+            nameKey: "wallpaper.spring",
+            colorHexes: ["#FFCAD4", "#B5EAD7", "#C7CEEA"],
+            startPoint: .topLeading, endPoint: .bottomTrailing
+        ),
+        WallpaperPreset(
+            id: "summer",
+            nameKey: "wallpaper.summer",
+            colorHexes: ["#00C9FF", "#12D8FA", "#A6FFCB"],
+            startPoint: .topLeading, endPoint: .bottomTrailing
+        ),
+        WallpaperPreset(
+            id: "autumn",
+            nameKey: "wallpaper.autumn",
+            colorHexes: ["#F7971E", "#FFD200", "#EB5757"],
+            startPoint: .topLeading, endPoint: .bottomTrailing
+        ),
+        WallpaperPreset(
+            id: "winter",
+            nameKey: "wallpaper.winter",
+            colorHexes: ["#1A2980", "#26D0CE", "#E0F7FA"],
+            startPoint: .topLeading, endPoint: .bottomTrailing
+        ),
     ]
 }
