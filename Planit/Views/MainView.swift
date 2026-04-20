@@ -789,8 +789,13 @@ struct DayCellView: View {
                     .padding(.horizontal, 4)
                     .padding(.vertical, 1.5)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(RoundedRectangle(cornerRadius: 3).fill(displayColor.opacity(0.15)))
-                    .foregroundStyle(isCurrentMonth ? displayColor.opacity(0.85) : .secondary.opacity(0.3))
+                    .background(
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 3).fill(.background.opacity(0.55))
+                            RoundedRectangle(cornerRadius: 3).fill(displayColor.opacity(0.25))
+                        }
+                    )
+                    .foregroundStyle(isCurrentMonth ? displayColor : .secondary.opacity(0.3))
             }
             ForEach(Array(todos.prefix(max(0, 4 - events.count))), id: \.id) { todo in
                 DayCellTodoRow(todo: todo, cat: categoryFor(todo.categoryID), isCurrentMonth: isCurrentMonth)
@@ -814,8 +819,13 @@ private struct DayCellTodoRow: View {
         .padding(.horizontal, 4)
         .padding(.vertical, 1.5)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 3).fill(cat.color.opacity(0.1)))
-        .foregroundStyle(isCurrentMonth ? cat.color.opacity(0.85) : .secondary.opacity(0.3))
+        .background(
+            ZStack {
+                RoundedRectangle(cornerRadius: 3).fill(.background.opacity(0.55))
+                RoundedRectangle(cornerRadius: 3).fill(cat.color.opacity(0.2))
+            }
+        )
+        .foregroundStyle(isCurrentMonth ? cat.color : .secondary.opacity(0.3))
     }
 }
 
