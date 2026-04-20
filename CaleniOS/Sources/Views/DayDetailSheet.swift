@@ -224,51 +224,60 @@ struct DayDetailSheet<Repo: iOSEventRepository>: View {
     }
 }
 
-// MARK: - EventCard
+// MARK: - EventCard (Quick Win: macOS DailyDetail 패턴 — 시간 rail + 색상 바 + 카드)
 
 private struct EventCard: View {
     let event: CalendarEvent
     var onTap: () -> Void
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            RoundedRectangle(cornerRadius: 2, style: .continuous)
-                .fill(categoryColor.opacity(0.95))
-                .frame(width: 4)
-                .frame(minHeight: 58)
+        HStack(alignment: .top, spacing: 0) {
+            // 왼쪽 시간 rail (56pt 고정, monospacedDigit) — macOS DailyDetailView 패턴 이식
+            timeRail
+                .frame(width: 56, alignment: .leading)
+                .padding(.top, 14)
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text(event.title)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(.primary)
-                    .lineLimit(2)
+            // 얇은 색상 바 (3pt) — 시간 rail과 카드 사이 시각 연결
+            RoundedRectangle(cornerRadius: 1.5, style: .continuous)
+                .fill(categoryColor)
+                .frame(width: 3)
+                .frame(minHeight: 52)
+                .padding(.trailing, 10)
 
-                HStack(spacing: 8) {
-                    Image(systemName: event.isAllDay ? "sun.max.fill" : "clock")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(categoryColor)
-                    Text(timeRangeText)
-                        .font(.system(size: 13, weight: .medium))
+            // 카드 본문
+            VStack(alignment: .leading, spacing: 5) {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(event.title)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
+                    Spacer(minLength: 6)
+                    categoryPill
+                }
+
+                if !event.isAllDay {
+                    Text(durationText)
+                        .font(.system(size: 12, weight: .regular))
                         .foregroundStyle(.secondary)
+                        .monospacedDigit()
                 }
 
                 if let loc = event.location, !loc.isEmpty {
-                    HStack(spacing: 6) {
+                    HStack(spacing: 4) {
                         Image(systemName: "mappin.and.ellipse")
                             .font(.system(size: 10))
-                            .foregroundStyle(Color(.tertiaryLabel))
                         Text(loc)
                             .font(.system(size: 12))
-                            .foregroundStyle(Color(.tertiaryLabel))
                             .lineLimit(1)
                     }
+                    .foregroundStyle(Color(.tertiaryLabel))
                 }
             }
+            .padding(.vertical, 12)
+            .padding(.trailing, 14)
 
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(Color.calenCardSurface)
@@ -278,17 +287,69 @@ private struct EventCard: View {
         .onTapGesture { onTap() }
     }
 
-    private var categoryColor: Color {
-        Color(hex: event.colorHex) ?? .calenBlue
+    @ViewBuilder
+    private var timeRail: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            if event.isAllDay {
+                Text("종일")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(categoryColor)
+                    .padding(.leading, 12)
+            } else {
+                Text(startTimeText)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.primary)
+                    .monospacedDigit()
+                    .padding(.leading, 12)
+                Text(endTimeText)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+                    .padding(.leading, 12)
+            }
+        }
     }
 
-    private var timeRangeText: String {
-        if event.isAllDay { return "종일" }
-        let fmt = DateFormatter()
-        fmt.locale = Locale(identifier: "ko_KR")
-        fmt.dateFormat = "HH:mm"
-        return "\(fmt.string(from: event.startDate)) – \(fmt.string(from: event.endDate))"
+    private var categoryPill: some View {
+        Text(categoryLabel)
+            .font(.system(size: 9, weight: .semibold))
+            .foregroundStyle(categoryColor)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(categoryColor.opacity(0.12), in: Capsule())
     }
+
+    private var categoryColor: Color { Color(hex: event.colorHex) ?? .calenBlue }
+
+    /// 카테고리 라벨 — colorHex 기반 macOS 매핑 재활용.
+    private var categoryLabel: String {
+        switch event.colorHex.uppercased() {
+        case "#F56691": return "업무"
+        case "#3B82F6", "#3A82F6": return "미팅"
+        case "#FAC430": return "식사"
+        case "#40C786": return "운동"
+        case "#9A5CE8": return "개인"
+        default: return "일반"
+        }
+    }
+
+    private var startTimeText: String { Self.hm.string(from: event.startDate) }
+    private var endTimeText: String { Self.hm.string(from: event.endDate) }
+
+    private var durationText: String {
+        let minutes = Int(event.endDate.timeIntervalSince(event.startDate) / 60)
+        if minutes <= 0 { return "" }
+        if minutes < 60 { return "\(minutes)분" }
+        let h = minutes / 60, m = minutes % 60
+        return m == 0 ? "\(h)시간" : "\(h)시간 \(m)분"
+    }
+
+    private static let hm: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "ko_KR")
+        f.dateFormat = "HH:mm"
+        return f
+    }()
 }
 
 // MARK: - Preview
