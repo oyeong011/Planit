@@ -2,6 +2,8 @@
 import Foundation
 import SwiftData
 import Combine
+import CryptoKit
+import SwiftUI
 import CalenShared
 
 // MARK: - HomeViewModel (v4)
@@ -98,9 +100,20 @@ final class HomeViewModel: ObservableObject {
     /// 전 달/다음 달 셀(스필오버)에 걸친 이벤트도 포함한다.
     @Published private(set) var schedulesInMonth: [ScheduleDisplayItem] = []
 
-    /// v5 Phase A: 주 시트용 fake 이벤트 리포지토리.
-    /// Phase B에서 Google Calendar 기반 구현체로 교체 예정.
+    /// v5 Phase A: 주 시트용 fake 이벤트 리포지토리. 미로그인/프리뷰에서 사용.
+    /// Phase B: 로그인 상태에선 `googleRepository`가 대신 source of truth.
     let eventRepository: FakeEventRepository
+
+    /// v0.1.1 Phase B M4: 로그인 시 활성화되는 실제 Google Calendar 리포지토리.
+    /// nil이면 fake fallback(미로그인 데모).
+    @Published private(set) var googleRepository: GoogleCalendarRepository?
+
+    /// Auth 관리자 — 로그인 상태 변화 구독.
+    private let authManager: iOSGoogleAuthManager
+    private var authCancellable: AnyCancellable?
+
+    /// 현재 repo가 Google 기반인지 (= 로그인됨).
+    var usingGoogleRepo: Bool { googleRepository != nil }
 
     /// 주 시트 표시 여부 (날짜 탭 시 true).
     @Published var showWeekSheet: Bool = false
@@ -124,7 +137,12 @@ final class HomeViewModel: ObservableObject {
 
     // MARK: - Init
 
-    init(modelContext: ModelContext? = nil, eventRepository: FakeEventRepository? = nil) {
+    init(
+        modelContext: ModelContext? = nil,
+        eventRepository: FakeEventRepository? = nil,
+        authManager: iOSGoogleAuthManager = .shared,
+        useFakeForPreview: Bool = false
+    ) {
         let now = Date()
         var comps = Calendar(identifier: .gregorian).dateComponents([.year, .month], from: now)
         comps.day = 1
@@ -133,15 +151,62 @@ final class HomeViewModel: ObservableObject {
         self.expandedWeekStart = nil
         self.modelContext = modelContext
         self.eventRepository = eventRepository ?? FakeEventRepository()
+        self.authManager = authManager
 
         // 오늘이 속한 주를 기본 확장
         self.expandedWeekStart = weekStart(for: selectedDate)
+
+        // Phase B M4: 로그인 상태에 따라 Google repository 활성화.
+        if !useFakeForPreview && authManager.isAuthenticated {
+            activateGoogleRepo()
+        }
+
+        // Phase B M4-2: 로그인 상태 변화 감지 → repo swap.
+        self.authCancellable = authManager.$isAuthenticated
+            .removeDuplicates()
+            .sink { [weak self] isAuthed in
+                guard let self else { return }
+                if isAuthed && self.googleRepository == nil {
+                    self.activateGoogleRepo()
+                    self.refreshEventsForCurrentMonth()
+                } else if !isAuthed {
+                    self.googleRepository = nil
+                }
+            }
 
         if modelContext != nil {
             seedIfNeededAndFetch()
         } else {
             // 프리뷰 / 컨텍스트 없을 때는 mock 주입
             schedulesInMonth = Self.mockMonthSchedules(around: currentMonth)
+        }
+    }
+
+    /// Phase B M4-2: auth manager로부터 GoogleCalendarClient를 조립해 repo 활성화.
+    private func activateGoogleRepo() {
+        let client = GoogleCalendarClient(authProvider: authManager)
+        self.googleRepository = GoogleCalendarRepository(client: client)
+    }
+
+    /// 현재 월에 대해 google repo로부터 이벤트를 가져와 `schedulesInMonth` 갱신.
+    /// 로그인 직후 / 월 네비 / manual refresh 시 호출.
+    func refreshEventsForCurrentMonth() {
+        guard let repo = googleRepository else { return }
+        let gridStart = cal.startOfDay(for: datesInMonthGrid(for: currentMonth).first ?? currentMonth)
+        guard let gridEnd = cal.date(byAdding: .day, value: 42, to: gridStart) else { return }
+        let interval = DateInterval(start: gridStart, end: gridEnd)
+
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            do {
+                let events = try await repo.events(in: interval)
+                self.schedulesInMonth = events
+                    .compactMap { Self.displayItem(from: $0) }
+                    .sorted { $0.startTime < $1.startTime }
+            } catch {
+                // 네트워크 실패: 기존 표시 유지 + 콘솔 로그 (Phase C에서 토스트 와이어링)
+                print("[HomeViewModel] google fetch error: \(error)")
+            }
         }
     }
 
@@ -161,14 +226,24 @@ final class HomeViewModel: ObservableObject {
     func goToPreviousMonth() {
         guard let prev = cal.date(byAdding: .month, value: -1, to: currentMonth) else { return }
         currentMonth = prev
-        fetchSchedulesInMonth()
+        reloadForCurrentMonth()
     }
 
     /// 가로 스와이프로 다음 달로 이동.
     func goToNextMonth() {
         guard let next = cal.date(byAdding: .month, value: 1, to: currentMonth) else { return }
         currentMonth = next
-        fetchSchedulesInMonth()
+        reloadForCurrentMonth()
+    }
+
+    /// 월 이동 / 외부 변경 후 재페치.
+    /// 로그인 → Google Calendar / 미로그인 → SwiftData mock.
+    private func reloadForCurrentMonth() {
+        if usingGoogleRepo {
+            refreshEventsForCurrentMonth()
+        } else {
+            fetchSchedulesInMonth()
+        }
     }
 
     /// 특정 날짜의 일정(시작시간 오름차순).
@@ -235,7 +310,53 @@ final class HomeViewModel: ObservableObject {
 
     /// 월 그리드 범위를 재페치. 일정 추가/삭제 등 외부 변경 후 호출.
     func reloadSchedules() {
-        fetchSchedulesInMonth()
+        if usingGoogleRepo {
+            refreshEventsForCurrentMonth()
+        } else {
+            fetchSchedulesInMonth()
+        }
+    }
+
+    // MARK: - Phase B M4-4: Google Calendar create
+
+    /// CalendarAddView가 만든 `Schedule`을 `CalendarEventDraft`로 변환 후 repo.create 호출.
+    /// 성공 시 월 그리드 재페치. 실패는 콘솔 로그 (Phase C에서 토스트 와이어링).
+    func createOnGoogleCalendar(from schedule: Schedule) {
+        guard let repo = googleRepository else { return }
+
+        let hex: String
+        switch schedule.category {
+        case .work:     hex = "#F56691"
+        case .meeting:  hex = "#3B82F6"
+        case .meal:     hex = "#FAC430"
+        case .exercise: hex = "#40C786"
+        case .personal: hex = "#9A5CE8"
+        case .general:  hex = "#909094"
+        }
+
+        // Schedule은 endTime이 optional. endTime이 nil이면 +1시간 기본.
+        let end = schedule.endTime ?? schedule.startTime.addingTimeInterval(3600)
+
+        let draft = CalendarEventDraft(
+            calendarId: repo.calendarId,
+            title: schedule.title,
+            startDate: schedule.startTime,
+            endDate: end,
+            isAllDay: false,
+            location: schedule.location,
+            description: schedule.notes,
+            colorHex: hex
+        )
+
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            do {
+                _ = try await repo.create(draft)
+                self.refreshEventsForCurrentMonth()
+            } catch {
+                print("[HomeViewModel] createOnGoogleCalendar error: \(error)")
+            }
+        }
     }
 
     private func fetchSchedulesInMonth() {
@@ -369,6 +490,90 @@ final class HomeViewModel: ObservableObject {
     /// (v3 호환) 외부에서 mock 요청 시 사용. CalendarAddView 프리뷰 등에서 참조 가능.
     static func mockSchedules(for date: Date) -> [ScheduleDisplayItem] {
         mockMonthSchedules(around: date)
+    }
+
+    // MARK: - CalendarEvent → ScheduleDisplayItem (Phase B M4-3)
+
+    /// Shared `CalendarEvent`를 월 그리드/주 확장용 `ScheduleDisplayItem`으로 매핑.
+    /// id: `event.calendarId + event.id`의 uuid5-like hash (Stable).
+    /// category: colorHex → Schedule.ScheduleCategory 6색 매핑.
+    static func displayItem(from event: CalendarEvent) -> ScheduleDisplayItem? {
+        // `ScheduleDisplayItem.id`는 UUID 타입. 복합 식별자(`calendarId::id`)를 deterministic UUID로 변환.
+        let composite = "\(event.calendarId)::\(event.id)"
+        let stableID = Self.deterministicUUID(from: composite)
+
+        return ScheduleDisplayItem(
+            id: stableID,
+            title: event.title,
+            category: category(forHex: event.colorHex),
+            startTime: event.startDate,
+            endTime: event.endDate,
+            location: event.location,
+            summary: nil,
+            travelTimeMinutes: nil,
+            bulletPoints: event.description.map { notes in
+                notes
+                    .components(separatedBy: "\n")
+                    .map { $0.trimmingCharacters(in: .whitespaces) }
+                    .filter { !$0.isEmpty }
+            } ?? []
+        )
+    }
+
+    /// Hex → Calen 6색 카테고리. Google colorId 기준 매핑과 대응.
+    static func category(forHex hex: String) -> ScheduleCategory {
+        switch hex.uppercased() {
+        case "#F56691": return .work
+        case "#3B82F6": return .meeting
+        case "#FAC430": return .meal
+        case "#40C786": return .exercise
+        case "#9A5CE8": return .personal
+        default: return .general
+        }
+    }
+
+    /// `input` 문자열 → deterministic UUID. 서로 다른 이벤트가 같은 UUID를 가질 확률은 사실상 0.
+    /// SHA-256 해시의 앞 16바이트로 v4 스타일 UUID를 구성 (variant/version 비트 세팅).
+    private static func deterministicUUID(from input: String) -> UUID {
+        let data = Data(input.utf8)
+        var hash = [UInt8](repeating: 0, count: 32)
+        data.withUnsafeBytes { ptr in
+            if let base = ptr.baseAddress {
+                Self.sha256(base, data.count, &hash)
+            }
+        }
+        var bytes = Array(hash.prefix(16))
+        // RFC 4122 v4 variant bits
+        bytes[6] = (bytes[6] & 0x0F) | 0x40
+        bytes[8] = (bytes[8] & 0x3F) | 0x80
+        let uuidTuple: uuid_t = (
+            bytes[0], bytes[1], bytes[2], bytes[3],
+            bytes[4], bytes[5], bytes[6], bytes[7],
+            bytes[8], bytes[9], bytes[10], bytes[11],
+            bytes[12], bytes[13], bytes[14], bytes[15]
+        )
+        return UUID(uuid: uuidTuple)
+    }
+
+    /// CommonCrypto 헤더 직접 import를 피하기 위한 thin wrapper.
+    /// 실사용 시 `_CCHashAlgorithm` → `CC_SHA256` 호출. 여기선 CryptoKit 경유.
+    private static func sha256(_ ptr: UnsafeRawPointer, _ count: Int, _ out: UnsafeMutablePointer<UInt8>) {
+        // CryptoKit의 SHA256 사용 — CommonCrypto 직접 바인딩 대신.
+        let data = Data(bytes: ptr, count: count)
+        let digest = _SHA256.hash(data: data)
+        for (i, byte) in digest.enumerated() where i < 32 {
+            out[i] = byte
+        }
+    }
+}
+
+// MARK: - SHA256 (CryptoKit thin wrapper)
+
+/// `_SHA256`: CryptoKit 의존을 파일 내 캡슐화하기 위한 shim. iOS 13+.
+private enum _SHA256 {
+    static func hash(data: Data) -> [UInt8] {
+        let digest = SHA256.hash(data: data)
+        return Array(digest)
     }
 }
 #endif

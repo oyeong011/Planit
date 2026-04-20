@@ -55,12 +55,31 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showAddSheet) {
             CalendarAddView(preselectedDate: viewModel.selectedDate) { newSchedule in
-                if let ctx = viewModel.modelContext {
+                // Phase B M4-4: Google 로그인 시 GCal insert, 미로그인 시 SwiftData 로컬 저장.
+                if viewModel.usingGoogleRepo {
+                    viewModel.createOnGoogleCalendar(from: newSchedule)
+                } else if let ctx = viewModel.modelContext {
                     ctx.insert(newSchedule)
                     try? ctx.save()
+                    reloadAfterAdd()
                 }
-                // 재페치 트리거
-                reloadAfterAdd()
+            }
+        }
+        // v5 Phase A: 풀스크린 주 시간 그리드 시트.
+        // Phase B M4: 로그인 시 GoogleCalendarRepository, 미로그인 시 FakeEventRepository.
+        .sheet(isPresented: $viewModel.showWeekSheet) {
+            if let googleRepo = viewModel.googleRepository {
+                WeekTimeGridSheet(
+                    isPresented: $viewModel.showWeekSheet,
+                    initialDate: viewModel.sheetAnchorDate,
+                    repo: googleRepo
+                )
+            } else {
+                WeekTimeGridSheet(
+                    isPresented: $viewModel.showWeekSheet,
+                    initialDate: viewModel.sheetAnchorDate,
+                    repo: viewModel.eventRepository
+                )
             }
         }
         // v5 Phase A: 풀스크린 주 시간 그리드 시트

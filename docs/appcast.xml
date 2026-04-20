@@ -567,5 +567,194 @@ brew install --cask oyeong011/calen/calen-ai
             type="application/octet-stream" />
         <description><![CDATA[릴리스 v0.3.2]]></description>
     </item>
+            <item>
+        <title>v0.3.3</title>
+        <sparkle:version>303</sparkle:version>
+        <sparkle:shortVersionString>0.3.3</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Sun, 19 Apr 2026 09:17:13 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.3.3/Calen-0.3.3-universal.zip"
+            sparkle:edSignature="BsE5OX23pe8TSLtOFUnJ99+Do+mjFlMNHaJcC+SpINdgPLx6aZS6uUHnNUMT4RRd9MynWM1A6L/zsGi5U/f4BQ=="
+            length="7466040"
+            type="application/octet-stream" />
+        <description><![CDATA[## Calen v0.3.3
+
+### 이번 버전 변경사항
+- Initial release
+
+### 업그레이드
+Sparkle이 자동으로 설치합니다. '지금 업데이트' 버튼을 누르면 바로 적용됩니다.
+]]></description>
+    </item>
+            <item>
+        <title>v0.3.4</title>
+        <sparkle:version>304</sparkle:version>
+        <sparkle:shortVersionString>0.3.4</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Sun, 19 Apr 2026 09:43:08 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.3.4/Calen-0.3.4-universal.zip"
+            sparkle:edSignature="v8gfIPBvClnpUNm+ohuWWRGNEyoozHTC/V3lGwS+s/gpjCEcE1QDCLHsgMXWyl8MK42F85sDFj/mzKI3TsDDDw=="
+            length="7506739"
+            type="application/octet-stream" />
+        <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.3.4</h2><p style="color:#666;">이번 빌드의 세부 변경사항은 GitHub 릴리즈 페이지를 확인하세요.</p><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
+    </item>
+            <item>
+        <title>v0.4.0</title>
+        <sparkle:version>400</sparkle:version>
+        <sparkle:shortVersionString>0.4.0</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Sun, 19 Apr 2026 09:59:03 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.4.0/Calen-0.4.0-universal.zip"
+            sparkle:edSignature="WpodaN8D5OQ2e5sH/PqjVXFVnlTfldTzIFRE1GK+GezIeK87Pm1kO7AxLzmjE/U5WS1LyYBjaIlU/UXsMVrMBw=="
+            length="7548173"
+            type="application/octet-stream" />
+        <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.4.0</h2><p style="color:#666;">이번 빌드의 세부 변경사항은 GitHub 릴리즈 페이지를 확인하세요.</p><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
+    </item>
+            <item>
+        <title>v0.4.1</title>
+        <sparkle:version>401</sparkle:version>
+        <sparkle:shortVersionString>0.4.1</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Sun, 19 Apr 2026 10:16:09 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.4.1/Calen-0.4.1-universal.zip"
+            sparkle:edSignature="ey/N7zTxOeT6pHpe4eAppIpOMCVk0Q1Z+lYS3K+mQ6re1TTP5ZJwJ1p9sgUMNvEMbajV96VQFIorGIeMmV70Bw=="
+            length="7542088"
+            type="application/octet-stream" />
+        <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.4.1</h2><p style="color:#666;">이번 빌드의 세부 변경사항은 GitHub 릴리즈 페이지를 확인하세요.</p><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
+    </item>
+            <item>
+        <title>v0.4.2</title>
+        <sparkle:version>402</sparkle:version>
+        <sparkle:shortVersionString>0.4.2</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Sun, 19 Apr 2026 10:21:05 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.4.2/Calen-0.4.2-universal.zip"
+            sparkle:edSignature="8f3RPxSwA/tTeu+6tATmCjCsZ12NuFQkYzjYrW79iOKiaD8Z5vlB0EYtrqwwJF1L8VuGk4XGMTk1hiTd9gMBAg=="
+            length="7543503"
+            type="application/octet-stream" />
+        <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.4.2</h2><p style="color:#666;">이번 빌드의 세부 변경사항은 GitHub 릴리즈 페이지를 확인하세요.</p><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
+    </item>
+            <item>
+        <title>v0.4.3</title>
+        <sparkle:version>403</sparkle:version>
+        <sparkle:shortVersionString>0.4.3</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Sun, 19 Apr 2026 10:37:34 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.4.3/Calen-0.4.3-universal.zip"
+            sparkle:edSignature="ZWwU7db4lAAUk9BCqBiDMkMLeA4nt3axrY9xJ+hY7JF52RVtolsdZb84jpVhupwIme6kDOlQZTJY5/3GXnzoCQ=="
+            length="7558797"
+            type="application/octet-stream" />
+        <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.4.3</h2><p style="color:#666;">이번 빌드의 세부 변경사항은 GitHub 릴리즈 페이지를 확인하세요.</p><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
+    </item>
+            <item>
+        <title>v0.4.4</title>
+        <sparkle:version>404</sparkle:version>
+        <sparkle:shortVersionString>0.4.4</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Sun, 19 Apr 2026 10:42:52 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.4.4/Calen-0.4.4-universal.zip"
+            sparkle:edSignature="AoUADV1CGEzAlvhKgUBa2JRW6UE6RSSWK/mVYfyVDF4lQvmfCtmLwAo4Qg6OCg2BVi0QQfV6ad8PZ6Ow91aVBw=="
+            length="7561207"
+            type="application/octet-stream" />
+        <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.4.4</h2><p style="color:#666;">이번 빌드의 세부 변경사항은 GitHub 릴리즈 페이지를 확인하세요.</p><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
+    </item>
+            <item>
+        <title>v0.4.5</title>
+        <sparkle:version>405</sparkle:version>
+        <sparkle:shortVersionString>0.4.5</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Sun, 19 Apr 2026 15:51:44 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.4.5/Calen-0.4.5-universal.zip"
+            sparkle:edSignature="2qyoQmJEU3p9piiqL9pmS1umvXFx+hCVHILFT+IbUDUGMmKk7l9b/jjWkSgx7m5FdAN/5ck8gTB4xWKJDrTYCA=="
+            length="7674061"
+            type="application/octet-stream" />
+        <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.4.5</h2><p style="color:#666;">이번 빌드의 세부 변경사항은 GitHub 릴리즈 페이지를 확인하세요.</p><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
+    </item>
+            <item>
+        <title>v0.4.6</title>
+        <sparkle:version>406</sparkle:version>
+        <sparkle:shortVersionString>0.4.6</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Sun, 19 Apr 2026 16:00:29 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.4.6/Calen-0.4.6-universal.zip"
+            sparkle:edSignature="QoOYU9vw7EwVTOhZphEI+9lwvfe0r4H3pCXrAvxiQe/KsdBwu+VIrfI3ZfmYndDWkPbIzpHFPAn1IoOeUJ+ZAw=="
+            length="7673589"
+            type="application/octet-stream" />
+        <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.4.6</h2><p style="color:#666;">이번 빌드의 세부 변경사항은 GitHub 릴리즈 페이지를 확인하세요.</p><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
+    </item>
+            <item>
+        <title>v0.4.7</title>
+        <sparkle:version>407</sparkle:version>
+        <sparkle:shortVersionString>0.4.7</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Sun, 19 Apr 2026 16:42:21 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.4.7/Calen-0.4.7-universal.zip"
+            sparkle:edSignature="6b+b7/3tS+SXofLWlbNiqGajgD4/RjvjsHM3mNWLVNVcbSeNfiT46nkznI0fv/Ou0QukchnHZWtwUY3sJCHuAQ=="
+            length="7719159"
+            type="application/octet-stream" />
+        <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.4.7</h2><p style="color:#666;">이번 빌드의 세부 변경사항은 GitHub 릴리즈 페이지를 확인하세요.</p><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
+    </item>
+            <item>
+        <title>v0.4.8</title>
+        <sparkle:version>408</sparkle:version>
+        <sparkle:shortVersionString>0.4.8</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Mon, 20 Apr 2026 00:38:40 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.4.8/Calen-0.4.8-universal.zip"
+            sparkle:edSignature="X7BRShqGcgWwosFkvFeuypk0e/Y/JAoYVvC5c9bdjBOwAPzYDgo2dBXNg2/oroQuUITy3AVCy5P01bgdN9TQCw=="
+            length="7719241"
+            type="application/octet-stream" />
+        <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.4.8</h2><p style="color:#666;">이번 빌드의 세부 변경사항은 GitHub 릴리즈 페이지를 확인하세요.</p><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
+    </item>
+            <item>
+        <title>v0.4.9</title>
+        <sparkle:version>409</sparkle:version>
+        <sparkle:shortVersionString>0.4.9</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Mon, 20 Apr 2026 02:46:01 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.4.9/Calen-0.4.9-universal.zip"
+            sparkle:edSignature="Fjy/Mk0wm7lQZaRkOL5CIrBhF0pLGcu5X8VGKNafyDAp6FPQOUYoQBQoe24FX1S08kzIQhosxXJQfOcuHKQpBg=="
+            length="7720441"
+            type="application/octet-stream" />
+        <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.4.9</h2><p style="color:#666;">이번 빌드의 세부 변경사항은 GitHub 릴리즈 페이지를 확인하세요.</p><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
+    </item>
+            <item>
+        <title>v0.4.10</title>
+        <sparkle:version>410</sparkle:version>
+        <sparkle:shortVersionString>0.4.10</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Mon, 20 Apr 2026 03:19:31 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.4.10/Calen-0.4.10-universal.zip"
+            sparkle:edSignature="asRKkUPlKvtgnyJwIq8oNTD8OPEtD6DoXOl9p7h9f/9Kx+JNsYAkaISJdG7J5GTehvW0pobjcb3TDEqpxEyZDQ=="
+            length="7773555"
+            type="application/octet-stream" />
+        <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.4.10</h2><p style="color:#666;">이번 빌드의 세부 변경사항은 GitHub 릴리즈 페이지를 확인하세요.</p><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
+    </item>
+            <item>
+        <title>v0.4.11</title>
+        <sparkle:version>411</sparkle:version>
+        <sparkle:shortVersionString>0.4.11</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Mon, 20 Apr 2026 03:31:17 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.4.11/Calen-0.4.11-universal.zip"
+            sparkle:edSignature="yuwuu2Koa7AMiUParjXPLCUBWlCwe7ASVSk4TLap47JGIKaiscd8N5tTjtRCi7bhXVDRwaeeMc1txPR+HqpYBw=="
+            length="7773705"
+            type="application/octet-stream" />
+        <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.4.11</h2><p style="color:#666;">이번 빌드의 세부 변경사항은 GitHub 릴리즈 페이지를 확인하세요.</p><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
+    </item>
     </channel>
 </rss>

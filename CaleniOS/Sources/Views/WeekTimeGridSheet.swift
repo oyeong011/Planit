@@ -32,14 +32,14 @@ import CalenShared
 //  6) columnWidth = max(120, availableWidth / 7) → iPhone 좁음/iPad 넓음 대응.
 //  7) DemoBanner: fake repo 상태 고지.
 
-struct WeekTimeGridSheet: View {
+struct WeekTimeGridSheet<Repo: iOSEventRepository>: View {
 
     // MARK: - Input
 
     @Binding var isPresented: Bool
     let initialDate: Date
 
-    @ObservedObject var repo: FakeEventRepository
+    @ObservedObject var repo: Repo
 
     // MARK: - Display state
 
@@ -83,7 +83,7 @@ struct WeekTimeGridSheet: View {
     private let tapThreshold: CGFloat = 8
     private let dragMinDistance: CGFloat = 4   // 제스처 인식 시작 minimumDistance
 
-    init(isPresented: Binding<Bool>, initialDate: Date, repo: FakeEventRepository) {
+    init(isPresented: Binding<Bool>, initialDate: Date, repo: Repo) {
         self._isPresented = isPresented
         self.initialDate = initialDate
         self.repo = repo
