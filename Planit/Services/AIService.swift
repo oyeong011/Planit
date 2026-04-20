@@ -245,7 +245,7 @@ final class AIService: ObservableObject {
     /// 스마트 스케줄러 (여유 슬롯 탐색, 충돌 감지)
     let scheduler = SmartSchedulerService()
 
-    nonisolated private static let cliTimeout: TimeInterval = 90
+    nonisolated private static let cliTimeout: TimeInterval = 35
     nonisolated private static let maxOutputBytes = 1_048_576  // 1 MB
     private static let externalContextConsentKey = "planit.aiExternalContextConsentGranted.v1"
     nonisolated static let maxActionDurationMinutes = 24 * 60
@@ -541,7 +541,7 @@ final class AIService: ObservableObject {
             context += "\n\(scheduleCtx)\n"
         }
 
-        return (String(context.prefix(24_000)), ids)
+        return (String(context.prefix(10_000)), ids)
     }
 
     private func buildCategoryContext() -> String {
@@ -1386,7 +1386,8 @@ final class AIService: ObservableObject {
         // Codex용: 시스템 프롬프트와 대화 내용을 명확히 분리해 인젝션 경계 강화
         var fullPrompt = system.isEmpty ? "" : system + "\n\n=== 대화 시작 ===\n"
 
-        let recentHistory = history.suffix(6)
+        // 직전 4턴만, 메시지당 800자 제한 — 긴 연구/분석 응답 후 컨텍스트 폭발 방지
+        let recentHistory = history.suffix(4)
         for msg in recentHistory {
             switch msg.role {
             case .user:
@@ -1395,7 +1396,7 @@ final class AIService: ObservableObject {
                     .replacingOccurrences(of: "\n사용자:", with: " ")
                     .replacingOccurrences(of: "\n=== ", with: " ")
                     .replacingOccurrences(of: "```", with: "")
-                    .prefix(2000))
+                    .prefix(800))
                 fullPrompt += "사용자: \(safe)\n"
             case .assistant:
                 let safe = String(msg.content
@@ -1403,7 +1404,7 @@ final class AIService: ObservableObject {
                     .replacingOccurrences(of: "\n사용자:", with: " ")
                     .replacingOccurrences(of: "\n=== ", with: " ")
                     .replacingOccurrences(of: "```", with: "")
-                    .prefix(2000))
+                    .prefix(800))
                 fullPrompt += "어시스턴트: \(safe)\n"
             default: break
             }
@@ -1413,8 +1414,10 @@ final class AIService: ObservableObject {
             .replacingOccurrences(of: "\n사용자:", with: " ")
             .replacingOccurrences(of: "\n=== ", with: " ")
             .replacingOccurrences(of: "```", with: "")
-            .prefix(4000))
+            .prefix(2000))
         fullPrompt += "\n사용자: \(safeMsg)"
+        // 전체 stdin 크기 15KB 이하로 제한
+        fullPrompt = String(fullPrompt.prefix(15_000))
 
         return await withCheckedContinuation { continuation in
             Task.detached {
