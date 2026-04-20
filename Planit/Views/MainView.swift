@@ -271,7 +271,8 @@ struct MainCalendarView: View {
                 ChatView(aiService: aiService, viewModel: viewModel,
                          goalMemoryService: goalMemoryService,
                          habitService: habitService,
-                         hermesMemoryService: hermesMemoryService)
+                         hermesMemoryService: hermesMemoryService,
+                         onOpenSettings: { showSettings = true })
             }
         }
     }
