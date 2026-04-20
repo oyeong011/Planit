@@ -47,12 +47,12 @@ struct MonthGridView: View {
 
     // MARK: - Dimensions
 
-    private let rowDateAreaHeight: CGFloat = 24    // 날짜 숫자 영역
-    private let barHeight: CGFloat = 18
+    private let rowDateAreaHeight: CGFloat = 22    // 날짜 숫자 영역 (축소)
+    private let barHeight: CGFloat = 20            // 바 높이 증가 (읽힘)
     private let barSpacing: CGFloat = 2
-    private let maxLanes: Int = 4                  // 최대 표시 lane
-    private let overflowBadgeHeight: CGFloat = 14
-    private let cellHorizontalPadding: CGFloat = 3
+    private let maxLanes: Int = 3                  // 공간 확보 — 4번째부터 "+N"
+    private let overflowBadgeHeight: CGFloat = 12
+    private let cellHorizontalPadding: CGFloat = 1  // 1pt만 양끝 간격 — 바가 cell 거의 꽉 채움
 
     private var laneArea: CGFloat {
         CGFloat(maxLanes) * (barHeight + barSpacing)
@@ -262,47 +262,47 @@ private struct EventBarRibbon: View {
     let dimmed: Bool
 
     var body: some View {
-        HStack(spacing: 4) {
-            if continuesFromPrev {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 8, weight: .bold))
-                    .foregroundStyle(category.swiftUIColor.opacity(0.9))
-            }
-            // 좌측 3pt color bar (첫 주일 때만)
-            if !continuesFromPrev {
-                RoundedRectangle(cornerRadius: 1, style: .continuous)
-                    .fill(category.swiftUIColor)
-                    .frame(width: 3, height: 12)
-            }
-            Text(item.title)
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(dimmed
-                    ? Color.secondary.opacity(0.6)
-                    : category.swiftUIColor.opacity(0.95))
-                .lineLimit(1)
-                .truncationMode(.tail)
-            Spacer(minLength: 0)
-            if continuesToNext {
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 8, weight: .bold))
-                    .foregroundStyle(category.swiftUIColor.opacity(0.9))
-            }
-        }
-        .padding(.horizontal, 6)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
+        // 단일 bar: 카테고리 색상 fill + 흰색 굵은 텍스트.
+        // 가독성 우선 — 내부 HStack의 chevron/컬러바 중첩을 제거해 전체 폭을 텍스트에 할당.
+        ZStack(alignment: .leading) {
             barShape
                 .fill(background)
-                .overlay(barShape.stroke(category.swiftUIColor.opacity(0.5), lineWidth: 0.8))
-        )
-        .opacity(dimmed ? 0.7 : 1.0)
+
+            HStack(spacing: 3) {
+                if continuesFromPrev {
+                    Image(systemName: "chevron.compact.left")
+                        .font(.system(size: 9, weight: .heavy))
+                        .foregroundStyle(textColor.opacity(0.85))
+                }
+                Text(item.title)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(textColor)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .truncationMode(.tail)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                if continuesToNext {
+                    Image(systemName: "chevron.compact.right")
+                        .font(.system(size: 9, weight: .heavy))
+                        .foregroundStyle(textColor.opacity(0.85))
+                }
+            }
+            .padding(.horizontal, 4)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .opacity(dimmed ? 0.5 : 1.0)
     }
+
+    /// 바 fill은 카테고리 색 **solid**(~0.9 opacity). 텍스트는 흰색.
+    /// 기존 0.2 opacity + stroke는 글자와 채도 대비가 부족해 가독성 낮았음.
+    private var background: Color {
+        category.swiftUIColor.opacity(0.88)
+    }
+
+    private var textColor: Color { .white }
 
     private var category: ScheduleCategory { item.category }
-
-    private var background: Color {
-        dimmed ? category.swiftUIColor.opacity(0.08) : category.swiftUIColor.opacity(0.20)
-    }
 
     private var barShape: some Shape {
         BarShape(leftSharp: continuesFromPrev, rightSharp: continuesToNext, cornerRadius: 4)
