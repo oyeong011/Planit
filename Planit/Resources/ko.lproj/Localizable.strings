@@ -347,6 +347,18 @@
 "settings.language.desc" = "언어를 선택하면 앱이 재시작되어 적용됩니다.";
 "settings.app.info.card" = "앱 정보";
 "settings.app.version" = "버전 1.0 · 개인 AI 캘린더 어시스턴트";
+"settings.app.tagline" = "개인 AI 캘린더 어시스턴트";
+"settings.app.version.detail" = "v%@ (%@) · %@";
+"settings.appearance.card" = "외관";
+"settings.appearance.title" = "테마";
+"settings.appearance.desc" = "라이트/다크 모드 또는 시스템 설정을 따릅니다.";
+"settings.appearance.mode.system" = "시스템";
+"settings.appearance.mode.light" = "라이트";
+"settings.appearance.mode.dark" = "다크";
+"settings.calendar.theme.card" = "캘린더 테마";
+"settings.calendar.theme.desc" = "캘린더 그리드, 선택 상태, 이벤트 강조색에 적용됩니다.";
+"settings.feedback.subject" = "Calen v%@ 피드백";
+"settings.feedback.body" = "\n\n---\n앱 버전: %@ (%@)\nmacOS: %@";
 
 /* ===== Review View (additional) ===== */
 "review.plan.complete.title" = "내일 계획 완성";
@@ -454,6 +466,11 @@
 "review.tomorrow.more" = "+%d개 더";
 "review.category.primary" = "기본 캘린더";
 "review.weekly.chart.title" = "7일 달성 현황";
+"review.todo.grass.title" = "30일 할일 잔디";
+"review.todo.grass.total" = "%d/%d 완료";
+"review.todo.grass.best" = "가장 많이 한 날";
+"review.todo.grass.streak" = "연속 완료";
+"review.todo.grass.days" = "%d일";
 "review.day.today.short" = "오늘";
 "goal.section.title" = "장기 목표";
 "goal.section.subtitle" = "채팅에서 감지됨";

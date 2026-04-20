@@ -1029,7 +1029,12 @@ struct SettingsView: View {
                                 .font(.system(size: 14, weight: .semibold))
                             let bundleVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"
                             let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
-                            Text("v\(bundleVersion) (\(buildNumber)) · Personal AI Calendar Assistant")
+                            Text(String(
+                                format: String(localized: "settings.app.version.detail"),
+                                bundleVersion,
+                                buildNumber,
+                                String(localized: "settings.app.tagline")
+                            ))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -1051,15 +1056,7 @@ struct SettingsView: View {
 
                         // 피드백
                         Button {
-                            let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
-                            let osVersion = ProcessInfo.processInfo.operatingSystemVersionString
-                            let subject = "Calen v\(version) 피드백"
-                            let body = "\n\n---\n앱 버전: \(version)\nmacOS: \(osVersion)"
-                            let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-                            let encodedBody = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-                            if let url = URL(string: "mailto:oyeong011@gmail.com?subject=\(encodedSubject)&body=\(encodedBody)") {
-                                NSWorkspace.shared.open(url)
-                            }
+                            openFeedbackMail()
                         } label: {
                             Label(String(localized: "settings.feedback.send"), systemImage: "envelope")
                                 .font(.system(size: 12))
@@ -1095,6 +1092,32 @@ struct SettingsView: View {
         )
     }
 
+    private func openFeedbackMail() {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
+        let osVersion = ProcessInfo.processInfo.operatingSystemVersionString
+        guard let url = FeedbackMail.makeURL(
+            recipient: "oyeong011@gmail.com",
+            version: version,
+            build: build,
+            osVersion: osVersion,
+            subjectFormat: String(localized: "settings.feedback.subject"),
+            bodyFormat: String(localized: "settings.feedback.body")
+        ) else {
+            return
+        }
+
+        #if os(macOS)
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = true
+        NSWorkspace.shared.open(url, configuration: configuration) { _, error in
+            if let error {
+                PlanitLoggers.sync.error("feedback mail open failed: \(error.localizedDescription, privacy: .public)")
+            }
+        }
+        #endif
+    }
+
     private var mirrorFilterLastUpdatedText: String {
         guard let lastUpdated = viewModel.lastMirrorFilterStats.lastUpdated else {
             return String(localized: "settings.apple.diagnostics.never")
@@ -1112,7 +1135,7 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 22) {
             sectionHeader(
                 String(localized: "settings.section.appearance"),
-                subtitle: String(localized: "settings.appearance.subtitle", defaultValue: "앱 표시 방식과 캘린더 색상을 설정합니다"),
+                subtitle: String(localized: "settings.appearance.subtitle"),
                 icon: "paintpalette"
             )
 
@@ -1122,12 +1145,12 @@ struct SettingsView: View {
     }
 
     private var appearanceCard: some View {
-        settingsCard(String(localized: "settings.appearance.card", defaultValue: "외관")) {
+        settingsCard(String(localized: "settings.appearance.card")) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(String(localized: "settings.appearance.title", defaultValue: "테마"))
+                    Text(String(localized: "settings.appearance.title"))
                         .font(.system(size: 13, weight: .medium))
-                    Text(String(localized: "settings.appearance.desc", defaultValue: "라이트/다크 모드 또는 시스템 설정을 따릅니다."))
+                    Text(String(localized: "settings.appearance.desc"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -1145,9 +1168,9 @@ struct SettingsView: View {
     }
 
     private var calendarThemeCard: some View {
-        settingsCard(String(localized: "settings.calendar.theme.card", defaultValue: "캘린더 테마")) {
+        settingsCard(String(localized: "settings.calendar.theme.card")) {
             VStack(alignment: .leading, spacing: 12) {
-                Text(String(localized: "settings.calendar.theme.desc", defaultValue: "캘린더 그리드, 선택 상태, 이벤트 강조색에 적용됩니다."))
+                Text(String(localized: "settings.calendar.theme.desc"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
 

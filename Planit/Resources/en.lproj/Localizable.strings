@@ -347,6 +347,18 @@
 "settings.language.desc" = "Select a language. The app will restart to apply the change.";
 "settings.app.info.card" = "App Info";
 "settings.app.version" = "Version 1.0 · Personal AI Calendar Assistant";
+"settings.app.tagline" = "Personal AI Calendar Assistant";
+"settings.app.version.detail" = "v%@ (%@) · %@";
+"settings.appearance.card" = "Appearance";
+"settings.appearance.title" = "Theme";
+"settings.appearance.desc" = "Follow light mode, dark mode, or the system setting.";
+"settings.appearance.mode.system" = "System";
+"settings.appearance.mode.light" = "Light";
+"settings.appearance.mode.dark" = "Dark";
+"settings.calendar.theme.card" = "Calendar Theme";
+"settings.calendar.theme.desc" = "Applied to the calendar grid, selected states, and event emphasis colors.";
+"settings.feedback.subject" = "Calen v%@ Feedback";
+"settings.feedback.body" = "\n\n---\nApp version: %@ (%@)\nmacOS: %@";
 
 /* ===== Review View (additional) ===== */
 "review.plan.complete.title" = "Tomorrow's Plan Ready";
@@ -454,6 +466,11 @@
 "review.tomorrow.more" = "+%d more";
 "review.category.primary" = "Primary";
 "review.weekly.chart.title" = "7-Day Progress";
+"review.todo.grass.title" = "30-Day Todo Grass";
+"review.todo.grass.total" = "%d/%d done";
+"review.todo.grass.best" = "Best day";
+"review.todo.grass.streak" = "Current streak";
+"review.todo.grass.days" = "%d days";
 "review.day.today.short" = "Today";
 "goal.section.title" = "Long-term Goals";
 "goal.section.subtitle" = "Detected from chat";

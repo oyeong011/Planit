@@ -6,6 +6,7 @@ import SwiftUI
 private enum ReviewSectionID: String, CaseIterable, Codable, Identifiable {
     case habitGraph   = "habit_graph"
     case weeklyChart  = "weekly_chart"
+    case todoGrass    = "todo_grass"
     case myHabits     = "my_habits"
     case progress     = "progress"
     case longTermGoals = "long_term_goals"
@@ -13,16 +14,29 @@ private enum ReviewSectionID: String, CaseIterable, Codable, Identifiable {
     var id: String { rawValue }
 
     static let defaultOrder: [ReviewSectionID] = [
-        .habitGraph, .weeklyChart, .myHabits, .progress, .longTermGoals
+        .habitGraph, .weeklyChart, .todoGrass, .myHabits, .progress, .longTermGoals
     ]
 
     static func loadFromDefaults() -> [ReviewSectionID] {
         guard let data = UserDefaults.standard.data(forKey: "planit.review.sectionOrder"),
-              let decoded = try? JSONDecoder().decode([ReviewSectionID].self, from: data),
-              Set(decoded) == Set(ReviewSectionID.allCases) else {   // 항목 수 불일치 시 기본값
+              let decoded = try? JSONDecoder().decode([ReviewSectionID].self, from: data) else {
             return defaultOrder
         }
-        return decoded
+        var normalized: [ReviewSectionID] = []
+        var seen = Set<ReviewSectionID>()
+        for sid in decoded where ReviewSectionID.allCases.contains(sid) && !seen.contains(sid) {
+            normalized.append(sid)
+            seen.insert(sid)
+        }
+        for sid in ReviewSectionID.allCases where !seen.contains(sid) {
+            if sid == .todoGrass, let weeklyIndex = normalized.firstIndex(of: .weeklyChart) {
+                normalized.insert(sid, at: normalized.index(after: weeklyIndex))
+            } else {
+                normalized.append(sid)
+            }
+            seen.insert(sid)
+        }
+        return Set(normalized) == Set(ReviewSectionID.allCases) ? normalized : defaultOrder
     }
 }
 
@@ -157,6 +171,7 @@ struct ReviewView: View {
         switch sid {
         case .habitGraph:    return 80 + CGFloat(habitService.habits.count) * 96
         case .weeklyChart:   return 148
+        case .todoGrass:     return 172
         case .myHabits:      return 70 + CGFloat(habitService.habits.count) * 66
         case .progress:      return 130
         case .longTermGoals: return 80 + CGFloat(max(1, goalMemoryService.goals.count)) * 64
@@ -199,6 +214,8 @@ struct ReviewView: View {
             if !habitService.habits.isEmpty { habitGraphSection }
         case .weeklyChart:
             weeklyChartSection
+        case .todoGrass:
+            todoGrassSection
         case .myHabits:
             myHabitsSection
         case .progress:
@@ -411,6 +428,111 @@ struct ReviewView: View {
         Calendar.current.isDateInToday(date)
             ? String(localized: "review.day.today.short")
             : weekDayFormatter.string(from: date)
+    }
+
+    // MARK: - Todo Grass Section (최근 30일 할일 잔디)
+
+    private var todoGrassSection: some View {
+        let stats = TodoGrassStats.make(todos: viewModel.todos, reminders: viewModel.appleReminders)
+
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                Label(String(localized: "review.todo.grass.title"), systemImage: "square.grid.3x3.fill")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text(String(format: String(localized: "review.todo.grass.total"), stats.totalDone, stats.totalTodos))
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(stats.totalDone > 0 ? .green : .secondary)
+            }
+
+            HStack(alignment: .top, spacing: 4) {
+                ForEach(Array(todoGrassColumns(stats.days).enumerated()), id: \.offset) { _, column in
+                    VStack(spacing: 4) {
+                        ForEach(column) { day in
+                            todoGrassCell(day)
+                        }
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.vertical, 2)
+
+            HStack(spacing: 12) {
+                todoGrassMetric(
+                    title: String(localized: "review.todo.grass.best"),
+                    value: "\(stats.maxDoneInDay)/\(stats.maxTotalInDay)"
+                )
+                Divider().frame(height: 18)
+                todoGrassMetric(
+                    title: String(localized: "review.todo.grass.streak"),
+                    value: String(format: String(localized: "review.todo.grass.days"), stats.currentFullCompletionStreak)
+                )
+                Spacer(minLength: 0)
+            }
+        }
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground).overlay(RoundedRectangle(cornerRadius: 10).fill(themeService.current.cardTint)))
+    }
+
+    private func todoGrassColumns(_ days: [TodoGrassDay]) -> [[TodoGrassDay]] {
+        stride(from: 0, to: days.count, by: 7).map { start in
+            Array(days[start..<min(start + 7, days.count)])
+        }
+    }
+
+    private func todoGrassCell(_ day: TodoGrassDay) -> some View {
+        let isToday = Calendar.current.isDateInToday(day.date)
+        let label = "\(todoGrassDateLabel(day.date)) · \(day.done)/\(day.total)"
+
+        return RoundedRectangle(cornerRadius: 3)
+            .fill(todoGrassColor(for: day))
+            .frame(width: 13, height: 13)
+            .overlay(
+                RoundedRectangle(cornerRadius: 3)
+                    .stroke(isToday ? Color.primary.opacity(0.45) : Color.clear, lineWidth: 1)
+            )
+            .help(label)
+            .accessibilityLabel(label)
+    }
+
+    private func todoGrassColor(for day: TodoGrassDay) -> Color {
+        guard day.total > 0, day.done > 0 else {
+            return Color.secondary.opacity(day.total > 0 ? 0.18 : 0.10)
+        }
+        switch day.rate {
+        case ..<0.25:
+            return Color.green.opacity(0.32)
+        case ..<0.50:
+            return Color.green.opacity(0.50)
+        case ..<0.75:
+            return Color.green.opacity(0.68)
+        case ..<1.0:
+            return Color.green.opacity(0.84)
+        default:
+            return Color.green
+        }
+    }
+
+    private func todoGrassMetric(title: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text(title)
+                .font(.system(size: 9))
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.primary)
+        }
+    }
+
+    private let todoGrassDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "M/d (E)"
+        return f
+    }()
+
+    private func todoGrassDateLabel(_ date: Date) -> String {
+        todoGrassDateFormatter.string(from: date)
     }
 
     // MARK: - My Habits Section (사용자 정의 습관 추적)
