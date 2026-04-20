@@ -1662,8 +1662,11 @@ struct TestCachedEventFull: Codable, Identifiable {
 
 func cleanCodexOutput(_ raw: String) -> String {
     let lines = raw.components(separatedBy: "\n")
-    var started = false
-    var resultLines: [String] = []
+    var sawAssistantMarker = false
+    var inAssistantBlock = false
+    var inUserBlock = false
+    var assistantLines: [String] = []
+    var fallbackLines: [String] = []
 
     for line in lines {
         if line.starts(with: "Reading prompt") || line.starts(with: "OpenAI Codex") ||
@@ -1671,21 +1674,34 @@ func cleanCodexOutput(_ raw: String) -> String {
            line.starts(with: "model:") || line.starts(with: "provider:") ||
            line.starts(with: "approval:") || line.starts(with: "sandbox:") ||
            line.starts(with: "reasoning") || line.starts(with: "session id:") ||
-           line.starts(with: "user") || line.starts(with: "tokens used") {
+           line.starts(with: "tokens used") {
             if line.starts(with: "tokens used") { break }
             continue
         }
-        if line.trimmingCharacters(in: .whitespaces) == "codex" {
-            started = true
+        let trimmed = line.trimmingCharacters(in: .whitespaces)
+        if trimmed == "user" {
+            inUserBlock = true
+            inAssistantBlock = false
             continue
         }
-        if started || !line.trimmingCharacters(in: .whitespaces).isEmpty {
-            started = true
-            resultLines.append(line)
+        if line.trimmingCharacters(in: .whitespaces) == "codex" {
+            sawAssistantMarker = true
+            inAssistantBlock = true
+            inUserBlock = false
+            assistantLines.removeAll()
+            continue
+        }
+        if sawAssistantMarker {
+            if inAssistantBlock {
+                assistantLines.append(line)
+            }
+        } else if !inUserBlock && !trimmed.isEmpty {
+            fallbackLines.append(line)
         }
     }
 
-    return resultLines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+    let result = sawAssistantMarker ? assistantLines : fallbackLines
+    return result.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
 }
 
 @Test func codexClean_removesHeaders() {
@@ -1720,6 +1736,96 @@ func cleanCodexOutput(_ raw: String) -> String {
     let raw = "그냥 일반 텍스트"
     let result = cleanCodexOutput(raw)
     #expect(result == "그냥 일반 텍스트")
+}
+
+@Test func codexClean_ignoresEchoedUserPrompt() {
+    let raw = """
+    OpenAI Codex v0.121.0
+    --------
+    model: gpt-5.4
+    user
+    ```json
+    {"message":"<사용자 요청에 맞는 응답 메시지>","actions":[{"action":"create","title":"<일정 제목>"}]}
+    ```
+    codex
+    실제 응답 내용입니다
+    tokens used
+    1234
+    """
+    let result = cleanCodexOutput(raw)
+    #expect(result == "실제 응답 내용입니다")
+}
+
+@MainActor
+@Test func codexTranscript_ignoresEchoedUserPromptJSON() async throws {
+    let tempDir = FileManager.default.temporaryDirectory
+        .appendingPathComponent("planit-codex-transcript-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+    let fakeCodex = tempDir.appendingPathComponent("codex")
+    let script = #"""
+    #!/bin/sh
+    case " $* " in
+      *gpt-4.1-mini*)
+        echo "unsupported model gpt-4.1-mini" >&2
+        exit 42
+        ;;
+    esac
+    cat <<'EOF'
+    Reading prompt from stdin...
+    OpenAI Codex v0.121.0 (research preview)
+    --------
+    workdir: /tmp
+    model: gpt-5.4
+    provider: openai
+    approval: never
+    sandbox: read-only
+    reasoning effort: low
+    session id: test
+    --------
+    user
+    ```json
+    {"message":"<사용자 요청에 맞는 응답 메시지>","actions":[{"action":"create","title":"<일정 제목>"}]}
+    ```
+    codex
+    오늘 일정은 없습니다.
+    tokens used
+    1
+    EOF
+    """#
+    try script.data(using: .utf8)!.write(to: fakeCodex)
+    try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: fakeCodex.path)
+
+    let oldOverride = {
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+        let url = support?.appendingPathComponent("Planit/ai/codexPath")
+        return url.flatMap { try? String(contentsOf: $0, encoding: .utf8) }
+    }()
+    AIService.savePathOverride(cmd: "codex", path: fakeCodex.path)
+    let consentKey = "planit.aiExternalContextConsentGranted.v1"
+    let oldConsent = UserDefaults.standard.object(forKey: consentKey)
+    defer {
+        AIService.savePathOverride(cmd: "codex", path: oldOverride)
+        if let oldConsent {
+            UserDefaults.standard.set(oldConsent, forKey: consentKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: consentKey)
+        }
+        try? FileManager.default.removeItem(at: tempDir)
+    }
+
+    let service = AIService(authManager: GoogleAuthManager(), calendarService: nil)
+    service.provider = .codex
+    service.grantExternalContextConsent()
+
+    // checkCLIAvailability() resolves paths asynchronously in init.
+    try? await Task.sleep(nanoseconds: 200_000_000)
+
+    let replies = await service.sendMessage("오늘 일정 알려줘", history: [])
+    let combined = replies.map(\.content).joined(separator: "\n")
+
+    #expect(combined.contains("오늘 일정은 없습니다."))
+    #expect(!combined.contains("<사용자 요청에 맞는 응답 메시지>"))
+    #expect(!combined.contains("생성 실패: 잘못된 파라미터"))
 }
 
 // ============================================================================
