@@ -557,3 +557,10 @@
 "settings.update.check" = "Check for updates";
 "settings.update.check.tooltip" = "Check GitHub appcast for new version now";
 "settings.feedback.send" = "Send feedback";
+
+// MARK: - Review Todo Grass
+"review.todo.grass.title" = "מעקב 30 ימים";
+"review.todo.grass.total" = "%d/%d הושלמו";
+"review.todo.grass.best" = "יום הטוב ביותר";
+"review.todo.grass.streak" = "רצף";
+"review.todo.grass.days" = "%d ימים";

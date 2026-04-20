@@ -556,3 +556,10 @@
 "settings.update.check" = "Check for updates";
 "settings.update.check.tooltip" = "Check GitHub appcast for new version now";
 "settings.feedback.send" = "Send feedback";
+
+// MARK: - Review Todo Grass
+"review.todo.grass.title" = "30天待辦追蹤";
+"review.todo.grass.total" = "%d/%d 已完成";
+"review.todo.grass.best" = "最佳日";
+"review.todo.grass.streak" = "連續完成";
+"review.todo.grass.days" = "%d天";

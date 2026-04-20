@@ -557,3 +557,10 @@
 "settings.update.check" = "Check for updates";
 "settings.update.check.tooltip" = "Check GitHub appcast for new version now";
 "settings.feedback.send" = "Send feedback";
+
+// MARK: - Review Todo Grass
+"review.todo.grass.title" = "Theo dõi 30 ngày";
+"review.todo.grass.total" = "%d/%d hoàn thành";
+"review.todo.grass.best" = "Ngày tốt nhất";
+"review.todo.grass.streak" = "Chuỗi liên tiếp";
+"review.todo.grass.days" = "%d ngày";

@@ -450,22 +450,14 @@ struct ReviewView: View {
                     .foregroundStyle(stats.totalDone > 0 ? .green : .secondary)
             }
 
-            let cols = todoGrassColumns(stats.days)
-            GeometryReader { geo in
-                let spacing: CGFloat = 4
-                let cellSize = max(10, (geo.size.width - spacing * CGFloat(max(1, cols.count) - 1)) / CGFloat(max(1, cols.count)))
-                HStack(alignment: .top, spacing: spacing) {
-                    ForEach(Array(cols.enumerated()), id: \.offset) { _, column in
-                        VStack(spacing: spacing) {
-                            ForEach(column) { day in
-                                todoGrassCell(day, size: cellSize)
-                            }
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
+            LazyVGrid(
+                columns: Array(repeating: GridItem(.flexible(), spacing: 3), count: 7),
+                spacing: 3
+            ) {
+                ForEach(stats.days) { day in
+                    todoGrassCell(day)
                 }
             }
-            .frame(height: CGFloat(7) * 20 + CGFloat(6) * 4)
             .padding(.vertical, 2)
 
             HStack(spacing: 12) {
@@ -485,22 +477,16 @@ struct ReviewView: View {
         .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground).overlay(RoundedRectangle(cornerRadius: 10).fill(themeService.current.cardTint)))
     }
 
-    private func todoGrassColumns(_ days: [TodoGrassDay]) -> [[TodoGrassDay]] {
-        stride(from: 0, to: days.count, by: 7).map { start in
-            Array(days[start..<min(start + 7, days.count)])
-        }
-    }
 
-    private func todoGrassCell(_ day: TodoGrassDay, size: CGFloat = 18) -> some View {
+
+    private func todoGrassCell(_ day: TodoGrassDay) -> some View {
         let isToday = Calendar.current.isDateInToday(day.date)
         let label = "\(todoGrassDateLabel(day.date)) · \(day.done)/\(day.total)"
-        let r = min(4, size * 0.22)
-
-        return RoundedRectangle(cornerRadius: r)
+        return RoundedRectangle(cornerRadius: 4)
             .fill(todoGrassColor(for: day))
-            .frame(width: size, height: size)
+            .aspectRatio(1, contentMode: .fit)
             .overlay(
-                RoundedRectangle(cornerRadius: r)
+                RoundedRectangle(cornerRadius: 4)
                     .stroke(isToday ? Color.primary.opacity(0.45) : Color.clear, lineWidth: 1.5)
             )
             .help(label)

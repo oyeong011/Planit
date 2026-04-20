@@ -546,3 +546,10 @@
 "settings.update.check" = "Check for updates";
 "settings.update.check.tooltip" = "Check GitHub appcast for new version now";
 "settings.feedback.send" = "Send feedback";
+
+// MARK: - Review Todo Grass
+"review.todo.grass.title" = "30-Day Todo Tracker";
+"review.todo.grass.total" = "%d/%d completed";
+"review.todo.grass.best" = "Best day";
+"review.todo.grass.streak" = "Streak";
+"review.todo.grass.days" = "%d days";
