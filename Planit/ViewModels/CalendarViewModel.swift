@@ -128,6 +128,8 @@ final class CalendarViewModel: ObservableObject {
     private var googleFetchGeneration = 0
     /// 월별 마지막 실제 fetch 시각 — TTL 내 중복 요청 방지
     private var lastFetchAtByMonthKey: [String: Date] = [:]
+    nonisolated static let googleFetchTTL: TimeInterval = 120
+    nonisolated static let periodicRefreshInterval: TimeInterval = 180
 
     private var notificationObserver: Any?
     private var authCancellable: AnyCancellable?
@@ -148,8 +150,7 @@ final class CalendarViewModel: ObservableObject {
             "CRUD failure operation=\(operation.rawValue, privacy: .public) source=\(source.rawValue, privacy: .public) eventID=\(notice.logMetadata["eventID"] ?? "none", privacy: .public) error=\(errorSummary, privacy: .public)"
         )
         // update/delete 403 → 재인증 필요 플래그 설정
-        if let calErr = error as? GoogleCalendarError,
-           case .httpStatus(let code) = calErr, code == 403 {
+        if Self.shouldMarkNeedsReauth(after: error) {
             needsReauth = true
         }
         if userVisible {
@@ -181,6 +182,19 @@ final class CalendarViewModel: ObservableObject {
             return "URLError.\(urlError.code.rawValue)"
         }
         return String(reflecting: type(of: error))
+    }
+
+    nonisolated static func shouldMarkNeedsReauth(after error: Error?) -> Bool {
+        guard let calendarError = error as? GoogleCalendarError else { return false }
+        switch calendarError {
+        case .httpStatus(let code):
+            return code == 403
+        }
+    }
+
+    nonisolated static func shouldSkipGoogleFetch(lastFetch: Date?, now: Date = Date(), force: Bool) -> Bool {
+        guard !force, let lastFetch else { return false }
+        return now.timeIntervalSince(lastFetch) < googleFetchTTL
     }
 
     init(authManager: GoogleAuthManager) {
@@ -268,7 +282,7 @@ final class CalendarViewModel: ObservableObject {
 
     /// Periodic refresh every 3 minutes
     private func startPeriodicRefresh() {
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: 180, repeats: true) { [weak self] _ in
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: Self.periodicRefreshInterval, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 guard let self else { return }
                 self.cleanupExpiredAppleMirrorSuppressions()
@@ -969,14 +983,14 @@ final class CalendarViewModel: ObservableObject {
         }
 
         // 2분 TTL — 동일 월은 2분 내 재요청 skip (force=true이면 무시)
-        if !force, let lastFetch = lastFetchAtByMonthKey[key],
-           Date().timeIntervalSince(lastFetch) < 120 {
+        let now = Date()
+        if Self.shouldSkipGoogleFetch(lastFetch: lastFetchAtByMonthKey[key], now: now, force: force) {
             PlanitLoggers.sync.info("Skipping TTL-throttled Google fetch month=\(key, privacy: .public)")
             return
         }
 
         // 실제 fetch 시작 시각 기록
-        lastFetchAtByMonthKey[key] = Date()
+        lastFetchAtByMonthKey[key] = now
 
         googleFetchTask?.cancel()
         googleFetchMonthKey = key
