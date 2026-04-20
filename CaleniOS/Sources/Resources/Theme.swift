@@ -3,8 +3,8 @@ import SwiftUI
 
 // MARK: - Brand Colors (extended)
 //
-// 레퍼런스: `Calen-iOS/Calen/Components/Theme.swift` 그대로 이식.
-// `Color.calenBlue`는 `Color+Calen.swift`에 정의됨 — 여기는 파생 세만틱 토큰 + 타이포 + 라디우스 + 그림자.
+// M2 UI v4 (TimeBlocks 스타일)에서 월 타이틀/셀 숫자/이벤트 막대 라벨 전용 타이포 토큰 추가.
+// v3 토큰(`calenDisplay`, `calenTitle`, `calenBody`, `calenCaption`)은 유지.
 
 extension Color {
     /// Lighter tint for backgrounds / chips
@@ -34,6 +34,17 @@ extension Font {
 
     /// Small caption / label
     static let calenCaption    = Font.system(size: 12, weight: .medium)
+
+    // MARK: - v4 (TimeBlocks) Tokens
+
+    /// 월간 상단 타이틀 ("2026년 4월"). 24pt bold rounded.
+    static let calenMonthTitle = Font.system(size: 24, weight: .bold, design: .rounded)
+
+    /// 월 그리드 셀 내부 날짜 숫자. 13pt medium.
+    static let calenDayCellNumber = Font.system(size: 13, weight: .medium)
+
+    /// 이벤트 막대(bar) 내부 라벨. 10pt medium, lineLimit 1 가정.
+    static let calenEventBarLabel = Font.system(size: 10, weight: .medium)
 }
 
 // MARK: - Corner Radii
@@ -48,9 +59,9 @@ enum CalenRadius {
 // MARK: - Shadows
 
 extension View {
-    /// Soft card shadow used throughout the app.
+    /// Soft card shadow used throughout the app. v4에서 opacity 0.08 → 0.05로 완화.
     func calenCardShadow() -> some View {
-        self.shadow(color: Color.black.opacity(0.06), radius: 12, x: 0, y: 4)
+        self.shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)
     }
 
     /// Stronger shadow for floating action elements.

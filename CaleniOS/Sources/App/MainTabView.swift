@@ -3,12 +3,9 @@ import SwiftUI
 
 // MARK: - MainTabView
 //
-// 레퍼런스 `Calen-iOS/Calen/App/MainTabView.swift` 포팅 (M2 UI v3).
-// 레퍼런스는 5탭 + 중앙 elevated mic 버튼 구조였으나, v0.1.0은 3탭으로 축소.
-//  - `.aiCall` 중앙 mic 버튼 제거
-//  - `.chat`(Relations) 제거
-//  - 4칸 pill → 3칸 pill
-// 나머지 스타일(cornerRadius 32, 이중 그림자, easeInOut 0.2) 그대로 유지.
+// M2 UI v4 (TimeBlocks 스타일) — 2칸 pill 탭바.
+// v3의 3칸(.home / .calendar / .profile)에서 `.calendar`가 오늘 탭(HomeView)에
+// 흡수되어 2칸으로 축소. 스타일(cornerRadius 32, 이중 그림자, easeInOut 0.2) 유지.
 
 struct MainTabView: View {
     @EnvironmentObject private var appState: AppState
@@ -18,10 +15,8 @@ struct MainTabView: View {
             // MARK: Content Area
             Group {
                 switch appState.selectedTab {
-                case .home:
+                case .today:
                     HomeView()
-                case .calendar:
-                    CalendarView()
                 case .profile:
                     SettingsView()
                 }
@@ -46,14 +41,13 @@ struct CustomTabBar: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            tabButton(.home)
-            tabButton(.calendar)
+            tabButton(.today)
             tabButton(.profile)
         }
         .frame(height: tabBarHeight)
         .background(
             RoundedRectangle(cornerRadius: 32, style: .continuous)
-                .fill(Color.white)
+                .fill(Color.calenCardSurface)
                 .shadow(color: .black.opacity(0.08), radius: 24, x: 0, y: -4)
                 .shadow(color: .black.opacity(0.04), radius: 8, x: 0, y: -2)
         )
@@ -73,7 +67,7 @@ struct CustomTabBar: View {
             }
         } label: {
             Image(systemName: isSelected ? tab.selectedIcon : tab.icon)
-                .font(.system(size: 22, weight: isSelected ? .semibold : .regular))
+                .font(.system(size: 26, weight: isSelected ? .semibold : .regular))
                 .foregroundStyle(isSelected ? Color.calenBlue : Color(.darkGray))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .contentShape(Rectangle())
