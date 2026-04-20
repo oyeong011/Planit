@@ -67,7 +67,7 @@ if [ ! -d "$SPARKLE_FW" ]; then
     exit 1
 fi
 
-if codesign -dv "$APP_BUNDLE" >/dev/null 2>&1; then
+if codesign --verify "$APP_BUNDLE" >/dev/null 2>&1; then
     codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE"
 else
     echo "ℹ︎ App bundle is unsigned; skipping codesign verification"
