@@ -782,19 +782,21 @@ struct DayCellView: View {
         VStack(alignment: .leading, spacing: 2) {
             ForEach(Array(events.prefix(4)), id: \.id) { event in
                 let displayColor = categoryForEvent?(event)?.color ?? themeService.current.eventTint
-                Text(event.title)
-                    .font(.system(size: 10))
-                    .lineLimit(1)
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 1.5)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 3).fill(.background.opacity(0.55))
-                            RoundedRectangle(cornerRadius: 3).fill(displayColor.opacity(0.25))
-                        }
-                    )
-                    .foregroundStyle(isCurrentMonth ? displayColor : .secondary.opacity(0.3))
+                HStack(spacing: 3) {
+                    RoundedRectangle(cornerRadius: 1.5)
+                        .fill(displayColor)
+                        .frame(width: 3)
+                    Text(event.title)
+                        .font(.system(size: 10))
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .padding(.horizontal, 4)
+                .padding(.vertical, 1.5)
+                .background(
+                    RoundedRectangle(cornerRadius: 3).fill(displayColor.opacity(0.12))
+                )
+                .foregroundStyle(isCurrentMonth ? Color.primary : .secondary.opacity(0.3))
             }
             ForEach(Array(todos.prefix(max(0, 4 - events.count))), id: \.id) { todo in
                 DayCellTodoRow(todo: todo, cat: categoryFor(todo.categoryID), isCurrentMonth: isCurrentMonth)

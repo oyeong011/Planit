@@ -110,7 +110,13 @@ struct ReviewView: View {
                 unifiedReviewView
             }
         }
-        .background(Color.platformWindowBackground)
+        .background(
+            ZStack {
+                Color.platformWindowBackground
+                themeService.current.subtleBackgroundTint
+            }
+        )
+        .animation(.easeInOut(duration: 0.28), value: themeService.current.id)
         // 단일 sheet — 목표·습관 시트 충돌 방지 (별도 subtree에 두지 않음)
         .sheet(item: $sheetRoute) { route in
             switch route {
@@ -127,17 +133,18 @@ struct ReviewView: View {
     private var header: some View {
         HStack(spacing: 8) {
             Circle()
-                .fill(headerColor.opacity(0.15))
+                .fill(themeService.current.gradient)
                 .frame(width: 28, height: 28)
                 .overlay(
                     Image(systemName: headerIcon)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(headerColor)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.white)
                 )
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(headerTitle)
                     .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(themeService.current.primary)
                 Text(todayDateString)
                     .font(.system(size: 10))
                     .foregroundStyle(.secondary)
@@ -152,11 +159,6 @@ struct ReviewView: View {
     private var headerIcon: String {
         if showPlanResult { return "calendar.badge.checkmark" }
         return reviewService.currentMode == .evening ? "moon.fill" : "sun.max.fill"
-    }
-
-    private var headerColor: Color {
-        if showPlanResult { return .green }
-        return reviewService.currentMode == .evening ? .indigo : .orange
     }
 
     private var headerTitle: String {
@@ -349,7 +351,7 @@ struct ReviewView: View {
         return VStack(alignment: .leading, spacing: 8) {
             Label(String(localized: "review.weekly.chart.title"), systemImage: "chart.bar.xaxis")
                 .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(themeService.current.accent)
 
             HStack(alignment: .bottom, spacing: 5) {
                 ForEach(days, id: \.self) { day in
@@ -379,7 +381,9 @@ struct ReviewView: View {
 
                 if total > 0 {
                     RoundedRectangle(cornerRadius: 3)
-                        .fill(isToday ? barColor : barColor.opacity(0.65))
+                        .fill(isToday
+                              ? AnyShapeStyle(themeService.current.gradient)
+                              : AnyShapeStyle(barColor.opacity(0.65)))
                         .frame(height: max(maxBarH * CGFloat(rate), 4))
                         .animation(.spring(duration: 0.4), value: rate)
                 }
@@ -448,7 +452,7 @@ struct ReviewView: View {
             HStack {
                 Label(String(localized: "review.todo.grass.title"), systemImage: "square.grid.3x3.fill")
                     .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(themeService.current.accent)
                 Spacer()
                 if viewModel.isLoadingHistory {
                     ProgressView()
@@ -620,7 +624,7 @@ struct ReviewView: View {
             HStack {
                 Label(String(localized: "habit.section.title"), systemImage: "checkmark.circle.fill")
                     .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(themeService.current.accent)
                 Spacer()
                 Button {
                     editHabitName = ""
@@ -1078,7 +1082,7 @@ struct ReviewView: View {
             HStack {
                 Label(String(localized: "habit.graph.title"), systemImage: "chart.bar.fill")
                     .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(themeService.current.accent)
                 Spacer()
                 let weekly = habitsWeeklyAverage
                 if weekly > 0 {
@@ -1294,7 +1298,7 @@ struct ReviewView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Label(String(localized: "review.today.lookback"), systemImage: "sparkles")
                     .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(themeService.current.accent)
                     .padding(.horizontal, 2)
 
                 ForEach(Array(reviewService.suggestions.enumerated()), id: \.element.id) { idx, s in
@@ -1505,7 +1509,7 @@ struct ReviewView: View {
         VStack(alignment: .leading, spacing: 8) {
             Label(String(localized: "review.category.title"), systemImage: "chart.bar.fill")
                 .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(themeService.current.accent)
 
             VStack(spacing: 6) {
                 ForEach(categoryStats) { stat in
@@ -1619,7 +1623,7 @@ struct ReviewView: View {
             HStack {
                 Label(String(localized: "goal.section.title"), systemImage: "flag.checkered")
                     .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(themeService.current.accent)
                 Spacer()
                 Button {
                     editTitle = ""; editTargets = ""; editTimeline = .thisYear
