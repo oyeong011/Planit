@@ -264,31 +264,53 @@ struct EventEditSheet: View {
         }
     }
 
-    // MARK: - Error banner (sheet 내부 상단)
+    // MARK: - Error banner (sheet 내부 상단) — macOS `CRUDErrorInlineNotice` 패턴 이식 (Quick Win)
 
     private func errorBanner(message: String) -> some View {
-        HStack(spacing: 8) {
+        HStack(alignment: .top, spacing: 10) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundStyle(.white)
-            Text(message)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(.white)
-                .lineLimit(2)
-            Spacer()
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(Color(.systemOrange))
+                .frame(width: 22, height: 22)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("작업 실패 — 복원됨")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.primary)
+                Text(message)
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+
+            Spacer(minLength: 6)
+
             Button {
-                withAnimation { saveError = nil }
+                withAnimation(.easeOut(duration: 0.2)) { saveError = nil }
             } label: {
                 Image(systemName: "xmark")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 28, height: 28)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("오류 닫기")
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-        .background(Color.red.opacity(0.92))
         .padding(.horizontal, 12)
-        .padding(.top, 6)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color(.systemOrange).opacity(0.12))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .stroke(Color(.systemOrange).opacity(0.35), lineWidth: 1)
+                )
+        )
+        .padding(.horizontal, 12)
+        .padding(.top, 8)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("오류: \(message)")
     }
 
     // MARK: - Flow
