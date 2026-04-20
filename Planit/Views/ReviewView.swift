@@ -479,19 +479,25 @@ struct ReviewView: View {
     }
 
     private func yearGrassGrid(stats: TodoGrassStats) -> some View {
-        let cellSize: CGFloat = 8
-        let gap: CGFloat = 2
+        let gap: CGFloat = 1
+        let dayLabelWidth: CGFloat = 10
         let dayLabels = todoGrassWeekdayLabels()
 
-        return ScrollView(.horizontal, showsIndicators: false) {
+        return GeometryReader { geo in
+            let weekCount = max(stats.weeks.count, 1)
+            let available = geo.size.width - dayLabelWidth - 4
+            let cellSize = max(3, floor((available - CGFloat(weekCount - 1) * gap) / CGFloat(weekCount)))
+            let rowHeight = cellSize + gap
+            let totalHeight = cellSize + 2 + 7 * rowHeight - gap  // 월레이블 + 7행
+
             HStack(alignment: .top, spacing: 0) {
                 VStack(spacing: gap) {
-                    Color.clear.frame(width: 12, height: cellSize + 2)
+                    Color.clear.frame(width: dayLabelWidth, height: cellSize + 2)
                     ForEach(0..<7, id: \.self) { index in
                         Text(index % 2 == 1 ? dayLabels[index] : "")
-                            .font(.system(size: 7))
+                            .font(.system(size: 6))
                             .foregroundStyle(.secondary)
-                            .frame(width: 12, height: cellSize)
+                            .frame(width: dayLabelWidth, height: cellSize)
                     }
                 }
 
@@ -500,16 +506,18 @@ struct ReviewView: View {
                         VStack(spacing: gap) {
                             monthLabel(for: week, weekIndex: weekIndex)
                                 .frame(height: cellSize + 2)
-
                             ForEach(0..<7, id: \.self) { dayIndex in
                                 grassCell(dayIndex < week.count ? week[dayIndex] : nil, size: cellSize)
                             }
                         }
+                        .frame(width: cellSize)
                     }
                 }
             }
             .padding(.horizontal, 2)
+            .frame(height: totalHeight, alignment: .top)
         }
+        .frame(height: 60)  // 넉넉한 고정 높이 (cellSize ~4-5pt 기준)
     }
 
     @ViewBuilder
