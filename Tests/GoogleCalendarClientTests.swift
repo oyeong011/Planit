@@ -203,13 +203,15 @@ struct GoogleCalendarClientTests {
         #expect(allDay?.isAllDay == true)
         // colorId 3 = Grape → 개인 violet
         #expect(allDay?.colorHex == "#9A5CE8")
-        // endDate는 inclusive로 보정: Google end=2026-04-22 → 내부 2026-04-21 00:00 UTC
+        // Phase B HIGH #3 fix: 내부 모델도 exclusive endDate로 통일.
+        // Google end=2026-04-22 (exclusive, 다음 날 00:00) → 내부 그대로 저장.
+        // UI는 `endDate > dayStart` 형태로 exclusive 해석 중이라 일관됨.
         let utc = TimeZone(identifier: "UTC")!
         var cal = Calendar(identifier: .gregorian); cal.timeZone = utc
         let startComps = cal.dateComponents([.year, .month, .day], from: allDay!.startDate)
         #expect(startComps.year == 2026 && startComps.month == 4 && startComps.day == 20)
         let endComps = cal.dateComponents([.year, .month, .day], from: allDay!.endDate)
-        #expect(endComps.year == 2026 && endComps.month == 4 && endComps.day == 21)
+        #expect(endComps.year == 2026 && endComps.month == 4 && endComps.day == 22)
     }
 
     // MARK: 2
