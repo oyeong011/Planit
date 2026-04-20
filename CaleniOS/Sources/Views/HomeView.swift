@@ -82,14 +82,6 @@ struct HomeView: View {
                 )
             }
         }
-        // v5 Phase A: 풀스크린 주 시간 그리드 시트
-        .sheet(isPresented: $viewModel.showWeekSheet) {
-            WeekTimeGridSheet(
-                isPresented: $viewModel.showWeekSheet,
-                initialDate: viewModel.sheetAnchorDate,
-                repo: viewModel.eventRepository
-            )
-        }
         .task {
             if viewModel.modelContext == nil {
                 viewModel.modelContext = modelContext

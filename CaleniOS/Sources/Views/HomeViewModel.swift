@@ -180,6 +180,13 @@ final class HomeViewModel: ObservableObject {
             // 프리뷰 / 컨텍스트 없을 때는 mock 주입
             schedulesInMonth = Self.mockMonthSchedules(around: currentMonth)
         }
+
+        // Phase B HIGH #2 fix: 앱 시작 시 이미 로그인된 세션이면 Google 이벤트를 즉시 fetch.
+        // seedIfNeededAndFetch의 SwiftData/mock 경로가 schedulesInMonth를 먼저 채우므로
+        // 그 다음 tick에 Google 결과로 덮어쓰게 한다.
+        if googleRepository != nil {
+            refreshEventsForCurrentMonth()
+        }
     }
 
     /// Phase B M4-2: auth manager로부터 GoogleCalendarClient를 조립해 repo 활성화.

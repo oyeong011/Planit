@@ -242,6 +242,12 @@ public actor GoogleCalendarClient {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
+        // Phase B HIGH #4 fix: lost update 방지 — etag 있으면 If-Match conditional update.
+        // 412 Precondition Failed 시 `GoogleCalendarClientError.preconditionFailed`로 매핑되어
+        // 상위 layer가 refetch + 사용자 diff/rollback UI를 구동하도록 신호.
+        if let etag = event.etag, !etag.isEmpty {
+            request.setValue(etag, forHTTPHeaderField: "If-Match")
+        }
         do {
             request.httpBody = try Self.encoder.encode(body)
         } catch {
@@ -280,6 +286,11 @@ public actor GoogleCalendarClient {
         request.httpMethod = "DELETE"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
+        // Phase B HIGH #4 fix: DELETE도 etag 기반 conditional — 외부에서 수정된 이벤트를
+        // 모르고 삭제하는 lost update 시나리오 방지.
+        if let etag = event.etag, !etag.isEmpty {
+            request.setValue(etag, forHTTPHeaderField: "If-Match")
+        }
 
         let (_, response) = try await perform(request)
         try Self.validate(response)
@@ -323,11 +334,22 @@ public actor GoogleCalendarClient {
         return fmt
     }()
 
-    /// all-day `date`용 (yyyy-MM-dd, UTC).
+    /// all-day `date`용 — **parsing (decode) 전용**, UTC. Google API 응답은 UTC로 옴.
     static let allDayFormatter: DateFormatter = {
         let fmt = DateFormatter()
         fmt.locale = Locale(identifier: "en_US_POSIX")
         fmt.timeZone = TimeZone(identifier: "UTC")
+        fmt.dateFormat = "yyyy-MM-dd"
+        return fmt
+    }()
+
+    /// all-day **encoding(write) 전용** — 로컬 타임존 기준 year-month-day.
+    /// Phase B MEDIUM #7 fix: 사용자가 KST 자정 `Date`를 만들면 그 Date는 UTC로는 전날 15:00이다.
+    /// UTC formatter로 찍으면 전날 문자열이 나와 off-by-one. current timezone 기준으로 인코딩해야 정확.
+    static let localAllDayFormatter: DateFormatter = {
+        let fmt = DateFormatter()
+        fmt.locale = Locale(identifier: "en_US_POSIX")
+        fmt.timeZone = .current
         fmt.dateFormat = "yyyy-MM-dd"
         return fmt
     }()
@@ -443,10 +465,11 @@ public actor GoogleCalendarClient {
                 return nil
             }
             startDate = start
-            // Google all-day endDate는 exclusive (마지막 날 다음 날 00:00).
-            // Calen 내부는 inclusive 의미로 저장 — 1일 빼서 "마지막 일의 00:00" 유지.
-            // (표시는 상위 UI가 해석. 같은 날짜 단일 all-day면 start == end.)
-            endDate = Calendar(identifier: .gregorian).date(byAdding: .day, value: -1, to: endExclusive) ?? endExclusive
+            // Phase B HIGH #3 fix: Google all-day endDate는 exclusive (다음 날 00:00).
+            // 내부 모델도 exclusive로 통일 — WeekEventLayout/allDayEventsByDay/EventEditSheet
+            // 모두 `endDate > dayStart` 형태로 exclusive interval 해석 중. 여기서 -1일 변환하면
+            // 렌더가 하루 짧아지는 off-by-one 버그 → 원본 그대로 저장.
+            endDate = endExclusive
         } else {
             guard let startStr = dto.start?.dateTime,
                   let endStr = dto.end?.dateTime,
@@ -498,7 +521,8 @@ public actor GoogleCalendarClient {
     }
 
     /// CalendarEvent/Draft → Google request body DTO.
-    /// all-day인 경우 endDate를 exclusive(+1일)로 변환. timed는 RFC3339 UTC로 전송.
+    /// all-day는 내부 모델이 이미 exclusive end(= 다음 날 00:00)를 저장하므로 그대로 전송.
+    /// timed는 RFC3339 UTC로 전송.
     static func makeEventBody(
         title: String,
         startDate: Date,
@@ -512,15 +536,17 @@ public actor GoogleCalendarClient {
         let end: EventDate
 
         if isAllDay {
-            let cal = Calendar(identifier: .gregorian)
-            let endExclusive = cal.date(byAdding: .day, value: 1, to: endDate) ?? endDate
+            // Phase B HIGH #3 fix: 내부 모델이 exclusive end로 통일됐으므로 여기서 +1일 하지 않는다.
+            // Google Calendar API spec과 그대로 일치 (end.date exclusive).
+            // all-day 문자열은 **로컬 타임존 기준** 년-월-일 component로 생성해야 한국 KST 자정 Date가
+            // UTC로 변환되어 전날로 인코딩되는 off-by-one을 피함 (MEDIUM #7).
             start = EventDate(
-                date: allDayFormatter.string(from: startDate),
+                date: localAllDayFormatter.string(from: startDate),
                 dateTime: nil,
                 timeZone: nil
             )
             end = EventDate(
-                date: allDayFormatter.string(from: endExclusive),
+                date: localAllDayFormatter.string(from: endDate),
                 dateTime: nil,
                 timeZone: nil
             )
