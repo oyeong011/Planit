@@ -1,30 +1,20 @@
 #if os(iOS)
 import SwiftUI
+import CalenShared
 
-// MARK: - MonthGridView
+// MARK: - MonthGridView (UI v7)
 //
-// TimeBlocks 스타일 6행 × 7열 월 그리드.
-// 각 셀은 `DayCell`로 구성되며, 날짜 숫자 + 최대 3개의 카테고리 색상 막대 + 초과 배지를 표시.
+// TimeBlocks 스타일 월 그리드.
+// v6까지: 각 날짜 셀 내부에 작은 pill로 이벤트 표시 → 제목 잘림.
+// v7: **주(week) 단위 레이어드 렌더링**으로 전환.
+//   1) 각 주는 ZStack — Layer 1은 7칸 DayCellShell(배경+날짜숫자만), Layer 2는 이벤트 가로 막대를
+//      GeometryReader 기반 absolute 좌표로 배치.
+//   2) 다일간(multi-day) 이벤트는 여러 칼럼에 걸친 하나의 긴 bar로 렌더 (TimeBlocks 원본 패턴).
+//   3) 주 경계에서 clip + continuesFromPrev/Next 플래그로 ◀/▶ 아이콘 표시.
+//   4) 같은 주에서 lane 4개까지 표시, 초과는 해당 칼럼 하단 "+N" 뱃지.
 //
-// 뷰는 데이터를 소유하지 않고 props(monthAnchor + schedules)로 받는다.
-// 가로 스와이프 월 이동은 HomeView의 TabView가 담당.
-
-// MARK: - Category soft color mapping (bar용)
-
-private extension ScheduleCategory {
-    var softColor: Color {
-        switch self {
-        case .work:     return .cardWorkSoft
-        case .meeting:  return .cardMeetingSoft
-        case .meal:     return .cardMealSoft
-        case .exercise: return .cardExerciseSoft
-        case .personal: return .cardPersonalSoft
-        case .general:  return .cardGeneralSoft
-        }
-    }
-}
-
-// MARK: - MonthGridView
+// 배치 알고리즘은 `CalenShared.WeekEventLayout`이 담당(테스트 8개).
+// 본 뷰는 그 결과를 받아 SwiftUI로 그리기만 한다.
 
 struct MonthGridView: View {
 
@@ -37,63 +27,144 @@ struct MonthGridView: View {
     /// 선택된 날짜 (parent binding).
     let selectedDate: Date
 
-    /// 확장된 주의 월요일 (parent binding 복제 — 표시는 안 하고 주 하이라이트용).
+    /// 확장된 주의 월요일 (현재는 미사용 — 호환 유지).
     let expandedWeekStart: Date?
 
     /// 날짜 탭 콜백.
     let onTapDate: (Date) -> Void
 
-    /// 이벤트 막대 탭 콜백.
+    /// 이벤트 막대 탭 콜백 — 편집 sheet 오픈 신호.
     let onTapEvent: (ScheduleDisplayItem) -> Void
 
     private let cal: Calendar = {
         var c = Calendar(identifier: .gregorian)
         c.firstWeekday = 1
+        c.timeZone = .current
         return c
     }()
 
     private let weekdayLabels = ["일", "월", "화", "수", "목", "금", "토"]
 
+    // MARK: - Dimensions
+
+    private let rowDateAreaHeight: CGFloat = 24    // 날짜 숫자 영역
+    private let barHeight: CGFloat = 18
+    private let barSpacing: CGFloat = 2
+    private let maxLanes: Int = 4                  // 최대 표시 lane
+    private let overflowBadgeHeight: CGFloat = 14
+    private let cellHorizontalPadding: CGFloat = 3
+
+    private var laneArea: CGFloat {
+        CGFloat(maxLanes) * (barHeight + barSpacing)
+    }
+
+    private var weekRowHeight: CGFloat {
+        rowDateAreaHeight + laneArea + overflowBadgeHeight + 4
+    }
+
+    // MARK: - Body
+
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 6) {
             // 요일 헤더
-            LazyVGrid(columns: gridColumns, spacing: 0) {
+            HStack(spacing: 0) {
                 ForEach(Array(weekdayLabels.enumerated()), id: \.offset) { index, label in
                     Text(label)
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(weekdayLabelColor(at: index))
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 6)
                 }
             }
+            .padding(.vertical, 6)
 
-            // 셀 42개
-            let dates = datesInGrid
-            LazyVGrid(columns: gridColumns, spacing: 4) {
-                ForEach(dates, id: \.self) { date in
-                    DayCell(
-                        date: date,
-                        isInCurrentMonth: cal.isDate(date, equalTo: monthAnchor, toGranularity: .month),
-                        isToday: cal.isDateInToday(date),
-                        isSelected: cal.isDate(date, inSameDayAs: selectedDate),
-                        isInExpandedWeek: isInExpandedWeek(date),
-                        columnIndex: cal.component(.weekday, from: date) - 1,
-                        events: eventsForDay(date),
-                        onTapCell: { onTapDate(date) },
-                        onTapEvent: onTapEvent
-                    )
+            // 주 단위 레이어드 렌더링
+            VStack(spacing: 4) {
+                ForEach(weeksInGrid, id: \.self) { weekStart in
+                    weekRow(weekStart: weekStart)
+                        .frame(height: weekRowHeight)
                 }
             }
         }
     }
 
-    // MARK: - Grid helpers
+    // MARK: - Week row
 
-    private var gridColumns: [GridItem] {
-        Array(repeating: GridItem(.flexible(), spacing: 4), count: 7)
+    @ViewBuilder
+    private func weekRow(weekStart: Date) -> some View {
+        let days = (0..<7).compactMap { cal.date(byAdding: .day, value: $0, to: weekStart) }
+
+        let inputs = schedules.compactMap { item -> WeekEventLayout.Input? in
+            let end = item.endTime ?? cal.date(byAdding: .minute, value: 30, to: item.startTime) ?? item.startTime
+            return WeekEventLayout.Input(id: item.id.uuidString, startDate: item.startTime, endDate: end)
+        }
+        let result = WeekEventLayout.layout(
+            events: inputs,
+            weekStart: weekStart,
+            maxVisibleLanes: maxLanes,
+            calendar: cal
+        )
+
+        GeometryReader { geo in
+            let columnWidth = geo.size.width / 7.0
+
+            ZStack(alignment: .topLeading) {
+                // Layer 1: 7 day cells (배경 + 날짜 숫자 + overflow 뱃지)
+                HStack(spacing: 0) {
+                    ForEach(Array(days.enumerated()), id: \.offset) { idx, date in
+                        DayCellShell(
+                            date: date,
+                            isInCurrentMonth: cal.isDate(date, equalTo: monthAnchor, toGranularity: .month),
+                            isToday: cal.isDateInToday(date),
+                            isSelected: cal.isDate(date, inSameDayAs: selectedDate),
+                            columnIndex: cal.component(.weekday, from: date) - 1,
+                            hiddenCount: result.hiddenByColumn[idx] ?? 0,
+                            rowHeight: weekRowHeight,
+                            onTapCell: { onTapDate(date) }
+                        )
+                        .frame(width: columnWidth)
+                    }
+                }
+
+                // Layer 2: 이벤트 가로 막대들 (absolute 좌표)
+                ForEach(result.placements, id: \.id) { placement in
+                    if let item = scheduleById(placement.id) {
+                        EventBarRibbon(
+                            item: item,
+                            continuesFromPrev: placement.continuesFromPrev,
+                            continuesToNext: placement.continuesToNext,
+                            dimmed: !currentMonthContainsBar(placement: placement, weekDays: days)
+                        )
+                        .frame(
+                            width: columnWidth * CGFloat(placement.spanColumns)
+                                - 2 * cellHorizontalPadding,
+                            height: barHeight
+                        )
+                        .position(
+                            x: columnWidth * (CGFloat(placement.startColumn) + CGFloat(placement.spanColumns) / 2),
+                            y: rowDateAreaHeight
+                                + CGFloat(placement.lane) * (barHeight + barSpacing)
+                                + barHeight / 2
+                        )
+                        .onTapGesture { onTapEvent(item) }
+                    }
+                }
+            }
+        }
     }
 
-    private var datesInGrid: [Date] {
+    private func currentMonthContainsBar(placement: WeekEventLayout.Placement, weekDays: [Date]) -> Bool {
+        let startIdx = max(0, min(weekDays.count - 1, placement.startColumn))
+        let anchor = weekDays[startIdx]
+        return cal.isDate(anchor, equalTo: monthAnchor, toGranularity: .month)
+    }
+
+    private func scheduleById(_ idString: String) -> ScheduleDisplayItem? {
+        schedules.first { $0.id.uuidString == idString }
+    }
+
+    // MARK: - Grid helpers
+
+    private var weeksInGrid: [Date] {
         var comps = cal.dateComponents([.year, .month], from: monthAnchor)
         comps.day = 1
         guard let firstOfMonth = cal.date(from: comps) else { return [] }
@@ -101,45 +172,27 @@ struct MonthGridView: View {
         guard let gridStart = cal.date(byAdding: .day, value: -weekdayOfFirst, to: firstOfMonth) else {
             return []
         }
-        return (0..<42).compactMap { cal.date(byAdding: .day, value: $0, to: gridStart) }
-    }
-
-    private func isInExpandedWeek(_ date: Date) -> Bool {
-        guard let weekStart = expandedWeekStart,
-              let weekEnd = cal.date(byAdding: .day, value: 7, to: weekStart) else { return false }
-        return date >= weekStart && date < weekEnd
-    }
-
-    private func eventsForDay(_ date: Date) -> [ScheduleDisplayItem] {
-        let start = cal.startOfDay(for: date)
-        guard let end = cal.date(byAdding: .day, value: 1, to: start) else { return [] }
-        return schedules
-            .filter { $0.startTime >= start && $0.startTime < end }
-            .sorted { $0.startTime < $1.startTime }
+        return (0..<6).compactMap { cal.date(byAdding: .day, value: $0 * 7, to: gridStart) }
     }
 
     private func weekdayLabelColor(at index: Int) -> Color {
-        if index == 0 { return .red.opacity(0.8) }      // 일요일
-        if index == 6 { return Color.calenBlue.opacity(0.8) } // 토요일
+        if index == 0 { return .red.opacity(0.8) }
+        if index == 6 { return Color.calenBlue.opacity(0.8) }
         return .secondary
     }
 }
 
-// MARK: - DayCell
+// MARK: - DayCellShell (배경 + 날짜 숫자 + overflow 뱃지)
 
-private struct DayCell: View {
-
+private struct DayCellShell: View {
     let date: Date
     let isInCurrentMonth: Bool
     let isToday: Bool
     let isSelected: Bool
-    let isInExpandedWeek: Bool
-    /// 0 = 일요일, 6 = 토요일
     let columnIndex: Int
-    let events: [ScheduleDisplayItem]
-
+    let hiddenCount: Int
+    let rowHeight: CGFloat
     let onTapCell: () -> Void
-    let onTapEvent: (ScheduleDisplayItem) -> Void
 
     private var dayNumber: String {
         "\(Calendar.current.component(.day, from: date))"
@@ -147,25 +200,19 @@ private struct DayCell: View {
 
     private var numberColor: Color {
         if !isInCurrentMonth { return .secondary.opacity(0.45) }
-        if isToday && !isSelected { return .white } // 오늘은 원형 fill 위에 흰색
+        if isToday && !isSelected { return .white }
         if columnIndex == 0 { return .red.opacity(0.9) }
         if columnIndex == 6 { return Color.calenBlue.opacity(0.9) }
         return .primary
     }
 
     private var backgroundColor: Color {
-        if isSelected && isInCurrentMonth {
-            return Color.calenBlue.opacity(0.10)
-        }
-        if isInExpandedWeek && isInCurrentMonth {
-            return Color.calenBlue.opacity(0.04)
-        }
+        if isSelected && isInCurrentMonth { return Color.calenBlue.opacity(0.10) }
         return .clear
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            // 상단: 날짜 숫자 우측 정렬
+        VStack(spacing: 0) {
             HStack {
                 Spacer()
                 ZStack {
@@ -175,108 +222,137 @@ private struct DayCell: View {
                             .frame(width: 22, height: 22)
                     }
                     Text(dayNumber)
-                        .font(isToday ? .system(size: 13, weight: .bold) : .calenDayCellNumber)
+                        .font(isToday ? .system(size: 13, weight: .bold) : .system(size: 12, weight: .medium))
                         .foregroundStyle(numberColor)
                 }
             }
-            .padding(.top, 6)
+            .padding(.top, 3)
             .padding(.trailing, 6)
 
-            // 이벤트 막대 영역 (최대 3개 + overflow)
-            eventBarsSection
-                .padding(.horizontal, 3)
-
             Spacer(minLength: 0)
+
+            if hiddenCount > 0 {
+                HStack {
+                    Spacer()
+                    Text("+\(hiddenCount)")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(Color.calenBlue.opacity(0.9))
+                    Spacer()
+                }
+                .padding(.bottom, 2)
+            }
         }
+        .frame(height: rowHeight)
         .frame(maxWidth: .infinity)
-        .frame(minHeight: 92, alignment: .top)
         .background(
             RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .fill(backgroundColor)
         )
         .contentShape(Rectangle())
         .onTapGesture { onTapCell() }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(accessibilityLabel)
-    }
-
-    @ViewBuilder
-    private var eventBarsSection: some View {
-        let maxVisible = 3
-        let visible = Array(events.prefix(maxVisible))
-        let overflow = events.count - visible.count
-
-        VStack(alignment: .leading, spacing: 2) {
-            ForEach(visible) { item in
-                EventBar(item: item, dimmed: !isInCurrentMonth)
-                    .onTapGesture { onTapEvent(item) }
-            }
-            if overflow > 0 {
-                Text("+\(overflow)")
-                    .font(.system(size: 9, weight: .semibold))
-                    .foregroundStyle(Color.calenBlue)
-                    .padding(.leading, 2)
-            }
-        }
-    }
-
-    private var accessibilityLabel: String {
-        let fmt = DateFormatter()
-        fmt.locale = Locale(identifier: "ko_KR")
-        fmt.dateFormat = "M월 d일"
-        let base = fmt.string(from: date)
-        if events.isEmpty { return base }
-        return "\(base), 일정 \(events.count)개"
     }
 }
 
-// MARK: - EventBar
+// MARK: - EventBarRibbon (가로 막대)
 
-private struct EventBar: View {
+private struct EventBarRibbon: View {
     let item: ScheduleDisplayItem
+    let continuesFromPrev: Bool
+    let continuesToNext: Bool
     let dimmed: Bool
 
     var body: some View {
-        HStack(spacing: 3) {
-            // 좌측 색상 막대 (3pt 높이의 수평 bar 대신 수직 바 + 라벨 조합)
-            RoundedRectangle(cornerRadius: 1.5, style: .continuous)
-                .fill(barColor)
-                .frame(width: 3)
-                .frame(maxHeight: .infinity)
-
+        HStack(spacing: 4) {
+            if continuesFromPrev {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(category.swiftUIColor.opacity(0.9))
+            }
+            // 좌측 3pt color bar (첫 주일 때만)
+            if !continuesFromPrev {
+                RoundedRectangle(cornerRadius: 1, style: .continuous)
+                    .fill(category.swiftUIColor)
+                    .frame(width: 3, height: 12)
+            }
             Text(item.title)
-                .font(.calenEventBarLabel)
+                .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(dimmed
                     ? Color.secondary.opacity(0.6)
-                    : Color.primary.opacity(0.85))
+                    : category.swiftUIColor.opacity(0.95))
                 .lineLimit(1)
-                .minimumScaleFactor(0.85)
-                .padding(.trailing, 2)
+                .truncationMode(.tail)
+            Spacer(minLength: 0)
+            if continuesToNext {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(category.swiftUIColor.opacity(0.9))
+            }
         }
-        .frame(height: 13)
-        .padding(.vertical, 1)
-        .padding(.leading, 2)
+        .padding(.horizontal, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 3, style: .continuous)
-                .fill(barBackground)
+            barShape
+                .fill(background)
+                .overlay(barShape.stroke(category.swiftUIColor.opacity(0.5), lineWidth: 0.8))
         )
-        .dynamicTypeSize(.xSmall ... .accessibility1)
+        .opacity(dimmed ? 0.7 : 1.0)
     }
 
-    private var barColor: Color {
-        dimmed ? item.category.softColor.opacity(0.55) : item.category.swiftUIColor
+    private var category: ScheduleCategory { item.category }
+
+    private var background: Color {
+        dimmed ? category.swiftUIColor.opacity(0.08) : category.swiftUIColor.opacity(0.20)
     }
 
-    private var barBackground: Color {
-        dimmed
-            ? item.category.softColor.opacity(0.15)
-            : item.category.softColor.opacity(0.30)
+    private var barShape: some Shape {
+        BarShape(leftSharp: continuesFromPrev, rightSharp: continuesToNext, cornerRadius: 4)
+    }
+}
+
+/// 좌/우 각각 cornerRadius를 개별 제어하는 shape.
+/// 주 경계에서 continuesFromPrev/Next가 true면 해당 side의 radius = 0.
+private struct BarShape: Shape {
+    let leftSharp: Bool
+    let rightSharp: Bool
+    let cornerRadius: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        let r = cornerRadius
+        let topLeft = leftSharp ? 0 : r
+        let bottomLeft = leftSharp ? 0 : r
+        let topRight = rightSharp ? 0 : r
+        let bottomRight = rightSharp ? 0 : r
+
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX + topLeft, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX - topRight, y: rect.minY))
+        if topRight > 0 {
+            path.addArc(center: CGPoint(x: rect.maxX - topRight, y: rect.minY + topRight),
+                        radius: topRight, startAngle: .degrees(-90), endAngle: .degrees(0), clockwise: false)
+        }
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - bottomRight))
+        if bottomRight > 0 {
+            path.addArc(center: CGPoint(x: rect.maxX - bottomRight, y: rect.maxY - bottomRight),
+                        radius: bottomRight, startAngle: .degrees(0), endAngle: .degrees(90), clockwise: false)
+        }
+        path.addLine(to: CGPoint(x: rect.minX + bottomLeft, y: rect.maxY))
+        if bottomLeft > 0 {
+            path.addArc(center: CGPoint(x: rect.minX + bottomLeft, y: rect.maxY - bottomLeft),
+                        radius: bottomLeft, startAngle: .degrees(90), endAngle: .degrees(180), clockwise: false)
+        }
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + topLeft))
+        if topLeft > 0 {
+            path.addArc(center: CGPoint(x: rect.minX + topLeft, y: rect.minY + topLeft),
+                        radius: topLeft, startAngle: .degrees(180), endAngle: .degrees(270), clockwise: false)
+        }
+        path.closeSubpath()
+        return path
     }
 }
 
 // MARK: - Preview
 
-#Preview("Month Grid") {
+#Preview("Month Grid v7") {
     let vm = HomeViewModel()
     return MonthGridView(
         monthAnchor: vm.currentMonth,
@@ -286,7 +362,7 @@ private struct EventBar: View {
         onTapDate: { _ in },
         onTapEvent: { _ in }
     )
-    .padding(.horizontal, 12)
+    .padding(.horizontal, 8)
     .background(Color.calenCream)
 }
 #endif
