@@ -12,7 +12,9 @@ import CoreGraphics
 //   y = H  → (startHour + durationHours)시 정각 (예: 24시)
 //   분당 pixel = hourHeight / 60  (기본 60pt/h → 1pt/min)
 //
-// 수직(y) 변환만 담당. 가로(컬럼 x)는 View가 GeometryReader로 처리.
+// 수직(y) 변환은 instance helper로, 가로(컬럼 x) 변환은 v6부터 아래
+// `dayColumn`/`dayColumnWidth` helper로 함께 제공한다. 실제 그리드 뷰에는 여전히
+// GeometryReader가 필요하지만, 좌표 → 요일 인덱스 매핑은 순수 함수로 단위 테스트한다.
 
 public struct TimeGridLayout: Sendable, Equatable {
 
@@ -150,5 +152,40 @@ public struct TimeGridLayout: Sendable, Equatable {
             return nil
         }
         return y(forMinutesFromStart: minutes)
+    }
+
+    // MARK: - Day column (horizontal) — v6
+
+    /// 7일 그리드에서 단일 요일 칼럼이 차지할 폭.
+    ///
+    /// iPhone 세로 같은 좁은 화면에서도 이벤트 텍스트가 잘리지 않도록 최소 120pt를 보장한다.
+    /// 화면이 충분히 크면(`availableWidth / dayCount >= 120`) 비율대로 늘려 iPad/가로 모드에서도
+    /// 한 화면에 7일이 완전히 펼쳐진다.
+    ///
+    /// - Parameters:
+    ///   - availableWidth: 좌측 시간 라벨(gutter)을 뺀 실제 그리드용 가용 폭.
+    ///   - dayCount: 열을 나눌 요일 수(기본 7). 0 이하는 1로 클램프.
+    /// - Returns: pt 단위 컬럼 폭. `max(120, availableWidth / dayCount)`.
+    public func dayColumnWidth(availableWidth: CGFloat, dayCount: Int = 7) -> CGFloat {
+        let safeCount = max(1, dayCount)
+        let even = availableWidth / CGFloat(safeCount)
+        return max(120, even)
+    }
+
+    /// 그리드 내부 x 좌표를 요일 인덱스로 변환한다.
+    ///
+    /// 좌측 gutter를 이미 제외한 "그리드 로컬 x"(0 = 월요일 컬럼 좌측)가 전제다.
+    /// 결과는 `[0, dayCount - 1]` 범위로 클램프된다 — 드래그가 가장자리를 넘어 튕기는 현상 방지.
+    ///
+    /// - Parameters:
+    ///   - x: 그리드 기준 x 좌표 (pt). 음수 허용(왼쪽 끝으로 클램프됨).
+    ///   - columnWidth: `dayColumnWidth(...)`로 계산된 칼럼 폭. 0 이하는 무효 → 0 반환.
+    ///   - dayCount: 요일 수(기본 7).
+    /// - Returns: 0-based 요일 인덱스.
+    public func dayColumn(fromX x: CGFloat, columnWidth: CGFloat, dayCount: Int = 7) -> Int {
+        guard columnWidth > 0 else { return 0 }
+        let safeCount = max(1, dayCount)
+        let raw = Int((x / columnWidth).rounded(.down))
+        return max(0, min(safeCount - 1, raw))
     }
 }

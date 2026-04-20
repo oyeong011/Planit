@@ -3,50 +3,72 @@ import SwiftUI
 import UIKit
 import CalenShared
 
-// MARK: - WeekTimeGridSheet
+// MARK: - WeekTimeGridSheet (v6)
 //
-// v5 Phase A 풀스크린 주 시트. 75%/large detent, 시간 그리드, 이벤트 드래그/리사이즈.
+// Phase A 주 시트 v6 재설계.
+// v5에서 GeometryReader 기반 7등분 → iPhone 세로에서 칼럼이 ~50pt까지 줄어
+// 텍스트가 잘리는 문제를 해결하기 위해 **120pt 고정 칼럼 + 가로 스크롤** 모델로 전환.
 //
-// 구성:
-//  - 상단 주 네비(prev/next + 주 제목)
-//  - all-day pinned row (32pt)
-//  - ScrollView 내부: 요일 헤더 sticky + 시간 그리드 (60pt × 19h = 1140pt)
-//  - 이벤트 블록: ZStack overlay로 컬럼별 배치, 드래그/리사이즈 제스처
-//  - rollback 토스트 overlay
+// 구조:
+//   VStack
+//     ├─ WeekHeaderBar (월 네비 + 닫기)
+//     ├─ DemoBanner (repo.isFakeRepo 일 때)
+//     └─ HStack
+//         ├─ TimeGutter (48pt, 가로 스크롤 밖 고정)
+//         └─ ScrollViewReader { horizontal ScrollView {
+//             VStack
+//               ├─ WeekdayHeader (7 × columnWidth)
+//               ├─ AllDayRow (7 × columnWidth)
+//               └─ vertical ScrollView { TimeGridBody (7 × columnWidth × totalHeight) }
+//           } }
 //
-// 상태:
-//  - isPresented binding — HomeView에서 제어
-//  - anchorDate — 시트가 렌더할 주의 기준 날짜(해당 주의 어느 날이든 상관없음)
-//  - repo — EventRepository (fake/google/eventkit 주입 가능)
+// 핵심 변경점 (codex v6 피드백 반영):
+//  1) `isDraggingEvent` 단일 상태로 horizontal + vertical ScrollView 동시에 .scrollDisabled.
+//  2) Tap vs Drag: 블록에 DragGesture(min=8)를 달고 onEnded의 translation.distance < 8
+//     일 때만 tap으로 간주 → EventEditSheet 오픈. onTapGesture와 병존시키지 않음.
+//  3) Edge autoscroll: ScrollViewProxy.scrollTo(dayID, anchor: .center), 300ms throttle.
+//  4) 날짜 간 이동: dayDelta 계산 후 (newDay, snappedTimeFromDrag) combine, duration 유지.
+//  5) EventEditSheet: .large detent, interactiveDismissDisabled + save/delete rollback.
+//  6) columnWidth = max(120, availableWidth / 7) → iPhone 좁음/iPad 넓음 대응.
+//  7) DemoBanner: fake repo 상태 고지.
 
 struct WeekTimeGridSheet: View {
+
+    // MARK: - Input
 
     @Binding var isPresented: Bool
     let initialDate: Date
 
-    /// EventRepository 구현체. 반드시 `ObservableObject`인 FakeEventRepository 사용 시
-    /// 상위에서 `@ObservedObject`로 전달해 `events` 업데이트가 반영되도록 함.
     @ObservedObject var repo: FakeEventRepository
 
-    // MARK: - State
+    // MARK: - Display state
 
     @State private var anchorDate: Date
-    @State private var scrollDisabled: Bool = false
     @State private var toastMessage: String?
     @State private var toastWorkItem: DispatchWorkItem?
 
-    /// 현재 드래그 중인 이벤트 id
-    @State private var draggingId: String?
-    /// 현재 리사이즈 중인 이벤트 id
-    @State private var resizingId: String?
-    /// 드래그 translation (y) — 즉시 반영용
-    @State private var dragTranslation: CGFloat = 0
-    /// 리사이즈 translation (y)
-    @State private var resizeTranslation: CGFloat = 0
+    /// 편집 시트에 바인딩될 이벤트 — nil이면 시트 닫힘.
+    @State private var editingEvent: CalendarEvent?
 
     /// 현재 시각 tick (분 단위 업데이트)
     @State private var nowTick: Date = Date()
     private let nowTimer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
+
+    // MARK: - Drag state (codex: 단일 상태로 스크롤 제어)
+
+    /// 드래그 중인 이벤트의 id(복합). nil = 드래그 아님.
+    /// 이 값이 non-nil일 때 horizontal + vertical ScrollView 모두 .scrollDisabled(true).
+    @State private var draggingId: String?
+    @State private var resizingId: String?
+
+    /// 드래그 중 translation.
+    @State private var dragTranslation: CGSize = .zero
+    @State private var resizeTranslation: CGFloat = 0
+
+    /// Edge autoscroll throttle 타임스탬프.
+    @State private var lastAutoscrollAt: Date = .distantPast
+
+    // MARK: - Config
 
     private let layout = TimeGridLayout()
     private let cal: Calendar = {
@@ -57,6 +79,10 @@ struct WeekTimeGridSheet: View {
 
     private let leadingGutter: CGFloat = 48
 
+    /// 블록 탭 vs 드래그 구분 임계값 (pt). codex: DragGesture onEnded에서 distance < 8 → tap.
+    private let tapThreshold: CGFloat = 8
+    private let dragMinDistance: CGFloat = 4   // 제스처 인식 시작 minimumDistance
+
     init(isPresented: Binding<Bool>, initialDate: Date, repo: FakeEventRepository) {
         self._isPresented = isPresented
         self.initialDate = initialDate
@@ -64,30 +90,49 @@ struct WeekTimeGridSheet: View {
         self._anchorDate = State(initialValue: initialDate)
     }
 
-    var body: some View {
-        VStack(spacing: 0) {
-            weekHeader
-                .padding(.horizontal, 16)
-                .padding(.top, 4)
-                .padding(.bottom, 6)
+    // MARK: - Body
 
-            AllDayRowView(
-                days: weekDays,
-                eventsByDay: allDayEventsByDay,
-                onTap: { _ in /* v0.1.1 */ },
-                leadingTimeGutter: leadingGutter
+    var body: some View {
+        GeometryReader { geo in
+            let columnWidth = layout.dayColumnWidth(
+                availableWidth: geo.size.width - leadingGutter,
+                dayCount: 7
             )
 
-            weekdayHeader
+            VStack(spacing: 0) {
+                weekHeader
+                    .padding(.horizontal, 16)
+                    .padding(.top, 4)
+                    .padding(.bottom, 6)
 
-            timeGridScrollView
+                if repo.isFakeRepo {
+                    DemoBanner()
+                }
+
+                // v6: 외곽 vertical scroll 안에서 시간 gutter + weekday header + grid가
+                // 함께 세로 스크롤된다 (gutter ↔ grid 시간 라벨 자동 동기화). 가로 스크롤은
+                // grid/헤더 row 내부에 별도로 둔다 — weekday header와 all-day row는 가로만,
+                // grid body는 가로/세로 둘 다 움직인다.
+                scrollingWeekArea(columnWidth: columnWidth)
+            }
+            .background(Color.calenCream.ignoresSafeArea(edges: .bottom))
+            .overlay(alignment: .bottom) { toastOverlay }
         }
-        .background(Color.calenCream.ignoresSafeArea(edges: .bottom))
-        .overlay(alignment: .bottom) { toastOverlay }
         .presentationDetents([.fraction(0.75), .large])
         .presentationDragIndicator(.visible)
         .presentationBackgroundInteraction(.disabled)
         .onReceive(nowTimer) { nowTick = $0 }
+        .sheet(item: $editingEvent) { ev in
+            EventEditSheet(
+                event: ev,
+                onSave: { updated in
+                    try await saveFromEditSheet(updated)
+                },
+                onDelete: { target in
+                    try await deleteFromEditSheet(target)
+                }
+            )
+        }
     }
 
     // MARK: - Week Header
@@ -103,6 +148,7 @@ struct WeekTimeGridSheet: View {
                     .frame(width: 32, height: 32)
                     .background(Color.calenBlue.opacity(0.10), in: Circle())
             }
+            .disabled(isDraggingEvent)
 
             VStack(spacing: 2) {
                 Text(weekTitle)
@@ -123,6 +169,19 @@ struct WeekTimeGridSheet: View {
                     .frame(width: 32, height: 32)
                     .background(Color.calenBlue.opacity(0.10), in: Circle())
             }
+            .disabled(isDraggingEvent)
+
+            Button {
+                isPresented = false
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 30, height: 30)
+                    .background(Color.primary.opacity(0.06), in: Circle())
+            }
+            .disabled(isDraggingEvent)
+            .accessibilityLabel("닫기")
         }
     }
 
@@ -132,9 +191,7 @@ struct WeekTimeGridSheet: View {
         let fmt = DateFormatter()
         fmt.locale = Locale(identifier: "ko_KR")
         fmt.dateFormat = "M월 d일"
-        let l = fmt.string(from: first)
-        let r = fmt.string(from: last)
-        return "\(l) ~ \(r)"
+        return "\(fmt.string(from: first)) ~ \(fmt.string(from: last))"
     }
 
     private var yearText: String {
@@ -144,21 +201,116 @@ struct WeekTimeGridSheet: View {
         return fmt.string(from: weekDays.first ?? anchorDate)
     }
 
-    // MARK: - Weekday Header (sticky inside grid scroll - here fixed above)
+    // MARK: - Scrolling area
 
-    private var weekdayHeader: some View {
-        HStack(spacing: 0) {
-            Color.clear.frame(width: leadingGutter)
-            GeometryReader { geo in
-                let colW = geo.size.width / 7
-                HStack(spacing: 0) {
-                    ForEach(Array(weekDays.enumerated()), id: \.offset) { idx, day in
-                        weekdayCell(day: day, width: colW, index: idx)
+    @ViewBuilder
+    private func scrollingWeekArea(columnWidth: CGFloat) -> some View {
+        // v6 구조:
+        //   VStack
+        //     ├ HStack — [gutter placeholder (leadingGutter)] + [horizontal ScrollView { weekdayHeader + AllDayRow }]
+        //     └ vertical ScrollView
+        //         └ HStack — [time gutter hour labels (leadingGutter)] + [horizontal ScrollView { timeGridBody }]
+        //
+        // 상단 헤더 row와 grid 가로 스크롤은 서로 독립. 사용자에게는 두 영역이 함께 가로로 흘러야
+        // 자연스러우므로 동일한 ScrollViewReader/hProxy를 공유해 scrollTo로 동기화한다.
+        ScrollViewReader { hProxy in
+            VStack(spacing: 0) {
+                // 상단 헤더 영역 (수직 스크롤 X, 가로 스크롤 O)
+                HStack(alignment: .top, spacing: 0) {
+                    // gutter placeholder + "종일" 라벨 (AllDay row 위치)
+                    VStack(spacing: 0) {
+                        Color.clear.frame(height: 48) // weekday header 공간
+                        ZStack {
+                            Color.calenCardSurface
+                            Text("종일")
+                                .font(.system(size: 9, weight: .medium))
+                                .foregroundStyle(.secondary)
+                                .frame(maxWidth: .infinity, alignment: .trailing)
+                                .padding(.trailing, 4)
+                        }
+                        .frame(height: 32)
+                    }
+                    .frame(width: leadingGutter)
+
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        VStack(spacing: 0) {
+                            weekdayHeader(columnWidth: columnWidth)
+                            AllDayRowView(
+                                days: weekDays,
+                                eventsByDay: allDayEventsByDay,
+                                onTap: { ev in openEditor(ev) },
+                                leadingTimeGutter: 0
+                            )
+                            .frame(width: columnWidth * 7)
+                        }
+                    }
+                    .scrollDisabled(isDraggingEvent)
+                }
+
+                // 하단 그리드 — 수직 스크롤 O, 가로 스크롤 O (별도 proxy)
+                ScrollView(.vertical, showsIndicators: true) {
+                    HStack(alignment: .top, spacing: 0) {
+                        timeGutterLabels
+                            .frame(width: leadingGutter)
+
+                        ScrollView(.horizontal, showsIndicators: true) {
+                            timeGridBody(columnWidth: columnWidth, hProxy: hProxy)
+                        }
+                        .scrollDisabled(isDraggingEvent)
+                    }
+                }
+                .scrollDisabled(isDraggingEvent)
+            }
+            .onAppear {
+                let idx = weekDays.firstIndex(where: { cal.isDate($0, inSameDayAs: initialDate) }) ?? 0
+                let id = dayID(for: weekDays[idx])
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        hProxy.scrollTo(id, anchor: .leading)
+                    }
+                }
+            }
+            .onChange(of: anchorDate) { _, _ in
+                if let first = weekDays.first {
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        hProxy.scrollTo(dayID(for: first), anchor: .leading)
                     }
                 }
             }
         }
-        .frame(height: 48)
+    }
+
+    // MARK: - Time Gutter Labels (grid와 같은 vertical scroll 내부에 동거)
+
+    private var timeGutterLabels: some View {
+        VStack(spacing: 0) {
+            ForEach(0..<layout.durationHours, id: \.self) { offset in
+                let hour = layout.startHour + offset
+                HStack {
+                    Spacer()
+                    Text(hourLabel(hour))
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                        .padding(.trailing, 6)
+                }
+                .frame(height: layout.hourHeight, alignment: .top)
+                .padding(.top, -6)
+            }
+        }
+        .frame(width: leadingGutter, height: layout.totalHeight, alignment: .top)
+    }
+
+    // MARK: - Weekday Header
+
+    private func weekdayHeader(columnWidth: CGFloat) -> some View {
+        HStack(spacing: 0) {
+            ForEach(Array(weekDays.enumerated()), id: \.offset) { idx, day in
+                weekdayCell(day: day, width: columnWidth, index: idx)
+                    .id(dayID(for: day))
+            }
+        }
+        .frame(width: columnWidth * 7, height: 48)
         .background(Color.calenCardSurface)
         .overlay(
             Rectangle().fill(Color.primary.opacity(0.08)).frame(height: 0.5),
@@ -190,93 +342,46 @@ struct WeekTimeGridSheet: View {
     }
 
     private func weekdayName(index: Int) -> String {
-        // firstWeekday=2(월) 기준. index 0 = 월, ..., 5 = 토, 6 = 일
         ["월", "화", "수", "목", "금", "토", "일"][index % 7]
     }
 
     private func weekdayColor(index: Int) -> Color {
-        if index == 6 { return .red.opacity(0.9) }       // 일
-        if index == 5 { return Color.calenBlue }         // 토
+        if index == 6 { return .red.opacity(0.9) }
+        if index == 5 { return Color.calenBlue }
         return .primary
     }
 
-    // MARK: - Time Grid
+    // MARK: - Time Grid Body
 
     @ViewBuilder
-    private var timeGridScrollView: some View {
-        ScrollViewReader { proxy in
-            ScrollView(.vertical, showsIndicators: true) {
-                HStack(alignment: .top, spacing: 0) {
-                    timeLabelColumn
-                    daysGrid
-                }
-                .id("grid")
-            }
-            .scrollDisabled(scrollDisabled)
-            .onAppear {
-                // 현재 시각 근처로 스크롤
-                // (SwiftUI ScrollView + ScrollViewReader는 id 지정 구간으로만 scroll —
-                // anchor 지점의 ID를 hour 기준으로 별도 심어두고 싶지만 복잡도 대비 이득이 적어
-                // 초기에는 8시 근처 offset으로 content를 밀어놓는 방식을 택함.)
-                // 여기서는 content 안에 hourly ID를 심어두진 않고, 시트가 열리자마자
-                // 자동으로 표준 위치로 스크롤되도록 함 (추후 개선).
-            }
-        }
-    }
+    private func timeGridBody(columnWidth: CGFloat, hProxy: ScrollViewProxy) -> some View {
+        ZStack(alignment: .topLeading) {
+            gridLines(width: columnWidth * 7)
 
-    private var timeLabelColumn: some View {
-        VStack(spacing: 0) {
-            ForEach(0..<layout.durationHours, id: \.self) { offset in
-                let hour = layout.startHour + offset
-                HStack {
-                    Spacer()
-                    Text(hourLabel(hour))
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(.secondary)
-                        .monospacedDigit()
-                        .padding(.trailing, 6)
-                }
-                .frame(height: layout.hourHeight, alignment: .top)
-                .padding(.top, -6) // 시간 라벨이 그 시간의 "시작선" 근처에 오도록 위로 밀착
+            verticalDividers(columnWidth: columnWidth)
+
+            ForEach(Array(weekDays.enumerated()), id: \.offset) { idx, day in
+                dayEventLayer(
+                    day: day,
+                    dayIndex: idx,
+                    columnWidth: columnWidth,
+                    hProxy: hProxy
+                )
+            }
+
+            if let nowY = currentNowY(),
+               let todayIndex = weekDays.firstIndex(where: { cal.isDateInToday($0) }) {
+                nowLine(
+                    y: nowY,
+                    columnX: CGFloat(todayIndex) * columnWidth,
+                    columnWidth: columnWidth
+                )
             }
         }
-        .frame(width: leadingGutter)
+        .frame(width: columnWidth * 7, height: layout.totalHeight)
     }
 
-    private func hourLabel(_ hour: Int) -> String {
-        // 0~23 포맷
-        let h = hour % 24
-        return String(format: "%02d:00", h)
-    }
-
-    /// 주 7일 시간 그리드. 각 컬럼은 GeometryReader로 폭을 계산.
-    private var daysGrid: some View {
-        GeometryReader { geo in
-            let colW = geo.size.width / 7
-            ZStack(alignment: .topLeading) {
-                // 1. 배경 grid lines (시간당 가로 선)
-                gridLines
-                    .frame(width: geo.size.width, height: layout.totalHeight)
-
-                // 2. 요일별 수직 구분선
-                verticalDividers(totalWidth: geo.size.width)
-
-                // 3. 이벤트 블록 (각 요일 컬럼의 timed events)
-                ForEach(weekDays, id: \.self) { day in
-                    dayEventLayer(day: day, columnWidth: colW)
-                }
-
-                // 4. Now line (오늘이 주 내부일 때만)
-                if let nowY = currentNowY() {
-                    nowLine(y: nowY, totalWidth: geo.size.width)
-                }
-            }
-            .frame(width: geo.size.width, height: layout.totalHeight)
-        }
-        .frame(height: layout.totalHeight)
-    }
-
-    private var gridLines: some View {
+    private func gridLines(width: CGFloat) -> some View {
         VStack(spacing: 0) {
             ForEach(0..<layout.durationHours, id: \.self) { idx in
                 Rectangle()
@@ -286,32 +391,47 @@ struct WeekTimeGridSheet: View {
                     .frame(height: layout.hourHeight - 0.5)
             }
         }
+        .frame(width: width)
     }
 
-    private func verticalDividers(totalWidth: CGFloat) -> some View {
-        let colW = totalWidth / 7
-        return ZStack(alignment: .topLeading) {
+    private func verticalDividers(columnWidth: CGFloat) -> some View {
+        ZStack(alignment: .topLeading) {
             ForEach(1..<7, id: \.self) { i in
                 Rectangle()
                     .fill(Color.primary.opacity(0.05))
                     .frame(width: 0.5, height: layout.totalHeight)
-                    .offset(x: colW * CGFloat(i), y: 0)
+                    .offset(x: columnWidth * CGFloat(i), y: 0)
             }
         }
+    }
+
+    private func hourLabel(_ hour: Int) -> String {
+        String(format: "%02d:00", hour % 24)
     }
 
     // MARK: - Event Layer per Day
 
     @ViewBuilder
-    private func dayEventLayer(day: Date, columnWidth: CGFloat) -> some View {
-        let dayIndex = weekDays.firstIndex(of: day) ?? 0
+    private func dayEventLayer(
+        day: Date,
+        dayIndex: Int,
+        columnWidth: CGFloat,
+        hProxy: ScrollViewProxy
+    ) -> some View {
         let columnX = CGFloat(dayIndex) * columnWidth
         let events = timedEvents(for: day)
 
         ZStack(alignment: .topLeading) {
             ForEach(events, id: \.self) { ev in
                 if let frame = layout.frame(for: ev, dayAnchor: day, calendar: cal) {
-                    eventBlock(event: ev, frame: frame, columnX: columnX, columnWidth: columnWidth)
+                    eventBlock(
+                        event: ev,
+                        dayIndex: dayIndex,
+                        frame: frame,
+                        columnX: columnX,
+                        columnWidth: columnWidth,
+                        hProxy: hProxy
+                    )
                 }
             }
         }
@@ -320,15 +440,17 @@ struct WeekTimeGridSheet: View {
     @ViewBuilder
     private func eventBlock(
         event: CalendarEvent,
+        dayIndex: Int,
         frame: (y: CGFloat, height: CGFloat),
         columnX: CGFloat,
-        columnWidth: CGFloat
+        columnWidth: CGFloat,
+        hProxy: ScrollViewProxy
     ) -> some View {
-        let isDragging = (draggingId == event.id)
-        let isResizing = (resizingId == event.id)
+        let isDragging = (draggingId == compositeID(event))
+        let isResizing = (resizingId == compositeID(event))
 
-        // 시각 반영을 위한 pixel offset
-        let dragY = isDragging ? dragTranslation : 0
+        let dragDX = isDragging ? dragTranslation.width : 0
+        let dragDY = isDragging ? dragTranslation.height : 0
         let resizeDelta = isResizing ? resizeTranslation : 0
         let displayHeight = max(
             CGFloat(layout.minDurationMinutes) * layout.pixelsPerMinute,
@@ -342,47 +464,102 @@ struct WeekTimeGridSheet: View {
             isResizing: isResizing,
             showResizeHandle: !event.isReadOnly
         )
-        .frame(width: max(0, columnWidth - 4), height: displayHeight)
-        .offset(x: columnX + 2, y: frame.y + dragY)
+        .frame(width: max(0, columnWidth - 6), height: displayHeight)
+        .offset(x: columnX + 3 + dragDX, y: frame.y + dragDY)
         .zIndex((isDragging || isResizing) ? 10 : 1)
-        // 이동 드래그 (블록 전체, 상단 80%)
         .gesture(
-            event.isReadOnly ? nil : moveGesture(for: event, frame: frame)
+            event.isReadOnly
+                ? nil
+                : moveAndTapGesture(for: event, dayIndex: dayIndex, columnWidth: columnWidth, hProxy: hProxy)
         )
-        // 리사이즈 드래그 (하단 12pt)
+        // 읽기 전용은 탭만 허용 (편집 시트는 열리되 저장 비활성)
+        .simultaneousGesture(
+            event.isReadOnly
+                ? TapGesture().onEnded { openEditor(event) }
+                : nil
+        )
         .overlay(alignment: .bottom) {
             if !event.isReadOnly {
                 Color.clear
                     .frame(height: 14)
                     .contentShape(Rectangle())
-                    .gesture(resizeGesture(for: event, frame: frame))
+                    .gesture(resizeGesture(for: event))
+                    .offset(x: columnX + 3, y: 0) // overlay 내부라 columnX 불필요 (이미 부모에서 offset)
+                    .allowsHitTesting(!isDragging)
             }
         }
     }
 
-    // MARK: - Gestures
+    // MARK: - Gestures (v6)
 
-    private func moveGesture(for event: CalendarEvent, frame: (y: CGFloat, height: CGFloat)) -> some Gesture {
-        DragGesture(minimumDistance: 6)
+    /// 이동 드래그 + 탭 통합 제스처.
+    ///
+    /// codex 피드백 반영:
+    ///  - `DragGesture(minimumDistance: 4)` — 손가락을 거의 안 움직이면 tap으로 해석.
+    ///  - onEnded에서 `hypot(tx, ty) < tapThreshold(8)` → EventEditSheet 오픈.
+    ///  - 그 이상이면 (newDay, newStart) 적용.
+    private func moveAndTapGesture(
+        for event: CalendarEvent,
+        dayIndex: Int,
+        columnWidth: CGFloat,
+        hProxy: ScrollViewProxy
+    ) -> some Gesture {
+        DragGesture(minimumDistance: dragMinDistance)
             .onChanged { value in
-                if draggingId != event.id {
-                    draggingId = event.id
-                    scrollDisabled = true
+                if draggingId != compositeID(event) {
+                    draggingId = compositeID(event)
                     Self.impact(.light)
                 }
-                dragTranslation = value.translation.height
+                dragTranslation = value.translation
+
+                // Edge autoscroll — 가로 스크롤 viewport 좌/우 근처에 있을 때
+                maybeAutoscroll(
+                    currentDayIndex: dayIndex,
+                    translationWidth: value.translation.width,
+                    columnWidth: columnWidth,
+                    hProxy: hProxy
+                )
             }
             .onEnded { value in
-                let snappedMin = layout.snappedMinutes(forDeltaY: value.translation.height)
-                dragTranslation = 0
+                let tx = value.translation.width
+                let ty = value.translation.height
+                let dist = hypot(tx, ty)
+
+                dragTranslation = .zero
                 draggingId = nil
-                scrollDisabled = false
 
-                if snappedMin == 0 { return }
+                // tap 판정 → 편집 시트 오픈
+                if dist < tapThreshold {
+                    openEditor(event)
+                    return
+                }
 
-                // delta 적용
-                let newStart = event.startDate.addingTimeInterval(TimeInterval(snappedMin * 60))
-                let newEnd = event.endDate.addingTimeInterval(TimeInterval(snappedMin * 60))
+                // 드래그 종료 → 날짜 + 시간 재계산 (duration 유지)
+                let dayDelta = Int((tx / columnWidth).rounded())
+                let snappedMin = layout.snappedMinutes(forDeltaY: ty)
+
+                if dayDelta == 0 && snappedMin == 0 { return }
+
+                let newIndex = max(0, min(weekDays.count - 1, dayIndex + dayDelta))
+                let newDay = weekDays[newIndex]
+
+                // 기존 시작 시각의 시/분/초 요소 보존 + snappedMin 가산
+                let originalStart = event.startDate
+                let timeComps = cal.dateComponents(
+                    [.hour, .minute, .second],
+                    from: originalStart
+                )
+                let baseDay = cal.startOfDay(for: newDay)
+                guard let restored = cal.date(
+                    byAdding: .minute,
+                    value: (timeComps.hour ?? 0) * 60 + (timeComps.minute ?? 0) + snappedMin,
+                    to: baseDay
+                ) else { return }
+
+                let duration = event.endDate.timeIntervalSince(event.startDate)
+                let newStart = restored
+                let newEnd = newStart.addingTimeInterval(duration)
+
                 var updated = event
                 updated.startDate = newStart
                 updated.endDate = newEnd
@@ -391,12 +568,11 @@ struct WeekTimeGridSheet: View {
             }
     }
 
-    private func resizeGesture(for event: CalendarEvent, frame: (y: CGFloat, height: CGFloat)) -> some Gesture {
+    private func resizeGesture(for event: CalendarEvent) -> some Gesture {
         DragGesture(minimumDistance: 4)
             .onChanged { value in
-                if resizingId != event.id {
-                    resizingId = event.id
-                    scrollDisabled = true
+                if resizingId != compositeID(event) {
+                    resizingId = compositeID(event)
                     Self.impact(.light)
                 }
                 resizeTranslation = value.translation.height
@@ -405,7 +581,6 @@ struct WeekTimeGridSheet: View {
                 let snappedMin = layout.snappedMinutes(forDeltaY: value.translation.height)
                 resizeTranslation = 0
                 resizingId = nil
-                scrollDisabled = false
 
                 if snappedMin == 0 { return }
 
@@ -420,6 +595,43 @@ struct WeekTimeGridSheet: View {
             }
     }
 
+    /// 드래그 상태 단일 소스 — horizontal + vertical scroll 모두 이것으로 제어.
+    private var isDraggingEvent: Bool {
+        draggingId != nil || resizingId != nil
+    }
+
+    // MARK: - Edge autoscroll
+
+    /// 드래그 중 손가락이 좌/우 가장자리에 근접하면 ScrollViewReader로 다음 day ID로 스크롤.
+    /// 300ms throttle로 연속 호출 방지.
+    private func maybeAutoscroll(
+        currentDayIndex: Int,
+        translationWidth: CGFloat,
+        columnWidth: CGFloat,
+        hProxy: ScrollViewProxy
+    ) {
+        let now = Date()
+        guard now.timeIntervalSince(lastAutoscrollAt) > 0.3 else { return }
+
+        // translation이 오른쪽으로 columnWidth * 0.8 이상 벗어나면 다음 day로
+        // 왼쪽도 대칭
+        let advance = translationWidth / columnWidth
+        let threshold: CGFloat = 0.7
+
+        var nextIndex: Int? = nil
+        if advance > threshold {
+            nextIndex = min(weekDays.count - 1, currentDayIndex + 1)
+        } else if advance < -threshold {
+            nextIndex = max(0, currentDayIndex - 1)
+        }
+
+        guard let idx = nextIndex, idx != currentDayIndex else { return }
+        lastAutoscrollAt = now
+        withAnimation(.easeInOut(duration: 0.3)) {
+            hProxy.scrollTo(dayID(for: weekDays[idx]), anchor: .center)
+        }
+    }
+
     // MARK: - Commit / Rollback
 
     private func commitUpdate(_ updated: CalendarEvent, original: CalendarEvent, operation: String) {
@@ -430,13 +642,46 @@ struct WeekTimeGridSheet: View {
             do {
                 _ = try await repo.update(updated)
             } catch {
-                // rollback
                 withAnimation(.easeOut(duration: 0.3)) {
                     repo.replaceInMemory(original)
                 }
                 Self.impact(.heavy)
                 showToast("\(operation) 실패 — 되돌림")
             }
+        }
+    }
+
+    // MARK: - Edit sheet flow
+
+    private func openEditor(_ event: CalendarEvent) {
+        editingEvent = event
+        Self.impact(.light)
+    }
+
+    /// EventEditSheet에서 저장 요청 → repo.update. 실패 throw 그대로 전파 (sheet 내부 에러 배너).
+    private func saveFromEditSheet(_ updated: CalendarEvent) async throws -> CalendarEvent {
+        // optimistic 미리 반영 → 성공/실패 분기
+        let original = repo.events.first(where: { $0 == updated }) ?? updated
+        repo.replaceInMemory(updated)
+        do {
+            return try await repo.update(updated)
+        } catch {
+            // rollback
+            repo.replaceInMemory(original)
+            throw error
+        }
+    }
+
+    /// EventEditSheet에서 삭제 요청. optimistic remove → 실패 시 복원 + 토스트.
+    private func deleteFromEditSheet(_ event: CalendarEvent) async throws {
+        let snapshot = event
+        repo.removeInMemory(event)
+        do {
+            try await repo.delete(event)
+        } catch {
+            repo.insertInMemory(snapshot)
+            showToast("삭제 실패 — 복원됨")
+            throw error
         }
     }
 
@@ -524,39 +769,43 @@ struct WeekTimeGridSheet: View {
         return nil
     }
 
-    private func nowLine(y: CGFloat, totalWidth: CGFloat) -> some View {
-        guard let idx = weekDays.firstIndex(where: { cal.isDateInToday($0) }) else {
-            return AnyView(EmptyView())
+    private func nowLine(y: CGFloat, columnX: CGFloat, columnWidth: CGFloat) -> some View {
+        ZStack(alignment: .leading) {
+            Circle()
+                .fill(Color.red)
+                .frame(width: 7, height: 7)
+                .offset(x: columnX - 3.5, y: -3.5)
+            Rectangle()
+                .fill(Color.red)
+                .frame(width: columnWidth, height: 1)
+                .offset(x: columnX, y: 0)
         }
-        let colW = totalWidth / 7
-        let x = CGFloat(idx) * colW
-        return AnyView(
-            ZStack(alignment: .leading) {
-                Circle()
-                    .fill(Color.red)
-                    .frame(width: 7, height: 7)
-                    .offset(x: x - 3.5, y: -3.5)
-                Rectangle()
-                    .fill(Color.red)
-                    .frame(width: colW, height: 1)
-                    .offset(x: x, y: 0)
-            }
-            .offset(y: y)
-            .allowsHitTesting(false)
-        )
+        .offset(y: y)
+        .allowsHitTesting(false)
+    }
+
+    // MARK: - Identity helpers
+
+    private func compositeID(_ event: CalendarEvent) -> String {
+        "\(event.calendarId)::\(event.id)"
+    }
+
+    private func dayID(for day: Date) -> String {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM-dd"
+        return "day-\(fmt.string(from: day))"
     }
 
     // MARK: - Haptics
 
     private static func impact(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
-        let gen = UIImpactFeedbackGenerator(style: style)
-        gen.impactOccurred()
+        UIImpactFeedbackGenerator(style: style).impactOccurred()
     }
 }
 
 // MARK: - Preview
 
-#Preview("WeekTimeGridSheet") {
+#Preview("WeekTimeGridSheet v6") {
     struct Wrap: View {
         @StateObject var repo = FakeEventRepository()
         @State var show = true

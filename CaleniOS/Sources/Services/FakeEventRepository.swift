@@ -27,6 +27,11 @@ public final class FakeEventRepository: EventRepository, ObservableObject {
 
     // MARK: - Config
 
+    /// `true`면 현재 repo가 실제 백엔드가 아닌 fake(데모 데이터) 구현임을 UI에 알린다.
+    /// v6부터 주 시트 상단의 "데모 데이터" 배너 표시 조건으로 사용된다. Phase B(Google Calendar
+    /// 실연동) 구현체는 이 값을 `false`로 두어 배너가 자동 숨겨지게 한다.
+    public let isFakeRepo: Bool = true
+
     /// 시뮬레이션된 네트워크 지연(초). UI hot-reload 피드백용.
     public var networkDelay: Duration = .milliseconds(300)
 
@@ -57,6 +62,21 @@ public final class FakeEventRepository: EventRepository, ObservableObject {
         }) {
             events[idx] = event
         }
+    }
+
+    /// 해당 calendarId + id 매치되는 이벤트를 in-memory에서 즉시 제거(optimistic delete).
+    public func removeInMemory(_ event: CalendarEvent) {
+        events.removeAll {
+            $0.id == event.id && $0.calendarId == event.calendarId
+        }
+    }
+
+    /// 낙관적 제거 후 롤백해야 할 때 in-memory에 복원.
+    public func insertInMemory(_ event: CalendarEvent) {
+        guard !events.contains(where: {
+            $0.id == event.id && $0.calendarId == event.calendarId
+        }) else { return }
+        events.append(event)
     }
 
     // MARK: - EventRepository
