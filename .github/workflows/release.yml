@@ -175,25 +175,49 @@ jobs:
           rm -f "$ZIP_NAME"
           ditto -c -k --keepParent "Calen.app" "$ZIP_NAME"
 
-      - name: Create DMG
+      - name: Install create-dmg
+        run: brew install create-dmg
+
+      - name: Create DMG (drag-and-drop layout)
         env:
           VERSION: ${{ steps.version.outputs.VERSION }}
         run: |
           BUILD_DIR=".build/apple/Products/Release"
           DMG_NAME="Calen-${VERSION}-universal.dmg"
-          STAGING="$BUILD_DIR/dmg-staging"
+          DMG_BG="docs/dmg-background.png"
 
-          rm -rf "$STAGING" && mkdir -p "$STAGING"
-          cp -R "$APP_BUNDLE" "$STAGING/"
-          ln -s /Applications "$STAGING/Applications"
-          hdiutil create -volname "Calen" \
-            -srcfolder "$STAGING" \
-            -ov -format UDZO \
-            "$BUILD_DIR/$DMG_NAME"
-          rm -rf "$STAGING"
+          # create-dmg는 같은 디렉터리의 @2x 파일을 자동으로 Retina 리소스로 사용
+          create-dmg \
+            --volname "Calen" \
+            --background "$DMG_BG" \
+            --window-pos 200 120 \
+            --window-size 1000 600 \
+            --icon-size 128 \
+            --icon "Calen.app" 280 300 \
+            --hide-extension "Calen.app" \
+            --app-drop-link 720 300 \
+            --hdiutil-quiet \
+            --no-internet-enable \
+            "$BUILD_DIR/$DMG_NAME" \
+            "$APP_BUNDLE"
 
           echo "DMG_PATH=$BUILD_DIR/$DMG_NAME" >> "$GITHUB_ENV"
           echo "DMG_NAME=$DMG_NAME" >> "$GITHUB_ENV"
+
+      - name: Sign & staple DMG
+        env:
+          DEVELOPER_ID: ${{ secrets.DEVELOPER_ID }}
+          NOTARIZE_APPLE_ID: ${{ secrets.NOTARIZE_APPLE_ID }}
+          NOTARIZE_PASSWORD: ${{ secrets.NOTARIZE_PASSWORD }}
+          NOTARIZE_TEAM_ID: ${{ secrets.NOTARIZE_TEAM_ID }}
+        run: |
+          codesign --force --sign "$DEVELOPER_ID" --timestamp "$DMG_PATH"
+          xcrun notarytool submit "$DMG_PATH" \
+            --apple-id "$NOTARIZE_APPLE_ID" \
+            --password "$NOTARIZE_PASSWORD" \
+            --team-id "$NOTARIZE_TEAM_ID" \
+            --wait
+          xcrun stapler staple "$DMG_PATH"
 
       - name: Compute checksums
         env:
