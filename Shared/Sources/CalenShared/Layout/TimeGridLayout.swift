@@ -158,18 +158,19 @@ public struct TimeGridLayout: Sendable, Equatable {
 
     /// 7일 그리드에서 단일 요일 칼럼이 차지할 폭.
     ///
-    /// iPhone 세로 같은 좁은 화면에서도 이벤트 텍스트가 잘리지 않도록 최소 120pt를 보장한다.
-    /// 화면이 충분히 크면(`availableWidth / dayCount >= 120`) 비율대로 늘려 iPad/가로 모드에서도
-    /// 한 화면에 7일이 완전히 펼쳐진다.
+    /// UX Critic 권고 반영: 캘린더 앱의 기본 가치(한 화면 7일)를 깨지 않기 위해
+    /// 최소 폭을 120pt → 52pt로 축소. iPhone 17 Pro 세로(가용폭 ~342pt)에서 7일이
+    /// 각 48.8pt로 펼쳐짐. 이벤트 블록 텍스트는 `minimumScaleFactor(0.7)` + `.lineLimit(1)`
+    /// 로 자동 축소 렌더. iPad/가로 모드는 availableWidth/7이 52pt를 넘으므로 비율 확장.
     ///
     /// - Parameters:
     ///   - availableWidth: 좌측 시간 라벨(gutter)을 뺀 실제 그리드용 가용 폭.
     ///   - dayCount: 열을 나눌 요일 수(기본 7). 0 이하는 1로 클램프.
-    /// - Returns: pt 단위 컬럼 폭. `max(120, availableWidth / dayCount)`.
+    /// - Returns: pt 단위 컬럼 폭. `max(52, availableWidth / dayCount)`.
     public func dayColumnWidth(availableWidth: CGFloat, dayCount: Int = 7) -> CGFloat {
         let safeCount = max(1, dayCount)
         let even = availableWidth / CGFloat(safeCount)
-        return max(120, even)
+        return max(52, even)
     }
 
     /// 그리드 내부 x 좌표를 요일 인덱스로 변환한다.
