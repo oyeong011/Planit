@@ -434,36 +434,32 @@ struct ReviewView: View {
             : weekDayFormatter.string(from: date)
     }
 
-    // MARK: - Todo Grass Section (최근 30일 할일 잔디)
+    // MARK: - Todo Grass Section (최근 1년 할일 잔디)
 
     private var todoGrassSection: some View {
         let stats = TodoGrassStats.make(
             todos: viewModel.todos,
             reminders: viewModel.appleReminders,
-            calendarEvents: viewModel.calendarEvents,
+            calendarEvents: viewModel.historyEvents,
             completedEventIDs: viewModel.completedEventIDs
         )
 
         return VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline) {
+            HStack {
                 Label(String(localized: "review.todo.grass.title"), systemImage: "square.grid.3x3.fill")
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(.secondary)
                 Spacer()
+                if viewModel.isLoadingHistory {
+                    ProgressView()
+                        .scaleEffect(0.5)
+                }
                 Text(String(format: String(localized: "review.todo.grass.total"), stats.totalDone, stats.totalTodos))
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(stats.totalDone > 0 ? .green : .secondary)
             }
 
-            LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible(maximum: 18), spacing: 3), count: 7),
-                spacing: 3
-            ) {
-                ForEach(stats.days) { day in
-                    todoGrassCell(day)
-                }
-            }
-            .padding(.vertical, 2)
+            yearGrassGrid(stats: stats)
 
             HStack(spacing: 12) {
                 todoGrassMetric(
@@ -482,20 +478,86 @@ struct ReviewView: View {
         .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground).overlay(RoundedRectangle(cornerRadius: 10).fill(themeService.current.cardTint)))
     }
 
+    private func yearGrassGrid(stats: TodoGrassStats) -> some View {
+        let cellSize: CGFloat = 8
+        let gap: CGFloat = 2
+        let dayLabels = todoGrassWeekdayLabels()
 
+        return ScrollView(.horizontal, showsIndicators: false) {
+            HStack(alignment: .top, spacing: 0) {
+                VStack(spacing: gap) {
+                    Color.clear.frame(width: 12, height: cellSize + 2)
+                    ForEach(0..<7, id: \.self) { index in
+                        Text(index % 2 == 1 ? dayLabels[index] : "")
+                            .font(.system(size: 7))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 12, height: cellSize)
+                    }
+                }
 
-    private func todoGrassCell(_ day: TodoGrassDay) -> some View {
-        let isToday = Calendar.current.isDateInToday(day.date)
-        let label = "\(todoGrassDateLabel(day.date)) · \(day.done)/\(day.total)"
-        return RoundedRectangle(cornerRadius: 4)
-            .fill(todoGrassColor(for: day))
-            .aspectRatio(1, contentMode: .fit)
-            .overlay(
-                RoundedRectangle(cornerRadius: 4)
-                    .stroke(isToday ? Color.primary.opacity(0.45) : Color.clear, lineWidth: 1.5)
-            )
-            .help(label)
-            .accessibilityLabel(label)
+                HStack(alignment: .top, spacing: gap) {
+                    ForEach(Array(stats.weeks.enumerated()), id: \.offset) { weekIndex, week in
+                        VStack(spacing: gap) {
+                            monthLabel(for: week, weekIndex: weekIndex)
+                                .frame(height: cellSize + 2)
+
+                            ForEach(0..<7, id: \.self) { dayIndex in
+                                grassCell(dayIndex < week.count ? week[dayIndex] : nil, size: cellSize)
+                            }
+                        }
+                    }
+                }
+            }
+            .padding(.horizontal, 2)
+        }
+    }
+
+    @ViewBuilder
+    private func monthLabel(for week: [TodoGrassDay?], weekIndex: Int) -> some View {
+        let dates = week.compactMap { $0?.date }
+        let firstOfMonth = dates.first { Calendar.current.component(.day, from: $0) == 1 }
+        let leadingDate = weekIndex == 0 ? dates.first : nil
+        let labelDate = firstOfMonth ?? leadingDate.flatMap { date in
+            Calendar.current.component(.day, from: date) <= 7 ? date : nil
+        }
+
+        if let labelDate {
+            Text(todoGrassMonthFormatter.string(from: labelDate))
+                .font(.system(size: 7, weight: .medium))
+                .foregroundStyle(.secondary)
+        } else {
+            Color.clear
+        }
+    }
+
+    private func grassCell(_ day: TodoGrassDay?, size: CGFloat) -> some View {
+        Group {
+            if let day {
+                let isToday = Calendar.current.isDateInToday(day.date)
+                let label = "\(todoGrassDateLabel(day.date)) · \(day.done)/\(day.total)"
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(todoGrassColor(for: day))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 2)
+                            .stroke(isToday ? Color.primary.opacity(0.45) : Color.clear, lineWidth: 1)
+                    )
+                    .help(label)
+                    .accessibilityLabel(label)
+            } else {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(Color.clear)
+                    .accessibilityHidden(true)
+            }
+        }
+        .frame(width: size, height: size)
+    }
+
+    private func todoGrassWeekdayLabels() -> [String] {
+        let formatter = DateFormatter()
+        formatter.locale = Locale.current
+        let symbols = formatter.veryShortWeekdaySymbols ?? ["S", "M", "T", "W", "T", "F", "S"]
+        let start = max(0, Calendar.current.firstWeekday - 1)
+        return (0..<7).map { symbols[(start + $0) % symbols.count] }
     }
 
     private func todoGrassColor(for day: TodoGrassDay) -> Color {
@@ -530,6 +592,12 @@ struct ReviewView: View {
     private let todoGrassDateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "M/d (E)"
+        return f
+    }()
+
+    private let todoGrassMonthFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "MMM"
         return f
     }()
 

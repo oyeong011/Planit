@@ -8,16 +8,23 @@ private func fixedDate(_ value: String) -> Date {
     return formatter.date(from: value)!
 }
 
-@Test func todoGrassStats_buildsThirtyDaysEndingToday() {
+@Test func todoGrassStats_buildsYearEndingTodayWithWeekColumns() {
     var calendar = Calendar(identifier: .gregorian)
     calendar.timeZone = TimeZone(secondsFromGMT: 0)!
     let now = fixedDate("2026-04-20T12:00:00Z")
 
     let stats = TodoGrassStats.make(todos: [], reminders: [], now: now, calendar: calendar)
 
-    #expect(stats.days.count == 30)
-    #expect(calendar.isDate(stats.days.first!.date, inSameDayAs: fixedDate("2026-03-22T00:00:00Z")))
+    #expect(stats.days.count == 365)
+    #expect(calendar.isDate(stats.days.first!.date, inSameDayAs: fixedDate("2025-04-21T00:00:00Z")))
     #expect(calendar.isDate(stats.days.last!.date, inSameDayAs: fixedDate("2026-04-20T00:00:00Z")))
+    #expect(stats.weeks.count == 53)
+    #expect(stats.weeks.allSatisfy { $0.count == 7 })
+    let firstWeek = stats.weeks.first
+    #expect(firstWeek != nil)
+    #expect(firstWeek?[0] == nil)
+    #expect(stats.weeks.last?[1]?.date == fixedDate("2026-04-20T00:00:00Z"))
+    #expect(stats.weeks.last?[2] == nil)
 }
 
 @Test func todoGrassStats_countsDoneAndTotalPerScheduledDay() {
@@ -41,9 +48,68 @@ private func fixedDate(_ value: String) -> Date {
 
     #expect(day?.done == 2)
     #expect(day?.total == 3)
-    #expect(stats.totalDone == 2)
-    #expect(stats.totalTodos == 3)
+    let oldDay = stats.days.first { calendar.isDate($0.date, inSameDayAs: outsideWindow) }
+    #expect(oldDay?.done == 1)
+    #expect(oldDay?.total == 1)
+    #expect(stats.totalDone == 3)
+    #expect(stats.totalTodos == 4)
     #expect(stats.maxDoneInDay == 2)
+}
+
+@Test func todoGrassStats_countsHistoryCalendarEventsAcrossYearWindow() {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+    let now = fixedDate("2026-04-20T12:00:00Z")
+    let category = UUID()
+    let todoMirrorEventID = "todo-event"
+    let todos = [
+        TodoItem(
+            title: "todo mirror",
+            categoryID: category,
+            isCompleted: true,
+            date: fixedDate("2026-01-10T09:00:00Z"),
+            googleEventId: todoMirrorEventID
+        )
+    ]
+    let events = [
+        CalendarEvent(
+            id: "history-event",
+            title: "history event",
+            startDate: fixedDate("2025-08-15T09:00:00Z"),
+            endDate: fixedDate("2025-08-15T10:00:00Z"),
+            color: .blue,
+            isAllDay: false,
+            calendarName: "Work",
+            calendarID: "google:work",
+            source: .google
+        ),
+        CalendarEvent(
+            id: todoMirrorEventID,
+            title: "mirrored todo",
+            startDate: fixedDate("2026-01-10T09:00:00Z"),
+            endDate: fixedDate("2026-01-10T10:00:00Z"),
+            color: .blue,
+            isAllDay: false,
+            calendarName: "Work",
+            calendarID: "google:work",
+            source: .google
+        )
+    ]
+
+    let stats = TodoGrassStats.make(
+        todos: todos,
+        reminders: [],
+        calendarEvents: events,
+        completedEventIDs: ["history-event"],
+        now: now,
+        calendar: calendar
+    )
+
+    let eventDay = stats.days.first { calendar.isDate($0.date, inSameDayAs: fixedDate("2025-08-15T00:00:00Z")) }
+    #expect(eventDay?.done == 1)
+    #expect(eventDay?.total == 1)
+    #expect(stats.totalDone == 2)
+    #expect(stats.totalTodos == 2)
 }
 
 @Test func todoGrassStats_currentStreakRequiresEveryTodoDone() {
