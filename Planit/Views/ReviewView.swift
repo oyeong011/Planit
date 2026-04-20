@@ -450,22 +450,13 @@ struct ReviewView: View {
                     .foregroundStyle(stats.totalDone > 0 ? .green : .secondary)
             }
 
-            let cols = todoGrassColumns(stats.days)
-            GeometryReader { geo in
-                let spacing: CGFloat = 4
-                let cellSize = max(10, (geo.size.width - spacing * CGFloat(max(1, cols.count) - 1)) / CGFloat(max(1, cols.count)))
-                HStack(alignment: .top, spacing: spacing) {
-                    ForEach(Array(cols.enumerated()), id: \.offset) { _, column in
-                        VStack(spacing: spacing) {
-                            ForEach(column) { day in
-                                todoGrassCell(day, size: cellSize)
-                            }
-                        }
-                        .frame(maxWidth: .infinity)
-                    }
+            // 30일 → 6열 × 5행 LazyVGrid (마지막 열 짧은 문제 없음, 빈공간 없음)
+            let numCols = 6
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: numCols), spacing: 4) {
+                ForEach(stats.days) { day in
+                    todoGrassCell(day)
                 }
             }
-            .frame(height: CGFloat(7) * 20 + CGFloat(6) * 4)
             .padding(.vertical, 2)
 
             HStack(spacing: 12) {
@@ -491,17 +482,16 @@ struct ReviewView: View {
         }
     }
 
-    private func todoGrassCell(_ day: TodoGrassDay, size: CGFloat = 18) -> some View {
+    private func todoGrassCell(_ day: TodoGrassDay) -> some View {
         let isToday = Calendar.current.isDateInToday(day.date)
         let label = "\(todoGrassDateLabel(day.date)) · \(day.done)/\(day.total)"
-        let r = min(4, size * 0.22)
 
-        return RoundedRectangle(cornerRadius: r)
+        return RoundedRectangle(cornerRadius: 4)
             .fill(todoGrassColor(for: day))
-            .frame(width: size, height: size)
+            .aspectRatio(1, contentMode: .fit)
             .overlay(
-                RoundedRectangle(cornerRadius: r)
-                    .stroke(isToday ? Color.primary.opacity(0.45) : Color.clear, lineWidth: 1.5)
+                RoundedRectangle(cornerRadius: 4)
+                    .stroke(isToday ? Color.primary.opacity(0.5) : Color.clear, lineWidth: 1.5)
             )
             .help(label)
             .accessibilityLabel(label)
