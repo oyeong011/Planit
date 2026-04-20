@@ -149,16 +149,37 @@ else
     echo "   Set DEVELOPER_ID, NOTARIZE_TEAM_ID, NOTARIZE_APPLE_ID, NOTARIZE_PASSWORD"
 fi
 
-# 6. Create DMG
-echo "→ Creating DMG..."
+# 6. Create DMG — create-dmg로 드래그앤드랍 레이아웃 + 배경 이미지
+echo "→ Creating DMG with drag-and-drop layout..."
 rm -f "$BUILD_DIR/$DMG_NAME"
-STAGING="$BUILD_DIR/dmg-staging"
-rm -rf "$STAGING"
-mkdir -p "$STAGING"
-cp -R "$APP_BUNDLE" "$STAGING/"
-ln -s /Applications "$STAGING/Applications"
-hdiutil create -volname "Calen" -srcfolder "$STAGING" -ov -format UDZO "$BUILD_DIR/$DMG_NAME"
-rm -rf "$STAGING"
+DMG_BG="$PROJECT_DIR/docs/dmg-background.png"
+DMG_BG_2X="$PROJECT_DIR/docs/dmg-background@2x.png"
+
+if command -v create-dmg >/dev/null 2>&1 && [ -f "$DMG_BG" ]; then
+    # create-dmg는 Retina용 2x 이미지를 자동으로 찾음 (같은 디렉터리에 @2x 붙은 파일)
+    create-dmg \
+        --volname "Calen" \
+        --background "$DMG_BG" \
+        --window-pos 200 120 \
+        --window-size 1000 600 \
+        --icon-size 128 \
+        --icon "Calen.app" 280 300 \
+        --hide-extension "Calen.app" \
+        --app-drop-link 720 300 \
+        --hdiutil-quiet \
+        --no-internet-enable \
+        "$BUILD_DIR/$DMG_NAME" \
+        "$APP_BUNDLE"
+else
+    echo "⚠️  create-dmg 또는 배경 이미지 없음 — hdiutil 기본 레이아웃으로 폴백"
+    STAGING="$BUILD_DIR/dmg-staging"
+    rm -rf "$STAGING"
+    mkdir -p "$STAGING"
+    cp -R "$APP_BUNDLE" "$STAGING/"
+    ln -s /Applications "$STAGING/Applications"
+    hdiutil create -volname "Calen" -srcfolder "$STAGING" -ov -format UDZO "$BUILD_DIR/$DMG_NAME"
+    rm -rf "$STAGING"
+fi
 
 # DMG도 공증 스테이플
 if [ -n "$SIGN" ] && [ -n "$TEAM_ID" ] && [ -n "$APPLE_ID" ] && [ -n "$APP_PWD" ]; then

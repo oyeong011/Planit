@@ -2,464 +2,225 @@
 import SwiftUI
 import SwiftData
 
-// MARK: - HomeView
+// MARK: - HomeView (v4)
 //
-// 레퍼런스 `Calen-iOS/Calen/Features/Home/HomeView.swift` 1:1 포팅 (M2 UI v3).
-
-// MARK: - ScheduleCategory card colour mapping (view layer only)
-
-private extension ScheduleCategory {
-    var cardColor: Color {
-        switch self {
-        case .work:     return .cardWork
-        case .meeting:  return .cardMeeting
-        case .meal:     return .cardMeal
-        case .exercise: return .cardExercise
-        case .personal: return .cardPersonal
-        case .general:  return .cardGeneral
-        }
-    }
-}
-
-// MARK: - HomeView
+// TimeBlocks 스타일 메인 화면.
+// 레이아웃: 월 네비 헤더 → (가로 스와이프) MonthGridView → WeekExpansionView + FAB.
+//
+// 구성:
+//  - 상단 헤더: "2026년 4월" + prev/next 버튼, 우측 ⋯ / ⚙ 액션
+//  - 요일 헤더 + 6×7 월 그리드 (TabView로 가로 스와이프 지원)
+//  - 선택된 주의 확장 영역 (일정 카드 리스트)
+//  - 하단 우측 FAB(⊕) → CalendarAddView 시트
+//  - 이벤트 막대/카드 탭 → EventDetailSheet
 
 struct HomeView: View {
+
     @StateObject private var viewModel = HomeViewModel()
     @Environment(\.modelContext) private var modelContext
 
+    @State private var detailItem: ScheduleDisplayItem?
+    @State private var showAddSheet = false
+
     var body: some View {
-        NavigationStack {
+        ZStack(alignment: .bottomTrailing) {
+            Color.calenCream
+                .ignoresSafeArea()
+
             VStack(spacing: 0) {
+                monthHeader
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
+                    .padding(.bottom, 10)
 
-                // ── App header ────────────────────────────────────────
-                HomeHeaderView()
-
-                // ── Week strip ────────────────────────────────────────
-                WeekStripView(
-                    weekDates: viewModel.weekDates,
-                    selectedDate: viewModel.selectedDate,
-                    onSelect: { viewModel.selectDate($0) }
-                )
-                .padding(.bottom, 4)
+                monthPager
+                    .padding(.horizontal, 12)
 
                 Divider()
                     .padding(.horizontal, 20)
+                    .padding(.top, 4)
 
-                // ── Timeline scroll ───────────────────────────────────
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 0) {
-                        // Section title: 오늘의 일정
-                        Text("오늘의 일정")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.primary)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 16)
-                            .padding(.bottom, 4)
-
-                        ScheduleTimelineView(schedules: viewModel.schedules)
-                            .padding(.top, 4)
-                    }
-                    .padding(.bottom, 40)
-                }
+                weekExpansion
             }
-            .background(Color.white.ignoresSafeArea())
-            .navigationBarHidden(true)
+
+            // MARK: FAB
+            fab
+                .padding(.trailing, 20)
+                .padding(.bottom, 24)
         }
-        .onAppear {
-            viewModel.modelContext = modelContext
-            viewModel.fetchSchedules()
+        .sheet(item: $detailItem) { item in
+            EventDetailSheet(item: item)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showAddSheet) {
+            CalendarAddView(preselectedDate: viewModel.selectedDate) { newSchedule in
+                if let ctx = viewModel.modelContext {
+                    ctx.insert(newSchedule)
+                    try? ctx.save()
+                }
+                // 재페치 트리거
+                reloadAfterAdd()
+            }
+        }
+        .task {
+            if viewModel.modelContext == nil {
+                viewModel.modelContext = modelContext
+            }
         }
     }
-}
 
-// MARK: - HomeHeaderView
+    // MARK: - Month Header
 
-private struct HomeHeaderView: View {
-    var body: some View {
-        HStack {
-            Text("Calen")
-                .font(.system(size: 28, weight: .bold))
-                .foregroundColor(.calenBlue)
+    private var monthHeader: some View {
+        HStack(spacing: 12) {
+            Text(monthTitleString)
+                .font(.calenMonthTitle)
+                .foregroundStyle(.primary)
 
             Spacer()
 
-            Button {
-                // Notification action — placeholder
-            } label: {
-                Image(systemName: "bell")
-                    .font(.system(size: 20, weight: .medium))
-                    .foregroundColor(.calenBlue)
-            }
-        }
-        .padding(.horizontal, 20)
-        .padding(.top, 12)
-        .padding(.bottom, 10)
-    }
-}
-
-// MARK: - WeekStripView
-
-struct WeekStripView: View {
-    let weekDates: [Date]
-    let selectedDate: Date
-    let onSelect: (Date) -> Void
-
-    private let calendar = Calendar.current
-    // Korean single-character weekday labels, Monday-first
-    private let dayLabels = ["월", "화", "수", "목", "금", "토", "일"]
-
-    var body: some View {
-        HStack(spacing: 0) {
-            ForEach(Array(weekDates.enumerated()), id: \.offset) { index, date in
-                WeekDayCell(
-                    dayLabel: index < dayLabels.count ? dayLabels[index] : "",
-                    dayNumber: calendar.component(.day, from: date),
-                    isSelected: calendar.isDate(date, inSameDayAs: selectedDate),
-                    isToday: calendar.isDateInToday(date),
-                    onTap: { onSelect(date) }
-                )
-                .frame(maxWidth: .infinity)
-            }
-        }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 10)
-    }
-}
-
-// MARK: - WeekDayCell
-
-private struct WeekDayCell: View {
-    let dayLabel: String
-    let dayNumber: Int
-    let isSelected: Bool
-    let isToday: Bool
-    let onTap: () -> Void
-
-    var body: some View {
-        Button(action: onTap) {
-            VStack(spacing: 6) {
-                // Day letter
-                Text(dayLabel)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(isSelected ? .calenBlue : .secondary)
-
-                // Date circle
-                ZStack {
-                    if isSelected {
-                        Circle()
-                            .fill(Color.calenBlue)
-                            .frame(width: 34, height: 34)
-                    } else if isToday {
-                        Circle()
-                            .stroke(Color.calenBlue, lineWidth: 1.5)
-                            .frame(width: 34, height: 34)
+            HStack(spacing: 6) {
+                navButton(icon: "chevron.left") {
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        viewModel.goToPreviousMonth()
                     }
-
-                    Text("\(dayNumber)")
-                        .font(.system(size: 15, weight: isSelected ? .semibold : .regular))
-                        .foregroundColor(numberColor)
                 }
-                .frame(width: 34, height: 34)
+                navButton(icon: "chevron.right") {
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        viewModel.goToNextMonth()
+                    }
+                }
+                navButton(icon: "ellipsis") {
+                    // placeholder: 필터/정렬 메뉴 v0.1.1
+                }
             }
+        }
+    }
+
+    private func navButton(icon: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(Color.calenBlue)
+                .frame(width: 34, height: 34)
+                .background(Color.calenBlue.opacity(0.10), in: Circle())
         }
         .buttonStyle(.plain)
-        .animation(.easeInOut(duration: 0.15), value: isSelected)
     }
 
-    private var numberColor: Color {
-        if isSelected { return .white }
-        if isToday    { return .calenBlue }
-        return .primary
+    private var monthTitleString: String {
+        let fmt = DateFormatter()
+        fmt.locale = Locale(identifier: "ko_KR")
+        fmt.dateFormat = "yyyy년 M월"
+        return fmt.string(from: viewModel.currentMonth)
     }
-}
 
-// MARK: - ScheduleTimelineView
+    // MARK: - Month Pager (가로 스와이프)
 
-struct ScheduleTimelineView: View {
-    let schedules: [ScheduleDisplayItem]
-
-    var body: some View {
-        if schedules.isEmpty {
-            emptyState
-        } else {
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(Array(schedules.enumerated()), id: \.element.id) { index, item in
-                    TimelineRow(item: item)
-
-                    // Travel indicator before the NEXT card
-                    if index < schedules.count - 1 {
-                        let next = schedules[index + 1]
-                        if let minutes = next.travelTimeMinutes, minutes > 0 {
-                            TravelTimeRow(minutes: minutes)
+    private var monthPager: some View {
+        // TabView(.page) + 3슬롯 슬라이딩 윈도우.
+        // selection 변경이 사용자의 스와이프로 발생했을 때 ViewModel의 currentMonth를
+        // 이전/다음 월로 맞춘다.
+        TabView(selection: swipeBinding) {
+            ForEach(-1...1, id: \.self) { offset in
+                let month = shiftedMonth(by: offset)
+                MonthGridView(
+                    monthAnchor: month,
+                    schedules: viewModel.schedulesInMonth,
+                    selectedDate: viewModel.selectedDate,
+                    expandedWeekStart: viewModel.expandedWeekStart,
+                    onTapDate: { date in
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                            viewModel.tapDate(date)
                         }
+                    },
+                    onTapEvent: { item in
+                        detailItem = item
+                    }
+                )
+                .tag(offset)
+            }
+        }
+        .tabViewStyle(.page(indexDisplayMode: .never))
+        .frame(height: monthGridHeight)
+    }
+
+    /// 월 그리드 높이. DayCell minHeight(92pt) × 6행 + 요일 헤더 + 간격 여유.
+    private var monthGridHeight: CGFloat { 92 * 6 + 36 }
+
+    /// TabView selection 바인딩. 사용자 스와이프(offset != 0)를 감지해 월 이동 후 0으로 리셋.
+    private var swipeBinding: Binding<Int> {
+        Binding(
+            get: { 0 },
+            set: { newValue in
+                guard newValue != 0 else { return }
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    if newValue > 0 {
+                        viewModel.goToNextMonth()
+                    } else {
+                        viewModel.goToPreviousMonth()
                     }
                 }
             }
-        }
+        )
     }
 
-    // MARK: Empty state
+    private func shiftedMonth(by offset: Int) -> Date {
+        Calendar.current.date(byAdding: .month, value: offset, to: viewModel.currentMonth)
+            ?? viewModel.currentMonth
+    }
 
-    private var emptyState: some View {
-        VStack(spacing: 14) {
-            Image(systemName: "calendar.badge.checkmark")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary.opacity(0.35))
+    // MARK: - Week Expansion
 
-            Text("오늘 등록된 일정이 없어요")
-                .font(.system(size: 15))
-                .foregroundColor(.secondary)
+    private var weekExpansion: some View {
+        Group {
+            if let weekStart = viewModel.expandedWeekStart {
+                WeekExpansionView(
+                    weekStart: weekStart,
+                    groups: viewModel.weekGroups(starting: weekStart),
+                    selectedDate: viewModel.selectedDate,
+                    onTapEvent: { item in
+                        detailItem = item
+                    }
+                )
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .animation(.spring(response: 0.35, dampingFraction: 0.85), value: viewModel.expandedWeekStart)
+            } else {
+                Spacer()
+            }
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 64)
-    }
-}
-
-// MARK: - TimelineRow
-
-private struct TimelineRow: View {
-    let item: ScheduleDisplayItem
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 0) {
-
-            // Left column: time label + vertical track
-            VStack(spacing: 0) {
-                Text(item.startTime, format: .dateTime.hour().minute())
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.secondary)
-                    .monospacedDigit()
-                    .frame(width: 48, alignment: .trailing)
-                    .padding(.top, 2)
-
-                Rectangle()
-                    .fill(Color.secondary.opacity(0.18))
-                    .frame(width: 1)
-                    .frame(maxHeight: .infinity)
-                    .padding(.top, 8)
-                    .padding(.bottom, 16)
-            }
-            .padding(.leading, 20)
-            .padding(.trailing, 10)
-
-            // Right column: card
-            ScheduleCard(item: item)
-                .padding(.trailing, 20)
-                .padding(.bottom, 16)
-        }
-    }
-}
-
-// MARK: - TravelTimeRow
-
-private struct TravelTimeRow: View {
-    let minutes: Int
-
-    var body: some View {
-        HStack(spacing: 0) {
-            // Visually align with the card body (20 leading + 48 time + 10 gap)
-            Spacer().frame(width: 78)
-
-            HStack(spacing: 8) {
-                dashedVerticalLine
-                    .frame(width: 1, height: 26)
-
-                Image(systemName: "car.fill")
-                    .font(.system(size: 11))
-                    .foregroundColor(Color.secondary.opacity(0.7))
-
-                Text("\(minutes)분 이동")
-                    .font(.system(size: 12))
-                    .foregroundColor(.secondary)
-            }
-
-            Spacer()
-        }
-        .padding(.bottom, 8)
     }
 
-    private var dashedVerticalLine: some View {
-        GeometryReader { geo in
-            Path { path in
-                let x = geo.size.width / 2
-                let dashLen: CGFloat = 4
-                let gapLen:  CGFloat = 3
-                var y: CGFloat = 0
-                while y < geo.size.height {
-                    path.move(to: CGPoint(x: x, y: y))
-                    path.addLine(to: CGPoint(x: x, y: min(y + dashLen, geo.size.height)))
-                    y += dashLen + gapLen
-                }
-            }
-            .stroke(Color.secondary.opacity(0.35), lineWidth: 1)
-        }
-    }
-}
+    // MARK: - FAB
 
-// MARK: - ScheduleCard
-
-struct ScheduleCard: View {
-    let item: ScheduleDisplayItem
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-
-            // ── Header row ────────────────────────────────────────────
-            HStack(spacing: 8) {
-                Image(systemName: item.category.icon)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.calenBlue)
-
-                Text(item.title)
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.primary)
-
-                Spacer()
-
-                // Time range label (right-aligned)
-                Group {
-                    if let end = item.endTime {
-                        Text(
-                            "\(item.startTime.formatted(.dateTime.hour().minute()))–\(end.formatted(.dateTime.hour().minute()))"
-                        )
-                    } else {
-                        Text(item.startTime.formatted(.dateTime.hour().minute()))
-                    }
-                }
-                .font(.system(size: 11, weight: .medium))
-                .foregroundColor(.secondary)
-                .monospacedDigit()
-            }
-
-            // ── Body: bullet list OR summary ──────────────────────────
-            if !item.bulletPoints.isEmpty {
-                BulletList(points: item.bulletPoints)
-            } else if let summary = item.summary, !summary.isEmpty {
-                Text(summary)
-                    .font(.system(size: 13))
-                    .foregroundColor(.primary.opacity(0.75))
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            // ── Location ──────────────────────────────────────────────
-            if let location = item.location, !location.isEmpty {
-                HStack(spacing: 4) {
-                    Image(systemName: "location")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
-                    Text(location)
-                        .font(.system(size: 12))
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
-                }
-            }
-
-            // ── CTA buttons (work & meeting only) ─────────────────────
-            if item.category == .work || item.category == .meeting {
-                HStack(spacing: 8) {
-                    let primaryLabel = item.category == .work
-                        ? "업무 진행도 보기"
-                        : "회의 내용 보기"
-                    let primaryIcon = item.category == .work
-                        ? "chart.bar"
-                        : "doc.text"
-
-                    CardCTAButton(title: primaryLabel, iconName: primaryIcon)
-                    CardCTAButton(title: "할 일 추가하기", iconName: "plus.circle")
-                }
-                .padding(.top, 2)
-            }
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(item.category.cardColor)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(Color.primary.opacity(0.06), lineWidth: 1)
-        )
-    }
-}
-
-// MARK: - BulletList
-
-private struct BulletList: View {
-    let points: [String]
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            ForEach(points, id: \.self) { point in
-                HStack(alignment: .top, spacing: 7) {
-                    Circle()
-                        .fill(Color.calenBlue.opacity(0.65))
-                        .frame(width: 5, height: 5)
-                        .padding(.top, 5)
-
-                    Text(point)
-                        .font(.system(size: 13))
-                        .foregroundColor(.primary.opacity(0.8))
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-        }
-    }
-}
-
-// MARK: - CardCTAButton
-
-private struct CardCTAButton: View {
-    let title: String
-    let iconName: String
-
-    var body: some View {
+    private var fab: some View {
         Button {
-            // Action placeholder
+            showAddSheet = true
         } label: {
-            HStack(spacing: 4) {
-                Image(systemName: iconName)
-                    .font(.system(size: 11))
-                Text(title)
-                    .font(.system(size: 11, weight: .medium))
-            }
-            .foregroundColor(.calenBlue)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.calenBlue, lineWidth: 1)
-            )
+            Image(systemName: "plus")
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 56, height: 56)
+                .background(Color.calenBlue, in: Circle())
+                .calenFloatingShadow()
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("새 일정 추가")
+    }
+
+    // MARK: - Actions
+
+    private func reloadAfterAdd() {
+        viewModel.reloadSchedules()
     }
 }
 
 // MARK: - Previews
 
-#Preview("Home Screen") {
+#Preview("Home v4") {
     HomeView()
         .modelContainer(for: Schedule.self, inMemory: true)
-}
-
-#Preview("Week Strip") {
-    let today = Date()
-    let cal = Calendar.current
-    var comps = cal.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today)
-    comps.weekday = 2
-    let monday = cal.date(from: comps) ?? today
-    let week = (0..<7).compactMap { cal.date(byAdding: .day, value: $0, to: monday) }
-
-    return WeekStripView(weekDates: week, selectedDate: today, onSelect: { _ in })
-        .padding()
-        .background(Color.white)
-}
-
-#Preview("Full Timeline") {
-    ScrollView {
-        ScheduleTimelineView(schedules: HomeViewModel.mockSchedules(for: Date()))
-    }
-    .padding(.top)
-    .background(Color.white)
 }
 #endif
