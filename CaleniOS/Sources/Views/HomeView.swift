@@ -65,20 +65,70 @@ struct HomeView: View {
                 }
             }
         }
-        // v5 Phase A: 풀스크린 주 시간 그리드 시트.
-        // Phase B M4: 로그인 시 GoogleCalendarRepository, 미로그인 시 FakeEventRepository.
+        // PRD v0.1: WeekTimeGridSheet(hour grid) 폐기 → DayDetailSheet(단일일 리스트).
+        // TimeBlocks 기조 유지하되 iPhone 세로의 hour grid 구조적 복잡성 제거.
         .sheet(isPresented: $viewModel.showWeekSheet) {
             if let googleRepo = viewModel.googleRepository {
-                WeekTimeGridSheet(
+                DayDetailSheet(
                     isPresented: $viewModel.showWeekSheet,
-                    initialDate: viewModel.sheetAnchorDate,
-                    repo: googleRepo
+                    day: viewModel.sheetAnchorDate,
+                    repo: googleRepo,
+                    onRequestEdit: { event in
+                        viewModel.showWeekSheet = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                            viewModel.selectedEventForEdit = event
+                        }
+                    },
+                    onRequestAdd: { date in
+                        viewModel.showWeekSheet = false
+                        viewModel.selectedDate = date
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                            showAddSheet = true
+                        }
+                    }
                 )
             } else {
-                WeekTimeGridSheet(
+                DayDetailSheet(
                     isPresented: $viewModel.showWeekSheet,
-                    initialDate: viewModel.sheetAnchorDate,
-                    repo: viewModel.eventRepository
+                    day: viewModel.sheetAnchorDate,
+                    repo: viewModel.eventRepository,
+                    onRequestEdit: { event in
+                        viewModel.showWeekSheet = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                            viewModel.selectedEventForEdit = event
+                        }
+                    },
+                    onRequestAdd: { date in
+                        viewModel.showWeekSheet = false
+                        viewModel.selectedDate = date
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                            showAddSheet = true
+                        }
+                    }
+                )
+            }
+        }
+        // PRD v0.1: Day Sheet 안에서 이벤트 탭 → dismiss → 편집 시트 직행 경로.
+        .sheet(item: $viewModel.selectedEventForEdit) { event in
+            if let googleRepo = viewModel.googleRepository {
+                EventEditSheet(
+                    event: event,
+                    onSave: { updated in
+                        return try await googleRepo.update(updated)
+                    },
+                    onDelete: { target in
+                        try await googleRepo.delete(target)
+                    }
+                )
+            } else {
+                EventEditSheet(
+                    event: event,
+                    onSave: { updated in
+                        return try await viewModel.eventRepository.update(updated)
+                    },
+                    onDelete: { target in
+                        try await viewModel.eventRepository.delete(target)
+                    }
                 )
             }
         }

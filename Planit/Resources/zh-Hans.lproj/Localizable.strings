@@ -578,3 +578,14 @@
 "settings.appearance.mode.system" = "系统";
 "settings.appearance.mode.light" = "浅色";
 "settings.appearance.mode.dark" = "深色";
+"settings.wallpaper.card" = "Background";
+"settings.wallpaper.desc" = "Choose a gradient background displayed behind the calendar.";
+"settings.wallpaper.none" = "None";
+"wallpaper.aurora" = "Aurora";
+"wallpaper.sunset" = "Sunset";
+"wallpaper.ocean" = "Ocean";
+"wallpaper.lavender" = "Lavender";
+"wallpaper.forest" = "Forest";
+"wallpaper.midnight" = "Midnight";
+"wallpaper.peach" = "Peach";
+"wallpaper.mint" = "Mint";

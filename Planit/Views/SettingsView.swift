@@ -42,6 +42,7 @@ struct SettingsView: View {
     @State private var profile: UserProfile
     @ObservedObject private var appearance = AppearanceService.shared
     @ObservedObject private var calendarThemeService = CalendarThemeService.shared
+    @ObservedObject private var wallpaperService = WallpaperService.shared
 
     init(goalService: GoalService, authManager: GoogleAuthManager, aiService: AIService,
          viewModel: CalendarViewModel, userContextService: UserContextService,
@@ -1120,6 +1121,7 @@ struct SettingsView: View {
 
             appearanceCard
             calendarThemeCard
+            wallpaperCard
         }
     }
 
@@ -1162,6 +1164,87 @@ struct SettingsView: View {
                         ) {
                             calendarThemeService.selectTheme(theme)
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    private var wallpaperCard: some View {
+        settingsCard(String(localized: "settings.wallpaper.card")) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(String(localized: "settings.wallpaper.desc"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                let columns = [GridItem(.adaptive(minimum: 96), spacing: 8)]
+                LazyVGrid(columns: columns, spacing: 8) {
+                    // "없음" 버튼
+                    Button {
+                        wallpaperService.select(nil)
+                    } label: {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color.platformControlBackground)
+                                .frame(height: 56)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(
+                                            wallpaperService.activePreset == nil
+                                                ? calendarThemeService.current.accent
+                                                : Color.secondary.opacity(0.3),
+                                            lineWidth: wallpaperService.activePreset == nil ? 2 : 1
+                                        )
+                                )
+                            VStack(spacing: 3) {
+                                Image(systemName: "circle.slash")
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(wallpaperService.activePreset == nil ? calendarThemeService.current.accent : .secondary)
+                                Text(String(localized: "settings.wallpaper.none"))
+                                    .font(.system(size: 9, weight: .medium))
+                                    .foregroundStyle(wallpaperService.activePreset == nil ? calendarThemeService.current.accent : .secondary)
+                            }
+                        }
+                    }
+                    .buttonStyle(.plain)
+
+                    ForEach(wallpaperService.presets) { preset in
+                        let isSelected = wallpaperService.activePreset?.id == preset.id
+                        Button {
+                            wallpaperService.select(preset)
+                        } label: {
+                            ZStack(alignment: .topTrailing) {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(preset.gradient)
+                                    .frame(height: 56)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(
+                                                isSelected ? Color.white.opacity(0.9) : Color.clear,
+                                                lineWidth: 2
+                                            )
+                                    )
+                                    .shadow(color: .black.opacity(0.15), radius: 3, y: 1)
+
+                                if isSelected {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 14))
+                                        .foregroundStyle(.white)
+                                        .shadow(radius: 2)
+                                        .padding(4)
+                                }
+
+                                VStack {
+                                    Spacer()
+                                    Text(preset.localizedName)
+                                        .font(.system(size: 9, weight: .medium))
+                                        .foregroundStyle(.white.opacity(0.85))
+                                        .shadow(radius: 2)
+                                        .padding(.bottom, 5)
+                                }
+                            }
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
             }

@@ -1073,7 +1073,12 @@ final class AIService: ObservableObject {
     /// Google Calendar 오류를 사용자 친화적 메시지로 변환
     private static func calendarErrorMessage(_ error: Error) -> String {
         let desc = error.localizedDescription
-        if desc.contains("401") || desc.contains("403") || desc.contains("invalid_grant") || desc.contains("Refresh") {
+        if desc.contains("401") || desc.contains("invalid_grant") || desc.contains("Refresh") {
+            // 테스트 앱은 refresh token이 7일 만료 → 재연결 필요
+            return "Google 캘린더 인증이 만료되었습니다. 설정에서 다시 연결해주세요."
+        }
+        if desc.contains("403") {
+            // 403 = 쓰기 권한 없음 (공유 캘린더 read-only, 또는 앱 테스트 모드 7일 만료)
             return "Google 캘린더 인증이 만료되었습니다. 설정에서 다시 연결해주세요."
         }
         return desc

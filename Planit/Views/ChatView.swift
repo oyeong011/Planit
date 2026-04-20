@@ -9,6 +9,7 @@ struct ChatView: View {
     var goalMemoryService: GoalMemoryService? = nil
     var habitService: HabitService? = nil          // 습관 — 목표와 완전히 분리
     var hermesMemoryService: HermesMemoryService? = nil
+    var onOpenSettings: (() -> Void)? = nil
 
     @State private var planningSuggestion: PlanningSuggestion? = nil
     // aiService.chatMessages 사용 — 탭 전환 후에도 유지
@@ -409,7 +410,7 @@ struct ChatView: View {
                         }
 
                         ForEach(aiService.chatMessages) { msg in
-                            ChatBubble(message: msg)
+                            ChatBubble(message: msg, onOpenSettings: onOpenSettings)
                                 .id(msg.id)
                         }
 
@@ -1180,6 +1181,7 @@ struct ChatView: View {
 
 struct ChatBubble: View {
     let message: ChatMessage
+    var onOpenSettings: (() -> Void)? = nil
     @ObservedObject private var themeService = CalendarThemeService.shared
 
     /// Markdown 문자열을 AttributedString으로 변환 (실패 시 plain text fallback)
@@ -1193,16 +1195,31 @@ struct ChatBubble: View {
 
             VStack(alignment: message.role == .user ? .trailing : .leading, spacing: 2) {
                 if message.role == .toolCall {
-                    HStack(spacing: 4) {
-                        Image(systemName: "wrench.and.screwdriver")
-                            .font(.system(size: 9))
-                        Text(message.content)
-                            .font(.system(size: 10))
+                    let isAuthError = message.content.contains("인증이 만료")
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 4) {
+                            Image(systemName: isAuthError ? "exclamationmark.triangle" : "wrench.and.screwdriver")
+                                .font(.system(size: 9))
+                                .foregroundStyle(isAuthError ? .orange : .secondary)
+                            Text(message.content)
+                                .font(.system(size: 10))
+                                .foregroundStyle(isAuthError ? .primary : .secondary)
+                        }
+                        if isAuthError, let onOpenSettings {
+                            Button {
+                                onOpenSettings()
+                            } label: {
+                                Text("Google 다시 연결 →")
+                                    .font(.system(size: 10, weight: .medium))
+                                    .foregroundStyle(themeService.current.accent)
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
-                    .foregroundStyle(.secondary)
                     .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(RoundedRectangle(cornerRadius: 4).fill(Color.secondary.opacity(0.1)))
+                    .padding(.vertical, 5)
+                    .background(RoundedRectangle(cornerRadius: 6).fill(isAuthError ? Color.orange.opacity(0.08) : Color.secondary.opacity(0.1)))
+                    .overlay(isAuthError ? RoundedRectangle(cornerRadius: 6).stroke(Color.orange.opacity(0.25), lineWidth: 1) : nil)
                 } else {
                     VStack(alignment: message.role == .user ? .trailing : .leading, spacing: 4) {
                         // 첨부파일 썸네일

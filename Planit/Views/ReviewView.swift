@@ -479,37 +479,44 @@ struct ReviewView: View {
     }
 
     private func yearGrassGrid(stats: TodoGrassStats) -> some View {
-        let cellSize: CGFloat = 8
+        let cellSize: CGFloat = 9
         let gap: CGFloat = 2
+        let dayLabelWidth: CGFloat = 10
         let dayLabels = todoGrassWeekdayLabels()
 
-        return ScrollView(.horizontal, showsIndicators: false) {
+        return GeometryReader { geo in
+            // 카드 너비에 맞는 최대 주 수 계산 후 가장 최근 N주만 표시
+            let available = geo.size.width - dayLabelWidth - 4
+            let maxWeeks = max(1, Int(floor((available + gap) / (cellSize + gap))))
+            let visibleWeeks = Array(stats.weeks.suffix(maxWeeks))
+
             HStack(alignment: .top, spacing: 0) {
                 VStack(spacing: gap) {
-                    Color.clear.frame(width: 12, height: cellSize + 2)
+                    Color.clear.frame(width: dayLabelWidth, height: cellSize + 2)
                     ForEach(0..<7, id: \.self) { index in
                         Text(index % 2 == 1 ? dayLabels[index] : "")
                             .font(.system(size: 7))
                             .foregroundStyle(.secondary)
-                            .frame(width: 12, height: cellSize)
+                            .frame(width: dayLabelWidth, height: cellSize)
                     }
                 }
 
                 HStack(alignment: .top, spacing: gap) {
-                    ForEach(Array(stats.weeks.enumerated()), id: \.offset) { weekIndex, week in
+                    ForEach(Array(visibleWeeks.enumerated()), id: \.offset) { weekIndex, week in
                         VStack(spacing: gap) {
                             monthLabel(for: week, weekIndex: weekIndex)
                                 .frame(height: cellSize + 2)
-
                             ForEach(0..<7, id: \.self) { dayIndex in
                                 grassCell(dayIndex < week.count ? week[dayIndex] : nil, size: cellSize)
                             }
                         }
+                        .frame(width: cellSize)
                     }
                 }
             }
             .padding(.horizontal, 2)
         }
+        .frame(height: cellSize + 2 + 7 * (cellSize + gap) - gap)
     }
 
     @ViewBuilder
