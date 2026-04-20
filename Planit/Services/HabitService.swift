@@ -12,8 +12,13 @@ struct Habit: Codable, Identifiable {
     var weeklyTarget: Int      // 주 N회 목표 (1–7)
     var createdAt: Date
     var completedDates: [String]  // "yyyy-MM-dd" 형식
+    // 기간 한정 습관 (v0.4.9): 두 필드가 모두 있으면 "범위 습관"으로 간주.
+    // 달력 블럭 + 진행률 게이지 렌더링은 이 값이 있을 때만 활성화.
+    var startDateKey: String?  // "yyyy-MM-dd"
+    var endDateKey: String?    // "yyyy-MM-dd" (inclusive)
 
-    init(name: String, emoji: String, colorName: String, weeklyTarget: Int) {
+    init(name: String, emoji: String, colorName: String, weeklyTarget: Int,
+         startDateKey: String? = nil, endDateKey: String? = nil) {
         self.id = UUID()
         self.name = name
         self.emoji = emoji
@@ -21,6 +26,14 @@ struct Habit: Codable, Identifiable {
         self.weeklyTarget = weeklyTarget
         self.createdAt = Date()
         self.completedDates = []
+        self.startDateKey = startDateKey
+        self.endDateKey = endDateKey
+    }
+
+    /// 범위 습관 여부 (start/end 둘 다 있고 start ≤ end)
+    var isRanged: Bool {
+        guard let s = startDateKey, let e = endDateKey else { return false }
+        return s <= e  // "yyyy-MM-dd" 문자열은 사전순이 시간순과 일치
     }
 
     var accentColor: Color {
@@ -45,25 +58,60 @@ final class HabitService: ObservableObject {
 
     private let storageKey = "planit.habits.v1"
     private let logger = Logger(subsystem: "com.planit.calen", category: "HabitService")
-    private let dateFormatter: DateFormatter = {
+    // 저장용 날짜 키는 반드시 Gregorian + POSIX — 사용자 Locale이 태국 불력/일본 황력이어도
+    // "yyyy-MM-dd" 그레고리안 기준으로 일관 생성/파싱되어야 사전순 비교가 안전.
+    // autoupdatingCurrent: 메뉴바 앱은 장시간 실행되므로 해외 이동 시 기기 타임존 변경을 바로 반영.
+    static let dayKeyFormatter: DateFormatter = {
         let f = DateFormatter()
+        f.calendar   = Calendar(identifier: .gregorian)
+        f.locale     = Locale(identifier: "en_US_POSIX")
+        f.timeZone   = TimeZone.autoupdatingCurrent
         f.dateFormat = "yyyy-MM-dd"
         return f
     }()
+    private var dateFormatter: DateFormatter { Self.dayKeyFormatter }
 
     init() { load() }
 
     // MARK: - 완료 기록
 
     func toggleToday(_ habit: Habit) {
+        toggle(habit, on: Date())
+    }
+
+    /// 임의 날짜 체크 토글. 범위 습관이면 범위 밖 날짜는 무시.
+    func toggle(_ habit: Habit, on date: Date) {
         guard let idx = habits.firstIndex(where: { $0.id == habit.id }) else { return }
-        let key = todayKey()
+        // 범위 습관: 범위 밖 토글 차단 (예방적)
+        if habits[idx].isRanged && !isInRange(habits[idx], on: date) { return }
+        let key = dateFormatter.string(from: date)
         if habits[idx].completedDates.contains(key) {
             habits[idx].completedDates.removeAll { $0 == key }
         } else {
             habits[idx].completedDates.append(key)
         }
         save()
+    }
+
+    /// 7일(또는 그 이하) 배열과 겹치는 범위 습관 리스트.
+    /// 정렬: 시작일 이른 순 → 같으면 이름 오름차순.
+    func rangedHabits(activeIn days: [Date]) -> [Habit] {
+        guard !days.isEmpty else { return [] }
+        let cal = Calendar.current
+        let keys = days.map { dateFormatter.string(from: cal.startOfDay(for: $0)) }
+        guard let minKey = keys.min(), let maxKey = keys.max() else { return [] }
+        return habits.filter { habit in
+            guard habit.isRanged,
+                  let s = habit.startDateKey,
+                  let e = habit.endDateKey else { return false }
+            // 두 범위 [s,e] ↔ [minKey,maxKey] 교집합 있는지 (inclusive)
+            return s <= maxKey && e >= minKey
+        }.sorted { lhs, rhs in
+            if let ls = lhs.startDateKey, let rs = rhs.startDateKey, ls != rs {
+                return ls < rs
+            }
+            return lhs.name < rhs.name
+        }
     }
 
     func isCompletedToday(_ habit: Habit) -> Bool {
@@ -108,6 +156,41 @@ final class HabitService: ObservableObject {
             let day = cal.date(byAdding: .day, value: -offset, to: today)!
             return isCompleted(habit, on: day)
         }.count
+    }
+
+    // MARK: - 범위 습관 (v0.4.9 +)
+
+    /// 해당 날짜가 습관의 활성 범위 내인지 (범위 없으면 항상 true)
+    func isInRange(_ habit: Habit, on date: Date) -> Bool {
+        guard habit.isRanged,
+              let startKey = habit.startDateKey,
+              let endKey = habit.endDateKey else { return true }
+        let key = dateFormatter.string(from: date)
+        return key >= startKey && key <= endKey
+    }
+
+    /// 범위 습관 진행률: (완료일수, 총일수, 0~1 비율).
+    /// 범위가 아닌 습관엔 (0,0,0) 반환.
+    func rangeProgress(_ habit: Habit) -> (completed: Int, total: Int, ratio: Double) {
+        guard habit.isRanged,
+              let startKey = habit.startDateKey,
+              let endKey = habit.endDateKey,
+              let startDate = dateFormatter.date(from: startKey),
+              let endDate = dateFormatter.date(from: endKey) else {
+            return (0, 0, 0)
+        }
+        let cal = Calendar.current
+        let s = cal.startOfDay(for: startDate)
+        let e = cal.startOfDay(for: endDate)
+        let totalDays = (cal.dateComponents([.day], from: s, to: e).day ?? 0) + 1
+        guard totalDays > 0 else { return (0, 0, 0) }
+        // completedDates 중 범위 내 항목만 카운트 (중복/범위 밖 제거)
+        var seen = Set<String>()
+        for key in habit.completedDates where key >= startKey && key <= endKey {
+            seen.insert(key)
+        }
+        let done = seen.count
+        return (done, totalDays, Double(done) / Double(totalDays))
     }
 
     // MARK: - AI 채팅 습관 감지 (목표와 완전히 분리)
@@ -157,7 +240,8 @@ final class HabitService: ObservableObject {
 
     // MARK: - CRUD
 
-    func add(name: String, emoji: String, colorName: String, weeklyTarget: Int) {
+    func add(name: String, emoji: String, colorName: String, weeklyTarget: Int,
+             startDate: Date? = nil, endDate: Date? = nil) {
         let cleanName = sanitizeName(name)
         guard !cleanName.isEmpty else { return }
         // 중복 이름(대소문자·공백 무시) 방지
@@ -165,7 +249,9 @@ final class HabitService: ObservableObject {
         let safeColor  = Self.allowedColors.contains(colorName) ? colorName : "blue"
         let safeTarget = max(1, min(7, weeklyTarget))
         let safeEmoji  = sanitizeEmoji(emoji)
-        let habit = Habit(name: cleanName, emoji: safeEmoji, colorName: safeColor, weeklyTarget: safeTarget)
+        let (sKey, eKey) = Self.normalizeRange(start: startDate, end: endDate, formatter: dateFormatter)
+        let habit = Habit(name: cleanName, emoji: safeEmoji, colorName: safeColor,
+                          weeklyTarget: safeTarget, startDateKey: sKey, endDateKey: eKey)
         habits.append(habit)
         save()
     }
@@ -184,10 +270,26 @@ final class HabitService: ObservableObject {
         updated.emoji        = sanitizeEmoji(habit.emoji)
         updated.colorName    = Self.allowedColors.contains(habit.colorName) ? habit.colorName : "blue"
         updated.weeklyTarget = max(1, min(7, habit.weeklyTarget))
+        // 범위 필드 정규화 (start > end 면 swap, 한 쪽만 있으면 무효화)
+        let sDate = habit.startDateKey.flatMap { dateFormatter.date(from: $0) }
+        let eDate = habit.endDateKey.flatMap { dateFormatter.date(from: $0) }
+        let (sKey, eKey) = Self.normalizeRange(start: sDate, end: eDate, formatter: dateFormatter)
+        updated.startDateKey = sKey
+        updated.endDateKey   = eKey
         if let idx = habits.firstIndex(where: { $0.id == habit.id }) {
             habits[idx] = updated
             save()
         }
+    }
+
+    /// start/end 둘 다 있을 때만 유효 범위로 저장. start > end 면 swap.
+    private static func normalizeRange(start: Date?, end: Date?, formatter: DateFormatter) -> (String?, String?) {
+        guard let s0 = start, let e0 = end else { return (nil, nil) }
+        let cal = Calendar.current
+        let sDay = cal.startOfDay(for: s0)
+        let eDay = cal.startOfDay(for: e0)
+        let (lo, hi) = sDay <= eDay ? (sDay, eDay) : (eDay, sDay)
+        return (formatter.string(from: lo), formatter.string(from: hi))
     }
 
     func delete(_ habit: Habit) {

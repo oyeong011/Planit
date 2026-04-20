@@ -6,6 +6,7 @@ import SwiftUI
 private enum ReviewSectionID: String, CaseIterable, Codable, Identifiable {
     case habitGraph   = "habit_graph"
     case weeklyChart  = "weekly_chart"
+    case todoGrass    = "todo_grass"
     case myHabits     = "my_habits"
     case progress     = "progress"
     case longTermGoals = "long_term_goals"
@@ -13,16 +14,29 @@ private enum ReviewSectionID: String, CaseIterable, Codable, Identifiable {
     var id: String { rawValue }
 
     static let defaultOrder: [ReviewSectionID] = [
-        .habitGraph, .weeklyChart, .myHabits, .progress, .longTermGoals
+        .habitGraph, .weeklyChart, .todoGrass, .myHabits, .progress, .longTermGoals
     ]
 
     static func loadFromDefaults() -> [ReviewSectionID] {
         guard let data = UserDefaults.standard.data(forKey: "planit.review.sectionOrder"),
-              let decoded = try? JSONDecoder().decode([ReviewSectionID].self, from: data),
-              Set(decoded) == Set(ReviewSectionID.allCases) else {   // 항목 수 불일치 시 기본값
+              let decoded = try? JSONDecoder().decode([ReviewSectionID].self, from: data) else {
             return defaultOrder
         }
-        return decoded
+        var normalized: [ReviewSectionID] = []
+        var seen = Set<ReviewSectionID>()
+        for sid in decoded where ReviewSectionID.allCases.contains(sid) && !seen.contains(sid) {
+            normalized.append(sid)
+            seen.insert(sid)
+        }
+        for sid in ReviewSectionID.allCases where !seen.contains(sid) {
+            if sid == .todoGrass, let weeklyIndex = normalized.firstIndex(of: .weeklyChart) {
+                normalized.insert(sid, at: normalized.index(after: weeklyIndex))
+            } else {
+                normalized.append(sid)
+            }
+            seen.insert(sid)
+        }
+        return Set(normalized) == Set(ReviewSectionID.allCases) ? normalized : defaultOrder
     }
 }
 
@@ -74,6 +88,10 @@ struct ReviewView: View {
     @State private var editHabitColor = "blue"
     @State private var editHabitTarget = 5
     @State private var hoveredHabitID: UUID? = nil
+    // 범위 습관(v0.4.9) — 기간이 있으면 매일 체크 진행률 게이지로 표시
+    @State private var editHabitHasRange = false
+    @State private var editHabitStart = Date()
+    @State private var editHabitEnd = Calendar.current.date(byAdding: .day, value: 6, to: Date()) ?? Date()
 
     // MARK: - Drag-to-reorder state
     @State private var sectionOrder: [ReviewSectionID] = ReviewSectionID.loadFromDefaults()
@@ -157,6 +175,7 @@ struct ReviewView: View {
         switch sid {
         case .habitGraph:    return 80 + CGFloat(habitService.habits.count) * 96
         case .weeklyChart:   return 148
+        case .todoGrass:     return 172
         case .myHabits:      return 70 + CGFloat(habitService.habits.count) * 66
         case .progress:      return 130
         case .longTermGoals: return 80 + CGFloat(max(1, goalMemoryService.goals.count)) * 64
@@ -199,6 +218,8 @@ struct ReviewView: View {
             if !habitService.habits.isEmpty { habitGraphSection }
         case .weeklyChart:
             weeklyChartSection
+        case .todoGrass:
+            todoGrassSection
         case .myHabits:
             myHabitsSection
         case .progress:
@@ -411,6 +432,118 @@ struct ReviewView: View {
         Calendar.current.isDateInToday(date)
             ? String(localized: "review.day.today.short")
             : weekDayFormatter.string(from: date)
+    }
+
+    // MARK: - Todo Grass Section (최근 30일 할일 잔디)
+
+    private var todoGrassSection: some View {
+        let stats = TodoGrassStats.make(todos: viewModel.todos, reminders: viewModel.appleReminders)
+
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                Label(String(localized: "review.todo.grass.title"), systemImage: "square.grid.3x3.fill")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text(String(format: String(localized: "review.todo.grass.total"), stats.totalDone, stats.totalTodos))
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(stats.totalDone > 0 ? .green : .secondary)
+            }
+
+            let cols = todoGrassColumns(stats.days)
+            GeometryReader { geo in
+                let spacing: CGFloat = 4
+                let cellSize = max(10, (geo.size.width - spacing * CGFloat(max(1, cols.count) - 1)) / CGFloat(max(1, cols.count)))
+                HStack(alignment: .top, spacing: spacing) {
+                    ForEach(Array(cols.enumerated()), id: \.offset) { _, column in
+                        VStack(spacing: spacing) {
+                            ForEach(column) { day in
+                                todoGrassCell(day, size: cellSize)
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                }
+            }
+            .frame(height: CGFloat(7) * 20 + CGFloat(6) * 4)
+            .padding(.vertical, 2)
+
+            HStack(spacing: 12) {
+                todoGrassMetric(
+                    title: String(localized: "review.todo.grass.best"),
+                    value: "\(stats.maxDoneInDay)/\(stats.maxTotalInDay)"
+                )
+                Divider().frame(height: 18)
+                todoGrassMetric(
+                    title: String(localized: "review.todo.grass.streak"),
+                    value: String(format: String(localized: "review.todo.grass.days"), stats.currentFullCompletionStreak)
+                )
+                Spacer(minLength: 0)
+            }
+        }
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground).overlay(RoundedRectangle(cornerRadius: 10).fill(themeService.current.cardTint)))
+    }
+
+    private func todoGrassColumns(_ days: [TodoGrassDay]) -> [[TodoGrassDay]] {
+        stride(from: 0, to: days.count, by: 7).map { start in
+            Array(days[start..<min(start + 7, days.count)])
+        }
+    }
+
+    private func todoGrassCell(_ day: TodoGrassDay, size: CGFloat = 18) -> some View {
+        let isToday = Calendar.current.isDateInToday(day.date)
+        let label = "\(todoGrassDateLabel(day.date)) · \(day.done)/\(day.total)"
+        let r = min(4, size * 0.22)
+
+        return RoundedRectangle(cornerRadius: r)
+            .fill(todoGrassColor(for: day))
+            .frame(width: size, height: size)
+            .overlay(
+                RoundedRectangle(cornerRadius: r)
+                    .stroke(isToday ? Color.primary.opacity(0.45) : Color.clear, lineWidth: 1.5)
+            )
+            .help(label)
+            .accessibilityLabel(label)
+    }
+
+    private func todoGrassColor(for day: TodoGrassDay) -> Color {
+        guard day.total > 0, day.done > 0 else {
+            return Color.secondary.opacity(day.total > 0 ? 0.18 : 0.10)
+        }
+        switch day.rate {
+        case ..<0.25:
+            return Color.green.opacity(0.32)
+        case ..<0.50:
+            return Color.green.opacity(0.50)
+        case ..<0.75:
+            return Color.green.opacity(0.68)
+        case ..<1.0:
+            return Color.green.opacity(0.84)
+        default:
+            return Color.green
+        }
+    }
+
+    private func todoGrassMetric(title: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text(title)
+                .font(.system(size: 9))
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.primary)
+        }
+    }
+
+    private let todoGrassDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "M/d (E)"
+        return f
+    }()
+
+    private func todoGrassDateLabel(_ date: Date) -> String {
+        todoGrassDateFormatter.string(from: date)
     }
 
     // MARK: - My Habits Section (사용자 정의 습관 추적)
@@ -703,6 +836,38 @@ struct ReviewView: View {
                         }
                     }
                 }
+
+                // 기간 (v0.4.9): 시작·종료 날짜 지정 시 달력에 게이지 바로 표시
+                VStack(alignment: .leading, spacing: 6) {
+                    Toggle(isOn: $editHabitHasRange.animation(.easeInOut(duration: 0.15))) {
+                        Label(String(localized: "habit.field.range.toggle"),
+                              systemImage: "calendar.badge.clock")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                    .toggleStyle(.switch)
+                    .controlSize(.mini)
+
+                    if editHabitHasRange {
+                        HStack(spacing: 8) {
+                            DatePicker(String(localized: "habit.field.range.start"),
+                                       selection: $editHabitStart, displayedComponents: .date)
+                                .datePickerStyle(.compact)
+                                .labelsHidden()
+                                .font(.system(size: 11))
+                            Text("→").foregroundStyle(.secondary).font(.system(size: 11))
+                            DatePicker(String(localized: "habit.field.range.end"),
+                                       selection: $editHabitEnd, in: editHabitStart...,
+                                       displayedComponents: .date)
+                                .datePickerStyle(.compact)
+                                .labelsHidden()
+                                .font(.system(size: 11))
+                        }
+                        Text(rangeSummary(start: editHabitStart, end: editHabitEnd))
+                            .font(.system(size: 10))
+                            .foregroundStyle(.tertiary)
+                    }
+                }
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 16)
@@ -721,13 +886,20 @@ struct ReviewView: View {
                 .buttonStyle(.plain)
 
                 Button {
+                    let fmt = HabitService.dayKeyFormatter
+                    let sKey: String? = editHabitHasRange ? fmt.string(from: editHabitStart) : nil
+                    let eKey: String? = editHabitHasRange ? fmt.string(from: editHabitEnd) : nil
                     if var h = habit {
                         h.name = editHabitName; h.emoji = editHabitEmoji
                         h.colorName = editHabitColor; h.weeklyTarget = editHabitTarget
+                        h.startDateKey = sKey
+                        h.endDateKey = eKey
                         habitService.update(h)
                     } else {
                         habitService.add(name: editHabitName, emoji: editHabitEmoji,
-                                         colorName: editHabitColor, weeklyTarget: editHabitTarget)
+                                         colorName: editHabitColor, weeklyTarget: editHabitTarget,
+                                         startDate: editHabitHasRange ? editHabitStart : nil,
+                                         endDate: editHabitHasRange ? editHabitEnd : nil)
                     }
                     sheetRoute = nil
                 } label: {
@@ -756,7 +928,19 @@ struct ReviewView: View {
             if let h = habit {
                 editHabitName = h.name; editHabitEmoji = h.emoji
                 editHabitColor = h.colorName; editHabitTarget = h.weeklyTarget
+                editHabitHasRange = h.isRanged
+                let fmt = HabitService.dayKeyFormatter
+                if let s = h.startDateKey.flatMap(fmt.date(from:)) { editHabitStart = s }
+                if let e = h.endDateKey.flatMap(fmt.date(from:)) { editHabitEnd = e }
+            } else {
+                editHabitHasRange = false
+                editHabitStart = Date()
+                editHabitEnd = Calendar.current.date(byAdding: .day, value: 6, to: Date()) ?? Date()
             }
+        }
+        // start를 end 뒤로 옮기면 end를 start로 클램프 (DatePicker 범위 밖 stale 상태 방지)
+        .onChange(of: editHabitStart) { _, newStart in
+            if editHabitEnd < newStart { editHabitEnd = newStart }
         }
     }
 
@@ -768,6 +952,27 @@ struct ReviewView: View {
         f.dateFormat = "yyyy-MM-dd"
         return f
     }()
+
+    /// 편집 시트에 보여줄 "N일간 · Apr 6 – Apr 12" 스타일 요약.
+    /// start > end 인 stale 입력도 방어적으로 swap 후 계산.
+    private func rangeSummary(start: Date, end: Date) -> String {
+        let cal = Calendar.current
+        let s = cal.startOfDay(for: min(start, end))
+        let e = cal.startOfDay(for: max(start, end))
+        let days = (cal.dateComponents([.day], from: s, to: e).day ?? 0) + 1
+        let fmt = DateFormatter()
+        fmt.dateStyle = .medium
+        fmt.timeStyle = .none
+        // %d days 는 단수 "1 days" 깨짐 — 1일일 때 별도 키로 분기.
+        let daysLabel: String
+        if days == 1 {
+            daysLabel = String(localized: "habit.field.range.days.one")
+        } else {
+            daysLabel = String.localizedStringWithFormat(
+                String(localized: "habit.field.range.days"), days)
+        }
+        return "\(daysLabel) · \(fmt.string(from: s)) – \(fmt.string(from: e))"
+    }
 
     /// 특정 습관의 최근 4주 주간 달성률 (0.0~1.0) 배열 (오래된 순, index 0=4주전, 3=이번주)
     private func weeklyRates(for habit: Habit) -> [Double] {
