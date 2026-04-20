@@ -126,6 +126,8 @@ final class CalendarViewModel: ObservableObject {
     private var googleFetchTask: Task<Void, Never>?
     private var googleFetchMonthKey: String?
     private var googleFetchGeneration = 0
+    /// 월별 마지막 실제 fetch 시각 — TTL 내 중복 요청 방지
+    private var lastFetchAtByMonthKey: [String: Date] = [:]
 
     private var notificationObserver: Any?
     private var authCancellable: AnyCancellable?
@@ -145,6 +147,11 @@ final class CalendarViewModel: ObservableObject {
         PlanitLoggers.crud.error(
             "CRUD failure operation=\(operation.rawValue, privacy: .public) source=\(source.rawValue, privacy: .public) eventID=\(notice.logMetadata["eventID"] ?? "none", privacy: .public) error=\(errorSummary, privacy: .public)"
         )
+        // update/delete 403 → 재인증 필요 플래그 설정
+        if let calErr = error as? GoogleCalendarError,
+           case .httpStatus(let code) = calErr, code == 403 {
+            needsReauth = true
+        }
         if userVisible {
             lastCRUDError = notice
         }
@@ -214,10 +221,11 @@ final class CalendarViewModel: ObservableObject {
             self.googleFetchTask?.cancel()
             self.googleFetchTask = nil
             self.googleFetchMonthKey = nil
+            self.lastFetchAtByMonthKey.removeAll()
             self.isOffline = false
             self.needsReauth = false
             self.lastCRUDError = nil
-            self.fetchEventsFromGoogle(for: self.currentMonth)
+            self.fetchEventsFromGoogle(for: self.currentMonth, force: true)
             self.loadHistory()
         }
 
@@ -226,7 +234,7 @@ final class CalendarViewModel: ObservableObject {
         loadHistory()
 
         if authManager.isAuthenticated {
-            fetchEventsFromGoogle(for: currentMonth)
+            fetchEventsFromGoogle(for: currentMonth, force: true)
             // Apple Calendar도 활성화되어 있으면 병합
             if appleCalendarEnabled {
                 enableAppleCalendar()
@@ -258,9 +266,9 @@ final class CalendarViewModel: ObservableObject {
         }
     }
 
-    /// Periodic refresh every 60 seconds
+    /// Periodic refresh every 3 minutes
     private func startPeriodicRefresh() {
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: 180, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 guard let self else { return }
                 self.cleanupExpiredAppleMirrorSuppressions()
@@ -952,13 +960,23 @@ final class CalendarViewModel: ObservableObject {
 
     // MARK: - Google Calendar API
 
-    func fetchEventsFromGoogle(for month: Date) {
+    func fetchEventsFromGoogle(for month: Date, force: Bool = false) {
         let key = monthKey(month)
         if googleFetchTask != nil, googleFetchMonthKey == key {
             // Timers, popover lifecycle, and CRUD callbacks can request the same month at once.
             PlanitLoggers.sync.info("Skipping duplicate in-flight Google fetch month=\(key, privacy: .public)")
             return
         }
+
+        // 2분 TTL — 동일 월은 2분 내 재요청 skip (force=true이면 무시)
+        if !force, let lastFetch = lastFetchAtByMonthKey[key],
+           Date().timeIntervalSince(lastFetch) < 120 {
+            PlanitLoggers.sync.info("Skipping TTL-throttled Google fetch month=\(key, privacy: .public)")
+            return
+        }
+
+        // 실제 fetch 시작 시각 기록
+        lastFetchAtByMonthKey[key] = Date()
 
         googleFetchTask?.cancel()
         googleFetchMonthKey = key
@@ -1041,7 +1059,7 @@ final class CalendarViewModel: ObservableObject {
                 if try await googleService.createEvent(title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay) == nil {
                     recordCRUDFailure(operation: .create, source: .google)
                 }
-                fetchEventsFromGoogle(for: currentMonth)
+                fetchEventsFromGoogle(for: currentMonth, force: true)
             } catch {
                 guard Self.shouldQueueGoogleMutation(after: error) else {
                     recordCRUDFailure(operation: .create, source: .google, error: error)
@@ -1114,7 +1132,7 @@ final class CalendarViewModel: ObservableObject {
                 if try await googleService.updateEvent(eventID: eventID, calendarID: calendarID, title: title, startDate: startDate, endDate: endDate, isAllDay: isAllDay) == false {
                     recordCRUDFailure(operation: .update, source: .google, eventID: eventID)
                 }
-                fetchEventsFromGoogle(for: currentMonth)
+                fetchEventsFromGoogle(for: currentMonth, force: true)
             } catch {
                 guard Self.shouldQueueGoogleMutation(after: error) else {
                     recordCRUDFailure(operation: .update, source: .google, eventID: eventID, error: error)
@@ -1123,7 +1141,7 @@ final class CalendarViewModel: ObservableObject {
                 PlanitLoggers.sync.info("Offline Google update queued eventID=\(eventID, privacy: .public)")
                 queuePendingEdit(PendingCalendarEdit(
                     action: "update", title: title, startDate: startDate,
-                    endDate: endDate, isAllDay: isAllDay, eventId: eventID))
+                    endDate: endDate, isAllDay: isAllDay, eventId: eventID, calendarID: calendarID))
                 // Optimistic local update
                 if let idx = calendarEvents.firstIndex(where: { $0.id == eventID }) {
                     calendarEvents[idx].title = title
@@ -1145,7 +1163,7 @@ final class CalendarViewModel: ObservableObject {
                 completedEventIDs.remove(eventID)
                 goalService?.removeCompletion(eventId: eventID)
                 saveCompletedEvents()
-                fetchEventsFromGoogle(for: currentMonth)
+                fetchEventsFromGoogle(for: currentMonth, force: true)
             } catch {
                 guard Self.shouldQueueGoogleMutation(after: error) else {
                     recordCRUDFailure(operation: .delete, source: .google, eventID: eventID, error: error)
@@ -1153,7 +1171,7 @@ final class CalendarViewModel: ObservableObject {
                 }
                 PlanitLoggers.sync.info("Offline Google delete queued eventID=\(eventID, privacy: .public)")
                 queuePendingEdit(PendingCalendarEdit(
-                    action: "delete", eventId: eventID))
+                    action: "delete", eventId: eventID, calendarID: calendarID))
                 // Optimistic local removal
                 calendarEvents.removeAll { $0.id == eventID }
                 completedEventIDs.remove(eventID)
@@ -2577,7 +2595,9 @@ final class CalendarViewModel: ObservableObject {
                 case "update":
                     if let eventId = edit.eventId {
                         if try await googleService.updateEvent(
-                            eventID: eventId, title: edit.title,
+                            eventID: eventId,
+                            calendarID: edit.calendarID ?? "primary",
+                            title: edit.title,
                             startDate: edit.startDate, endDate: edit.endDate,
                             isAllDay: edit.isAllDay) == false {
                             recordCRUDFailure(operation: .update, source: .google, eventID: eventId, userVisible: false)
@@ -2585,7 +2605,9 @@ final class CalendarViewModel: ObservableObject {
                     }
                 case "delete":
                     if let eventId = edit.eventId {
-                        if try await googleService.deleteEvent(eventID: eventId) == false {
+                        if try await googleService.deleteEvent(
+                            eventID: eventId,
+                            calendarID: edit.calendarID ?? "primary") == false {
                             recordCRUDFailure(operation: .delete, source: .google, eventID: eventId, userVisible: false)
                         }
                     }
