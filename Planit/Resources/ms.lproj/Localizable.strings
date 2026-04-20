@@ -564,3 +564,8 @@
 "review.todo.grass.best" = "Hari terbaik";
 "review.todo.grass.streak" = "Berturutan";
 "review.todo.grass.days" = "%d hari";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes Ingatan jangka panjang";
+"settings.hermes.outcome.accepted" = "diterima";
+"settings.hermes.outcome.rejected" = "ditolak";

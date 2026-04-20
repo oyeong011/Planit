@@ -553,3 +553,8 @@
 "review.todo.grass.best" = "Best day";
 "review.todo.grass.streak" = "Streak";
 "review.todo.grass.days" = "%d days";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes Long-Term Memory";
+"settings.hermes.outcome.accepted" = "accepted";
+"settings.hermes.outcome.rejected" = "rejected";

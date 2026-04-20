@@ -786,7 +786,7 @@ struct SettingsView: View {
     // MARK: - Hermes 기억 카드
 
     private var hermesMemoryCard: some View {
-        settingsCard("🧠 Hermes 장기 기억") {
+        settingsCard(String(localized: "settings.hermes.card.title")) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 8) {
                     Image(systemName: "sparkles")
@@ -838,7 +838,9 @@ struct SettingsView: View {
                                 .font(.system(size: 11))
                                 .lineLimit(1)
                             Spacer()
-                            Text(decision.outcome.rawValue)
+                            Text(decision.outcome == .accepted
+                                 ? String(localized: "settings.hermes.outcome.accepted")
+                                 : String(localized: "settings.hermes.outcome.rejected"))
                                 .font(.system(size: 10))
                                 .foregroundStyle(decision.outcome == .accepted ? .green : .secondary)
                         }

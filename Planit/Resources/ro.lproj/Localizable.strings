@@ -564,3 +564,8 @@
 "review.todo.grass.best" = "Ziua cea mai bună";
 "review.todo.grass.streak" = "Serie";
 "review.todo.grass.days" = "%d zile";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes Memorie pe termen lung";
+"settings.hermes.outcome.accepted" = "acceptat";
+"settings.hermes.outcome.rejected" = "respins";

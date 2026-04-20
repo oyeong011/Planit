@@ -564,3 +564,8 @@
 "review.todo.grass.best" = "יום הטוב ביותר";
 "review.todo.grass.streak" = "רצף";
 "review.todo.grass.days" = "%d ימים";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes זיכרון ארוך טווח";
+"settings.hermes.outcome.accepted" = "התקבל";
+"settings.hermes.outcome.rejected" = "נדחה";

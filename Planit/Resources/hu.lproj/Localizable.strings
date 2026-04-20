@@ -564,3 +564,8 @@
 "review.todo.grass.best" = "Legjobb nap";
 "review.todo.grass.streak" = "Sorozat";
 "review.todo.grass.days" = "%d nap";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes Hosszú távú memória";
+"settings.hermes.outcome.accepted" = "elfogadva";
+"settings.hermes.outcome.rejected" = "elutasítva";

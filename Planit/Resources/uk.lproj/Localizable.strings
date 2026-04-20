@@ -564,3 +564,8 @@
 "review.todo.grass.best" = "Найкращий день";
 "review.todo.grass.streak" = "Серія";
 "review.todo.grass.days" = "%d дн.";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes Довгострокова пам'ять";
+"settings.hermes.outcome.accepted" = "прийнято";
+"settings.hermes.outcome.rejected" = "відхилено";

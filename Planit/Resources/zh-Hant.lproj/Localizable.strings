@@ -563,3 +563,8 @@
 "review.todo.grass.best" = "最佳日";
 "review.todo.grass.streak" = "連續完成";
 "review.todo.grass.days" = "%d天";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes 長期記憶";
+"settings.hermes.outcome.accepted" = "已接受";
+"settings.hermes.outcome.rejected" = "已拒絕";

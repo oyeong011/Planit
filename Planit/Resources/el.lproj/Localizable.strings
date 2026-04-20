@@ -564,3 +564,8 @@
 "review.todo.grass.best" = "Καλύτερη ημέρα";
 "review.todo.grass.streak" = "Σερί";
 "review.todo.grass.days" = "%d ημέρες";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes Μακροπρόθεσμη μνήμη";
+"settings.hermes.outcome.accepted" = "αποδεκτό";
+"settings.hermes.outcome.rejected" = "απορρίφθηκε";

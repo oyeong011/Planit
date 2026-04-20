@@ -1,31 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-    <!-- App Group: macOS Calen(com.oy.planit)과 iOS CaleniOS(com.oy.planit.ios)가 -->
-    <!-- Keychain/UserDefaults/파일을 공유하기 위한 식별자. -->
-    <!-- 실제 배포 시 Apple Developer 콘솔에서 App Group 등록 필요 (RELEASE 팀장). -->
-    <key>com.apple.security.application-groups</key>
-    <array>
-        <string>group.com.oy.planit</string>
-    </array>
-
-    <!-- Keychain 공유: App Group ID로 공유하면 Team ID prefix가 자동 붙지 않는다. -->
-    <!-- 코드는 `group.com.oy.planit` 리터럴을 `kSecAttrAccessGroup`에 사용. -->
-    <key>keychain-access-groups</key>
-    <array>
-        <string>group.com.oy.planit</string>
-    </array>
-
-    <!-- iCloud (CloudKit): macOS가 write한 Hermes 메모리 레코드를 iOS가 read한다. -->
-    <!-- SYNC 팀장이 `HermesMemoryFactV1` 커스텀 CKRecord로 구현 예정. -->
-    <key>com.apple.developer.icloud-container-identifiers</key>
-    <array>
-        <string>iCloud.com.oy.planit</string>
-    </array>
-    <key>com.apple.developer.icloud-services</key>
-    <array>
-        <string>CloudKit</string>
-    </array>
-</dict>
+<dict/>
 </plist>

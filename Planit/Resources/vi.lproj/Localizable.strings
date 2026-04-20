@@ -564,3 +564,8 @@
 "review.todo.grass.best" = "Ngày tốt nhất";
 "review.todo.grass.streak" = "Chuỗi liên tiếp";
 "review.todo.grass.days" = "%d ngày";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes Bộ nhớ dài hạn";
+"settings.hermes.outcome.accepted" = "đã chấp nhận";
+"settings.hermes.outcome.rejected" = "đã từ chối";

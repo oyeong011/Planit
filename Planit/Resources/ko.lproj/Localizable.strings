@@ -553,3 +553,8 @@
 "review.todo.grass.best" = "최다 완료일";
 "review.todo.grass.streak" = "연속 완료";
 "review.todo.grass.days" = "%d일";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes 장기 기억";
+"settings.hermes.outcome.accepted" = "수락됨";
+"settings.hermes.outcome.rejected" = "거절됨";

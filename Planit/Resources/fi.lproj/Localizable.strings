@@ -564,3 +564,8 @@
 "review.todo.grass.best" = "Paras päivä";
 "review.todo.grass.streak" = "Putki";
 "review.todo.grass.days" = "%d päivää";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes Pitkäkestoinen muisti";
+"settings.hermes.outcome.accepted" = "hyväksytty";
+"settings.hermes.outcome.rejected" = "hylätty";

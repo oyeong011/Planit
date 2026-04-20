@@ -564,3 +564,8 @@
 "review.todo.grass.best" = "En iyi gün";
 "review.todo.grass.streak" = "Seri";
 "review.todo.grass.days" = "%d gün";
+
+// MARK: - Hermes card
+"settings.hermes.card.title" = "🧠 Hermes Uzun süreli bellek";
+"settings.hermes.outcome.accepted" = "kabul edildi";
+"settings.hermes.outcome.rejected" = "reddedildi";
