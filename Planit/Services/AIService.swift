@@ -1285,7 +1285,10 @@ final class AIService: ObservableObject {
                              "--skip-git-repo-check",
                              "--ephemeral",
                              "-m", AIProvider.codex.defaultModel,
-                             "-c", "model_reasoning_effort=low"]
+                             "-c", "model_reasoning_effort=low",
+                             // 사용자 MCP 서버(구글 캘린더, 피그마 등) 비활성화 — 앱이 이미 캘린더 컨텍스트 주입
+                             // 없으면 MCP 호출로 토큰 93k+ 낭비 + 지연 발생
+                             "-c", "mcp_servers={}"]
             for img in imageAttachments {
                 if let safePath = Self.safeImagePath(img.url) {
                     codexArgs += ["--image", safePath]
@@ -1538,6 +1541,21 @@ final class AIService: ObservableObject {
 
         if proc.terminationStatus != 0 {
             let errStr = String(data: finalErr, encoding: .utf8) ?? ""
+            let combined = (errStr + output).lowercased()
+            // 공통 인증/모델 오류 → 사용자 친화적 안내
+            if combined.contains("not logged in") || combined.contains("unauthenticated") || combined.contains("unauthorized") || combined.contains("please login") || combined.contains("로그인") {
+                let tool = isCodex ? "codex" : "claude"
+                return "⚠️ \(isCodex ? "Codex" : "Claude") 인증이 만료되었습니다. 터미널에서 '\(tool) login' 또는 '\(tool) auth login'을 실행해 다시 로그인해 주세요."
+            }
+            if combined.contains("model not supported") || combined.contains("invalid model") || combined.contains("does not exist") {
+                return "⚠️ 선택한 AI 모델을 사용할 수 없습니다. 설정에서 다른 모델을 선택하거나, CLI를 최신 버전으로 업데이트해 주세요."
+            }
+            if combined.contains("rate limit") || combined.contains("too many requests") || combined.contains("quota") {
+                return "⚠️ 요청 한도에 도달했습니다. 잠시 후 다시 시도해 주세요."
+            }
+            if combined.contains("network") || combined.contains("connection") || combined.contains("timeout") {
+                return "⚠️ 네트워크 연결에 실패했습니다. 인터넷 연결을 확인하고 다시 시도해 주세요."
+            }
             if isCodex {
                 let cleanedError = errStr.trimmingCharacters(in: .whitespacesAndNewlines)
                 if !cleanedError.isEmpty {
