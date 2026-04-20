@@ -87,7 +87,8 @@ struct MainCalendarView: View {
                     Divider()
                 }
 
-                CalendarGridView(viewModel: viewModel, showChat: $showLeftPanel)
+                CalendarGridView(viewModel: viewModel, showChat: $showLeftPanel,
+                                 habitService: habitService)
                     .frame(maxWidth: .infinity)
 
                 Divider()
@@ -362,7 +363,23 @@ struct CRUDErrorInlineNotice: View {
 struct CalendarGridView: View {
     @ObservedObject var viewModel: CalendarViewModel
     @Binding var showChat: Bool
+    @ObservedObject var habitService: HabitService
     @ObservedObject private var themeService = CalendarThemeService.shared
+
+    // 바 레이아웃 상수
+    private let rangeBarSingleHeight: CGFloat = 14
+    private let rangeBarSpacing: CGFloat = 2
+    private let rangeBarTopPadding: CGFloat = 2
+    private let rangeBarHorizontalInset: CGFloat = 2
+    private let rangeBarMaxVisible = 2
+
+    private func barBandHeight(for count: Int) -> CGFloat {
+        guard count > 0 else { return 0 }
+        let visible = min(count, rangeBarMaxVisible)
+        let total = CGFloat(visible) * rangeBarSingleHeight
+            + CGFloat(visible - 1) * rangeBarSpacing
+        return total + rangeBarTopPadding * 2  // 위/아래 패딩
+    }
     private let weekdays = [
         String(localized: "calendar.weekdays.sun"),
         String(localized: "calendar.weekdays.mon"),
@@ -471,37 +488,62 @@ struct CalendarGridView: View {
 
             VStack(spacing: 0) {
                 ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
-                    HStack(spacing: 0) {
-                        ForEach(row) { day in
-                            if let date = day.date {
-                                DayCellView(
-                                    date: date,
-                                    isSelected: day.isSelected,
-                                    isToday: day.isToday,
-                                    isSunday: day.isSunday,
-                                    isSaturday: day.isSaturday,
-                                    isCurrentMonth: day.isCurrentMonth,
-                                    events: day.events,
-                                    todos: day.todos,
-                                    categoryFor: { viewModel.category(for: $0) },
-                                    categoryForEvent: { viewModel.categoryForEvent($0) },
-                                    onDrop: { payload, targetDate in
-                                        switch CalendarDragPayload(payload) {
-                                        case .todo(let id):
-                                            viewModel.moveTodo(id: id, toDate: targetDate)
-                                        case .event(let id):
-                                            viewModel.moveCalendarEvent(id: id, toDate: targetDate)
-                                        case nil:
-                                            return
-                                        }
-                                        viewModel.selectedDate = targetDate
-                                    }
-                                )
-                                .onTapGesture { viewModel.selectedDate = date }
-                            } else {
-                                Color.clear
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    let rowDates      = row.map { $0.date }
+                    let activeHabits  = habitService.rangedHabits(activeIn: rowDates.compactMap { $0 })
+                    let bandHeight    = barBandHeight(for: activeHabits.count)
+
+                    ZStack(alignment: .top) {
+                        HStack(spacing: 0) {
+                            ForEach(row) { day in
+                                if let date = day.date {
+                                    DayCellView(
+                                        date: date,
+                                        isSelected: day.isSelected,
+                                        isToday: day.isToday,
+                                        isSunday: day.isSunday,
+                                        isSaturday: day.isSaturday,
+                                        isCurrentMonth: day.isCurrentMonth,
+                                        events: day.events,
+                                        todos: day.todos,
+                                        categoryFor: { viewModel.category(for: $0) },
+                                        categoryForEvent: { viewModel.categoryForEvent($0) },
+                                        onDrop: { payload, targetDate in
+                                            switch CalendarDragPayload(payload) {
+                                            case .todo(let id):
+                                                viewModel.moveTodo(id: id, toDate: targetDate)
+                                            case .event(let id):
+                                                viewModel.moveCalendarEvent(id: id, toDate: targetDate)
+                                            case nil:
+                                                return
+                                            }
+                                            viewModel.selectedDate = targetDate
+                                        },
+                                        reservedBarHeight: bandHeight
+                                    )
+                                    .onTapGesture { viewModel.selectedDate = date }
+                                } else {
+                                    Color.clear
+                                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                }
                             }
+                        }
+
+                        if !activeHabits.isEmpty {
+                            // 헤더 높이 (26pt 숫자 + 6pt 상단 패딩 + 2pt 아이템 간격)
+                            let headerH: CGFloat = 26 + 6 + 2
+                            WeekRangeBarOverlay(
+                                weekDays: rowDates,
+                                habits: activeHabits,
+                                service: habitService,
+                                barHeight: rangeBarSingleHeight,
+                                spacing: rangeBarSpacing,
+                                topPad: rangeBarTopPadding,
+                                maxVisible: rangeBarMaxVisible,
+                                horizontalInset: rangeBarHorizontalInset
+                            )
+                            .frame(height: bandHeight)
+                            .offset(y: headerH)
+                            .allowsHitTesting(true)
                         }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -511,6 +553,136 @@ struct CalendarGridView: View {
             .padding(.horizontal, 8)
             .padding(.bottom, 8)
         }
+    }
+}
+
+// MARK: - Week Range Bar Overlay
+
+/// 한 주(row)에 활성인 범위 습관 게이지 바를 절대 좌표로 그리는 오버레이.
+/// GeometryReader 하나로 셀 너비를 계산한 뒤, 각 습관마다 x·width를 결정해 ZStack에 배치.
+private struct WeekRangeBarOverlay: View {
+    let weekDays: [Date?]
+    let habits: [Habit]
+    @ObservedObject var service: HabitService
+    let barHeight: CGFloat
+    let spacing: CGFloat
+    let topPad: CGFloat
+    let maxVisible: Int
+    let horizontalInset: CGFloat
+
+    private let fmt = HabitService.dayKeyFormatter
+
+    var body: some View {
+        if habits.isEmpty { return AnyView(EmptyView()) }
+        return AnyView(
+            GeometryReader { geo in
+                let cellW = geo.size.width / 7.0
+                ZStack(alignment: .topLeading) {
+                    let visible = habits.prefix(maxVisible)
+                    ForEach(Array(visible.enumerated()), id: \.element.id) { idx, habit in
+                        barView(habit: habit, cellW: cellW,
+                                yOff: topPad + CGFloat(idx) * (barHeight + spacing))
+                    }
+                    if habits.count > maxVisible {
+                        let extra = habits.count - maxVisible
+                        let yOff = topPad + CGFloat(maxVisible - 1) * (barHeight + spacing)
+                        Text("+\(extra)")
+                            .font(.system(size: 8, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .offset(x: geo.size.width - 18, y: yOff + 1)
+                    }
+                }
+            }
+        )
+    }
+
+    @ViewBuilder
+    private func barView(habit: Habit, cellW: CGFloat, yOff: CGFloat) -> some View {
+        if let (fi, li) = rowSlice(habit: habit) {
+            // nil 슬롯을 고려한 경계 감지: 첫/마지막 실제 날짜 인덱스와 비교
+            let firstNonNilIdx = weekDays.firstIndex(where: { $0 != nil }) ?? 0
+            let lastNonNilIdx  = weekDays.lastIndex(where:  { $0 != nil }) ?? 6
+            let weekKeys = weekDays.map { $0.map { fmt.string(from: $0) } }
+            let clippedL = fi == firstNonNilIdx && (weekKeys[fi] ?? "") > (habit.startDateKey ?? "")
+            let clippedR = li == lastNonNilIdx  && (weekKeys[li] ?? "") < (habit.endDateKey ?? "")
+
+            let xPos   = CGFloat(fi) * cellW + horizontalInset
+            let width  = CGFloat(li - fi + 1) * cellW - 2 * horizontalInset
+            let prog   = service.rangeProgress(habit)
+            let accent = habit.accentColor
+
+            // 코너 반경: 잘린 쪽 0, 온전한 쪽 7
+            let tl: CGFloat = clippedL ? 0 : 7
+            let tr: CGFloat = clippedR ? 0 : 7
+            let bl: CGFloat = clippedL ? 0 : 7
+            let br: CGFloat = clippedR ? 0 : 7
+
+            ZStack(alignment: .leading) {
+                // 트랙 (배경)
+                UnevenRoundedRectangle(
+                    topLeadingRadius: tl, bottomLeadingRadius: bl,
+                    bottomTrailingRadius: br, topTrailingRadius: tr
+                )
+                .fill(accent.opacity(0.18))
+                .frame(width: width, height: barHeight)
+
+                // 채움 (진행률)
+                UnevenRoundedRectangle(
+                    topLeadingRadius: tl, bottomLeadingRadius: bl,
+                    bottomTrailingRadius: br, topTrailingRadius: tr
+                )
+                .fill(LinearGradient(
+                    colors: [accent.opacity(0.55), accent.opacity(0.9)],
+                    startPoint: .leading, endPoint: .trailing
+                ))
+                .frame(width: max(0, width * CGFloat(prog.ratio)), height: barHeight)
+                .clipped()
+
+                // 라벨
+                HStack(spacing: 3) {
+                    Text(habit.emoji)
+                        .font(.system(size: 9))
+                    Text(habit.name)
+                        .font(.system(size: 9, weight: .semibold))
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .foregroundStyle(accent)
+                }
+                .padding(.horizontal, 5)
+            }
+            .frame(width: width, height: barHeight)
+            .offset(x: xPos, y: yOff)
+            .contentShape(Rectangle())
+            // SpatialTapGesture로 탭 위치에서 날짜 인덱스를 계산해 정확한 날 toggle
+            .highPriorityGesture(
+                SpatialTapGesture().onEnded { value in
+                    let tapX    = value.location.x + xPos  // overlay 내 절대 x
+                    let dayIdx  = max(fi, min(li, Int(tapX / cellW)))
+                    if let tappedDate = weekDays[dayIdx],
+                       service.isInRange(habit, on: tappedDate) {
+                        service.toggle(habit, on: tappedDate)
+                    }
+                }
+            )
+        }
+    }
+
+    /// 이번 주 row 안에서 habit이 차지하는 (첫 셀 인덱스, 마지막 셀 인덱스) 반환.
+    private func rowSlice(habit: Habit) -> (Int, Int)? {
+        guard let startKey = habit.startDateKey,
+              let endKey   = habit.endDateKey else { return nil }
+        var first: Int? = nil
+        var last:  Int? = nil
+        for (i, day) in weekDays.enumerated() {
+            guard let day else { continue }
+            let key = fmt.string(from: day)
+            if key >= startKey && key <= endKey {
+                if first == nil { first = i }
+                last = i
+            }
+        }
+        guard let f = first, let l = last else { return nil }
+        return (f, l)
     }
 }
 
@@ -528,6 +700,9 @@ struct DayCellView: View {
     let categoryFor: (UUID) -> TodoCategory
     var categoryForEvent: ((CalendarEvent) -> TodoCategory?)? = nil
     var onDrop: ((String, Date) -> Void)? = nil
+    /// 주 row가 요청한 범위습관 바 영역 높이 — 헤더 ↔ 이벤트 사이 투명 예약 슬롯.
+    /// 0 이면 바 없음 (구식 셀 그대로).
+    var reservedBarHeight: CGFloat = 0
 
     @State private var isDropTarget = false
     @ObservedObject private var themeService = CalendarThemeService.shared
@@ -547,6 +722,11 @@ struct DayCellView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             dayCellHeader
+            // 범위 습관 바가 그려질 슬롯. 실제 바는 row-level overlay에서 절대 좌표로 렌더.
+            // 0이면 레이아웃에 영향 없음.
+            if reservedBarHeight > 0 {
+                Color.clear.frame(height: reservedBarHeight)
+            }
             dayCellItems
             Spacer(minLength: 0)
         }
