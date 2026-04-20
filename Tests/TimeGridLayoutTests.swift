@@ -149,3 +149,56 @@ func timeGridLayout_yForNow_returns_nil_for_different_day() {
     let sameDay = date("2026-04-19T10:00:00+09:00")
     #expect(layout.yForNow(on: anchor, calendar: cal, now: sameDay) == 300)
 }
+
+// MARK: - v6 dayColumn / dayColumnWidth
+
+@Test
+func timeGridLayout_dayColumnWidth_enforces_120pt_min_on_narrow_screens() {
+    let layout = TimeGridLayout()
+    // iPhone 17 Pro 세로 (393pt) - leading gutter 48 = 345 / 7 ≈ 49.3 → 120으로 올라가야 함
+    #expect(layout.dayColumnWidth(availableWidth: 345, dayCount: 7) == 120)
+    // iPhone SE 세로 (320 - 48 = 272) → 272/7 ≈ 38.9 → 120
+    #expect(layout.dayColumnWidth(availableWidth: 272, dayCount: 7) == 120)
+    // 0 가까운 입력도 120 floor
+    #expect(layout.dayColumnWidth(availableWidth: 0, dayCount: 7) == 120)
+}
+
+@Test
+func timeGridLayout_dayColumnWidth_scales_on_wide_screens() {
+    let layout = TimeGridLayout()
+    // iPad mini 세로 약 744pt - 48 gutter ≈ 696 / 7 ≈ 99.4 → 120
+    #expect(layout.dayColumnWidth(availableWidth: 696, dayCount: 7) == 120)
+    // iPad 12.9" 세로 (1024 - 48 = 976) → 976/7 ≈ 139.4 → 139.4 (120 이상이라 비례)
+    let iPadLarge = layout.dayColumnWidth(availableWidth: 976, dayCount: 7)
+    #expect(iPadLarge >= 139 && iPadLarge <= 140)
+    // 7 * 120 = 840 경계 — availableWidth = 840 이면 정확히 120
+    #expect(layout.dayColumnWidth(availableWidth: 840, dayCount: 7) == 120)
+    // dayCount 0/음수 → 1로 클램프, availableWidth 그대로(혹은 120 중 큰 값)
+    #expect(layout.dayColumnWidth(availableWidth: 300, dayCount: 0) == 300)
+}
+
+@Test
+func timeGridLayout_dayColumn_maps_x_to_index_at_boundaries() {
+    let layout = TimeGridLayout()
+    let colW: CGFloat = 120 // v6 고정 칼럼 폭
+    // 경계 값 4개 (spec 요구)
+    #expect(layout.dayColumn(fromX: 0, columnWidth: colW, dayCount: 7) == 0)       // 좌측 edge
+    #expect(layout.dayColumn(fromX: 120, columnWidth: colW, dayCount: 7) == 1)     // 둘째 칼럼 시작
+    #expect(layout.dayColumn(fromX: 359, columnWidth: colW, dayCount: 7) == 2)     // 셋째 칼럼 끝 (359/120=2)
+    #expect(layout.dayColumn(fromX: 840, columnWidth: colW, dayCount: 7) == 6)     // 우측 edge 클램프 (840/120=7 → clamp 6)
+}
+
+@Test
+func timeGridLayout_dayColumn_clamps_negative_and_oversize() {
+    let layout = TimeGridLayout()
+    let colW: CGFloat = 120
+    // 음수 → 0
+    #expect(layout.dayColumn(fromX: -50, columnWidth: colW, dayCount: 7) == 0)
+    #expect(layout.dayColumn(fromX: -0.1, columnWidth: colW, dayCount: 7) == 0)
+    // 7번째 컬럼 이상 → dayCount-1 (6)
+    #expect(layout.dayColumn(fromX: 2000, columnWidth: colW, dayCount: 7) == 6)
+    // 중간 값: x=300, colW=120 → 2.5 → floor 2
+    #expect(layout.dayColumn(fromX: 300, columnWidth: colW, dayCount: 7) == 2)
+    // columnWidth 0 → 방어적 0
+    #expect(layout.dayColumn(fromX: 500, columnWidth: 0, dayCount: 7) == 0)
+}

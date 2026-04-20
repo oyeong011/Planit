@@ -5,16 +5,20 @@ import CalenShared
 // MARK: - EventBlockView
 //
 // 주 시간 그리드에 렌더되는 단일 이벤트 블록.
-// v5 요구사항:
-//  - 카테고리 컬러 3pt leading bar + 배경 opacity 0.18 + stroke opacity 0.7
+// v6 요구사항 (v5 대비 가독성 강화):
+//  - 카테고리 컬러 4pt leading bar + 배경 opacity 0.18 + stroke opacity 0.7
 //  - cornerRadius 6
-//  - 제목 12pt bold + 시간 10pt secondary (+ 위치 10pt tertiary)
-//  - 높이 < 22pt면 제목만 1줄
+//  - 제목 13pt semibold / 시간 11pt regular secondary / 위치 11pt regular tertiary
+//  - 높이 ≥ 32pt: 제목 + 시간 + (선택) 위치
+//    22 ≤ 높이 < 32: 제목만 1줄
+//    높이 < 22pt: 제목 1자 + 생략("…")
+//  - padding 8pt horizontal / 6pt vertical
 //  - 읽기 전용은 하단 resize handle 숨김 + opacity 0.75
 //  - Drag 중 border 2pt + 강화 그림자
+//  - .contentShape(Rectangle()) 로 탭/드래그 히트 영역 명시
 //
-// 제스처(이동/리사이즈)는 WeekTimeGridSheet에서 .simultaneousGesture로 주입.
-// 이 View 자체는 순수 렌더만 담당(isDragging state만 받음).
+// 제스처(탭/이동/리사이즈)는 WeekTimeGridSheet에서 외부에서 주입.
+// 이 View 자체는 순수 렌더만 담당(isDragging / isResizing state만 받음).
 
 struct EventBlockView: View {
 
@@ -31,7 +35,11 @@ struct EventBlockView: View {
         Color(hex: event.colorHex)
     }
 
-    private var isCompact: Bool { height < 28 }
+    /// 높이 22pt 미만: 제목 1자만 + 생략.
+    private var isUltraCompact: Bool { height < 22 }
+
+    /// 높이 22~32pt: 제목 1줄만.
+    private var isCompact: Bool { height < 32 }
 
     private var opacity: Double {
         event.isReadOnly ? 0.75 : 1.0
@@ -50,20 +58,20 @@ struct EventBlockView: View {
                         )
                 )
 
-            // 좌측 색상 bar
+            // 좌측 색상 bar (v6: 3pt → 4pt)
             HStack(spacing: 0) {
-                RoundedRectangle(cornerRadius: 1.5, style: .continuous)
+                RoundedRectangle(cornerRadius: 2, style: .continuous)
                     .fill(color)
-                    .frame(width: 3)
+                    .frame(width: 4)
                 Spacer(minLength: 0)
             }
             .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
 
-            // 본문
+            // 본문 (v6: horizontal 8pt / vertical 6pt)
             contentStack
-                .padding(.leading, 8)
-                .padding(.trailing, 6)
-                .padding(.vertical, 4)
+                .padding(.leading, 12) // 4pt bar + 8pt gap
+                .padding(.trailing, 8)
+                .padding(.vertical, 6)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             // 하단 resize handle visual
@@ -76,6 +84,7 @@ struct EventBlockView: View {
             }
         }
         .opacity(opacity)
+        .contentShape(Rectangle())
         .shadow(
             color: (isDragging || isResizing) ? Color.black.opacity(0.18) : Color.clear,
             radius: (isDragging || isResizing) ? 8 : 0,
@@ -90,26 +99,34 @@ struct EventBlockView: View {
 
     @ViewBuilder
     private var contentStack: some View {
-        if isCompact {
-            // 높이 < 28 → 제목 1줄만
+        if isUltraCompact {
+            // 높이 < 22 → 제목 1자 정도만 보여주고 자연 truncation
             Text(event.title)
-                .font(.system(size: 11, weight: .bold))
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+                .truncationMode(.tail)
+        } else if isCompact {
+            // 22 ≤ 높이 < 32 → 제목 1줄
+            Text(event.title)
+                .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(.primary)
                 .lineLimit(1)
         } else {
+            // 높이 ≥ 32 → 제목 + 시간 (+ 위치 옵션)
             VStack(alignment: .leading, spacing: 2) {
                 Text(event.title)
-                    .font(.system(size: 12, weight: .bold))
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                 Text(timeString)
-                    .font(.system(size: 10))
+                    .font(.system(size: 11, weight: .regular))
                     .foregroundStyle(.secondary)
                     .monospacedDigit()
                     .lineLimit(1)
-                if let location = event.location, !location.isEmpty, height > 52 {
+                if let location = event.location, !location.isEmpty, height > 56 {
                     Text(location)
-                        .font(.system(size: 10))
+                        .font(.system(size: 11, weight: .regular))
                         .foregroundStyle(Color(.tertiaryLabel))
                         .lineLimit(1)
                 }
