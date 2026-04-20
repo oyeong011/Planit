@@ -826,13 +826,117 @@ Sparkle이 자동으로 설치합니다. '지금 업데이트' 버튼을 누르�
         <sparkle:version>417</sparkle:version>
         <sparkle:shortVersionString>0.4.17</sparkle:shortVersionString>
         <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-        <pubDate>Sun, 20 Apr 2026 09:30:00 +0000</pubDate>
+        <pubDate>Mon, 20 Apr 2026 09:25:31 +0000</pubDate>
         <enclosure
             url="https://github.com/oyeong011/Planit/releases/download/v0.4.17/Calen-0.4.17-universal.zip"
             sparkle:edSignature="T9BpiptIsbaO2V3zwW6JN3nNt637V3a8QcccLBMvqa2JNDQFk2v2UPyB+n3bQcJgWlpmX5jDni7AabcPYGlDDQ=="
             length="8479224"
             type="application/octet-stream" />
-        <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.4.17</h2><ul style="margin:8px 0;padding-left:20px;"><li>Google 재연결 버그 수정: 연결해제 후 재로그인 시 이벤트가 갱신되지 않던 문제 해결</li><li>Google Calendar 업데이트/삭제 에러 원인 로깅 강화</li></ul><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
+        <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.4.17</h2><ul style="margin:8px 0;padding-left:20px;"><li>Google 재연결 버그 수정: 연결해제 후 재로그인 시 이벤트가 갱신되지 않던 문제 해결</li><li>Google Calendar 업데이트/삭제 API 실패 시 응답 로깅 강화</li></ul><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
+    </item>
+        <item>
+        <title>v0.4.18</title>
+        <sparkle:version>418</sparkle:version>
+        <sparkle:shortVersionString>0.4.18</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Mon, 20 Apr 2026 10:00:00 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.4.18/Calen-0.4.18-universal.zip"
+            sparkle:edSignature="DeYFEShBuJ+dQrTmX9KNoefZcIOfQnbDTZdoBSH/8EUpgCOQnWNv1lbMC71SWyJFUXYFJFXdm0xnXz07L8IWAw=="
+            length="8479197"
+            type="application/octet-stream" />
+        <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.4.18</h2><ul style="margin:8px 0;padding-left:20px;"><li>Google 재연결 안정성 개선: 연결해제 후 재로그인 시 이벤트 갱신 문제 최종 수정</li><li>업데이트 안정성 개선</li></ul><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
+    </item>
+            <item>
+            <title>v0.4.19</title>
+            <sparkle:version>419</sparkle:version>
+            <sparkle:shortVersionString>0.4.19</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <pubDate>Mon, 20 Apr 2026 12:40:48 +0000</pubDate>
+            <enclosure
+                url="https://github.com/oyeong011/Planit/releases/download/v0.4.19/Calen-0.4.19-universal.zip"
+                sparkle:edSignature="tvOt9cE0U60gKfRKf43VgRgd2jSQNlvIWXoid20PqeZo4cDTqlC9wZLVWq8ccn0u+ZuIKXheFaZLcncAd3xKAA=="
+                length="8168383"
+                type="application/octet-stream" />
+            <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.4.19</h2><p style="color:#666;">이번 빌드의 세부 변경사항은 GitHub 릴리즈 페이지를 확인하세요.</p><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
+        </item>
+                <item>
+            <title>v0.4.20</title>
+            <sparkle:version>420</sparkle:version>
+            <sparkle:shortVersionString>0.4.20</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <pubDate>Mon, 20 Apr 2026 12:55:32 +0000</pubDate>
+            <enclosure
+                url="https://github.com/oyeong011/Planit/releases/download/v0.4.20/Calen-0.4.20-universal.zip"
+                sparkle:edSignature="wiV/rwlWkRaUGaZ5mfVLfssow9fUCZfBqqZD0tUhlM2mB/UH34t25HLoIDAPqQybqqGBmG2UWYbSpJy/SCttCg=="
+                length="8167735"
+                type="application/octet-stream" />
+            <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.4.20</h2><p style="color:#666;">이번 빌드의 세부 변경사항은 GitHub 릴리즈 페이지를 확인하세요.</p><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
+        </item>
+                <item>
+            <title>v0.4.21</title>
+            <sparkle:version>421</sparkle:version>
+            <sparkle:shortVersionString>0.4.21</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <pubDate>Mon, 20 Apr 2026 13:05:17 +0000</pubDate>
+            <enclosure
+                url="https://github.com/oyeong011/Planit/releases/download/v0.4.21/Calen-0.4.21-universal.zip"
+                sparkle:edSignature="Z3U5zjUb4XVzcI8L2ZnE+9bsM03ZuGS83+LTeN+/8JlrCzBE9+j1sF9azIk7Nt6Cv/B8KVXCBeuj/Y63p3w4Dg=="
+                length="8174630"
+                type="application/octet-stream" />
+            <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.4.21</h2><p style="color:#666;">이번 빌드의 세부 변경사항은 GitHub 릴리즈 페이지를 확인하세요.</p><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
+        </item>
+                <item>
+            <title>v0.4.22</title>
+            <sparkle:version>422</sparkle:version>
+            <sparkle:shortVersionString>0.4.22</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <pubDate>Mon, 20 Apr 2026 13:21:49 +0000</pubDate>
+            <enclosure
+                url="https://github.com/oyeong011/Planit/releases/download/v0.4.22/Calen-0.4.22-universal.zip"
+                sparkle:edSignature="N8Ell0DT1Qzdew6sxUgfb9D+0ogzSVCev242gBZCedwPoVLWVV662Ltjntu2GNenSMI6AKCxdQktV/zeK30FBA=="
+                length="8174923"
+                type="application/octet-stream" />
+            <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.4.22</h2><p style="color:#666;">이번 빌드의 세부 변경사항은 GitHub 릴리즈 페이지를 확인하세요.</p><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
+        </item>
+                <item>
+            <title>v0.4.23</title>
+            <sparkle:version>423</sparkle:version>
+            <sparkle:shortVersionString>0.4.23</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <pubDate>Mon, 20 Apr 2026 13:27:41 +0000</pubDate>
+            <enclosure
+                url="https://github.com/oyeong011/Planit/releases/download/v0.4.23/Calen-0.4.23-universal.zip"
+                sparkle:edSignature="HMlj+OI/8KZqLL+WUfvds5/7lhtYCbfdiTturdJh0DyfN7l361vJdq/+QLNibvj1wtVPjyQ+u3mfzklVcksrBg=="
+                length="8180155"
+                type="application/octet-stream" />
+            <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.4.23</h2><p style="color:#666;">이번 빌드의 세부 변경사항은 GitHub 릴리즈 페이지를 확인하세요.</p><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
+        </item>
+                <item>
+            <title>v0.4.24</title>
+            <sparkle:version>424</sparkle:version>
+            <sparkle:shortVersionString>0.4.24</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <pubDate>Mon, 20 Apr 2026 13:46:52 +0000</pubDate>
+            <enclosure
+                url="https://github.com/oyeong011/Planit/releases/download/v0.4.24/Calen-0.4.24-universal.zip"
+                sparkle:edSignature="HTQFP1S4WKVpXIxlpJPClUrtNRI7mAEf47ydhxBkDVwAvtPAJUDr6c22Ppvn268QY5F0fAgOFADF5k2dIBLeCA=="
+                length="8178626"
+                type="application/octet-stream" />
+            <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.4.24</h2><p style="color:#666;">이번 빌드의 세부 변경사항은 GitHub 릴리즈 페이지를 확인하세요.</p><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
+        </item>
+                <item>
+        <title>v0.4.26</title>
+        <sparkle:version>426</sparkle:version>
+        <sparkle:shortVersionString>0.4.26</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <pubDate>Mon, 20 Apr 2026 14:49:44 +0000</pubDate>
+        <enclosure
+            url="https://github.com/oyeong011/Planit/releases/download/v0.4.26/Calen-0.4.26-universal.zip"
+            sparkle:edSignature="/K83ghh2th5YRzKCjjqgf3u9dDVLZ8oQb6ZOyvnd7+mS2dj7SCvokAI17lZLK/Q6lazfPhMN+1LSwevM2uJtAQ=="
+            length="8188662"
+            type="application/octet-stream" />
+        <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.4.26</h2><p style="color:#666;">이번 빌드의 세부 변경사항은 GitHub 릴리즈 페이지를 확인하세요.</p><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
     </item>
         <item>
             <title>v0.4.26</title>

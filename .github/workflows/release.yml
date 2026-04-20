@@ -344,23 +344,28 @@ jobs:
           python3 - <<PYEOF
           import os, re
           path = "docs/appcast.xml"
+          version = os.environ["VERSION"]
           with open(path) as f: content = f.read()
-          item = f'''        <item>
-                  <title>v{os.environ["VERSION"]}</title>
-                  <sparkle:version>{os.environ["BUILD_NUMBER"]}</sparkle:version>
-                  <sparkle:shortVersionString>{os.environ["VERSION"]}</sparkle:shortVersionString>
-                  <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-                  <pubDate>{os.environ["PUB_DATE"]}</pubDate>
-                  <enclosure
-                      url="{os.environ["DOWNLOAD_URL"]}"
-                      sparkle:edSignature="{os.environ["SPARKLE_ED_SIG"]}"
-                      length="{os.environ["SPARKLE_LENGTH"]}"
-                      type="application/octet-stream" />
-                  <description><![CDATA[{os.environ["NOTES"]}]]></description>
-              </item>
-          '''
-          content = content.replace("</channel>", item + "    </channel>", 1)
-          with open(path, "w") as f: f.write(content)
+          # 이미 동일 버전 항목이 있으면 추가하지 않음 (중복 방지)
+          if f"<sparkle:shortVersionString>{version}</sparkle:shortVersionString>" in content:
+              print(f"[appcast] v{version} entry already exists — skipping duplicate insert")
+          else:
+              item = f'''        <item>
+                      <title>v{version}</title>
+                      <sparkle:version>{os.environ["BUILD_NUMBER"]}</sparkle:version>
+                      <sparkle:shortVersionString>{version}</sparkle:shortVersionString>
+                      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+                      <pubDate>{os.environ["PUB_DATE"]}</pubDate>
+                      <enclosure
+                          url="{os.environ["DOWNLOAD_URL"]}"
+                          sparkle:edSignature="{os.environ["SPARKLE_ED_SIG"]}"
+                          length="{os.environ["SPARKLE_LENGTH"]}"
+                          type="application/octet-stream" />
+                      <description><![CDATA[{os.environ["NOTES"]}]]></description>
+                  </item>
+              '''
+              content = content.replace("</channel>", item + "    </channel>", 1)
+              with open(path, "w") as f: f.write(content)
           PYEOF
 
           git config user.email "github-actions[bot]@users.noreply.github.com"

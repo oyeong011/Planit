@@ -507,7 +507,8 @@ struct ChatView: View {
         }.count
     }
 
-    private var planningActionBar: some View {
+    @ViewBuilder private var planningActionBar: some View {
+        let untaggedCount = untaggedEventCount
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 6) {
                 planningButton(
@@ -529,10 +530,10 @@ struct ChatView: View {
 
                 planningButton(
                     icon: "tag.circle",
-                    label: String(format: NSLocalizedString("chat.action.categorize", comment: ""), untaggedEventCount),
+                    label: String(format: NSLocalizedString("chat.action.categorize", comment: ""), untaggedCount),
                     tint: .teal,
-                    enabled: canCategorize,
-                    help: untaggedEventCount == 0 ? String(localized: "chat.action.categorize.tooltip.empty") : String(localized: "chat.action.categorize.tooltip")
+                    enabled: canCategorize(untaggedCount),
+                    help: untaggedCount == 0 ? String(localized: "chat.action.categorize.tooltip.empty") : String(localized: "chat.action.categorize.tooltip")
                 ) { Task { await runCategorizeUntagged() } }
                 .accessibilityIdentifier("categorizeUntaggedButton")
 
@@ -602,11 +603,11 @@ struct ChatView: View {
         .help(help)
     }
 
-    private var canCategorize: Bool {
+    private func canCategorize(_ count: Int) -> Bool {
         !aiService.planningInProgress
             && aiService.isConfigured
             && hermesMemoryService != nil
-            && untaggedEventCount > 0
+            && count > 0
     }
 
     @MainActor
@@ -1184,9 +1185,14 @@ struct ChatBubble: View {
     var onOpenSettings: (() -> Void)? = nil
     @ObservedObject private var themeService = CalendarThemeService.shared
 
+    private static var markdownCache: [String: AttributedString] = [:]
+
     /// Markdown 문자열을 AttributedString으로 변환 (실패 시 plain text fallback)
     static func markdownText(_ raw: String) -> AttributedString {
-        (try? AttributedString(markdown: raw, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))) ?? AttributedString(raw)
+        if let cached = markdownCache[raw] { return cached }
+        let result = (try? AttributedString(markdown: raw, options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))) ?? AttributedString(raw)
+        markdownCache[raw] = result
+        return result
     }
 
     var body: some View {

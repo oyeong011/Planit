@@ -51,6 +51,7 @@
 	<string>0.4.27</string>
 	<key>CFBundleVersion</key>
 	<string>427</string>
+
 	<key>LSMinimumSystemVersion</key>
 	<string>14.0</string>
 	<key>LSUIElement</key>

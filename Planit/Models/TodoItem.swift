@@ -259,10 +259,11 @@ struct PendingCalendarEdit: Codable, Identifiable {
     var endDate: Date
     var isAllDay: Bool
     var eventId: String?  // for update/delete
+    var calendarID: String?  // non-primary 캘린더 식별자 (nil이면 "primary" 사용)
     let createdAt: Date
 
     init(action: String, title: String = "", startDate: Date = Date(), endDate: Date = Date(),
-         isAllDay: Bool = false, eventId: String? = nil) {
+         isAllDay: Bool = false, eventId: String? = nil, calendarID: String? = nil) {
         self.id = UUID()
         self.action = action
         self.title = title
@@ -270,7 +271,26 @@ struct PendingCalendarEdit: Codable, Identifiable {
         self.endDate = endDate
         self.isAllDay = isAllDay
         self.eventId = eventId
+        self.calendarID = calendarID
         self.createdAt = Date()
+    }
+
+    // Codable 하위 호환성: 구 버전 JSON에 calendarID 없어도 nil로 디코딩
+    private enum CodingKeys: String, CodingKey {
+        case id, action, title, startDate, endDate, isAllDay, eventId, calendarID, createdAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        action = try c.decode(String.self, forKey: .action)
+        title = try c.decodeIfPresent(String.self, forKey: .title) ?? ""
+        startDate = try c.decode(Date.self, forKey: .startDate)
+        endDate = try c.decode(Date.self, forKey: .endDate)
+        isAllDay = try c.decodeIfPresent(Bool.self, forKey: .isAllDay) ?? false
+        eventId = try c.decodeIfPresent(String.self, forKey: .eventId)
+        calendarID = try c.decodeIfPresent(String.self, forKey: .calendarID)
+        createdAt = try c.decode(Date.self, forKey: .createdAt)
     }
 
     var isSafeForSync: Bool {

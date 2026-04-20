@@ -13,46 +13,29 @@ enum KeychainHelper {
 
     // MARK: - Generic single-item API
 
-    /// 명시적 SecAccessControl — Developer ID 서명의 designated requirement (Team ID 기반)에
-    /// bind되어 버전 업데이트마다 Keychain 접근 프롬프트가 뜨는 문제를 해결한다.
-    /// flags: [] = user presence 불필요, unlock 상태면 허용.
-    private static func makeAccessControl() -> SecAccessControl? {
-        SecAccessControlCreateWithFlags(
-            nil,
-            kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
-            [],
-            nil
-        )
-    }
-
     @discardableResult
     private static func saveItem(account: String, data: Data) -> Bool {
-        let lookup: [String: Any] = [
+        let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
         ]
-        var updateAttrs: [String: Any] = [
-            kSecValueData as String: data,
-            kSecAttrSynchronizable as String: false,  // iCloud 동기화 방지
-        ]
-        if let ac = makeAccessControl() {
-            updateAttrs[kSecAttrAccessControl as String] = ac
-        } else {
-            updateAttrs[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
-        }
-        let updateStatus = SecItemUpdate(lookup as CFDictionary, updateAttrs as CFDictionary)
+        let updateAttrs: [String: Any] = [kSecValueData as String: data]
+        let updateStatus = SecItemUpdate(query as CFDictionary, updateAttrs as CFDictionary)
         if updateStatus == errSecSuccess { return true }
 
-        guard updateStatus == errSecItemNotFound else { return false }
-        var addQuery = lookup
-        addQuery[kSecValueData as String] = data
-        addQuery[kSecAttrSynchronizable as String] = false  // iCloud 동기화 방지
-        if let ac = makeAccessControl() {
-            addQuery[kSecAttrAccessControl as String] = ac
-        } else {
-            addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+        if updateStatus == errSecItemNotFound {
+            var addQuery = query
+            addQuery[kSecValueData as String] = data
+            addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+            return SecItemAdd(addQuery as CFDictionary, nil) == errSecSuccess
         }
+
+        // 기존 항목 속성(accessControl 등)이 달라 update 실패한 경우 — 삭제 후 재추가
+        SecItemDelete(query as CFDictionary)
+        var addQuery = query
+        addQuery[kSecValueData as String] = data
+        addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         return SecItemAdd(addQuery as CFDictionary, nil) == errSecSuccess
     }
 
