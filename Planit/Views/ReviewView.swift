@@ -450,9 +450,8 @@ struct ReviewView: View {
                     .foregroundStyle(stats.totalDone > 0 ? .green : .secondary)
             }
 
-            // 30일 → 6열 × 5행 LazyVGrid (마지막 열 짧은 문제 없음, 빈공간 없음)
-            let numCols = 6
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: numCols), spacing: 4) {
+            // 30일 → 7열(주 단위) × 최대 5행, 셀 최대 20pt로 clamp
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(maximum: 20), spacing: 3), count: 7), spacing: 3) {
                 ForEach(stats.days) { day in
                     todoGrassCell(day)
                 }

@@ -546,3 +546,10 @@
 "settings.update.check" = "업데이트 확인";
 "settings.update.check.tooltip" = "GitHub 최신 appcast에서 새 버전을 즉시 확인";
 "settings.feedback.send" = "피드백 보내기";
+
+// MARK: - Review Todo Grass
+"review.todo.grass.title" = "30일 할일 잔디";
+"review.todo.grass.total" = "%d/%d 완료";
+"review.todo.grass.best" = "가장 많이 한 날";
+"review.todo.grass.streak" = "연속 완료";
+"review.todo.grass.days" = "%d일";
