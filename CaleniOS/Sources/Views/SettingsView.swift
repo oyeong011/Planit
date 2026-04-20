@@ -17,7 +17,9 @@ struct SettingsView: View {
 
     @EnvironmentObject private var appState: AppState
 
-    @StateObject private var googleAuth = iOSGoogleAuthManager()
+    // Phase B M4-2: HomeViewModel과 동일 auth 인스턴스를 공유 → 로그인/로그아웃 상태 변화가
+    // 세션 내에서 즉시 홈 탭에 반영된다. Shared singleton은 이미 MainActor에서 생성된 ObservableObject.
+    @ObservedObject private var googleAuth = iOSGoogleAuthManager.shared
 
     // MARK: App Settings
 
