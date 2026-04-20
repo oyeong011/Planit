@@ -32,15 +32,11 @@ enum KeychainHelper {
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
         ]
-        var updateAttrs: [String: Any] = [
+        // kSecAttrAccessControl은 생성 시에만 설정 가능 — 업데이트 시 포함하면 SecItemUpdate 실패
+        let updateAttrs: [String: Any] = [
             kSecValueData as String: data,
-            kSecAttrSynchronizable as String: false,  // iCloud 동기화 방지
+            kSecAttrSynchronizable as String: false,
         ]
-        if let ac = makeAccessControl() {
-            updateAttrs[kSecAttrAccessControl as String] = ac
-        } else {
-            updateAttrs[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
-        }
         let updateStatus = SecItemUpdate(lookup as CFDictionary, updateAttrs as CFDictionary)
         if updateStatus == errSecSuccess { return true }
 
