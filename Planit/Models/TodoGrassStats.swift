@@ -20,10 +20,12 @@ struct TodoGrassStats: Equatable {
         todos: [TodoItem],
         reminders: [TodoItem],
         calendarEvents: [CalendarEvent] = [],
-        completedEventIDs: Set<String> = []
+        completedEventIDs: Set<String> = [],
+        now: Date = Date(),
+        calendar: Calendar = .current
     ) -> TodoGrassStats {
-        let cal = Calendar.current
-        let today = cal.startOfDay(for: Date())
+        let cal = calendar
+        let today = cal.startOfDay(for: now)
         let allTodos = todos + reminders
         let todoEventIDSet = Set(todos.compactMap { $0.googleEventId })
 
