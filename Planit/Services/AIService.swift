@@ -1278,13 +1278,13 @@ final class AIService: ObservableObject {
                                          system: "", userMessage: augmentedMessage, history: history)
         case .codex:
             guard let path = codexPath else { return [ChatMessage(role: .assistant, content: "Codex CLI가 설치되지 않았습니다. Homebrew(/opt/homebrew/bin) 또는 npm 글로벌(/usr/local/bin)로 설치해주세요.")] }
-            // gpt-4.1-mini + reasoning low → 응답 속도 우선
-            // config.toml의 xhigh reasoning을 앱 내에서 low로 오버라이드
+            // ChatGPT 계정의 Codex CLI에서 지원되는 기본 모델을 사용하되,
+            // config.toml의 xhigh reasoning은 앱 내에서 low로 오버라이드.
             var codexArgs = ["exec",
                              "--sandbox", "read-only",
                              "--skip-git-repo-check",
                              "--ephemeral",
-                             "-c", "model=gpt-4.1-mini",
+                             "-m", AIProvider.codex.defaultModel,
                              "-c", "model_reasoning_effort=low"]
             for img in imageAttachments {
                 if let safePath = Self.safeImagePath(img.url) {
@@ -1538,6 +1538,14 @@ final class AIService: ObservableObject {
 
         if proc.terminationStatus != 0 {
             let errStr = String(data: finalErr, encoding: .utf8) ?? ""
+            if isCodex {
+                let cleanedError = errStr.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !cleanedError.isEmpty {
+                    return "오류: \(cleanedError)"
+                }
+                let cleanedOutput = cleanCodexOutput(output)
+                return cleanedOutput.isEmpty ? "오류: Codex CLI 종료 코드 \(proc.terminationStatus)" : cleanedOutput
+            }
             return output.isEmpty ? "오류: \(errStr)" : output
         }
 
@@ -1574,8 +1582,11 @@ final class AIService: ObservableObject {
 
     nonisolated private static func cleanCodexOutput(_ raw: String) -> String {
         let lines = raw.components(separatedBy: "\n")
-        var started = false
-        var resultLines: [String] = []
+        var sawAssistantMarker = false
+        var inAssistantBlock = false
+        var inUserBlock = false
+        var assistantLines: [String] = []
+        var fallbackLines: [String] = []
 
         // Codex 헤더/메타 줄 패턴
         let headerPrefixes = ["Reading prompt", "OpenAI Codex", "--------",
@@ -1591,17 +1602,32 @@ final class AIService: ObservableObject {
             // 헤더 줄 스킵
             if headerPrefixes.contains(where: { line.starts(with: $0) }) { continue }
 
-            // "codex" 또는 "user" 단독 줄 → 역할 마커, 스킵하되 codex 마커 이후를 본문으로 인식
-            if trimmed == "codex" { started = true; continue }
-            if trimmed == "user"  { continue }
+            // Codex CLI transcript는 `user` 입력 프롬프트와 `codex` 응답을 모두 stdout에 출력한다.
+            // 시스템 프롬프트의 JSON 예시가 액션으로 오인되지 않도록 `codex` 구간만 채택한다.
+            if trimmed == "user" {
+                inUserBlock = true
+                inAssistantBlock = false
+                continue
+            }
+            if trimmed == "codex" {
+                sawAssistantMarker = true
+                inAssistantBlock = true
+                inUserBlock = false
+                assistantLines.removeAll()
+                continue
+            }
 
-            if started || !trimmed.isEmpty {
-                started = true
-                resultLines.append(line)
+            if sawAssistantMarker {
+                if inAssistantBlock {
+                    assistantLines.append(line)
+                }
+            } else if !inUserBlock && !trimmed.isEmpty {
+                fallbackLines.append(line)
             }
         }
 
-        return resultLines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+        let result = sawAssistantMarker ? assistantLines : fallbackLines
+        return result.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     // MARK: - Planning (side-effect-free CLI)
