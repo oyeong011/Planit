@@ -63,10 +63,27 @@ struct HomeView: View {
                 reloadAfterAdd()
             }
         }
+        // v5 Phase A: 풀스크린 주 시간 그리드 시트
+        .sheet(isPresented: $viewModel.showWeekSheet) {
+            WeekTimeGridSheet(
+                isPresented: $viewModel.showWeekSheet,
+                initialDate: viewModel.sheetAnchorDate,
+                repo: viewModel.eventRepository
+            )
+        }
         .task {
             if viewModel.modelContext == nil {
                 viewModel.modelContext = modelContext
             }
+            #if DEBUG
+            // QA: UserDefaults planit.devOpenWeekSheet=1 일 때 주 시트 자동 오픈.
+            // 프로덕션 빌드에서는 이 블록이 컴파일되지 않음.
+            if UserDefaults.standard.bool(forKey: "planit.devOpenWeekSheet") {
+                try? await Task.sleep(nanoseconds: 400_000_000)
+                viewModel.sheetAnchorDate = viewModel.selectedDate
+                viewModel.showWeekSheet = true
+            }
+            #endif
         }
     }
 
