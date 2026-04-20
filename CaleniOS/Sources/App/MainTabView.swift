@@ -3,9 +3,8 @@ import SwiftUI
 
 // MARK: - MainTabView
 //
-// M2 UI v4 (TimeBlocks 스타일) — 2칸 pill 탭바.
-// v3의 3칸(.home / .calendar / .profile)에서 `.calendar`가 오늘 탭(HomeView)에
-// 흡수되어 2칸으로 축소. 스타일(cornerRadius 32, 이중 그림자, easeInOut 0.2) 유지.
+// v0.1.1 — 3칸 pill 탭바 (today / chat / profile). AI 채팅 탭 추가.
+// 스타일(cornerRadius 32, 이중 그림자, easeInOut 0.2) 유지.
 
 struct MainTabView: View {
     @EnvironmentObject private var appState: AppState
@@ -17,6 +16,8 @@ struct MainTabView: View {
                 switch appState.selectedTab {
                 case .today:
                     HomeView()
+                case .chat:
+                    ChatTabView()
                 case .profile:
                     SettingsView()
                 }
@@ -42,6 +43,7 @@ struct CustomTabBar: View {
     var body: some View {
         HStack(spacing: 0) {
             tabButton(.today)
+            tabButton(.chat)
             tabButton(.profile)
         }
         .frame(height: tabBarHeight)
