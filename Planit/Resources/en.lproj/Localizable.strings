@@ -359,6 +359,7 @@
 "settings.calendar.theme.desc" = "Applied to the calendar grid, selected states, and event emphasis colors.";
 "settings.feedback.subject" = "Calen v%@ Feedback";
 "settings.feedback.body" = "\n\n---\nApp version: %@ (%@)\nmacOS: %@";
+"settings.hermes.card" = "🧠 Hermes Long-Term Memory";
 
 /* ===== Review View (additional) ===== */
 "review.plan.complete.title" = "Tomorrow's Plan Ready";

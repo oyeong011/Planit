@@ -359,6 +359,7 @@
 "settings.calendar.theme.desc" = "캘린더 그리드, 선택 상태, 이벤트 강조색에 적용됩니다.";
 "settings.feedback.subject" = "Calen v%@ 피드백";
 "settings.feedback.body" = "\n\n---\n앱 버전: %@ (%@)\nmacOS: %@";
+"settings.hermes.card" = "🧠 Hermes 장기 기억";
 
 /* ===== Review View (additional) ===== */
 "review.plan.complete.title" = "내일 계획 완성";

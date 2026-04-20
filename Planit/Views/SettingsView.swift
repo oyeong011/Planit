@@ -786,7 +786,7 @@ struct SettingsView: View {
     // MARK: - Hermes 기억 카드
 
     private var hermesMemoryCard: some View {
-        settingsCard("🧠 Hermes 장기 기억") {
+        settingsCard(String(localized: "settings.hermes.card")) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 8) {
                     Image(systemName: "sparkles")
