@@ -47,10 +47,23 @@ targets:
     sources:
       - path: Sources
         excludes:
-          # Info.plist은 INFOPLIST_KEY_* 빌드 설정으로 Xcode가 auto-generate (GENERATE_INFOPLIST_FILE=YES).
-          # 커스텀 Info.plist 파일을 두면 UILaunchScreen 누락으로 compat mode(iPhone 4 스케일) 발생.
+          # Info.plist은 xcodegen이 project.yml의 info.properties 로부터 매번 새로 씀.
+          # (수동 편집은 xcodegen generate 시 덮어쓰여짐 — project.yml 이 source of truth.)
           - Info.plist
           - Resources/CaleniOS.entitlements
+    info:
+      path: Sources/Info.plist
+      properties:
+        # Google OAuth iOS Client 1067993984953 (Bundle ID는 Google Cloud Console에서
+        # com.oy.planit.ios 로 설정 필요 — 미설정 시 callback 거부).
+        # iOSGoogleAuthManager가 Bundle.main.object(forInfoDictionaryKey:) 로 읽음.
+        GoogleClientID: 1067993984953-ac7apjln9gaqjsgbcha5irbb5srsvmfh.apps.googleusercontent.com
+        CFBundleURLTypes:
+          - CFBundleURLName: com.oy.planit.ios.google-oauth
+            CFBundleTypeRole: Editor
+            CFBundleURLSchemes:
+              # Google iOS OAuth REVERSED_CLIENT_ID (Client 1067993984953).
+              - com.googleusercontent.apps.1067993984953-ac7apjln9gaqjsgbcha5irbb5srsvmfh
     entitlements:
       path: Sources/Resources/CaleniOS.entitlements
     dependencies:
