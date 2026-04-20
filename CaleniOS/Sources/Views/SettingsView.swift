@@ -26,6 +26,9 @@ struct SettingsView: View {
     @AppStorage("notificationsEnabled")  private var notificationsEnabled: Bool = true
     @AppStorage("calendarSyncEnabled")   private var calendarSyncEnabled: Bool = false
     @AppStorage("preferredLanguage")     private var preferredLanguage: String = "ko"
+    // v0.1 iCloud Hermes 메모리 sync — macOS MainView의 HermesMemorySync.startIfEnabled 도 같은 key 감시.
+    // 이 토글이 UserDefaults.standard 에 저장되므로 같은 기기의 macOS 앱이 값 확인 가능.
+    @AppStorage("planit.hermesCloudKitSyncEnabled") private var hermesCloudKitSyncEnabled: Bool = false
 
     // MARK: Auth sheets
 
@@ -37,6 +40,12 @@ struct SettingsView: View {
     @State private var showResetAlert = false
     @State private var showPrivacySheet = false
     @State private var showContactSheet = false
+
+    // MARK: Claude API key 상태
+    //
+    // v0.1.1: `ClaudeAPIKeychain.load()`는 I/O이므로 매 뷰 재평가마다 호출되면 성능/배터리 손해.
+    // @State로 캐시해두고 시트 dismiss / 데이터 초기화 시 명시적으로 갱신한다.
+    @State private var hasClaudeAPIKey: Bool = ClaudeAPIKeychain.load() != nil
 
     // MARK: Derived
 
@@ -68,7 +77,10 @@ struct SettingsView: View {
                 googleAuth.setupCredentials(clientID: newID)
             }
         }
-        .sheet(isPresented: $showClaudeAPIKeySheet) {
+        .sheet(isPresented: $showClaudeAPIKeySheet, onDismiss: {
+            // 시트 닫힐 때 Keychain 상태 재조회 → "설정됨/필요" 뱃지 동기화.
+            hasClaudeAPIKey = ClaudeAPIKeychain.load() != nil
+        }) {
             ClaudeAPIKeySheet()
         }
         .sheet(isPresented: $showPrivacySheet) {
@@ -81,6 +93,7 @@ struct SettingsView: View {
             Button("초기화", role: .destructive) {
                 googleAuth.logout()
                 ClaudeAPIKeychain.remove()
+                hasClaudeAPIKey = false
             }
             Button("취소", role: .cancel) {}
         } message: {
@@ -198,9 +211,9 @@ struct SettingsView: View {
                         Text("Claude API 키")
                             .foregroundStyle(Color(.label))
                         Spacer()
-                        Text(ClaudeAPIKeychain.load() != nil ? "설정됨" : "필요")
+                        Text(hasClaudeAPIKey ? "저장됨" : "미저장")
                             .font(.system(size: 13))
-                            .foregroundStyle(ClaudeAPIKeychain.load() != nil ? Color(.secondaryLabel) : Color.orange)
+                            .foregroundStyle(hasClaudeAPIKey ? Color(.secondaryLabel) : Color.orange)
                     }
                 } icon: {
                     SettingsIconView(
@@ -217,7 +230,7 @@ struct SettingsView: View {
                 Label {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("AI 모델 정보")
-                        Text("Claude 3.5 Sonnet")
+                        Text("Claude Opus 4.7")
                             .font(.system(size: 12))
                             .foregroundStyle(Color(.secondaryLabel))
                     }
@@ -265,6 +278,21 @@ struct SettingsView: View {
                     Text("캘린더 동기화")
                 } icon: {
                     SettingsIconView(systemName: "calendar", color: Color(red: 0.96, green: 0.32, blue: 0.32))
+                }
+            }
+            .tint(Color.calenBlue)
+
+            // v0.1 iCloud Hermes memory sync (macOS writes → iOS reads)
+            Toggle(isOn: $hermesCloudKitSyncEnabled) {
+                Label {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("iCloud 동기화 (Hermes 기억)")
+                        Text("Mac에서 학습된 AI 기억을 iPhone에서 조회")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                } icon: {
+                    SettingsIconView(systemName: "icloud.fill", color: Color(red: 0.23, green: 0.60, blue: 0.96))
                 }
             }
             .tint(Color.calenBlue)
@@ -468,7 +496,7 @@ private struct AIModelInfoView: View {
                         }
 
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Claude 3.5 Sonnet")
+                            Text("Claude Opus 4.7")
                                 .font(.system(size: 18, weight: .bold))
                             Text("Anthropic · 최신 버전")
                                 .font(.system(size: 14))
