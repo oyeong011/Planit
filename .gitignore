@@ -10,3 +10,5 @@ google_credentials.json
 Planit/Services/BundledCredentials.local.swift
 # xcodegen이 생성하는 일회성 iOS 프로젝트 — 빌드 시 재생성
 CaleniOS/CaleniOS.xcodeproj/
+# Claude Code worktree 임시 디렉터리 — submodule로 인식돼 Pages 빌드 깨뜨림
+.claude/worktrees/
