@@ -404,7 +404,7 @@ struct ReviewView: View {
 
         // all-day 이벤트도 포함 — 사용자가 만든 종일 일정(예: "캘린 데모영상촬영", "렌즈수령")도
         // 할 일로 카운트되어야 우측 DailyDetailView와 총 개수가 일치한다.
-        let events = viewModel.calendarEvents.filter { ev in
+        let events = viewModel.historyEvents.filter { ev in
             !todoEventIds.contains(ev.id) &&
             ev.startDate >= interval.start && ev.startDate < interval.end
         }
