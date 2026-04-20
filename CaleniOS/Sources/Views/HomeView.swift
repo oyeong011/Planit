@@ -119,8 +119,12 @@ struct HomeView: View {
                         viewModel.goToNextMonth()
                     }
                 }
-                navButton(icon: "ellipsis") {
-                    // placeholder: 필터/정렬 메뉴 v0.1.1
+                // UX Critic fix: 기존 ⋯ placeholder(dead button) 제거 → "오늘로" 복귀 버튼.
+                // 월 이동 후 이번 달로 되돌리기 어렵던 문제 해결.
+                navButton(icon: "dot.scope") {
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        viewModel.goToToday()
+                    }
                 }
             }
         }

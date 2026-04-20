@@ -243,6 +243,18 @@ final class HomeViewModel: ObservableObject {
         reloadForCurrentMonth()
     }
 
+    /// UX 개선: 월 네비 후 "오늘로" 복귀. 오늘 날짜 선택 + 해당 월로 이동.
+    func goToToday() {
+        let now = Date()
+        var comps = cal.dateComponents([.year, .month], from: now)
+        comps.day = 1
+        let monthAnchor = cal.date(from: comps) ?? now
+        currentMonth = monthAnchor
+        selectedDate = cal.startOfDay(for: now)
+        expandedWeekStart = weekStart(for: selectedDate)
+        reloadForCurrentMonth()
+    }
+
     /// 월 이동 / 외부 변경 후 재페치.
     /// 로그인 → Google Calendar / 미로그인 → SwiftData mock.
     private func reloadForCurrentMonth() {

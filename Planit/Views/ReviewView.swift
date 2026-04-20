@@ -437,7 +437,12 @@ struct ReviewView: View {
     // MARK: - Todo Grass Section (최근 30일 할일 잔디)
 
     private var todoGrassSection: some View {
-        let stats = TodoGrassStats.make(todos: viewModel.todos, reminders: viewModel.appleReminders)
+        let stats = TodoGrassStats.make(
+            todos: viewModel.todos,
+            reminders: viewModel.appleReminders,
+            calendarEvents: viewModel.calendarEvents,
+            completedEventIDs: viewModel.completedEventIDs
+        )
 
         return VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
@@ -451,7 +456,7 @@ struct ReviewView: View {
             }
 
             LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible(), spacing: 3), count: 7),
+                columns: Array(repeating: GridItem(.flexible(maximum: 18), spacing: 3), count: 7),
                 spacing: 3
             ) {
                 ForEach(stats.days) { day in

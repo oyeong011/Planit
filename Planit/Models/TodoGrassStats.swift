@@ -16,15 +16,37 @@ struct TodoGrassStats: Equatable {
     let maxTotalInDay: Int
     let currentFullCompletionStreak: Int
 
-    static func make(todos: [TodoItem], reminders: [TodoItem]) -> TodoGrassStats {
+    static func make(
+        todos: [TodoItem],
+        reminders: [TodoItem],
+        calendarEvents: [CalendarEvent] = [],
+        completedEventIDs: Set<String> = []
+    ) -> TodoGrassStats {
         let cal = Calendar.current
         let today = cal.startOfDay(for: Date())
-        let all = todos + reminders
+        let allTodos = todos + reminders
+        let todoEventIDSet = Set(todos.compactMap { $0.googleEventId })
 
         let days: [TodoGrassDay] = (0..<30).reversed().map { offset in
             let date = cal.date(byAdding: .day, value: -offset, to: today)!
-            let dayItems = all.filter { cal.isDate(cal.startOfDay(for: $0.date), inSameDayAs: date) }
-            return TodoGrassDay(date: date, done: dayItems.filter(\.isCompleted).count, total: dayItems.count)
+            guard let interval = cal.dateInterval(of: .day, for: date) else {
+                return TodoGrassDay(date: date, done: 0, total: 0)
+            }
+
+            let dayTodos = allTodos.filter {
+                cal.isDate(cal.startOfDay(for: $0.date), inSameDayAs: date)
+            }
+            let dayEvents = calendarEvents.filter { ev in
+                !todoEventIDSet.contains(ev.id) &&
+                ev.startDate >= interval.start && ev.startDate < interval.end
+            }
+
+            let doneTodos = dayTodos.filter(\.isCompleted).count
+            let doneEvents = dayEvents.filter { completedEventIDs.contains($0.id) }.count
+            let totalTodos = dayTodos.count + dayEvents.count
+            let totalDone = doneTodos + doneEvents
+
+            return TodoGrassDay(date: date, done: totalDone, total: totalTodos)
         }
 
         var streak = 0

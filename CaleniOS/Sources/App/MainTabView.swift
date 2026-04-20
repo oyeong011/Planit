@@ -66,11 +66,18 @@ struct CustomTabBar: View {
                 selectedTab = tab
             }
         } label: {
-            Image(systemName: isSelected ? tab.selectedIcon : tab.icon)
-                .font(.system(size: 26, weight: isSelected ? .semibold : .regular))
-                .foregroundStyle(isSelected ? Color.calenBlue : Color(.darkGray))
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .contentShape(Rectangle())
+            VStack(spacing: 2) {
+                Image(systemName: isSelected ? tab.selectedIcon : tab.icon)
+                    .font(.system(size: 20, weight: isSelected ? .semibold : .regular))
+                Text(tab.title)
+                    .font(.system(size: 10, weight: isSelected ? .semibold : .medium))
+            }
+            // UX Critic fix: Color(.darkGray)는 다크모드에서 거의 안 보임.
+            // 시스템 의미적 색상으로 교체 — 자동 light/dark 대응.
+            .foregroundStyle(isSelected ? Color.calenBlue : Color.secondary)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(Rectangle())
+            .accessibilityLabel(tab.title)
         }
         .buttonStyle(.plain)
     }
