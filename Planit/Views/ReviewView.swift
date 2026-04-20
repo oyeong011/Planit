@@ -479,30 +479,30 @@ struct ReviewView: View {
     }
 
     private func yearGrassGrid(stats: TodoGrassStats) -> some View {
-        let gap: CGFloat = 1
+        let cellSize: CGFloat = 9
+        let gap: CGFloat = 2
         let dayLabelWidth: CGFloat = 10
         let dayLabels = todoGrassWeekdayLabels()
 
         return GeometryReader { geo in
-            let weekCount = max(stats.weeks.count, 1)
+            // 카드 너비에 맞는 최대 주 수 계산 후 가장 최근 N주만 표시
             let available = geo.size.width - dayLabelWidth - 4
-            let cellSize = max(3, floor((available - CGFloat(weekCount - 1) * gap) / CGFloat(weekCount)))
-            let rowHeight = cellSize + gap
-            let totalHeight = cellSize + 2 + 7 * rowHeight - gap  // 월레이블 + 7행
+            let maxWeeks = max(1, Int(floor((available + gap) / (cellSize + gap))))
+            let visibleWeeks = Array(stats.weeks.suffix(maxWeeks))
 
             HStack(alignment: .top, spacing: 0) {
                 VStack(spacing: gap) {
                     Color.clear.frame(width: dayLabelWidth, height: cellSize + 2)
                     ForEach(0..<7, id: \.self) { index in
                         Text(index % 2 == 1 ? dayLabels[index] : "")
-                            .font(.system(size: 6))
+                            .font(.system(size: 7))
                             .foregroundStyle(.secondary)
                             .frame(width: dayLabelWidth, height: cellSize)
                     }
                 }
 
                 HStack(alignment: .top, spacing: gap) {
-                    ForEach(Array(stats.weeks.enumerated()), id: \.offset) { weekIndex, week in
+                    ForEach(Array(visibleWeeks.enumerated()), id: \.offset) { weekIndex, week in
                         VStack(spacing: gap) {
                             monthLabel(for: week, weekIndex: weekIndex)
                                 .frame(height: cellSize + 2)
@@ -515,9 +515,8 @@ struct ReviewView: View {
                 }
             }
             .padding(.horizontal, 2)
-            .frame(height: totalHeight, alignment: .top)
         }
-        .frame(height: 60)  // 넉넉한 고정 높이 (cellSize ~4-5pt 기준)
+        .frame(height: cellSize + 2 + 7 * (cellSize + gap) - gap)
     }
 
     @ViewBuilder
