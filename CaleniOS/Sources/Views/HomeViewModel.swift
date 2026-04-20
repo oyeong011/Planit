@@ -2,6 +2,7 @@
 import Foundation
 import SwiftData
 import Combine
+import CalenShared
 
 // MARK: - HomeViewModel (v4)
 //
@@ -97,6 +98,16 @@ final class HomeViewModel: ObservableObject {
     /// 전 달/다음 달 셀(스필오버)에 걸친 이벤트도 포함한다.
     @Published private(set) var schedulesInMonth: [ScheduleDisplayItem] = []
 
+    /// v5 Phase A: 주 시트용 fake 이벤트 리포지토리.
+    /// Phase B에서 Google Calendar 기반 구현체로 교체 예정.
+    let eventRepository: FakeEventRepository
+
+    /// 주 시트 표시 여부 (날짜 탭 시 true).
+    @Published var showWeekSheet: Bool = false
+
+    /// 주 시트가 보여줄 앵커 날짜.
+    @Published var sheetAnchorDate: Date = Date()
+
     // MARK: Internal
 
     private let cal: Calendar = {
@@ -113,7 +124,7 @@ final class HomeViewModel: ObservableObject {
 
     // MARK: - Init
 
-    init(modelContext: ModelContext? = nil) {
+    init(modelContext: ModelContext? = nil, eventRepository: FakeEventRepository? = nil) {
         let now = Date()
         var comps = Calendar(identifier: .gregorian).dateComponents([.year, .month], from: now)
         comps.day = 1
@@ -121,6 +132,7 @@ final class HomeViewModel: ObservableObject {
         self.selectedDate = Calendar(identifier: .gregorian).startOfDay(for: now)
         self.expandedWeekStart = nil
         self.modelContext = modelContext
+        self.eventRepository = eventRepository ?? FakeEventRepository()
 
         // 오늘이 속한 주를 기본 확장
         self.expandedWeekStart = weekStart(for: selectedDate)
@@ -136,10 +148,13 @@ final class HomeViewModel: ObservableObject {
     // MARK: - Public API
 
     /// 월 그리드 날짜 탭 시 호출. 같은 주면 선택만 변경, 다른 주면 해당 주로 확장 이동.
+    /// v5 Phase A: 탭 시 풀스크린 주 시트도 함께 띄움.
     func tapDate(_ date: Date) {
         let day = cal.startOfDay(for: date)
         selectedDate = day
         expandedWeekStart = weekStart(for: day)
+        sheetAnchorDate = day
+        showWeekSheet = true
     }
 
     /// 가로 스와이프로 이전 달로 이동.
