@@ -579,9 +579,8 @@ private struct WeekRangeBarOverlay: View {
 
     private let fmt = HabitService.dayKeyFormatter
 
-    var body: some View {
-        if habits.isEmpty { return AnyView(EmptyView()) }
-        return AnyView(
+    @ViewBuilder var body: some View {
+        if !habits.isEmpty {
             GeometryReader { geo in
                 let cellW = geo.size.width / 7.0
                 ZStack(alignment: .topLeading) {
@@ -600,7 +599,7 @@ private struct WeekRangeBarOverlay: View {
                     }
                 }
             }
-        )
+        }
     }
 
     @ViewBuilder
@@ -1282,19 +1281,20 @@ struct ModalEventDetail: View {
     @State private var editStartDate = Date()
     @State private var editEndDate = Date()
 
+    private static let timeFmt: DateFormatter = {
+        let f = DateFormatter(); f.locale = Locale.current; f.dateFormat = "HH:mm"; return f
+    }()
+    private static let dateFmt: DateFormatter = {
+        let f = DateFormatter(); f.locale = Locale.current; f.dateStyle = .medium; return f
+    }()
+
     private var timeText: String {
         if event.isAllDay { return String(localized: "event.detail.allday") }
-        let fmt = DateFormatter()
-        fmt.locale = Locale.current
-        fmt.dateFormat = "HH:mm"
-        return "\(fmt.string(from: event.startDate)) – \(fmt.string(from: event.endDate))"
+        return "\(Self.timeFmt.string(from: event.startDate)) – \(Self.timeFmt.string(from: event.endDate))"
     }
 
     private var dateText: String {
-        let fmt = DateFormatter()
-        fmt.locale = Locale.current
-        fmt.dateStyle = .medium
-        return fmt.string(from: event.startDate)
+        Self.dateFmt.string(from: event.startDate)
     }
 
     var body: some View {
@@ -1466,15 +1466,16 @@ struct ModalTodoDetail: View {
     @State private var editDate = Date()
     @State private var selectedCategoryID: UUID? = nil
 
+    private static let dateFmt: DateFormatter = {
+        let f = DateFormatter(); f.locale = Locale.current; f.dateStyle = .medium; return f
+    }()
+
     private var category: TodoCategory {
         viewModel.category(for: selectedCategoryID ?? todo.categoryID)
     }
 
     private var dateText: String {
-        let fmt = DateFormatter()
-        fmt.locale = Locale.current
-        fmt.dateStyle = .medium
-        return fmt.string(from: todo.date)
+        Self.dateFmt.string(from: todo.date)
     }
 
     var body: some View {
@@ -1787,14 +1788,15 @@ struct EventRowView: View {
 
     @State private var isHandleHover: Bool = false
 
+    private static let timeFmt: DateFormatter = {
+        let f = DateFormatter(); f.locale = Locale.current; f.dateFormat = "HH:mm"; return f
+    }()
+
     private var displayColor: Color { category?.color ?? event.color }
 
     private var timeText: String {
         if event.isAllDay { return String(localized: "event.detail.allday") }
-        let fmt = DateFormatter()
-        fmt.locale = Locale.current
-        fmt.dateFormat = "HH:mm"
-        return "\(fmt.string(from: event.startDate)) – \(fmt.string(from: event.endDate))"
+        return "\(Self.timeFmt.string(from: event.startDate)) – \(Self.timeFmt.string(from: event.endDate))"
     }
 
     var body: some View {
@@ -2002,13 +2004,15 @@ struct WeekDensityBar: View {
         return (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: monday) }
     }
 
+    private static let dayFmt: DateFormatter = {
+        let f = DateFormatter(); f.dateFormat = "E"
+        f.locale = Locale(identifier: "ko_KR"); return f
+    }()
+
     var body: some View {
         let days = thisWeekDays
         let analyses = scheduler.analyzeDays(events: events, for: days)
-        let dayFmt: DateFormatter = {
-            let f = DateFormatter(); f.dateFormat = "E"
-            f.locale = Locale(identifier: "ko_KR"); return f
-        }()
+        let dayFmt = Self.dayFmt
 
         HStack(spacing: 3) {
             ForEach(Array(zip(days, analyses).enumerated()), id: \.offset) { _, pair in
