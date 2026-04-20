@@ -27,54 +27,104 @@ enum KeychainHelper {
 
     @discardableResult
     private static func saveItem(account: String, data: Data) -> Bool {
+        // kSecAttrSynchronizable: false 를 조회 쿼리에도 포함시켜야
+        // 저장/조회/삭제 시 동일한 항목을 정확히 타깃할 수 있다.
         let lookup: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
+            kSecAttrSynchronizable as String: false,
         ]
         // kSecAttrAccessControl은 생성 시에만 설정 가능 — 업데이트 시 포함하면 SecItemUpdate 실패
         let updateAttrs: [String: Any] = [
             kSecValueData as String: data,
-            kSecAttrSynchronizable as String: false,
         ]
         let updateStatus = SecItemUpdate(lookup as CFDictionary, updateAttrs as CFDictionary)
         if updateStatus == errSecSuccess { return true }
 
-        guard updateStatus == errSecItemNotFound else { return false }
-        var addQuery = lookup
-        addQuery[kSecValueData as String] = data
-        addQuery[kSecAttrSynchronizable as String] = false  // iCloud 동기화 방지
-        if let ac = makeAccessControl() {
-            addQuery[kSecAttrAccessControl as String] = ac
-        } else {
-            addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+        if updateStatus == errSecItemNotFound {
+            var addQuery = lookup
+            addQuery[kSecValueData as String] = data
+            if let ac = makeAccessControl() {
+                addQuery[kSecAttrAccessControl as String] = ac
+            } else {
+                addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+            }
+            let addStatus = SecItemAdd(addQuery as CFDictionary, nil)
+            if addStatus == errSecSuccess { return true }
+
+            // errSecDuplicateItem: accessControl 속성이 다른 이전 항목이 남아 있는 경우.
+            // 이전 항목을 삭제하고 다시 추가한다.
+            if addStatus == errSecDuplicateItem {
+                // accessControl 없이 삭제 (속성 무관하게 service+account 기준)
+                let deleteQuery: [String: Any] = [
+                    kSecClass as String: kSecClassGenericPassword,
+                    kSecAttrService as String: service,
+                    kSecAttrAccount as String: account,
+                ]
+                SecItemDelete(deleteQuery as CFDictionary)
+                return SecItemAdd(addQuery as CFDictionary, nil) == errSecSuccess
+            }
+            return false
         }
-        return SecItemAdd(addQuery as CFDictionary, nil) == errSecSuccess
+        return false
     }
 
     private static func loadItem(account: String) -> Data? {
+        // kSecAttrSynchronizable: false 를 명시해 saveItem 과 동일한 항목을 정확히 조회.
+        // 명시하지 않으면 macOS가 iCloud 동기 항목까지 포함해 검색하다가
+        // 접근 제어 정책이 다른 중복 항목과 충돌하여 errSecItemNotFound 를 반환할 수 있다.
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
+            kSecAttrSynchronizable as String: false,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne,
         ]
         var result: AnyObject?
-        guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
-              let data = result as? Data else { return nil }
-        return data
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        if status == errSecSuccess, let data = result as? Data { return data }
+
+        // 이전 버전에서 kSecAttrSynchronizable 없이 저장된 항목 fallback 조회
+        if status == errSecItemNotFound {
+            let legacyQuery: [String: Any] = [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: service,
+                kSecAttrAccount as String: account,
+                kSecReturnData as String: true,
+                kSecMatchLimit as String: kSecMatchLimitOne,
+            ]
+            var legacyResult: AnyObject?
+            guard SecItemCopyMatching(legacyQuery as CFDictionary, &legacyResult) == errSecSuccess,
+                  let data = legacyResult as? Data else { return nil }
+            // 레거시 항목을 현재 형식(kSecAttrSynchronizable: false)으로 재저장하여 이후 조회가 빠르게 동작하도록 함
+            saveItem(account: account, data: data)
+            return data
+        }
+        return nil
     }
 
     @discardableResult
     private static func deleteItem(account: String) -> Bool {
+        // kSecAttrSynchronizable: false 를 명시해 saveItem 과 동일한 항목을 삭제.
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: account,
+            kSecAttrSynchronizable as String: false,
         ]
         let status = SecItemDelete(query as CFDictionary)
-        return status == errSecSuccess || status == errSecItemNotFound
+        if status == errSecSuccess || status == errSecItemNotFound { return true }
+
+        // 속성이 다른 레거시 항목 삭제 fallback
+        let legacyQuery: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+        ]
+        let legacyStatus = SecItemDelete(legacyQuery as CFDictionary)
+        return legacyStatus == errSecSuccess || legacyStatus == errSecItemNotFound
     }
 
     // MARK: - Auth Tokens
