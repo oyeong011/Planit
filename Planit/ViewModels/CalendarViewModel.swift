@@ -129,6 +129,7 @@ final class CalendarViewModel: ObservableObject {
 
     private var notificationObserver: Any?
     private var authCancellable: AnyCancellable?
+    private var authSucceededCancellable: AnyCancellable?
     /// syncPendingEdits 재진입 방지 플래그
     private var isSyncingPendingEdits = false
 
@@ -195,15 +196,25 @@ final class CalendarViewModel: ObservableObject {
         // 날짜 변경 감지 (앱이 켜진 상태로 자정 넘길 때)
         observeDateChange()
 
-        // 로그인/로그아웃 시 캘린더 목록 캐시 초기화
+        // 로그아웃 감지: 구글 캐시 + 이벤트 정리
         authCancellable = authManager.$isAuthenticated.dropFirst().sink { [weak self] authenticated in
+            guard let self, !authenticated else { return }
+            self.googleService.clearCache()
+            self.calendarEvents.removeAll { $0.source == .google }
+            self.needsReauth = false
+            self.lastCRUDError = nil
+            self.cacheEvents(self.calendarEvents)
+        }
+
+        // OAuth 성공(로그인 + 재연결 모두)마다 이벤트 리프레시
+        // — isAuthenticated 변화 없는 재연결(true→true)도 처리
+        authSucceededCancellable = authManager.authSucceeded.sink { [weak self] in
             guard let self else { return }
-            if !authenticated {
-                // 로그아웃: 캐시 클리어
-                self.googleService.clearCache()
-            } else {
-                self.loadHistory()
-            }
+            self.googleService.clearCache()
+            self.needsReauth = false
+            self.lastCRUDError = nil
+            self.fetchEventsFromGoogle(for: self.currentMonth)
+            self.loadHistory()
         }
 
         // Load cached events first (instant display), then try network

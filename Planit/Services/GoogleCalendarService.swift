@@ -546,16 +546,20 @@ final class GoogleCalendarService {
         }
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        let (_, response) = try await URLSession.shared.data(for: request)
+        let (updateData, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
             throw URLError(.badServerResponse)
         }
-        PlanitLoggers.sync.info(
-            "Google event update PATCH eventID=\(eventID, privacy: .public) calendarID=\(rawCalID, privacy: .public) status=\(httpResponse.statusCode, privacy: .public) allDay=\(isAllDay, privacy: .public)"
-        )
         guard httpResponse.statusCode == 200 else {
+            let responseBody = String(data: updateData, encoding: .utf8) ?? ""
+            PlanitLoggers.sync.error(
+                "updateEvent HTTP \(httpResponse.statusCode, privacy: .public) eventID=\(eventID, privacy: .public) calendarID=\(rawCalID, privacy: .public) body=\(responseBody, privacy: .public)"
+            )
             throw GoogleCalendarError.httpStatus(httpResponse.statusCode)
         }
+        PlanitLoggers.sync.info(
+            "Google event update PATCH eventID=\(eventID, privacy: .public) calendarID=\(rawCalID, privacy: .public) status=200 allDay=\(isAllDay, privacy: .public)"
+        )
         return true
     }
 
@@ -572,9 +576,13 @@ final class GoogleCalendarService {
         request.httpMethod = "DELETE"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
-        let (_, response) = try await URLSession.shared.data(for: request)
+        let (deleteData, response) = try await URLSession.shared.data(for: request)
         let code = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard code == 204 || code == 200 else {
+            let responseBody = String(data: deleteData, encoding: .utf8) ?? ""
+            PlanitLoggers.sync.error(
+                "deleteEvent HTTP \(code, privacy: .public) eventID=\(eventID, privacy: .public) calendarID=\(rawCalID, privacy: .public) body=\(responseBody, privacy: .public)"
+            )
             throw GoogleCalendarError.httpStatus(code)
         }
         return true

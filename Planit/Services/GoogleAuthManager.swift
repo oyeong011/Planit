@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import CommonCrypto
+import Combine
 import os
 
 // double-close 방지용 경량 mutex
@@ -50,6 +51,8 @@ final class GoogleAuthManager: ObservableObject {
     @Published var isAuthenticated = false
     @Published var userEmail: String?
     @Published var errorMessage: String?
+    /// OAuth 완료(토큰 발급)마다 발행 — isAuthenticated 변화 없어도 발행 (재연결 포함)
+    let authSucceeded = PassthroughSubject<Void, Never>()
 
     // Google Desktop OAuth credentials (non-confidential per Google's documentation).
     // Desktop app client_secrets are NOT treated as confidential by Google;
@@ -222,6 +225,7 @@ final class GoogleAuthManager: ObservableObject {
             try await exchangeCodeForTokens(code: code, redirectURI: redirectURI, codeVerifier: codeVerifier)
             await fetchUserEmail()
             isAuthenticated = true
+            authSucceeded.send()
         } catch {
             if serverFd >= 0 { close(serverFd) }
             errorMessage = error.localizedDescription
