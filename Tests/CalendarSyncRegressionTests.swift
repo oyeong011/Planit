@@ -66,55 +66,48 @@ private struct CalendarSyncRegressionFailure: Error, CustomStringConvertible {
     }
 }
 
-@Test func keychainQueries_useSameNonSynchronizableSelectorForSaveLoadDelete() throws {
+@Test func keychainQueries_doNotMixAccessControlWithSynchronizable() throws {
     let source = try CalendarSyncRegressionSource.read("Planit/Services/KeychainHelper.swift")
     let saveBody = try CalendarSyncRegressionSource.body(of: "saveItem", in: source)
-    let loadBody = try CalendarSyncRegressionSource.body(of: "loadItem", in: source)
-    let deleteBody = try CalendarSyncRegressionSource.body(of: "deleteItem", in: source)
 
-    #expect(saveBody.contains("kSecAttrSynchronizable as String: false"),
-            "saveItem must write and update the non-iCloud Keychain row selected by service/account.")
-    #expect(loadBody.contains("kSecAttrSynchronizable as String: false"),
-            "loadItem must select the same non-synchronizable row saved by saveItem.")
-    #expect(deleteBody.contains("kSecAttrSynchronizable as String: false"),
-            "deleteItem must delete the same non-synchronizable row saved by saveItem.")
+    // kSecAttrAccessControl과 kSecAttrSynchronizable을 동시에 쓰면 SecItemAdd가 errSecParam(-50)으로 실패.
+    // 단순하게 service+account만으로 조회하고 kSecAttrAccessible만 쓰는 것이 올바른 방식.
+    #expect(!saveBody.contains("kSecAttrAccessControl"),
+            "saveItem must not use kSecAttrAccessControl — it conflicts with kSecAttrSynchronizable causing silent save failures.")
+    #expect(saveBody.contains("kSecAttrAccessible"),
+            "saveItem must use kSecAttrAccessible to set protection level without conflicting attributes.")
 }
 
-@Test func keychainSave_recoversDuplicateItemsByDeletingLegacyRowAndRetryingAdd() throws {
+@Test func keychainSave_recoversStaleRowByDeleteAndRetryingAdd() throws {
     let source = try CalendarSyncRegressionSource.read("Planit/Services/KeychainHelper.swift")
     let saveBody = try CalendarSyncRegressionSource.body(of: "saveItem", in: source)
-    let duplicateBranch = try CalendarSyncRegressionSource.block(after: "if addStatus == errSecDuplicateItem", in: saveBody)
-    let deleteQuery = try CalendarSyncRegressionSource.segment(from: "let deleteQuery", to: "SecItemDelete", in: duplicateBranch)
 
-    #expect(duplicateBranch.contains("SecItemDelete"),
-            "Duplicate recovery must clear the stale row before retrying SecItemAdd.")
-    #expect(duplicateBranch.contains("SecItemAdd(addQuery"),
-            "Duplicate recovery must retry the original add query after deleting the stale row.")
-    #expect(!deleteQuery.contains("kSecAttrSynchronizable"),
-            "The duplicate cleanup query must omit synchronizable so legacy rows with mismatched attributes are removed.")
+    // update 실패(errSecItemNotFound 이외 에러) 시 기존 항목 삭제 후 재추가해야 한다.
+    #expect(saveBody.contains("SecItemDelete(query"),
+            "saveItem must delete a stale row before retrying SecItemAdd when SecItemUpdate fails.")
+    #expect(saveBody.contains("SecItemAdd(addQuery"),
+            "saveItem must retry SecItemAdd after clearing the stale row.")
 }
 
-@Test func keychainLoad_fallsBackToLegacyUnsynchronizableRowsAndMigratesThem() throws {
+@Test func keychainLoad_usesSimpleServiceAccountQuery() throws {
     let source = try CalendarSyncRegressionSource.read("Planit/Services/KeychainHelper.swift")
     let loadBody = try CalendarSyncRegressionSource.body(of: "loadItem", in: source)
-    let legacyQuery = try CalendarSyncRegressionSource.segment(from: "let legacyQuery", to: "var legacyResult", in: loadBody)
 
-    #expect(loadBody.contains("if status == errSecItemNotFound"),
-            "Legacy fallback should only run when the strict non-synchronizable lookup misses.")
-    #expect(!legacyQuery.contains("kSecAttrSynchronizable"),
-            "Legacy fallback must omit synchronizable to find rows written by older releases.")
-    #expect(loadBody.contains("saveItem(account: account, data: data)"),
-            "Loaded legacy data should be rewritten through saveItem to normalize future lookups.")
+    // 단순 service+account 조회가 모든 과거 버전 항목을 포괄한다 (속성 제한 없음).
+    #expect(loadBody.contains("kSecAttrService"),
+            "loadItem must query by service to find items across all historical attribute combinations.")
+    #expect(loadBody.contains("kSecReturnData as String: true"),
+            "loadItem must request data return.")
 }
 
-@Test func keychainDelete_fallsBackToLegacyUnsynchronizableRows() throws {
+@Test func keychainDelete_usesSimpleServiceAccountQuery() throws {
     let source = try CalendarSyncRegressionSource.read("Planit/Services/KeychainHelper.swift")
     let deleteBody = try CalendarSyncRegressionSource.body(of: "deleteItem", in: source)
-    let legacyQuery = try CalendarSyncRegressionSource.segment(from: "let legacyQuery", to: "let legacyStatus", in: deleteBody)
 
-    #expect(!legacyQuery.contains("kSecAttrSynchronizable"),
-            "Legacy delete fallback must omit synchronizable so old rows do not survive logout/delete.")
-    #expect(deleteBody.contains("legacyStatus == errSecSuccess || legacyStatus == errSecItemNotFound"))
+    #expect(deleteBody.contains("SecItemDelete"),
+            "deleteItem must call SecItemDelete.")
+    #expect(deleteBody.contains("errSecSuccess || status == errSecItemNotFound"),
+            "deleteItem must treat both success and not-found as successful deletion.")
 }
 
 @Test func pendingCalendarEdit_decodesLegacyPayloadWithoutCalendarID() throws {
