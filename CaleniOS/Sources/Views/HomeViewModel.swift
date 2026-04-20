@@ -115,11 +115,16 @@ final class HomeViewModel: ObservableObject {
     /// 현재 repo가 Google 기반인지 (= 로그인됨).
     var usingGoogleRepo: Bool { googleRepository != nil }
 
-    /// 주 시트 표시 여부 (날짜 탭 시 true).
+    /// Day 상세 시트 표시 여부 (날짜 탭 시 true).
+    /// 변수명은 호환 유지 (v0.1에서 WeekTimeGridSheet → DayDetailSheet 교체).
     @Published var showWeekSheet: Bool = false
 
-    /// 주 시트가 보여줄 앵커 날짜.
+    /// 시트가 보여줄 앵커 날짜.
     @Published var sheetAnchorDate: Date = Date()
+
+    /// PRD v0.1: 이벤트 탭 → 편집 시트 직행. DayDetailSheet가 dismiss 후 이 값을 set하면
+    /// HomeView가 EventEditSheet를 이어 띄운다.
+    @Published var selectedEventForEdit: CalendarEvent?
 
     // MARK: Internal
 
