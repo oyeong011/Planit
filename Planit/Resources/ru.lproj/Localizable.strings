@@ -579,3 +579,14 @@
 "settings.appearance.mode.system" = "Система";
 "settings.appearance.mode.light" = "Светлый";
 "settings.appearance.mode.dark" = "Тёмный";
+"settings.wallpaper.card" = "Background";
+"settings.wallpaper.desc" = "Choose a gradient background displayed behind the calendar.";
+"settings.wallpaper.none" = "None";
+"wallpaper.aurora" = "Aurora";
+"wallpaper.sunset" = "Sunset";
+"wallpaper.ocean" = "Ocean";
+"wallpaper.lavender" = "Lavender";
+"wallpaper.forest" = "Forest";
+"wallpaper.midnight" = "Midnight";
+"wallpaper.peach" = "Peach";
+"wallpaper.mint" = "Mint";

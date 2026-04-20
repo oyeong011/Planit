@@ -41,6 +41,7 @@ struct MainCalendarView: View {
     @StateObject private var hermesMemoryService = HermesMemoryService()
     @StateObject private var updater = UpdaterService.shared
     @ObservedObject private var themeService = CalendarThemeService.shared
+    @ObservedObject private var wallpaperService = WallpaperService.shared
     @State private var showLeftPanel: Bool = true
     @State private var leftPanelMode: LeftPanelMode = .chat
     @State private var showSettings: Bool = false
@@ -116,11 +117,16 @@ struct MainCalendarView: View {
         }
         .background(
             ZStack {
-                Color.platformControlBackground
-                themeService.current.paneTint
+                if let preset = wallpaperService.activePreset {
+                    preset.gradient.ignoresSafeArea()
+                } else {
+                    Color.platformControlBackground
+                    themeService.current.paneTint
+                }
             }
         )
         .animation(.easeInOut(duration: 0.28), value: themeService.current.id)
+        .animation(.easeInOut(duration: 0.35), value: wallpaperService.activePreset?.id)
         .onChange(of: authManager.isAuthenticated) {
             viewModel.refreshEvents()
         }
@@ -821,6 +827,7 @@ struct DailyDetailView: View {
 
     @StateObject private var updater = UpdaterService.shared
     @ObservedObject private var themeService = CalendarThemeService.shared
+    @ObservedObject private var wallpaperService = WallpaperService.shared
     @State private var selectedCategoryID: UUID?
     @State private var isRepeating: Bool = false
     @State private var showCategoryManager = false
@@ -1085,9 +1092,18 @@ struct DailyDetailView: View {
             }
         }
         .background(
-            ZStack {
-                Color.platformWindowBackground.opacity(0.5)
-                themeService.current.paneTint
+            Group {
+                if wallpaperService.isActive {
+                    ZStack {
+                        Rectangle().fill(.ultraThinMaterial)
+                        Rectangle().fill(Color.platformWindowBackground.opacity(0.12))
+                    }
+                } else {
+                    ZStack {
+                        Color.platformWindowBackground.opacity(0.5)
+                        themeService.current.paneTint
+                    }
+                }
             }
         )
         .popover(isPresented: $showCategoryManager) {

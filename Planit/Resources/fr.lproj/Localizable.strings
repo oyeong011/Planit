@@ -578,3 +578,14 @@
 "settings.appearance.mode.system" = "Système";
 "settings.appearance.mode.light" = "Clair";
 "settings.appearance.mode.dark" = "Sombre";
+"settings.wallpaper.card" = "Background";
+"settings.wallpaper.desc" = "Choose a gradient background displayed behind the calendar.";
+"settings.wallpaper.none" = "None";
+"wallpaper.aurora" = "Aurora";
+"wallpaper.sunset" = "Sunset";
+"wallpaper.ocean" = "Ocean";
+"wallpaper.lavender" = "Lavender";
+"wallpaper.forest" = "Forest";
+"wallpaper.midnight" = "Midnight";
+"wallpaper.peach" = "Peach";
+"wallpaper.mint" = "Mint";
