@@ -211,6 +211,10 @@ final class CalendarViewModel: ObservableObject {
         authSucceededCancellable = authManager.authSucceeded.sink { [weak self] in
             guard let self else { return }
             self.googleService.clearCache()
+            self.googleFetchTask?.cancel()
+            self.googleFetchTask = nil
+            self.googleFetchMonthKey = nil
+            self.isOffline = false
             self.needsReauth = false
             self.lastCRUDError = nil
             self.fetchEventsFromGoogle(for: self.currentMonth)
