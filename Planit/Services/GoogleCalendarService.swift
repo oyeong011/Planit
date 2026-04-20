@@ -450,6 +450,8 @@ final class GoogleCalendarService {
             throw URLError(.badServerResponse)
         }
         guard (200...299).contains(httpResponse.statusCode) else {
+            let body = String(data: data, encoding: .utf8) ?? ""
+            PlanitLoggers.sync.error("createEvent HTTP \(httpResponse.statusCode, privacy: .public) body=\(body, privacy: .public)")
             throw GoogleCalendarError.httpStatus(httpResponse.statusCode)
         }
         // 생성은 항상 primary 캘린더 — calInfo nil → "Google" / "google:primary"
