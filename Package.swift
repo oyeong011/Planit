@@ -80,6 +80,11 @@ let package = Package(
                 // SwiftPM executableTarget에서는 unhandled resources가 되지 않도록 제외.
                 "Info.plist",
                 "Resources/CaleniOS.entitlements"
+            ],
+            resources: [
+                // v0.1.2 — iOS 전용 Localizable.strings. SwiftPM 빌드에서 bundle로 번들링.
+                .process("Resources/ko.lproj"),
+                .process("Resources/en.lproj")
             ]
         ),
         .testTarget(

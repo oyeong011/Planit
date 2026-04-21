@@ -2,75 +2,86 @@
 import SwiftUI
 import UIKit
 
-// MARK: - SettingsView
+// MARK: - SettingsView (v0.1.2 Brand Card Redesign)
 //
-// 레퍼런스 `Calen-iOS/Calen/Features/Settings/SettingsView.swift` 포팅 (M2 UI v3).
-// 적응 포인트(v0.1.0):
-//  1. `UserProfile` 의존 제거 — Planit iOS v0.1.0 범위 밖. 표시 이름은 Google 계정
-//     이메일(userEmail)로 대체하거나 "사용자"로 고정.
-//  2. Google 로그인 UI → `iOSGoogleAuthManager`의 `startOAuthFlow()` / `logout()` 연결.
-//  3. `ClaudeAPIKeychain` 기반 API 키 SecureField 섹션 **추가** — v0.1.0 핵심 기능.
-//  4. `AIModelInfoView`는 레퍼런스 원문 유지(참고용 정적 문서). 모델명은 "Claude 3.5 Sonnet"로
-//     표기 변경 (Planit은 Claude 사용).
+// v0.1.1까지의 iOS 기본 `.insetGrouped` List 를 버리고 macOS 브랜드 감각에 맞춘
+// ScrollView + 카드 섹션 레이아웃으로 재구성했다.
+//
+// 구성:
+//  - BrandHeader: 앱 아이콘 + 이름 + 버전
+//  - ProfileCard: 아바타 + 이름 + Google 상태
+//  - AccountCard: OAuth 클라이언트 ID / 로그인·로그아웃
+//  - AISection: Claude API 키 / 모델 정보 / 데이터 초기화
+//  - AppearanceCard: 테마 picker + 언어 picker (v0.1.2 핵심 — 테마/i18n)
+//  - AppCard: 알림 / 캘린더 동기화 / iCloud Hermes 동기화
+//  - AboutCard: 버전 / 개인정보 / 문의
+//
+// 공통 패턴:
+//  - `SectionHeader`: 섹션 제목(.footnote, .secondary)
+//  - `SettingsCard`: rounded corner 20, 카드 내부 RowGroup 레이아웃
+//  - `Row`/`ToggleRow`/`ButtonRow`: 아이콘(30×30 square) + 텍스트 + trailing 액션
+//  - 모든 아이콘 배경/강조 색상은 활성 `iOSThemeService.current`에서 파생
 
 struct SettingsView: View {
 
     @EnvironmentObject private var appState: AppState
+    @EnvironmentObject private var theme: iOSThemeService
+    @EnvironmentObject private var language: iOSLanguageService
 
-    // Phase B M4-2: HomeViewModel과 동일 auth 인스턴스를 공유 → 로그인/로그아웃 상태 변화가
-    // 세션 내에서 즉시 홈 탭에 반영된다. Shared singleton은 이미 MainActor에서 생성된 ObservableObject.
     @ObservedObject private var googleAuth = iOSGoogleAuthManager.shared
 
-    // MARK: App Settings
+    // MARK: App toggles
 
-    @AppStorage("notificationsEnabled")  private var notificationsEnabled: Bool = true
-    @AppStorage("calendarSyncEnabled")   private var calendarSyncEnabled: Bool = false
-    @AppStorage("preferredLanguage")     private var preferredLanguage: String = "ko"
-    // v0.1 iCloud Hermes 메모리 sync — macOS MainView의 HermesMemorySync.startIfEnabled 도 같은 key 감시.
-    // 이 토글이 UserDefaults.standard 에 저장되므로 같은 기기의 macOS 앱이 값 확인 가능.
-    @AppStorage("planit.hermesCloudKitSyncEnabled") private var hermesCloudKitSyncEnabled: Bool = false
+    @AppStorage("notificationsEnabled")                private var notificationsEnabled: Bool = true
+    @AppStorage("calendarSyncEnabled")                 private var calendarSyncEnabled: Bool = false
+    @AppStorage("planit.hermesCloudKitSyncEnabled")    private var hermesCloudKitSyncEnabled: Bool = false
 
-    // MARK: Auth sheets
+    // MARK: Sheets / alerts
 
     @State private var showGoogleClientIDSheet = false
-    @State private var showClaudeAPIKeySheet = false
+    @State private var showClaudeAPIKeySheet   = false
+    @State private var showResetAlert          = false
+    @State private var showPrivacySheet        = false
+    @State private var showContactSheet        = false
 
-    // MARK: Alert state
-
-    @State private var showResetAlert = false
-    @State private var showPrivacySheet = false
-    @State private var showContactSheet = false
-
-    // MARK: Claude API key 상태
-    //
-    // v0.1.1: `ClaudeAPIKeychain.load()`는 I/O이므로 매 뷰 재평가마다 호출되면 성능/배터리 손해.
-    // @State로 캐시해두고 시트 dismiss / 데이터 초기화 시 명시적으로 갱신한다.
+    /// API 키 Keychain 캐시 — 매 렌더 I/O 방지.
     @State private var hasClaudeAPIKey: Bool = ClaudeAPIKeychain.load() != nil
 
     // MARK: Derived
 
-    /// v0.1.0에서는 `UserProfile`이 없으므로 Google 이메일 또는 "사용자"로 표시.
     private var displayName: String {
         if let email = googleAuth.userEmail, !email.isEmpty { return email }
-        return "사용자"
+        return NSLocalizedString("settings.user.default", comment: "")
     }
 
     private let appVersion: String = {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
     }()
 
+    // MARK: Body
+
     var body: some View {
         NavigationStack {
-            List {
-                profileSection
-                accountSection
-                aiSection
-                appSettingsSection
-                infoSection
+            ZStack(alignment: .top) {
+                backgroundLayer
+                    .ignoresSafeArea()
+
+                ScrollView {
+                    VStack(spacing: 20) {
+                        brandHeader
+                        profileCard
+                        appearanceCard
+                        accountCard
+                        aiCard
+                        appCard
+                        aboutCard
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 28)
+                    .padding(.bottom, 140)
+                }
             }
-            .listStyle(.insetGrouped)
-            .navigationTitle("설정")
-            .navigationBarTitleDisplayMode(.large)
+            .toolbar(.hidden, for: .navigationBar)
         }
         .sheet(isPresented: $showGoogleClientIDSheet) {
             GoogleClientIDSheet { newID in
@@ -78,304 +89,592 @@ struct SettingsView: View {
             }
         }
         .sheet(isPresented: $showClaudeAPIKeySheet, onDismiss: {
-            // 시트 닫힐 때 Keychain 상태 재조회 → "설정됨/필요" 뱃지 동기화.
             hasClaudeAPIKey = ClaudeAPIKeychain.load() != nil
         }) {
             ClaudeAPIKeySheet()
         }
-        .sheet(isPresented: $showPrivacySheet) {
-            PrivacyPolicyView()
-        }
-        .sheet(isPresented: $showContactSheet) {
-            ContactView()
-        }
-        .alert("데이터 초기화", isPresented: $showResetAlert) {
-            Button("초기화", role: .destructive) {
+        .sheet(isPresented: $showPrivacySheet) { PrivacyPolicyView() }
+        .sheet(isPresented: $showContactSheet) { ContactView() }
+        .alert(Text("settings.reset.alert.title"), isPresented: $showResetAlert) {
+            Button(NSLocalizedString("settings.reset.button", comment: ""), role: .destructive) {
                 googleAuth.logout()
                 ClaudeAPIKeychain.remove()
                 hasClaudeAPIKey = false
             }
-            Button("취소", role: .cancel) {}
+            Button(NSLocalizedString("common.cancel", comment: ""), role: .cancel) {}
         } message: {
-            Text("Google 로그인과 Claude API 키가 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.")
+            Text("settings.reset.alert.message")
         }
     }
 
-    // MARK: - Profile Section
+    // MARK: - Background
 
-    private var profileSection: some View {
-        Section {
+    /// 테마 cardTint 를 아주 옅게 깔아 일반 리스트 배경 대비 브랜드 감 부여.
+    private var backgroundLayer: some View {
+        LinearGradient(
+            colors: [
+                theme.current.surface.opacity(0.5),
+                Color(.systemBackground)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+
+    // MARK: - Brand Header
+
+    private var brandHeader: some View {
+        VStack(spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(theme.current.gradient)
+                    .frame(width: 80, height: 80)
+                    .shadow(color: theme.current.accent.opacity(0.35), radius: 18, x: 0, y: 10)
+
+                Text("C")
+                    .font(.system(size: 38, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+            }
+
+            VStack(spacing: 2) {
+                Text("Calen")
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                Text("v\(appVersion)")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 8)
+    }
+
+    // MARK: - Profile Card
+
+    private var profileCard: some View {
+        SettingsCard {
             HStack(spacing: 14) {
-                // Avatar
                 ZStack {
                     Circle()
-                        .fill(Color.calenBlue.opacity(0.15))
-                        .frame(width: 56, height: 56)
-
+                        .fill(theme.current.primary.opacity(0.18))
+                        .frame(width: 52, height: 52)
                     Text(displayName.prefix(1).uppercased())
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
-                        .foregroundStyle(Color.calenBlue)
+                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .foregroundStyle(theme.current.primary)
                 }
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(displayName)
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.system(size: 16, weight: .semibold))
                         .lineLimit(1)
-
-                    Text(googleAuth.isAuthenticated ? "Google 계정 연결됨" : "Calen 사용자")
-                        .font(.system(size: 13))
-                        .foregroundStyle(Color(.secondaryLabel))
+                    Text(googleAuth.isAuthenticated
+                         ? NSLocalizedString("settings.google.connected", comment: "")
+                         : NSLocalizedString("settings.user.default", comment: ""))
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
                 }
 
                 Spacer()
             }
-            .padding(.vertical, 6)
+            .padding(.vertical, 4)
         }
     }
 
-    // MARK: - Account Section (Google 로그인)
+    // MARK: - Appearance Card (Theme + Language)
 
-    private var accountSection: some View {
-        Section("Google 계정") {
-            // Client ID 설정
-            Button {
-                showGoogleClientIDSheet = true
-            } label: {
-                Label {
-                    HStack {
-                        Text("OAuth 클라이언트 ID")
-                            .foregroundStyle(Color(.label))
-                        Spacer()
-                        Text(googleAuth.hasCredentials ? "설정됨" : "필요")
-                            .font(.system(size: 13))
-                            .foregroundStyle(googleAuth.hasCredentials ? Color(.secondaryLabel) : Color.orange)
-                    }
-                } icon: {
-                    SettingsIconView(
-                        systemName: "key.fill",
-                        color: Color(red: 0.23, green: 0.51, blue: 0.96)
-                    )
+    private var appearanceCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionHeader(key: "settings.section.appearance")
+
+            SettingsCard {
+                VStack(spacing: 0) {
+                    themePickerRow
+                    Divider().padding(.leading, 58)
+                    languagePickerRow
                 }
             }
+        }
+    }
 
-            // Sign in / out
-            if googleAuth.isAuthenticated {
-                Button(role: .destructive) {
-                    googleAuth.logout()
-                } label: {
-                    Label {
-                        Text("로그아웃")
-                    } icon: {
-                        SettingsIconView(
-                            systemName: "rectangle.portrait.and.arrow.right",
-                            color: Color(red: 0.96, green: 0.27, blue: 0.27)
+    private var themePickerRow: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 12) {
+                IconSquare(systemName: "paintpalette.fill", tint: theme.current.accent)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("settings.theme.title")
+                        .font(.system(size: 15, weight: .semibold))
+                    Text("settings.theme.subtitle")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Text(theme.current.name)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(theme.themes) { t in
+                        ThemeSwatch(theme: t, isSelected: t.id == theme.current.id) {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                theme.select(t)
+                            }
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        }
+                    }
+                }
+                .padding(.horizontal, 2)
+            }
+        }
+        .padding(.vertical, 12)
+        .padding(.horizontal, 14)
+    }
+
+    private var languagePickerRow: some View {
+        HStack(spacing: 12) {
+            IconSquare(systemName: "globe", tint: theme.current.primary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("settings.language.title")
+                    .font(.system(size: 15, weight: .semibold))
+                Text("settings.language.subtitle")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Picker("", selection: Binding(
+                get: { language.current },
+                set: { language.select($0) }
+            )) {
+                ForEach(AppLanguage.allCases) { lang in
+                    Text(lang.displayName).tag(lang)
+                }
+            }
+            .pickerStyle(.segmented)
+            .frame(width: 156)
+        }
+        .padding(.vertical, 10)
+        .padding(.horizontal, 14)
+    }
+
+    // MARK: - Account Card
+
+    private var accountCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionHeader(key: "settings.section.account")
+
+            SettingsCard {
+                VStack(spacing: 0) {
+                    ButtonRow(
+                        icon: "key.fill",
+                        tint: theme.current.primary,
+                        titleKey: "settings.google.clientid",
+                        trailing: .badge(googleAuth.hasCredentials
+                                         ? NSLocalizedString("settings.google.configured", comment: "")
+                                         : NSLocalizedString("settings.google.needed", comment: ""),
+                                         warning: !googleAuth.hasCredentials),
+                        action: { showGoogleClientIDSheet = true }
+                    )
+
+                    Divider().padding(.leading, 58)
+
+                    if googleAuth.isAuthenticated {
+                        ButtonRow(
+                            icon: "rectangle.portrait.and.arrow.right",
+                            tint: Color.red,
+                            titleKey: "settings.google.signout",
+                            role: .destructive,
+                            action: { googleAuth.logout() }
+                        )
+                    } else {
+                        ButtonRow(
+                            icon: "person.crop.circle.badge.checkmark",
+                            tint: Color.green,
+                            titleKey: "settings.google.signin",
+                            action: { Task { await googleAuth.startOAuthFlow() } },
+                            disabled: !googleAuth.hasCredentials
                         )
                     }
-                }
-            } else {
-                Button {
-                    Task { await googleAuth.startOAuthFlow() }
-                } label: {
-                    Label {
-                        Text("Google로 로그인")
-                            .foregroundStyle(Color(.label))
-                    } icon: {
-                        SettingsIconView(
-                            systemName: "person.crop.circle.badge.checkmark",
-                            color: Color(red: 0.25, green: 0.78, blue: 0.52)
-                        )
-                    }
-                }
-                .disabled(!googleAuth.hasCredentials)
-            }
 
-            // 오류 메시지
-            if let err = googleAuth.errorMessage, !err.isEmpty {
-                Text(err)
-                    .font(.system(size: 12))
-                    .foregroundStyle(.red)
-            }
-        }
-    }
-
-    // MARK: - AI Section (Claude API)
-
-    private var aiSection: some View {
-        Section("AI 설정") {
-            // Claude API key
-            Button {
-                showClaudeAPIKeySheet = true
-            } label: {
-                Label {
-                    HStack {
-                        Text("Claude API 키")
-                            .foregroundStyle(Color(.label))
-                        Spacer()
-                        Text(hasClaudeAPIKey ? "저장됨" : "미저장")
-                            .font(.system(size: 13))
-                            .foregroundStyle(hasClaudeAPIKey ? Color(.secondaryLabel) : Color.orange)
-                    }
-                } icon: {
-                    SettingsIconView(
-                        systemName: "lock.shield.fill",
-                        color: Color(red: 0.60, green: 0.36, blue: 0.91)
-                    )
-                }
-            }
-
-            // AI model info
-            NavigationLink {
-                AIModelInfoView()
-            } label: {
-                Label {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("AI 모델 정보")
-                        Text("Claude Opus 4.7")
-                            .font(.system(size: 12))
-                            .foregroundStyle(Color(.secondaryLabel))
-                    }
-                } icon: {
-                    SettingsIconView(
-                        systemName: "cpu",
-                        color: Color(red: 0.60, green: 0.36, blue: 0.91)
-                    )
-                }
-            }
-
-            // Data reset
-            Button(role: .destructive) {
-                showResetAlert = true
-            } label: {
-                Label {
-                    Text("데이터 초기화")
-                } icon: {
-                    SettingsIconView(
-                        systemName: "trash.fill",
-                        color: Color(red: 0.96, green: 0.27, blue: 0.27)
-                    )
-                }
-            }
-        }
-    }
-
-    // MARK: - App Settings Section
-
-    private var appSettingsSection: some View {
-        Section("앱 설정") {
-            // Notifications toggle
-            Toggle(isOn: $notificationsEnabled) {
-                Label {
-                    Text("알림 설정")
-                } icon: {
-                    SettingsIconView(systemName: "bell.fill", color: Color(red: 1.0, green: 0.58, blue: 0.0))
-                }
-            }
-            .tint(Color.calenBlue)
-
-            // Calendar sync toggle
-            Toggle(isOn: $calendarSyncEnabled) {
-                Label {
-                    Text("캘린더 동기화")
-                } icon: {
-                    SettingsIconView(systemName: "calendar", color: Color(red: 0.96, green: 0.32, blue: 0.32))
-                }
-            }
-            .tint(Color.calenBlue)
-
-            // v0.1 iCloud Hermes memory sync (macOS writes → iOS reads)
-            Toggle(isOn: $hermesCloudKitSyncEnabled) {
-                Label {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("iCloud 동기화 (Hermes 기억)")
-                        Text("Mac에서 학습된 AI 기억을 iPhone에서 조회")
+                    if let err = googleAuth.errorMessage, !err.isEmpty {
+                        Text(err)
                             .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.red)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
                     }
-                } icon: {
-                    SettingsIconView(systemName: "icloud.fill", color: Color(red: 0.23, green: 0.60, blue: 0.96))
-                }
-            }
-            .tint(Color.calenBlue)
-
-            // Language picker
-            Picker(selection: $preferredLanguage) {
-                Text("한국어").tag("ko")
-                Text("English").tag("en")
-            } label: {
-                Label {
-                    Text("언어")
-                } icon: {
-                    SettingsIconView(systemName: "globe", color: Color(red: 0.23, green: 0.51, blue: 0.96))
                 }
             }
         }
     }
 
-    // MARK: - Info Section
+    // MARK: - AI Card
 
-    private var infoSection: some View {
-        Section("정보") {
-            // Version
-            HStack {
-                Label {
-                    Text("버전")
-                } icon: {
-                    SettingsIconView(systemName: "info.circle.fill", color: Color(.systemGray))
+    private var aiCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionHeader(key: "settings.section.ai")
+
+            SettingsCard {
+                VStack(spacing: 0) {
+                    ButtonRow(
+                        icon: "lock.shield.fill",
+                        tint: Color(red: 0.60, green: 0.36, blue: 0.91),
+                        titleKey: "settings.ai.claude.key",
+                        trailing: .badge(hasClaudeAPIKey
+                                         ? NSLocalizedString("settings.ai.saved", comment: "")
+                                         : NSLocalizedString("settings.ai.not.saved", comment: ""),
+                                         warning: !hasClaudeAPIKey),
+                        action: { showClaudeAPIKeySheet = true }
+                    )
+
+                    Divider().padding(.leading, 58)
+
+                    NavigationLinkRow(
+                        icon: "cpu",
+                        tint: Color(red: 0.60, green: 0.36, blue: 0.91),
+                        titleKey: "settings.ai.model.info",
+                        subtitle: "Claude Opus 4.7",
+                        destination: { AIModelInfoView() }
+                    )
+
+                    Divider().padding(.leading, 58)
+
+                    ButtonRow(
+                        icon: "trash.fill",
+                        tint: Color.red,
+                        titleKey: "settings.ai.reset",
+                        role: .destructive,
+                        action: { showResetAlert = true }
+                    )
                 }
-                Spacer()
-                Text(appVersion)
-                    .font(.system(size: 15))
-                    .foregroundStyle(Color(.secondaryLabel))
             }
+        }
+    }
 
-            // Privacy policy
-            Button {
-                showPrivacySheet = true
-            } label: {
-                Label {
-                    Text("개인정보처리방침")
-                        .foregroundStyle(Color(.label))
-                } icon: {
-                    SettingsIconView(systemName: "hand.raised.fill", color: Color(red: 0.25, green: 0.78, blue: 0.52))
+    // MARK: - App Card
+
+    private var appCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionHeader(key: "settings.section.app")
+
+            SettingsCard {
+                VStack(spacing: 0) {
+                    ToggleRow(
+                        icon: "bell.fill",
+                        tint: Color.orange,
+                        titleKey: "settings.app.notifications",
+                        isOn: $notificationsEnabled,
+                        tintOverride: theme.current.primary
+                    )
+                    Divider().padding(.leading, 58)
+
+                    ToggleRow(
+                        icon: "calendar",
+                        tint: Color.red,
+                        titleKey: "settings.app.calsync",
+                        isOn: $calendarSyncEnabled,
+                        tintOverride: theme.current.primary
+                    )
+                    Divider().padding(.leading, 58)
+
+                    ToggleRow(
+                        icon: "icloud.fill",
+                        tint: Color(red: 0.23, green: 0.60, blue: 0.96),
+                        titleKey: "settings.app.icloud.hermes",
+                        subtitleKey: "settings.app.icloud.hermes.hint",
+                        isOn: $hermesCloudKitSyncEnabled,
+                        tintOverride: theme.current.primary
+                    )
                 }
             }
+        }
+    }
 
-            // Contact
-            Button {
-                showContactSheet = true
-            } label: {
-                Label {
-                    Text("문의하기")
-                        .foregroundStyle(Color(.label))
-                } icon: {
-                    SettingsIconView(systemName: "envelope.fill", color: Color(red: 0.23, green: 0.51, blue: 0.96))
+    // MARK: - About Card
+
+    private var aboutCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionHeader(key: "settings.section.info")
+
+            SettingsCard {
+                VStack(spacing: 0) {
+                    Row(
+                        icon: "info.circle.fill",
+                        tint: Color.gray,
+                        titleKey: "settings.info.version",
+                        trailing: .plain(appVersion)
+                    )
+                    Divider().padding(.leading, 58)
+
+                    ButtonRow(
+                        icon: "hand.raised.fill",
+                        tint: Color.green,
+                        titleKey: "settings.info.privacy",
+                        action: { showPrivacySheet = true }
+                    )
+                    Divider().padding(.leading, 58)
+
+                    ButtonRow(
+                        icon: "envelope.fill",
+                        tint: theme.current.primary,
+                        titleKey: "settings.info.contact",
+                        action: { showContactSheet = true }
+                    )
                 }
             }
         }
     }
 }
 
-// MARK: - Settings Icon View
+// MARK: - Section Header
 
-/// Rounded-rectangle icon cell, consistent with native iOS Settings style.
-struct SettingsIconView: View {
+private struct SectionHeader: View {
+    let key: LocalizedStringKey
+
+    var body: some View {
+        Text(key)
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(.secondary)
+            .textCase(.uppercase)
+            .padding(.leading, 14)
+    }
+}
+
+// MARK: - SettingsCard
+
+private struct SettingsCard<Content: View>: View {
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        content
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(Color(.secondarySystemGroupedBackground))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(Color.primary.opacity(0.04), lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.04), radius: 14, x: 0, y: 4)
+    }
+}
+
+// MARK: - Icon Square
+
+private struct IconSquare: View {
     let systemName: String
-    let color: Color
+    let tint: Color
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 7, style: .continuous)
-                .fill(color)
-                .frame(width: 30, height: 30)
-
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(tint)
+                .frame(width: 32, height: 32)
             Image(systemName: systemName)
-                .font(.system(size: 15, weight: .medium))
+                .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(.white)
         }
     }
 }
 
-// MARK: - Google Client ID Sheet (Planit 적응)
+// MARK: - Row primitives
+
+private enum RowTrailing {
+    case none
+    case plain(String)
+    case badge(String, warning: Bool)
+    case chevron
+}
+
+private struct Row: View {
+    let icon: String
+    let tint: Color
+    let titleKey: LocalizedStringKey
+    var subtitleKey: LocalizedStringKey? = nil
+    var trailing: RowTrailing = .none
+    var role: ButtonRole? = nil
+
+    var body: some View {
+        HStack(spacing: 12) {
+            IconSquare(systemName: icon, tint: tint)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(titleKey)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(role == .destructive ? .red : .primary)
+                if let subtitleKey {
+                    Text(subtitleKey)
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Spacer(minLength: 8)
+
+            switch trailing {
+            case .none:
+                EmptyView()
+            case .plain(let text):
+                Text(text)
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary)
+            case .badge(let text, let warning):
+                Text(text)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(warning ? .orange : .secondary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(
+                        Capsule().fill(warning ? Color.orange.opacity(0.15) : Color.secondary.opacity(0.10))
+                    )
+            case .chevron:
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .contentShape(Rectangle())
+    }
+}
+
+private struct ButtonRow: View {
+    let icon: String
+    let tint: Color
+    let titleKey: LocalizedStringKey
+    var subtitleKey: LocalizedStringKey? = nil
+    var trailing: RowTrailing = .chevron
+    var role: ButtonRole? = nil
+    let action: () -> Void
+    var disabled: Bool = false
+
+    var body: some View {
+        Button(role: role, action: action) {
+            Row(
+                icon: icon,
+                tint: tint,
+                titleKey: titleKey,
+                subtitleKey: subtitleKey,
+                trailing: trailing,
+                role: role
+            )
+        }
+        .buttonStyle(.plain)
+        .disabled(disabled)
+        .opacity(disabled ? 0.45 : 1.0)
+    }
+}
+
+private struct NavigationLinkRow<Destination: View>: View {
+    let icon: String
+    let tint: Color
+    let titleKey: LocalizedStringKey
+    var subtitle: String? = nil
+    @ViewBuilder let destination: () -> Destination
+
+    var body: some View {
+        NavigationLink {
+            destination()
+        } label: {
+            HStack(spacing: 12) {
+                IconSquare(systemName: icon, tint: tint)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(titleKey)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.primary)
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct ToggleRow: View {
+    let icon: String
+    let tint: Color
+    let titleKey: LocalizedStringKey
+    var subtitleKey: LocalizedStringKey? = nil
+    @Binding var isOn: Bool
+    let tintOverride: Color
+
+    var body: some View {
+        HStack(spacing: 12) {
+            IconSquare(systemName: icon, tint: tint)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(titleKey)
+                    .font(.system(size: 15, weight: .semibold))
+                if let subtitleKey {
+                    Text(subtitleKey)
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Spacer()
+            Toggle("", isOn: $isOn)
+                .labelsHidden()
+                .tint(tintOverride)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+    }
+}
+
+// MARK: - Theme Swatch
+
+private struct ThemeSwatch: View {
+    let theme: CalenTheme
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 6) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(theme.gradient)
+                        .frame(width: 54, height: 54)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .stroke(isSelected ? Color.primary : Color.clear, lineWidth: 2.5)
+                        )
+                        .shadow(color: theme.accent.opacity(isSelected ? 0.35 : 0.15),
+                                radius: isSelected ? 10 : 5,
+                                x: 0,
+                                y: isSelected ? 4 : 2)
+
+                    if isSelected {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
+                }
+
+                Text(theme.name)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(isSelected ? .primary : .secondary)
+                    .lineLimit(1)
+            }
+            .frame(width: 62)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text(theme.name))
+    }
+}
+
+// MARK: - Google Client ID Sheet (unchanged logic, brand styling retained)
 
 private struct GoogleClientIDSheet: View {
     @Environment(\.dismiss) private var dismiss
@@ -393,19 +692,19 @@ private struct GoogleClientIDSheet: View {
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                 } header: {
-                    Text("OAuth 클라이언트 ID")
+                    Text("settings.google.clientid")
                 } footer: {
                     Text("Google Cloud Console에서 iOS 앱 OAuth 2.0 클라이언트 ID를 발급받아 입력하세요.\n`*.apps.googleusercontent.com` 형식이어야 합니다.")
                 }
             }
-            .navigationTitle("Google 클라이언트 ID")
+            .navigationTitle(Text("settings.google.clientid"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("취소") { dismiss() }
+                    Button(NSLocalizedString("common.cancel", comment: "")) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("저장") {
+                    Button(NSLocalizedString("common.save", comment: "")) {
                         onSave(clientID.trimmingCharacters(in: .whitespaces))
                         dismiss()
                     }
@@ -418,13 +717,12 @@ private struct GoogleClientIDSheet: View {
     }
 }
 
-// MARK: - Claude API Key Sheet (Planit 적응)
+// MARK: - Claude API Key Sheet (unchanged)
 
 private struct ClaudeAPIKeySheet: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var apiKey: String = ""
-    @State private var showSuccess = false
     @FocusState private var isFocused: Bool
 
     var body: some View {
@@ -436,7 +734,7 @@ private struct ClaudeAPIKeySheet: View {
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                 } header: {
-                    Text("API 키")
+                    Text("settings.ai.claude.key")
                 } footer: {
                     Text("`console.anthropic.com`에서 발급받은 `sk-ant-` 형식의 키를 입력하세요.\n키는 기기 Keychain에만 저장되며 서버로 전송되지 않습니다.")
                 }
@@ -449,7 +747,7 @@ private struct ClaudeAPIKeySheet: View {
                         } label: {
                             HStack {
                                 Spacer()
-                                Text("저장된 키 삭제")
+                                Text(NSLocalizedString("common.delete", comment: ""))
                                     .font(.system(size: 15, weight: .medium))
                                 Spacer()
                             }
@@ -457,14 +755,14 @@ private struct ClaudeAPIKeySheet: View {
                     }
                 }
             }
-            .navigationTitle("Claude API 키")
+            .navigationTitle(Text("settings.ai.claude.key"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("취소") { dismiss() }
+                    Button(NSLocalizedString("common.cancel", comment: "")) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("저장") {
+                    Button(NSLocalizedString("common.save", comment: "")) {
                         if ClaudeAPIKeychain.save(apiKey) {
                             dismiss()
                         }
@@ -481,6 +779,8 @@ private struct ClaudeAPIKeySheet: View {
 // MARK: - AI Model Info View
 
 private struct AIModelInfoView: View {
+    @EnvironmentObject private var theme: iOSThemeService
+
     var body: some View {
         List {
             Section {
@@ -488,11 +788,11 @@ private struct AIModelInfoView: View {
                     HStack(spacing: 12) {
                         ZStack {
                             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .fill(Color(red: 0.60, green: 0.36, blue: 0.91).opacity(0.15))
+                                .fill(theme.current.accent.opacity(0.15))
                                 .frame(width: 56, height: 56)
                             Image(systemName: "cpu")
                                 .font(.system(size: 26))
-                                .foregroundStyle(Color(red: 0.60, green: 0.36, blue: 0.91))
+                                .foregroundStyle(theme.current.accent)
                         }
 
                         VStack(alignment: .leading, spacing: 4) {
@@ -500,7 +800,7 @@ private struct AIModelInfoView: View {
                                 .font(.system(size: 18, weight: .bold))
                             Text("Anthropic · 최신 버전")
                                 .font(.system(size: 14))
-                                .foregroundStyle(Color(.secondaryLabel))
+                                .foregroundStyle(.secondary)
                         }
                     }
                     .padding(.vertical, 4)
@@ -516,12 +816,12 @@ private struct AIModelInfoView: View {
             Section("데이터 처리") {
                 Text("AI 처리에 사용되는 데이터는 암호화되어 전송되며, Anthropic의 개인정보처리방침에 따라 관리됩니다.")
                     .font(.system(size: 14))
-                    .foregroundStyle(Color(.secondaryLabel))
+                    .foregroundStyle(.secondary)
                     .padding(.vertical, 4)
             }
         }
         .listStyle(.insetGrouped)
-        .navigationTitle("AI 모델 정보")
+        .navigationTitle(Text("settings.ai.model.info"))
         .navigationBarTitleDisplayMode(.large)
     }
 }
@@ -544,14 +844,14 @@ private struct InfoRow: View {
                     .font(.system(size: 15, weight: .medium))
                 Text(description)
                     .font(.system(size: 13))
-                    .foregroundStyle(Color(.secondaryLabel))
+                    .foregroundStyle(.secondary)
             }
         }
         .padding(.vertical, 4)
     }
 }
 
-// MARK: - Privacy Policy View
+// MARK: - Privacy / Contact (unchanged)
 
 private struct PrivacyPolicyView: View {
     @Environment(\.dismiss) private var dismiss
@@ -582,11 +882,11 @@ private struct PrivacyPolicyView: View {
                 }
                 .padding(24)
             }
-            .navigationTitle("개인정보처리방침")
+            .navigationTitle(Text("settings.info.privacy"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("닫기") { dismiss() }
+                    Button(NSLocalizedString("common.close", comment: "")) { dismiss() }
                 }
             }
         }
@@ -598,16 +898,15 @@ private struct PrivacyPolicyView: View {
                 .font(.system(size: 16, weight: .semibold))
             Text(body)
                 .font(.system(size: 14))
-                .foregroundStyle(Color(.secondaryLabel))
+                .foregroundStyle(.secondary)
                 .lineSpacing(4)
         }
     }
 }
 
-// MARK: - Contact View
-
 private struct ContactView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var theme: iOSThemeService
 
     var body: some View {
         NavigationStack {
@@ -616,14 +915,14 @@ private struct ContactView: View {
                     VStack(alignment: .center, spacing: 12) {
                         Image(systemName: "envelope.circle.fill")
                             .font(.system(size: 56))
-                            .foregroundStyle(Color.calenBlue)
+                            .foregroundStyle(theme.current.primary)
 
                         Text("문의하기")
                             .font(.system(size: 20, weight: .bold))
 
                         Text("궁금하신 점이 있으신가요?\n아래 방법으로 문의해 주세요.")
                             .font(.system(size: 14))
-                            .foregroundStyle(Color(.secondaryLabel))
+                            .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
                     }
                     .frame(maxWidth: .infinity)
@@ -645,18 +944,18 @@ private struct ContactView: View {
                             Spacer()
                             Text("이메일 보내기")
                                 .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(Color.calenBlue)
+                                .foregroundStyle(theme.current.primary)
                             Spacer()
                         }
                     }
                 }
             }
             .listStyle(.insetGrouped)
-            .navigationTitle("문의하기")
+            .navigationTitle(Text("settings.info.contact"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("닫기") { dismiss() }
+                    Button(NSLocalizedString("common.close", comment: "")) { dismiss() }
                 }
             }
         }
@@ -665,8 +964,12 @@ private struct ContactView: View {
 
 // MARK: - Previews
 
-#Preview("Settings") {
-    SettingsView()
-        .environmentObject(AppState())
+#Preview("Settings v0.1.2") {
+    NavigationStack {
+        SettingsView()
+            .environmentObject(AppState())
+            .environmentObject(iOSThemeService.shared)
+            .environmentObject(iOSLanguageService.shared)
+    }
 }
 #endif

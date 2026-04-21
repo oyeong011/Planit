@@ -94,31 +94,29 @@ struct EventEditSheet: View {
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }
             }
-            .navigationTitle("일정 편집")
+            .navigationTitle(Text("edit.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbarContent }
             .interactiveDismissDisabled(hasChanges || isSaving || isDeleting)
             .confirmationDialog(
-                "변경사항을 취소할까요?",
+                Text("edit.confirm.cancel"),
                 isPresented: $showCancelConfirm,
                 titleVisibility: .visible
             ) {
-                Button("변경사항 버리기", role: .destructive) {
+                Button(NSLocalizedString("edit.confirm.discard", comment: ""), role: .destructive) {
                     dismiss()
                 }
-                Button("계속 편집", role: .cancel) {}
+                Button(NSLocalizedString("edit.confirm.keep", comment: ""), role: .cancel) {}
             }
             .confirmationDialog(
-                "이 일정을 삭제할까요?",
+                Text("edit.confirm.delete"),
                 isPresented: $showDeleteConfirm,
                 titleVisibility: .visible
             ) {
-                Button("삭제", role: .destructive) {
+                Button(NSLocalizedString("common.delete", comment: ""), role: .destructive) {
                     Task { await performDelete() }
                 }
-                Button("취소", role: .cancel) {}
-            } message: {
-                Text("삭제 후 복원은 실패 시 자동으로만 시도됩니다.")
+                Button(NSLocalizedString("common.cancel", comment: ""), role: .cancel) {}
             }
         }
         .presentationDetents([.large])
@@ -130,15 +128,15 @@ struct EventEditSheet: View {
     @ViewBuilder
     private var formContent: some View {
         Form {
-            Section("기본") {
-                TextField("제목", text: $title)
+            Section(header: Text("edit.basic")) {
+                TextField(NSLocalizedString("edit.title.placeholder", comment: ""), text: $title)
                     .textInputAutocapitalization(.sentences)
-                TextField("위치(선택)", text: $location)
+                TextField(NSLocalizedString("edit.location.placeholder", comment: ""), text: $location)
                     .textInputAutocapitalization(.words)
             }
 
-            Section("시간") {
-                Toggle("종일", isOn: $isAllDay)
+            Section(header: Text("edit.time")) {
+                Toggle(isOn: $isAllDay) { Text("edit.allday") }
                     .onChange(of: isAllDay) { _, newValue in
                         if newValue {
                             let cal = Calendar.current
@@ -148,19 +146,19 @@ struct EventEditSheet: View {
                     }
 
                 if isAllDay {
-                    DatePicker("시작", selection: $startDate, displayedComponents: .date)
-                    DatePicker("종료", selection: $endDate, in: startDate..., displayedComponents: .date)
+                    DatePicker(selection: $startDate, displayedComponents: .date) { Text("edit.start") }
+                    DatePicker(selection: $endDate, in: startDate..., displayedComponents: .date) { Text("edit.end") }
                 } else {
-                    DatePicker("시작", selection: $startDate)
-                    DatePicker("종료", selection: $endDate, in: startDate...)
+                    DatePicker(selection: $startDate) { Text("edit.start") }
+                    DatePicker(selection: $endDate, in: startDate...) { Text("edit.end") }
                 }
             }
 
-            Section("카테고리") {
+            Section(header: Text("edit.category")) {
                 colorPicker
             }
 
-            Section("메모") {
+            Section(header: Text("edit.memo")) {
                 TextEditor(text: $notes)
                     .frame(minHeight: 80)
             }
@@ -178,7 +176,7 @@ struct EventEditSheet: View {
                                     .padding(.leading, 6)
                             } else {
                                 Image(systemName: "trash")
-                                Text("일정 삭제")
+                                Text("edit.delete")
                                     .padding(.leading, 4)
                             }
                             Spacer()
@@ -229,12 +227,12 @@ struct EventEditSheet: View {
 
     private func colorLabel(hex: String) -> String {
         switch hex.uppercased() {
-        case "#F56691": return "업무"
-        case "#3B82F6": return "미팅"
-        case "#FAC430": return "식사"
-        case "#40C786": return "운동"
-        case "#9A5CE8": return "개인"
-        default: return "일반"
+        case "#F56691": return NSLocalizedString("category.work",     comment: "")
+        case "#3B82F6": return NSLocalizedString("category.meeting",  comment: "")
+        case "#FAC430": return NSLocalizedString("category.meal",     comment: "")
+        case "#40C786": return NSLocalizedString("category.exercise", comment: "")
+        case "#9A5CE8": return NSLocalizedString("category.personal", comment: "")
+        default:        return NSLocalizedString("category.general",  comment: "")
         }
     }
 
@@ -243,7 +241,7 @@ struct EventEditSheet: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            Button("취소") {
+            Button(NSLocalizedString("common.cancel", comment: "")) {
                 if hasChanges && !isSaving {
                     showCancelConfirm = true
                 } else if !isSaving {
@@ -256,7 +254,7 @@ struct EventEditSheet: View {
             if isSaving {
                 ProgressView().controlSize(.small)
             } else {
-                Button("저장") {
+                Button(NSLocalizedString("common.save", comment: "")) {
                     Task { await performSave() }
                 }
                 .disabled(!canSave)
@@ -274,7 +272,7 @@ struct EventEditSheet: View {
                 .frame(width: 22, height: 22)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("작업 실패 — 복원됨")
+                Text("edit.save.fail")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(.primary)
                 Text(message)

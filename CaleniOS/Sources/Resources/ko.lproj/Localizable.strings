@@ -1,0 +1,89 @@
+/* Calen iOS — Korean Localization (v0.1.2) */
+
+/* ===== Tabs ===== */
+"tab.today"     = "오늘";
+"tab.chat"      = "채팅";
+"tab.review"    = "리뷰";
+"tab.profile"   = "설정";
+
+/* ===== Common ===== */
+"common.save"    = "저장";
+"common.cancel"  = "취소";
+"common.delete"  = "삭제";
+"common.edit"    = "편집";
+"common.done"    = "완료";
+"common.close"   = "닫기";
+"common.confirm" = "확인";
+"common.add"     = "추가";
+"common.retry"   = "재시도";
+
+/* ===== Settings ===== */
+"settings.title"                   = "설정";
+"settings.section.account"         = "계정";
+"settings.section.ai"              = "AI";
+"settings.section.appearance"      = "모양";
+"settings.section.app"             = "앱 설정";
+"settings.section.info"            = "정보";
+"settings.theme.title"             = "테마";
+"settings.theme.subtitle"          = "앱 강조 색상 — 탭바·버튼·오늘 표시";
+"settings.language.title"          = "언어";
+"settings.language.subtitle"       = "앱 내 언어 강제 설정";
+"settings.google.clientid"         = "OAuth 클라이언트 ID";
+"settings.google.configured"       = "설정됨";
+"settings.google.needed"           = "필요";
+"settings.google.signin"           = "Google로 로그인";
+"settings.google.signout"          = "로그아웃";
+"settings.google.connected"        = "Google 계정 연결됨";
+"settings.user.default"            = "Calen 사용자";
+"settings.ai.claude.key"           = "Claude API 키";
+"settings.ai.saved"                = "저장됨";
+"settings.ai.not.saved"            = "미저장";
+"settings.ai.model.info"           = "AI 모델 정보";
+"settings.ai.reset"                = "데이터 초기화";
+"settings.app.notifications"       = "알림";
+"settings.app.calsync"             = "캘린더 동기화";
+"settings.app.icloud.hermes"       = "iCloud 동기화 (Hermes 기억)";
+"settings.app.icloud.hermes.hint"  = "Mac에서 학습된 AI 기억을 iPhone에서 조회";
+"settings.info.version"            = "버전";
+"settings.info.privacy"            = "개인정보처리방침";
+"settings.info.contact"            = "문의하기";
+"settings.reset.alert.title"       = "데이터 초기화";
+"settings.reset.alert.message"     = "Google 로그인과 Claude API 키가 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.";
+"settings.reset.button"            = "초기화";
+
+/* ===== Language picker values ===== */
+"language.ko"  = "한국어";
+"language.en"  = "English";
+
+/* ===== Home ===== */
+"home.title.today"            = "오늘";
+"home.day.empty"              = "일정이 없어요";
+"home.day.empty.hint"         = "+ 버튼으로 추가해보세요";
+"home.fab.add"                = "새 일정 추가";
+"home.replan.today"           = "오늘 다시 짜기";
+
+/* ===== Event Edit Sheet ===== */
+"edit.title"              = "일정 편집";
+"edit.basic"              = "기본";
+"edit.title.placeholder"  = "제목";
+"edit.location.placeholder" = "위치(선택)";
+"edit.time"               = "시간";
+"edit.allday"             = "종일";
+"edit.start"              = "시작";
+"edit.end"                = "종료";
+"edit.category"           = "카테고리";
+"edit.memo"               = "메모";
+"edit.delete"             = "일정 삭제";
+"edit.save.fail"          = "작업 실패 — 복원됨";
+"edit.confirm.cancel"     = "변경사항을 취소할까요?";
+"edit.confirm.discard"    = "변경사항 버리기";
+"edit.confirm.keep"       = "계속 편집";
+"edit.confirm.delete"     = "이 일정을 삭제할까요?";
+
+/* ===== Categories ===== */
+"category.work"      = "업무";
+"category.meeting"   = "미팅";
+"category.meal"      = "식사";
+"category.exercise"  = "운동";
+"category.personal"  = "개인";
+"category.general"   = "일반";

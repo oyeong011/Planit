@@ -23,6 +23,10 @@ import SwiftData
 @main
 struct CaleniOSApp: App {
     @StateObject private var appState = AppState()
+    /// v0.1.2 테마 시스템. MainTabView/HomeView/SettingsView 가 환경 주입으로 참조.
+    @StateObject private var themeService = iOSThemeService.shared
+    /// v0.1.2 언어 설정. Locale override — preferredLocalizations 를 앱 단위로 강제.
+    @StateObject private var language = iOSLanguageService.shared
 
     /// 로컬 SwiftData 컨테이너.
     ///  - `Schedule` (iOS 로컬 전용 샘플 엔티티, M2 UI v3에서 포팅)
@@ -45,6 +49,10 @@ struct CaleniOSApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(appState)
+                .environmentObject(themeService)
+                .environmentObject(language)
+                .environment(\.locale, Locale(identifier: language.current.rawValue))
+                .tint(themeService.current.primary)
                 .onOpenURL { url in
                     GoogleOAuthURLHandler.handleCallback(url)
                 }

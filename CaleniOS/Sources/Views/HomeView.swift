@@ -19,6 +19,7 @@ struct HomeView: View {
 
     @StateObject private var viewModel = HomeViewModel()
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var theme: iOSThemeService
 
     @State private var detailItem: ScheduleDisplayItem?
     @State private var showAddSheet = false
@@ -199,7 +200,7 @@ struct HomeView: View {
                 navButton(icon: "wand.and.stars") {
                     showReplanSheet = true
                 }
-                .accessibilityLabel("오늘 다시 짜기")
+                .accessibilityLabel(Text("home.replan.today"))
             }
         }
     }
@@ -208,9 +209,9 @@ struct HomeView: View {
         Button(action: action) {
             Image(systemName: icon)
                 .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(Color.calenBlue)
+                .foregroundStyle(theme.current.primary)
                 .frame(width: 34, height: 34)
-                .background(Color.calenBlue.opacity(0.10), in: Circle())
+                .background(theme.current.primary.opacity(0.10), in: Circle())
         }
         .buttonStyle(.plain)
     }
@@ -309,11 +310,11 @@ struct HomeView: View {
                 .font(.system(size: 22, weight: .semibold))
                 .foregroundStyle(.white)
                 .frame(width: 56, height: 56)
-                .background(Color.calenBlue, in: Circle())
-                .calenFloatingShadow()
+                .background(theme.current.gradient, in: Circle())
+                .shadow(color: theme.current.accent.opacity(0.30), radius: 20, x: 0, y: 8)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("새 일정 추가")
+        .accessibilityLabel(Text("home.fab.add"))
     }
 
     // MARK: - Actions
@@ -328,5 +329,6 @@ struct HomeView: View {
 #Preview("Home v4") {
     HomeView()
         .modelContainer(for: Schedule.self, inMemory: true)
+        .environmentObject(iOSThemeService.shared)
 }
 #endif
