@@ -13,10 +13,26 @@
     <key>com.apple.security.personal-information.reminders</key>
     <true/>
 
-    <!-- ⚠️ iOS 공유용 entitlement들은 macOS App ID (com.oy.planit) 에
-         Apple Developer Console 에서 capability 등록 전까지는 포함 금지.
-         등록 없이 넣으면 런타임 validator가 SIGKILL (v0.4.5 사고 사례, exit 137).
-         registration 완료 후 application-groups / keychain-access-groups /
-         icloud-container-identifiers / icloud-services 를 다시 추가할 것. -->
+    <!-- Portal 등록 완료 — iCloud CloudKit (Hermes 메모리 sync — macOS writes, iOS reads). -->
+    <key>com.apple.developer.icloud-container-identifiers</key>
+    <array>
+        <string>iCloud.com.oy.planit</string>
+    </array>
+    <key>com.apple.developer.icloud-services</key>
+    <array>
+        <string>CloudKit</string>
+    </array>
+    <key>com.apple.developer.ubiquity-container-identifiers</key>
+    <array>
+        <string>iCloud.com.oy.planit</string>
+    </array>
+    <key>com.apple.security.application-groups</key>
+    <array>
+        <string>group.com.oy.planit</string>
+    </array>
+    <key>keychain-access-groups</key>
+    <array>
+        <string>$(AppIdentifierPrefix)group.com.oy.planit</string>
+    </array>
 </dict>
 </plist>
