@@ -19,6 +19,13 @@
 "common.repeat" = "Repeat";
 
 /* ===== Login View ===== */
+"login.headline" = "The menubar calendar that plans\nyour tomorrow with AI";
+"login.subcopy" = "See all your events and reminders in one place, and let AI quickly organize your day.";
+"login.feature.menubar" = "Instant menubar access";
+"login.feature.integration" = "Calendar + Reminders";
+"login.feature.ai" = "AI daily planning";
+"login.cta.primary" = "Load My Schedule";
+"login.cta.local" = "Start with local calendar";
 "login.subtitle" = "Connect with Google Calendar\nto manage your schedule";
 "login.google.api.setup" = "Google API Setup";
 "login.google.api.description" = "Create an OAuth client in Google Cloud Console and enter the credentials.";
@@ -92,7 +99,7 @@
 "chat.codex.install.hint" = "brew install codex\nor npm install -g @openai/codex";
 "chat.redetect" = "Re-detect";
 "chat.select.other.ai" = "Select Other AI";
-"chat.assistant.title" = "Calendar AI Assistant";
+"chat.assistant.title" = "AI Daily Planner";
 "chat.examples" = "\"Add a meeting at 3pm tomorrow\"\n\"Show this week's schedule\"\n\"Delete the exam event\"";
 "chat.thinking" = "Thinking...";
 "chat.input.placeholder" = "Type a message...";
@@ -382,7 +389,7 @@
 "rollover.moved.body" = "%d incomplete task(s) moved to today";
 
 /* ===== Chat Quick Actions ===== */
-"chat.empty.subtitle" = "Try one of the examples below";
+"chat.empty.subtitle" = "Based on your events and tasks,\nI'll help you plan tomorrow.";
 "chat.quick.today" = "What's on my schedule today?";
 "chat.quick.add.meeting" = "Add a meeting tomorrow at 3pm";
 "chat.quick.free.time" = "Find free time this week";

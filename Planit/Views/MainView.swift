@@ -302,9 +302,15 @@ struct MainCalendarView: View {
     // MARK: - Mode Detection
 
     private func checkLeftPanelMode() {
+        // 온보딩 미완료면 기본값으로 자동 완료 처리 (강제 목표 입력 제거)
         if !goalService.profile.onboardingDone {
-            leftPanelMode = .onboarding
-            return
+            goalService.profile.workStartHour = 9
+            goalService.profile.workEndHour = 18
+            goalService.profile.energyType = .balanced
+            goalService.profile.weekdayCapacityMinutes = 480
+            goalService.profile.weekendCapacityMinutes = 480
+            goalService.profile.onboardingDone = true
+            goalService.saveProfile()
         }
 
         // Check if it's review time
