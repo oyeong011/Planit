@@ -565,13 +565,24 @@ struct ReviewView: View {
         guard day.total > 0, day.done > 0 else {
             return Color.secondary.opacity(day.total > 0 ? 0.18 : 0.10)
         }
-        let accent = themeService.current.accent
-        switch day.rate {
-        case ..<0.25: return accent.opacity(0.32)
-        case ..<0.50: return accent.opacity(0.50)
-        case ..<0.75: return accent.opacity(0.68)
-        case ..<1.0:  return accent.opacity(0.84)
-        default:      return accent
+        return accentShade(for: day.rate)
+    }
+
+    /// accent hue 고정, 채도(S)와 명도(B)를 4단계로 조절 — 어두운 accent에서도 레벨 구분이 명확하도록
+    /// level 1: 옅은 tint (S 낮음, B 높음) → level 4: 원래 accent에 근접
+    private func accentShade(for rate: Double) -> Color {
+        guard let ns = NSColor(themeService.current.accent).usingColorSpace(.sRGB) else {
+            return themeService.current.accent.opacity(0.40 + rate * 0.60)
+        }
+        var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        ns.getHue(&h, saturation: &s, brightness: &b, alpha: &a)
+        switch rate {
+        // 채도를 점진적으로 높이고, 낮은 레벨은 명도 하한(0.82)으로 밝게 유지해 가시성 확보
+        case ..<0.25: return Color(hue: h, saturation: s * 0.25, brightness: max(b, 0.82))
+        case ..<0.50: return Color(hue: h, saturation: s * 0.52, brightness: max(b, 0.76))
+        case ..<0.75: return Color(hue: h, saturation: s * 0.78, brightness: max(b, 0.70))
+        case ..<1.0:  return Color(hue: h, saturation: s * 0.93, brightness: b)
+        default:      return themeService.current.accent
         }
     }
 
@@ -1166,10 +1177,14 @@ struct ReviewView: View {
 
     // MARK: - Progress Section
 
-    /// 테마 accent 색을 기반으로 rate에 따라 opacity 보간 (낮은 달성률 → 옅게, 높은 달성률 → 진하게)
+    /// 4단계 discrete opacity — 바 차트에서 레벨 간 색 차이가 명확하도록
     private func progressColor(for rate: Double) -> Color {
         let clamped = max(0, min(1, rate))
-        return themeService.current.accent.opacity(0.30 + clamped * 0.70)
+        let opacity: Double = clamped < 0.25 ? 0.42
+                            : clamped < 0.50 ? 0.62
+                            : clamped < 0.75 ? 0.82
+                            : 1.0
+        return themeService.current.accent.opacity(opacity)
     }
 
     private var progressSection: some View {
