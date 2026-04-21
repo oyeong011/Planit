@@ -458,6 +458,421 @@
       footer { padding: 32px 20px; flex-direction: column; align-items: flex-start; }
       .pricing-card { padding: 32px 24px; }
     }
+
+    /* ── DEMO SECTION ──────────────────────────── */
+    :root { --demo-accent: #006D77; }
+
+    #demo { background: var(--bg); }
+    .demo-inner { max-width: 980px; margin: 0 auto; }
+
+    .demo-tab-row {
+      display: flex; gap: 4px; justify-content: center;
+      margin-bottom: 20px;
+    }
+    .demo-tab {
+      padding: 8px 22px;
+      border-radius: 8px;
+      border: 1px solid var(--border2);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      font-size: 0.875rem; font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, color .15s, border-color .15s;
+      user-select: none;
+    }
+    .demo-tab:hover { background: rgba(255,255,255,.08); color: var(--text); }
+    .demo-tab.active {
+      background: rgba(0,109,119,.15);
+      border-color: rgba(0,109,119,.4);
+      color: #00b8c8;
+    }
+
+    .demo-frame {
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 0 80px rgba(0,109,119,.2), 0 40px 100px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.1);
+    }
+    .demo-titlebar {
+      height: 36px;
+      background: #f0f0f2;
+      display: flex; align-items: center;
+      padding: 0 14px; gap: 7px;
+      border-bottom: 1px solid #ddd;
+      flex-shrink: 0;
+    }
+    .demo-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    .demo-panel {
+      display: none;
+    }
+    .demo-panel.active { display: flex; }
+
+    /* ── SHARED LIGHT LAYOUT ───────────────── */
+    .demo-sidebar {
+      width: 220px; flex-shrink: 0;
+      background: #f5f5f7;
+      border-right: 1px solid #e5e5ea;
+      font-size: 12px; color: #333;
+      overflow: hidden;
+    }
+    .demo-sidebar-tabs {
+      display: flex; border-bottom: 1px solid #e5e5ea;
+      background: #fff;
+    }
+    .demo-sidebar-tab {
+      flex: 1; text-align: center;
+      padding: 9px 0; font-size: 12px; font-weight: 600;
+      color: #888; cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color .15s, border-color .15s;
+    }
+    .demo-sidebar-tab.active {
+      color: var(--demo-accent);
+      border-bottom-color: var(--demo-accent);
+    }
+    .demo-sb-section { padding: 10px 12px 8px; border-bottom: 1px solid #e5e5ea; }
+    .demo-sb-section:last-child { border-bottom: none; }
+    .demo-sb-label {
+      font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+      color: #999; margin-bottom: 7px;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .demo-sb-date { font-size: 11px; color: #555; margin-bottom: 6px; }
+
+    /* mini bar chart */
+    .demo-bar-chart {
+      display: flex; align-items: flex-end; gap: 3px; height: 40px; margin-bottom: 4px;
+    }
+    .demo-bar-wrap { display: flex; flex-direction: column-reverse; align-items: center; gap: 2px; flex: 1; height: 40px; }
+    .demo-bar {
+      width: 100%; border-radius: 2px 2px 0 0;
+      background: #34d399;
+      transition: height .3s; min-height: 3px;
+    }
+    .demo-bar.today { background: var(--demo-accent); }
+    .demo-bar.low { background: #fca5a5; }
+    .demo-bar-label { font-size: 8px; color: #999; }
+
+    /* grass grid */
+    .demo-grass { display: flex; flex-wrap: wrap; gap: 2px; margin-bottom: 5px; }
+    .demo-grass-dot {
+      width: 9px; height: 9px; border-radius: 2px;
+      background: #e5e5ea;
+    }
+    .demo-grass-dot.g1 { background: #bbf7d0; }
+    .demo-grass-dot.g2 { background: #4ade80; }
+    .demo-grass-dot.g3 { background: var(--demo-accent); }
+    .demo-grass-meta { font-size: 9px; color: #888; }
+
+    /* goal badge */
+    .demo-goal-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(0,109,119,.1); border: 1px solid rgba(0,109,119,.25);
+      border-radius: 6px; padding: 3px 7px;
+      font-size: 10px; color: var(--demo-accent); font-weight: 600;
+    }
+    .demo-year-badge {
+      margin-left: auto;
+      background: #e5f0ff; color: #3b82f6;
+      border-radius: 4px; padding: 1px 5px;
+      font-size: 9px; font-weight: 700;
+    }
+
+    /* habit sparkline */
+    .demo-sparkline { display: flex; align-items: flex-end; gap: 2px; height: 20px; }
+    .demo-spark-bar { width: 7px; border-radius: 1px 1px 0 0; background: var(--demo-accent); opacity: .7; }
+
+    /* ── CALENDAR PANEL ─────────────────────── */
+    .demo-cal-main {
+      flex: 1; background: #fff;
+      display: flex; flex-direction: column;
+      min-width: 0;
+    }
+    .demo-cal-header {
+      display: flex; align-items: center;
+      padding: 10px 14px 8px;
+      border-bottom: 1px solid #f0f0f0;
+      flex-shrink: 0;
+    }
+    .demo-cal-title {
+      font-size: 15px; font-weight: 800; color: #111; letter-spacing: -.4px;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .demo-cal-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--demo-accent); }
+    .demo-cal-nav { display: flex; gap: 2px; margin-left: 8px; }
+    .demo-cal-nav button {
+      width: 22px; height: 22px; border-radius: 5px; border: 1px solid #e5e5ea;
+      background: #f5f5f7; color: #555; font-size: 11px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; padding: 0;
+    }
+    .demo-cal-nav button:hover { background: #e8e8ec; }
+    .demo-cal-progress { display: flex; gap: 3px; margin-left: auto; align-items: center; }
+    .demo-cal-prog-bar { width: 28px; height: 3px; border-radius: 2px; }
+
+    .demo-weekdays {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      padding: 0 8px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .demo-wd {
+      text-align: center; font-size: 10px; font-weight: 700;
+      padding: 5px 0; color: #888;
+    }
+    .demo-wd.sun { color: #ef4444; }
+    .demo-wd.sat { color: #3b82f6; }
+
+    .demo-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      flex: 1; padding: 0 8px 8px; gap: 1px;
+      overflow: hidden;
+    }
+    .demo-cell {
+      padding: 3px 4px; border-radius: 6px; min-height: 52px;
+      cursor: pointer; transition: background .12s;
+      position: relative;
+    }
+    .demo-cell:hover { background: rgba(0,109,119,.04); }
+    .demo-cell.selected { background: rgba(0,109,119,.07); }
+    .demo-cell.other-month .demo-cell-num { color: #ccc; }
+    .demo-cell-num {
+      font-size: 11px; font-weight: 600; color: #444;
+      width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+    }
+    .demo-cell.today .demo-cell-num {
+      background: var(--demo-accent); color: #fff;
+    }
+    .demo-cell.sun-col .demo-cell-num { color: #ef4444; }
+    .demo-cell.sat-col .demo-cell-num { color: #3b82f6; }
+    .demo-cell.today.sun-col .demo-cell-num,
+    .demo-cell.today.sat-col .demo-cell-num { color: #fff; }
+    .demo-chip {
+      display: block; border-radius: 3px; padding: 1px 4px;
+      font-size: 9px; font-weight: 500; margin-top: 1px;
+      background: rgba(0,109,119,.12); color: #006D77;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .demo-chip.purple { background: rgba(139,92,246,.12); color: #7c3aed; }
+    .demo-bullet {
+      display: flex; align-items: center; gap: 3px;
+      font-size: 9px; color: #7c3aed; margin-top: 1px;
+      white-space: nowrap; overflow: hidden;
+    }
+    .demo-bullet::before {
+      content: ''; width: 5px; height: 5px; border-radius: 50%;
+      background: #7c3aed; flex-shrink: 0;
+    }
+
+    /* right panel */
+    .demo-right {
+      width: 200px; flex-shrink: 0;
+      background: #fff; border-left: 1px solid #e5e5ea;
+      display: flex; flex-direction: column;
+      font-size: 12px;
+    }
+    .demo-right-header {
+      padding: 12px 12px 8px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .demo-right-day { font-size: 14px; font-weight: 800; color: #111; letter-spacing: -.3px; }
+    .demo-right-badges { display: flex; gap: 5px; margin-top: 4px; flex-wrap: wrap; }
+    .demo-badge {
+      border-radius: 5px; padding: 2px 6px;
+      font-size: 10px; font-weight: 700;
+    }
+    .demo-badge.d-badge { background: #fff0e0; color: #f97316; }
+    .demo-right-events { flex: 1; padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; }
+    .demo-event {
+      display: flex; align-items: flex-start; gap: 6px;
+      padding: 6px 0;
+      border-bottom: 1px solid #f5f5f7;
+    }
+    .demo-event-bar { width: 3px; border-radius: 2px; background: var(--demo-accent); align-self: stretch; flex-shrink: 0; }
+    .demo-event-info { flex: 1; min-width: 0; }
+    .demo-event-title { font-size: 11px; font-weight: 600; color: #111; }
+    .demo-event-time { font-size: 10px; color: #888; }
+    .demo-event-toggle {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 1.5px solid #ccc; flex-shrink: 0; margin-top: 1px;
+    }
+    .demo-right-add {
+      margin: 8px 12px 12px;
+      padding: 7px; border-radius: 7px;
+      border: 1px dashed #e5e5ea; background: #fafafa;
+      text-align: center; font-size: 11px; color: #aaa; cursor: pointer;
+    }
+    .demo-right-add:hover { background: #f0f8f8; color: var(--demo-accent); border-color: rgba(0,109,119,.3); }
+
+    /* ── REVIEW PANEL ───────────────────────── */
+    .demo-review-sidebar {
+      width: 260px; flex-shrink: 0;
+      background: #f5f5f7; border-right: 1px solid #e5e5ea;
+      font-size: 12px; color: #333; overflow-y: auto;
+    }
+    .demo-period-tabs {
+      display: flex; border-bottom: 1px solid #e5e5ea; background: #fff;
+    }
+    .demo-period-tab {
+      flex: 1; text-align: center; padding: 8px 0;
+      font-size: 10px; font-weight: 600; color: #888;
+      border-bottom: 2px solid transparent; cursor: pointer;
+    }
+    .demo-period-tab.active { color: var(--demo-accent); border-bottom-color: var(--demo-accent); }
+
+    .demo-achieve-card {
+      margin: 10px 12px 8px; padding: 10px;
+      background: #fff; border-radius: 8px;
+      border: 1px solid #e5e5ea;
+    }
+    .demo-achieve-label { font-size: 10px; color: #888; margin-bottom: 4px; }
+    .demo-achieve-pct { font-size: 22px; font-weight: 800; color: var(--demo-accent); line-height: 1; }
+    .demo-achieve-bar { height: 5px; border-radius: 3px; background: #e5e5ea; margin-top: 6px; overflow: hidden; }
+    .demo-achieve-fill { height: 100%; border-radius: 3px; background: var(--demo-accent); }
+
+    .demo-rv-bar-chart {
+      display: flex; align-items: flex-end; gap: 4px; height: 50px; margin-bottom: 4px;
+    }
+    .demo-rv-bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 1; position: relative; }
+    .demo-rv-bar { width: 100%; border-radius: 2px 2px 0 0; background: #4ade80; }
+    .demo-rv-bar.today { background: var(--demo-accent); }
+    .demo-rv-bar.fail { background: #4ade80; }
+    .demo-rv-fail-pip {
+      position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 4px; height: 4px; border-radius: 50%; background: #ef4444;
+    }
+    .demo-rv-bar-lbl { font-size: 8px; color: #999; }
+
+    .demo-big-grass { display: flex; flex-wrap: wrap; gap: 2px; margin: 6px 0 4px; }
+    .demo-big-grass .demo-grass-dot { width: 8px; height: 8px; }
+
+    .demo-habit-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
+    .demo-habit-name { font-size: 10px; color: #444; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .demo-habit-pct { font-size: 10px; font-weight: 700; color: var(--demo-accent); margin: 0 6px; }
+
+    .demo-review-main {
+      flex: 1; background: #fff; display: flex; flex-direction: column;
+      padding: 16px; gap: 14px; overflow: hidden; min-width: 0;
+    }
+    .demo-review-card {
+      border: 1px solid #e5e5ea; border-radius: 10px; padding: 12px;
+    }
+    .demo-review-card-title { font-size: 12px; font-weight: 700; color: #111; margin-bottom: 10px; }
+    .demo-big-bar-chart {
+      display: flex; align-items: flex-end; gap: 6px; height: 64px; margin-bottom: 6px;
+    }
+    .demo-big-bar-wrap { display: flex; flex-direction: column-reverse; align-items: center; gap: 3px; flex: 1; height: 64px; }
+    .demo-big-bar { width: 100%; border-radius: 3px 3px 0 0; background: #4ade80; }
+    .demo-big-bar.today { background: var(--demo-accent); }
+    .demo-big-bar-lbl { font-size: 9px; color: #aaa; }
+    .demo-todo-item { display: flex; align-items: center; gap: 7px; font-size: 11px; color: #333; }
+    .demo-todo-check {
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--demo-accent); display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .demo-todo-check::after { content: '✓'; font-size: 8px; color: #fff; }
+
+    /* ── CHAT PANEL ─────────────────────────── */
+    .demo-chat-panel {
+      flex: 1; background: #fff; display: flex; flex-direction: column;
+      min-width: 0; height: 440px;
+    }
+    .demo-chat-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px; border-bottom: 1px solid #f0f0f0;
+      flex-shrink: 0;
+    }
+    .demo-chat-title { font-size: 14px; font-weight: 700; color: #111; display: flex; align-items: center; gap: 6px; }
+    .demo-chat-title .star { color: var(--demo-accent); font-size: 16px; }
+    .demo-provider-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: 6px; border: 1px solid #e5e5ea;
+      background: #f5f5f7; font-size: 11px; font-weight: 600; color: #444;
+      cursor: pointer;
+    }
+    .demo-provider-btn.active-provider { border-color: rgba(0,109,119,.4); background: rgba(0,109,119,.07); color: var(--demo-accent); }
+    .demo-trash { margin-left: auto; width: 28px; height: 28px; border-radius: 6px; border: 1px solid #e5e5ea; background: #f5f5f7; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; color: #888; }
+
+    .demo-chat-msgs {
+      flex: 1; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;
+      overflow-y: auto;
+    }
+    .demo-msg { display: flex; flex-direction: column; max-width: 82%; gap: 3px; }
+    .demo-msg.user { align-self: flex-end; align-items: flex-end; }
+    .demo-msg.ai { align-self: flex-start; align-items: flex-start; }
+    .demo-bubble {
+      padding: 8px 12px; border-radius: 12px;
+      font-size: 12px; line-height: 1.55; color: #222;
+    }
+    .demo-msg.user .demo-bubble {
+      background: rgba(0,109,119,.1); color: #004a51;
+      border-radius: 12px 12px 3px 12px;
+    }
+    .demo-msg.ai .demo-bubble {
+      background: #f0f0f3; color: #333;
+      border-radius: 12px 12px 12px 3px;
+    }
+    .demo-tool-row {
+      display: flex; align-items: center; gap: 7px;
+      background: #f5f5f7; border-radius: 7px;
+      padding: 5px 10px; font-size: 11px; color: #555;
+      border: 1px solid #e8e8ec;
+    }
+    .demo-tool-icon { font-size: 13px; }
+    .demo-tool-more { font-size: 11px; color: #aaa; padding: 2px 10px; }
+
+    .demo-chat-actions {
+      display: flex; gap: 6px; padding: 8px 14px;
+      border-top: 1px solid #f0f0f0; flex-shrink: 0; flex-wrap: wrap;
+    }
+    .demo-quick-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 5px 10px; border-radius: 7px;
+      border: 1px solid #e5e5ea; background: #f5f5f7;
+      font-size: 11px; font-weight: 600; color: #444; cursor: pointer;
+      transition: background .15s, border-color .15s, color .15s;
+    }
+    .demo-quick-btn:hover { background: rgba(0,109,119,.08); border-color: rgba(0,109,119,.35); color: var(--demo-accent); }
+
+    .demo-chat-input-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 14px 12px; flex-shrink: 0;
+    }
+    .demo-chat-input {
+      flex: 1; border: 1px solid #e5e5ea; border-radius: 8px;
+      padding: 7px 12px; font-size: 12px; background: #fafafa;
+      color: #888; outline: none;
+    }
+    .demo-chat-send {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--demo-accent); border: none;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: #fff; font-size: 14px;
+    }
+    .demo-chat-send:hover { background: #005a62; }
+
+    /* typing animation */
+    .demo-typing { display: flex; gap: 4px; align-items: center; padding: 8px 12px; }
+    .demo-typing span {
+      width: 6px; height: 6px; border-radius: 50%; background: #999;
+      animation: demoBounce .8s infinite;
+    }
+    .demo-typing span:nth-child(2) { animation-delay: .15s; }
+    .demo-typing span:nth-child(3) { animation-delay: .3s; }
+    @keyframes demoBounce {
+      0%, 80%, 100% { transform: translateY(0); opacity: .4; }
+      40% { transform: translateY(-5px); opacity: 1; }
+    }
+
+    @media (max-width: 900px) {
+      .demo-sidebar { width: 180px; }
+      .demo-right { width: 160px; }
+      .demo-review-sidebar { width: 200px; }
+    }
+    @media (max-width: 680px) {
+      .demo-sidebar, .demo-right, .demo-review-sidebar { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -615,6 +1030,240 @@
   </div>
 </section>
 
+<!-- INTERACTIVE DEMO -->
+<section id="demo">
+  <div class="demo-inner">
+    <p class="section-eyebrow" style="text-align:center">Interactive Demo</p>
+    <h2 class="section-title" style="text-align:center;margin-bottom:32px">See it in action.</h2>
+
+    <!-- Tab switcher -->
+    <div class="demo-tab-row">
+      <button class="demo-tab active" data-demo="calendar">Calendar</button>
+      <button class="demo-tab" data-demo="review">Review</button>
+      <button class="demo-tab" data-demo="chat">Chat</button>
+    </div>
+
+    <!-- Demo frame -->
+    <div class="demo-frame">
+      <div class="demo-titlebar">
+        <div class="demo-dot" style="background:#ff5f57"></div>
+        <div class="demo-dot" style="background:#febc2e"></div>
+        <div class="demo-dot" style="background:#28c840"></div>
+      </div>
+
+      <!-- ════ CALENDAR PANEL ════ -->
+      <div class="demo-panel active" id="demo-calendar" style="height:440px">
+
+        <!-- Left sidebar -->
+        <div class="demo-sidebar">
+          <div class="demo-sidebar-tabs">
+            <div class="demo-sidebar-tab active">리뷰</div>
+            <div class="demo-sidebar-tab">챗</div>
+          </div>
+          <div class="demo-sb-section">
+            <div class="demo-sb-label">☀ Today's Adjustment</div>
+            <div class="demo-sb-date">Apr 21, 2026</div>
+          </div>
+          <div class="demo-sb-section">
+            <div class="demo-sb-label">7-Day Progress</div>
+            <div class="demo-bar-chart">
+              <div class="demo-bar-wrap"><div class="demo-bar low" style="height:30%"></div><div class="demo-bar-label">Wed</div></div>
+              <div class="demo-bar-wrap"><div class="demo-bar" style="height:70%"></div><div class="demo-bar-label">Thu</div></div>
+              <div class="demo-bar-wrap"><div class="demo-bar" style="height:80%"></div><div class="demo-bar-label">Fri</div></div>
+              <div class="demo-bar-wrap"><div class="demo-bar" style="height:60%"></div><div class="demo-bar-label">Sat</div></div>
+              <div class="demo-bar-wrap"><div class="demo-bar low" style="height:20%"></div><div class="demo-bar-label">Sun</div></div>
+              <div class="demo-bar-wrap"><div class="demo-bar" style="height:75%"></div><div class="demo-bar-label">Mon</div></div>
+              <div class="demo-bar-wrap"><div class="demo-bar today" style="height:45%"></div><div class="demo-bar-label">Today</div></div>
+            </div>
+          </div>
+          <div class="demo-sb-section">
+            <div class="demo-sb-label">30-Day Todo Tracker</div>
+            <div class="demo-grass" id="demo-grass-sb"></div>
+            <div class="demo-grass-meta">Best day 14/14 | Streak 0 days</div>
+          </div>
+          <div class="demo-sb-section">
+            <div class="demo-sb-label">Long-term Goals</div>
+            <div style="display:flex;align-items:center;gap:4px">
+              <div class="demo-goal-badge">⭐ calen 5만 달성!</div>
+              <span class="demo-year-badge">올해</span>
+            </div>
+          </div>
+          <div class="demo-sb-section">
+            <div class="demo-sb-label">Habit Adherence</div>
+            <div class="demo-habit-row">
+              <div class="demo-habit-name">캘린 하루 1커밋</div>
+              <div class="demo-habit-pct">5%</div>
+              <div class="demo-sparkline">
+                <div class="demo-spark-bar" style="height:40%"></div>
+                <div class="demo-spark-bar" style="height:65%"></div>
+                <div class="demo-spark-bar" style="height:30%"></div>
+                <div class="demo-spark-bar" style="height:50%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main calendar grid -->
+        <div class="demo-cal-main">
+          <div class="demo-cal-header">
+            <span class="demo-cal-title">🗨 April <span class="demo-cal-dot"></span></span>
+            <div class="demo-cal-nav">
+              <button>‹</button>
+              <button>›</button>
+            </div>
+            <div class="demo-cal-progress">
+              <div class="demo-cal-prog-bar" style="background:rgba(0,109,119,.3)"></div>
+              <div class="demo-cal-prog-bar" style="background:rgba(99,102,241,.3)"></div>
+              <div class="demo-cal-prog-bar" style="background:rgba(167,139,250,.3)"></div>
+            </div>
+          </div>
+          <div class="demo-weekdays">
+            <div class="demo-wd sun">일</div>
+            <div class="demo-wd">월</div>
+            <div class="demo-wd">화</div>
+            <div class="demo-wd">수</div>
+            <div class="demo-wd">목</div>
+            <div class="demo-wd">금</div>
+            <div class="demo-wd sat">토</div>
+          </div>
+          <div class="demo-grid" id="demo-cal-grid"></div>
+        </div>
+
+        <!-- Right detail panel -->
+        <div class="demo-right">
+          <div class="demo-right-header">
+            <div class="demo-right-day" id="demo-right-day">4월 22일 수요일</div>
+            <div class="demo-right-badges">
+              <span class="demo-badge d-badge">D-1</span>
+            </div>
+          </div>
+          <div class="demo-right-events">
+            <div class="demo-event">
+              <div class="demo-event-bar"></div>
+              <div class="demo-event-info">
+                <div class="demo-event-title">팀 스탠드업</div>
+                <div class="demo-event-time">10:00–10:30</div>
+              </div>
+              <div class="demo-event-toggle"></div>
+            </div>
+            <div class="demo-event">
+              <div class="demo-event-bar"></div>
+              <div class="demo-event-info">
+                <div class="demo-event-title">코드 리뷰 세션</div>
+                <div class="demo-event-time">15:00–16:00</div>
+              </div>
+              <div class="demo-event-toggle"></div>
+            </div>
+          </div>
+          <div class="demo-right-add">+ 할 일 추가</div>
+        </div>
+      </div>
+
+      <!-- ════ REVIEW PANEL ════ -->
+      <div class="demo-panel" id="demo-review" style="height:440px">
+
+        <!-- Review sidebar -->
+        <div class="demo-review-sidebar">
+          <div class="demo-period-tabs">
+            <div class="demo-period-tab active">오늘</div>
+            <div class="demo-period-tab">이번주</div>
+            <div class="demo-period-tab">이번달</div>
+            <div class="demo-period-tab">올해</div>
+          </div>
+          <div class="demo-achieve-card">
+            <div class="demo-achieve-label">1 / 1 할일 달성률</div>
+            <div class="demo-achieve-pct">100%</div>
+            <div class="demo-achieve-bar"><div class="demo-achieve-fill" style="width:100%"></div></div>
+          </div>
+          <div class="demo-sb-section">
+            <div class="demo-sb-label">7-Day Progress</div>
+            <div class="demo-rv-bar-chart">
+              <div class="demo-rv-bar-wrap"><div class="demo-rv-bar fail" style="height:30%"></div><div class="demo-rv-fail-pip"></div><div class="demo-rv-bar-lbl">Wed</div></div>
+              <div class="demo-rv-bar-wrap"><div class="demo-rv-bar" style="height:70%"></div><div class="demo-rv-bar-lbl">Thu</div></div>
+              <div class="demo-rv-bar-wrap"><div class="demo-rv-bar" style="height:80%"></div><div class="demo-rv-bar-lbl">Fri</div></div>
+              <div class="demo-rv-bar-wrap"><div class="demo-rv-bar" style="height:50%"></div><div class="demo-rv-bar-lbl">Sat</div></div>
+              <div class="demo-rv-bar-wrap"><div class="demo-rv-bar fail" style="height:15%"></div><div class="demo-rv-fail-pip"></div><div class="demo-rv-bar-lbl">Sun</div></div>
+              <div class="demo-rv-bar-wrap"><div class="demo-rv-bar" style="height:75%"></div><div class="demo-rv-bar-lbl">Mon</div></div>
+              <div class="demo-rv-bar-wrap"><div class="demo-rv-bar today" style="height:40%"></div><div class="demo-rv-bar-lbl">Today</div></div>
+            </div>
+          </div>
+          <div class="demo-sb-section">
+            <div class="demo-sb-label">30-Day Tracker</div>
+            <div class="demo-big-grass" id="demo-grass-rv"></div>
+            <div class="demo-grass-meta" style="margin-top:3px">최대 완료일 14/14 | 연속 완료 0일</div>
+          </div>
+          <div class="demo-sb-section">
+            <div class="demo-sb-label">Habit Adherence</div>
+            <div class="demo-habit-row">
+              <div class="demo-habit-name">캘린 하루 1커밋</div>
+              <div class="demo-habit-pct">5%</div>
+              <div class="demo-sparkline">
+                <div class="demo-spark-bar" style="height:35%"></div>
+                <div class="demo-spark-bar" style="height:60%"></div>
+                <div class="demo-spark-bar" style="height:20%"></div>
+                <div class="demo-spark-bar" style="height:45%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Review main -->
+        <div class="demo-review-main">
+          <div class="demo-review-card">
+            <div class="demo-review-card-title">습관 달성률 — 캘린 하루 1커밋</div>
+            <div class="demo-big-bar-chart">
+              <div class="demo-big-bar-wrap"><div class="demo-big-bar" style="height:30%"></div><div class="demo-big-bar-lbl">W1</div></div>
+              <div class="demo-big-bar-wrap"><div class="demo-big-bar" style="height:55%"></div><div class="demo-big-bar-lbl">W2</div></div>
+              <div class="demo-big-bar-wrap"><div class="demo-big-bar" style="height:70%"></div><div class="demo-big-bar-lbl">W3</div></div>
+              <div class="demo-big-bar-wrap"><div class="demo-big-bar today" style="height:40%"></div><div class="demo-big-bar-lbl">W4</div></div>
+            </div>
+          </div>
+          <div class="demo-review-card" style="flex:1">
+            <div class="demo-review-card-title">오늘의 할일</div>
+            <div class="demo-todo-item">
+              <div class="demo-todo-check"></div>
+              <span>배포 체크리스트 작성 (플렉)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ CHAT PANEL ════ -->
+      <div class="demo-panel" id="demo-chat" style="height:440px;flex-direction:column;background:#fff;">
+        <div class="demo-chat-header">
+          <div class="demo-chat-title"><span class="star">✦</span> AI</div>
+          <div class="demo-provider-btn active-provider">+ Claude</div>
+          <div class="demo-provider-btn" style="margin-left:6px">⚙ Codex</div>
+          <div class="demo-trash">🗑</div>
+        </div>
+        <div class="demo-chat-msgs" id="demo-chat-msgs">
+          <div class="demo-msg user">
+            <div class="demo-bubble">캘린 배포를 위한 2주완성플랜을 만들어서 등록해줘</div>
+          </div>
+          <div class="demo-msg ai">
+            <div class="demo-bubble">저녁 집중 흐름을 기준으로 2주 배포 플랜을 등록할게요. 1주차는 정리·연동·검증, 2주차는 안정화·배포·회고 순서로 잡겠습니다.</div>
+          </div>
+          <div class="demo-tool-row"><span class="demo-tool-icon">🔧</span> 할일 추가: 배포 범위 확정 (플렉)</div>
+          <div class="demo-tool-row"><span class="demo-tool-icon">🔧</span> 할일 추가: 배포 체크리스트 작성 (플렉)</div>
+          <div class="demo-tool-row"><span class="demo-tool-icon">🔧</span> 할일 추가: 구글캘린더 연동 점검 (플렉)</div>
+          <div class="demo-tool-row"><span class="demo-tool-icon">🔧</span> 할일 추가: 핵심 시나리오 테스트 (플렉)</div>
+          <div class="demo-tool-more">···</div>
+        </div>
+        <div class="demo-chat-actions">
+          <button class="demo-quick-btn" data-quick="replan">+ 오늘 재계획</button>
+          <button class="demo-quick-btn" data-quick="free">⊞ 빈 시간</button>
+          <button class="demo-quick-btn" data-quick="classify">◎ 분류 (47)</button>
+        </div>
+        <div class="demo-chat-input-row">
+          <input class="demo-chat-input" type="text" placeholder="메시지 입력..." id="demo-chat-input" readonly>
+          <button class="demo-chat-send">↑</button>
+        </div>
+      </div>
+
+    </div><!-- /demo-frame -->
+  </div><!-- /demo-inner -->
+</section>
+
 <!-- HOW IT WORKS -->
 <section class="steps" id="how-it-works">
   <div class="section-inner">
@@ -743,6 +1392,167 @@
       document.querySelectorAll('[data-version]').forEach(el => el.textContent = release.tag_name);
     })
     .catch(() => {});
+</script>
+
+<script>
+/* ── DEMO INTERACTIONS ─────────────────────────────── */
+(function () {
+
+  /* --- Grass grid builder --- */
+  function buildGrass(containerId, cols, rows) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    const total = cols * rows;
+    const levels = ['', 'g1', 'g1', 'g2', 'g2', 'g3'];
+    for (let i = 0; i < total; i++) {
+      const d = document.createElement('div');
+      d.className = 'demo-grass-dot';
+      // weight toward filled on right side (recent days)
+      const ratio = i / total;
+      const rand = Math.random();
+      if (ratio > 0.65 && rand < 0.55) d.classList.add(levels[Math.floor(Math.random() * 3) + 1]);
+      else if (ratio > 0.4 && rand < 0.3) d.classList.add(levels[Math.floor(Math.random() * 2) + 1]);
+      el.appendChild(d);
+    }
+  }
+  buildGrass('demo-grass-sb', 30, 5);
+  buildGrass('demo-grass-rv', 30, 5);
+
+  /* --- Calendar grid builder --- */
+  const calGrid = document.getElementById('demo-cal-grid');
+  const rightDay = document.getElementById('demo-right-day');
+
+  const dayNames = ['일','월','화','수','목','금','토'];
+  // April 2026 starts on Wednesday (index 3)
+  const cells = [
+    // Row 1: offset + 1-4
+    {d:null},{d:null},{d:null},
+    {d:1},{d:2},{d:3},{d:4,sat:true},
+    // Row 2
+    {d:5,sun:true,chips:['식목일']},{d:6},{d:7},{d:8},{d:9},{d:10},{d:11,sat:true},
+    // Row 3
+    {d:12,sun:true},{d:13},{d:14},{d:15,chips:['스프린트 진행']},{d:16,chips:['테스팅 1/3','코드리뷰']},{d:17,chips:['캘린테스트']},{d:18,sat:true,chips:['캘린테스트QA']},
+    // Row 4
+    {d:19,sun:true},{d:20,chips:['운동']},{d:21,today:true,sel:true},{d:22,chips:['주간 계획 회의']},{d:23,chips:['팀 스탠드업'],bullets:['코드 리뷰 세션']},{d:24,chips:['디자인 리뷰'],bullets:['배포 준비']},{d:25,sat:true,chips:['주간 회고']},
+    // Row 5
+    {d:26,sun:true,chips:['개인 프로젝트']},{d:27,chips:['주간 학습']},{d:28},{d:29},{d:30},{d:null,om:true},{d:null,om:true,sat:true},
+  ];
+
+  const dayLabels = {
+    19:'4월 19일 일요일', 20:'4월 20일 월요일', 21:'4월 21일 화요일',
+    22:'4월 22일 수요일', 23:'4월 23일 목요일', 24:'4월 24일 금요일',
+    25:'4월 25일 토요일', 26:'4월 26일 일요일', 27:'4월 27일 월요일',
+    28:'4월 28일 화요일', 29:'4월 29일 수요일', 30:'4월 30일 목요일',
+  };
+
+  if (calGrid) {
+    cells.forEach((c) => {
+      const cell = document.createElement('div');
+      cell.className = 'demo-cell';
+      if (c.om) cell.classList.add('other-month');
+      if (c.today) cell.classList.add('today');
+      if (c.sel) cell.classList.add('selected');
+      if (c.sun) cell.classList.add('sun-col');
+      if (c.sat) cell.classList.add('sat-col');
+
+      const num = document.createElement('div');
+      num.className = 'demo-cell-num';
+      num.textContent = c.d || '';
+      cell.appendChild(num);
+
+      (c.chips || []).forEach(ch => {
+        const s = document.createElement('span');
+        s.className = 'demo-chip';
+        s.textContent = ch;
+        cell.appendChild(s);
+      });
+      (c.bullets || []).forEach(b => {
+        const s = document.createElement('div');
+        s.className = 'demo-bullet';
+        s.textContent = b;
+        cell.appendChild(s);
+      });
+
+      if (c.d) {
+        cell.addEventListener('click', () => {
+          document.querySelectorAll('#demo-cal-grid .demo-cell').forEach(x => x.classList.remove('selected'));
+          cell.classList.add('selected');
+          if (rightDay && dayLabels[c.d]) rightDay.textContent = dayLabels[c.d];
+        });
+      }
+
+      calGrid.appendChild(cell);
+    });
+  }
+
+  /* --- Demo tab switcher --- */
+  const tabs = document.querySelectorAll('.demo-tab');
+  const panels = document.querySelectorAll('.demo-panel');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const target = tab.dataset.demo;
+      panels.forEach(p => {
+        if (p.id === 'demo-' + target) {
+          p.classList.add('active');
+        } else {
+          p.classList.remove('active');
+        }
+      });
+    });
+  });
+
+  /* --- Chat quick actions --- */
+  const quickResponses = {
+    replan: { q: '오늘 일정을 다시 계획해줘', a: '오늘 남은 시간을 분석해서 우선순위 기반으로 재배치할게요. 오후 집중 블록을 확보했습니다.' },
+    free:   { q: '이번 주 빈 시간 찾아줘',    a: '이번 주 목요일 오후 2–4시, 금요일 오전 10–12시에 여유 블록이 있어요. 예약할까요?' },
+    classify: { q: '미분류 할일 47개 정리해줘', a: '업무 21개, 개인 18개, 학습 8개로 자동 분류했습니다. 캘린더에 반영했어요.' },
+  };
+
+  const msgsContainer = document.getElementById('demo-chat-msgs');
+  const chatInput = document.getElementById('demo-chat-input');
+
+  function appendMsg(cls, text) {
+    const wrap = document.createElement('div');
+    wrap.className = 'demo-msg ' + cls;
+    const bubble = document.createElement('div');
+    bubble.className = 'demo-bubble';
+    bubble.textContent = text;
+    wrap.appendChild(bubble);
+    msgsContainer.appendChild(wrap);
+    msgsContainer.scrollTop = msgsContainer.scrollHeight;
+    return wrap;
+  }
+
+  function showTyping() {
+    const wrap = document.createElement('div');
+    wrap.className = 'demo-msg ai';
+    wrap.innerHTML = '<div class="demo-bubble"><div class="demo-typing"><span></span><span></span><span></span></div></div>';
+    msgsContainer.appendChild(wrap);
+    msgsContainer.scrollTop = msgsContainer.scrollHeight;
+    return wrap;
+  }
+
+  document.querySelectorAll('.demo-quick-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.quick;
+      const resp = quickResponses[key];
+      if (!resp) return;
+
+      if (chatInput) chatInput.value = resp.q;
+      appendMsg('user', resp.q);
+
+      const typing = showTyping();
+      setTimeout(() => {
+        typing.remove();
+        appendMsg('ai', resp.a);
+        if (chatInput) chatInput.value = '';
+      }, 1200);
+    });
+  });
+
+})();
 </script>
 
 </body>
