@@ -197,13 +197,19 @@ extension AppDelegate {
 // MARK: - NSPopoverDelegate
 extension AppDelegate: NSPopoverDelegate {
     /// popover가 외부 클릭 등으로 닫힐 때 → MainView의 showSettings를 리셋
+    func popoverWillShow(_ notification: Notification) {
+        // 팝오버 열릴 때 외부(Google Calendar 앱/웹)에서 추가된 이벤트를 즉시 반영
+        NotificationCenter.default.post(name: .calenPopoverWillShow, object: nil)
+    }
+
     func popoverDidClose(_ notification: Notification) {
         NotificationCenter.default.post(name: .calenPopoverDidClose, object: nil)
     }
 }
 
 extension Notification.Name {
-    static let calenPopoverDidClose = Notification.Name("calenPopoverDidClose")
+    static let calenPopoverDidClose  = Notification.Name("calenPopoverDidClose")
+    static let calenPopoverWillShow  = Notification.Name("calenPopoverWillShow")
 }
 
 #elseif os(iOS)
