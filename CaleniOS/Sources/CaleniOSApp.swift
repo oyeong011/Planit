@@ -35,14 +35,50 @@ struct CaleniOSApp: App {
     /// iCloud sync는 SwiftData cloudKitDatabase가 아니라 custom CKRecord(`HermesMemoryFactV1`)
     /// 를 통해 M2(SYNC 팀장)에서 구현. (자동 CloudKit 동기화는 macOS 스키마와 해시 충돌
     /// 위험이 있어 의도적으로 꺼둠.)
+    ///
+    /// 실패 시: 기존 store가 스키마 변경으로 에러를 내면 shared App Group 내 store를
+    /// 지우고 재시도, 두 번째도 실패하면 in-memory fallback. `try!` 크래시 회피.
+    ///
+    /// v0.1.2 핫픽스 — iCloud entitlements 활성화로 SwiftData가 **자동 CloudKit 통합**을
+    /// 켜버려 "CloudKit integration requires that all attributes be optional" 에러로 크래시.
+    /// 우리는 Hermes custom CKRecord 경로를 사용하므로 SwiftData 자체 CloudKit은 `.none` 로 차단.
     let container: ModelContainer = {
         let schema = Schema([
             Schedule.self,
             MemoryFactRecord.self,
             PlanningDecisionRecord.self,
         ])
-        let config = ModelConfiguration(schema: schema)
-        return try! ModelContainer(for: schema, configurations: config)
+
+        // CloudKit 자동통합 차단 — Hermes 메모리는 별도 `HermesMemoryFactV1` CKRecord 경로 사용.
+        let diskConfig = ModelConfiguration(schema: schema, cloudKitDatabase: .none)
+
+        if let c = try? ModelContainer(for: schema, configurations: diskConfig) {
+            return c
+        }
+
+        // 구버전(v0.1.1) store가 CloudKit hash를 갖고 있어 열리지 않는 경우 제거 후 재시도.
+        let candidates: [URL] = [
+            URL.applicationSupportDirectory.appending(path: "default.store"),
+            URL.applicationSupportDirectory.appending(path: "default.store-shm"),
+            URL.applicationSupportDirectory.appending(path: "default.store-wal")
+        ]
+        for u in candidates { try? FileManager.default.removeItem(at: u) }
+
+        if let groupDir = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: "group.com.oy.planit"
+        )?.appending(path: "Library/Application Support") {
+            for name in ["default.store", "default.store-shm", "default.store-wal"] {
+                try? FileManager.default.removeItem(at: groupDir.appending(path: name))
+            }
+        }
+
+        if let c = try? ModelContainer(for: schema, configurations: diskConfig) {
+            return c
+        }
+
+        // 최후의 수단: 휘발성 in-memory 컨테이너. 로컬 SwiftData는 비지만 앱 자체는 구동.
+        let memConfig = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        return try! ModelContainer(for: schema, configurations: memConfig)
     }()
 
     var body: some Scene {
