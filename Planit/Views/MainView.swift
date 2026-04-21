@@ -520,9 +520,7 @@ struct CalendarGridView: View {
             let rows = viewModel.monthGridRows()
 
             VStack(spacing: 0) {
-                // 달력 rows
-                VStack(spacing: 0) {
-                    ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
                         let rowDates      = row.map { $0.date }
                         let activeHabits  = habitService.rangedHabits(activeIn: rowDates.compactMap { $0 })
                         let bandHeight    = barBandHeight(for: activeHabits.count)
@@ -583,15 +581,10 @@ struct CalendarGridView: View {
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
-                }
-                .frame(maxHeight: .infinity)
-
-                // 고양이 전용 레인 — 달력 rows와 분리된 고정 공간
-                WalkingCatView()
-                    .allowsHitTesting(false)
             }
+            .frame(maxHeight: .infinity)
             .padding(.horizontal, 8)
-            .padding(.bottom, 4)
+            .padding(.bottom, 8)
         }
     }
 }
