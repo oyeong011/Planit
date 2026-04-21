@@ -56,6 +56,16 @@ struct CalendarTheme: Identifiable, Equatable, Hashable {
     }
 
     static let builtIn: [CalendarTheme] = [
+        // 고양이 아이콘 컬러와 맞춘 기본 테마
+        CalendarTheme(
+            id: "calen",
+            name: "Calen",
+            primaryHex: "#E07A6E",
+            secondaryHex: "#9C8680",
+            accentHex: "#E07A6E",
+            eventTintHex: "#E07A6E",
+            backgroundOverlayHex: "#FAF0EE"
+        ),
         CalendarTheme(
             id: "classic",
             name: "Classic",
@@ -184,5 +194,5 @@ struct CalendarTheme: Identifiable, Equatable, Hashable {
         )
     ]
 
-    static let fallback = builtIn[0]
+    static let fallback = builtIn[0]  // "calen" 테마
 }

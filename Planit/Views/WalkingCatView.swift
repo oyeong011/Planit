@@ -1,96 +1,102 @@
 import SwiftUI
 
-/// 화면 하단을 좌우로 걸어다니는 고양이 오버레이
 struct WalkingCatView: View {
-    // 고양이 위치 & 방향
-    @State private var xPos: CGFloat = 80
+    @State private var xPos: CGFloat
     @State private var facingRight: Bool = true
-    // 걷기 애니메이션 페이즈
-    @State private var walkPhase: CGFloat = 0
-    // 걷기/멈추기 상태
+    @State private var frameIndex: Int = 0
     @State private var isWalking: Bool = true
-    @State private var pauseTimer: Timer? = nil
     @State private var walkTimer: Timer? = nil
+    @State private var pauseTimer: Timer? = nil
 
     let containerWidth: CGFloat
-    let catSize: CGFloat = 40
+    let catSize: CGFloat = 48
 
-    private let speed: CGFloat = 0.8        // px per tick
-    private let tickInterval: TimeInterval = 0.016 // ~60fps
+    private let fps: TimeInterval = 1.0 / 10   // 10fps 걷기
+    private let speed: CGFloat = 2.2            // px per frame
+    private let rFrames: [NSImage] = Self.loadFrames(prefix: "R")
+    private let lFrames: [NSImage] = Self.loadFrames(prefix: "L")
+
+    init(containerWidth: CGFloat) {
+        self.containerWidth = containerWidth
+        self._xPos = State(initialValue: CGFloat.random(in: 60...(containerWidth - 60)))
+    }
 
     var body: some View {
-        GeometryReader { _ in
-            catImage
-                .offset(x: xPos - catSize / 2, y: 0)
-        }
-        .frame(height: catSize)
-        .onAppear { startWalking() }
-        .onDisappear { stopTimers() }
+        currentFrameImage
+            .frame(width: catSize, height: catSize)
+            .offset(x: xPos - catSize / 2)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .onAppear { startWalking() }
+            .onDisappear { stopTimers() }
     }
 
-    // MARK: - Cat Image
+    // MARK: - Current Frame
 
-    private var catImage: some View {
-        Group {
-            if let url = Bundle.main.url(forResource: "WalkingCat", withExtension: "png"),
-               let nsImg = NSImage(contentsOf: url) {
-                Image(nsImage: nsImg)
-                    .resizable()
-                    .interpolation(.high)
-                    .frame(width: catSize, height: catSize)
-                    .scaleEffect(x: facingRight ? 1 : -1, y: 1)
-                    // 발 동작: 좌우 흔들기
-                    .rotationEffect(.degrees(isWalking ? sin(walkPhase) * 6 : 0),
-                                    anchor: .bottom)
-                    // 걸음 리듬: 위아래 바운스
-                    .offset(y: isWalking ? -abs(sin(walkPhase * 2)) * 3 : 0)
-            }
+    @ViewBuilder
+    private var currentFrameImage: some View {
+        let frames = facingRight ? rFrames : lFrames
+        if !frames.isEmpty {
+            let frame = frames[frameIndex % frames.count]
+            Image(nsImage: frame)
+                .resizable()
+                .interpolation(.high)
+                .frame(width: catSize, height: catSize)
         }
     }
 
-    // MARK: - Timers
+    // MARK: - Animation Loop
 
     private func startWalking() {
-        walkTimer = Timer.scheduledTimer(withTimeInterval: tickInterval, repeats: true) { _ in
+        walkTimer = Timer.scheduledTimer(withTimeInterval: fps, repeats: true) { _ in
             guard isWalking else { return }
+            tick()
+        }
+    }
 
-            walkPhase += 0.18
+    private func tick() {
+        frameIndex = (frameIndex + 1) % 8
 
-            let halfCat = catSize / 2
-            let minX = halfCat + 10
-            let maxX = containerWidth - halfCat - 10
-
-            if facingRight {
-                xPos += speed
-                if xPos >= maxX {
-                    xPos = maxX
-                    facingRight = false
-                    randomPause()
-                }
-            } else {
-                xPos -= speed
-                if xPos <= minX {
-                    xPos = minX
-                    facingRight = true
-                    randomPause()
-                }
+        let edge = catSize / 2 + 8
+        if facingRight {
+            xPos += speed
+            if xPos >= containerWidth - edge {
+                xPos = containerWidth - edge
+                facingRight = false
+                randomPause()
+            }
+        } else {
+            xPos -= speed
+            if xPos <= edge {
+                xPos = edge
+                facingRight = true
+                randomPause()
             }
         }
     }
 
-    /// 가끔 멈춰서 앉아있다가 다시 걷기
     private func randomPause() {
-        guard Bool.random() else { return }
+        guard Double.random(in: 0...1) < 0.5 else { return }
         isWalking = false
-        let pauseDuration = Double.random(in: 1.5...4.0)
+        frameIndex = 0
         pauseTimer?.invalidate()
-        pauseTimer = Timer.scheduledTimer(withTimeInterval: pauseDuration, repeats: false) { _ in
-            isWalking = true
-        }
+        pauseTimer = Timer.scheduledTimer(
+            withTimeInterval: Double.random(in: 1.2...3.5),
+            repeats: false
+        ) { _ in isWalking = true }
     }
 
     private func stopTimers() {
         walkTimer?.invalidate()
         pauseTimer?.invalidate()
+    }
+
+    // MARK: - Resource Loading
+
+    private static func loadFrames(prefix: String) -> [NSImage] {
+        (1...8).compactMap { i in
+            guard let url = Bundle.main.url(forResource: "CatWalk_\(prefix)\(i)", withExtension: "png"),
+                  let img = NSImage(contentsOf: url) else { return nil }
+            return img
+        }
     }
 }
