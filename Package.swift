@@ -84,7 +84,9 @@ let package = Package(
         ),
         .testTarget(
             name: "CalenTests",
-            dependencies: ["Calen"],
+            // v0.1.1 Widget: WidgetDataPublisher 테스트를 위해 CaleniOS도 dependency로 추가.
+            // (CaleniOS는 executableTarget이지만 @testable import는 허용됨.)
+            dependencies: ["Calen", "CaleniOS"],
             path: "Tests"
         )
     ]

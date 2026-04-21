@@ -69,6 +69,9 @@ targets:
     dependencies:
       - package: Calen
         product: CalenShared
+      # v0.1.1 Widget: 위젯 extension을 메인 앱에 embed — 홈스크린 위젯 노출 조건.
+      - target: CaleniOSWidget
+        embed: true
     settings:
       base:
         ENABLE_HARDENED_RUNTIME: YES
@@ -81,3 +84,37 @@ targets:
         TARGETED_DEVICE_FAMILY: "1,2"
         SUPPORTS_MACCATALYST: NO
         CODE_SIGN_ENTITLEMENTS: Sources/Resources/CaleniOS.entitlements
+
+  # MARK: - CaleniOSWidget (Widget extension)
+  #
+  # 홈스크린 위젯 extension — 오늘의 일정 2~4개 표시 (TodayEventsWidget).
+  # Bundle ID는 메인 앱(com.oy.planit.ios)의 suffix로 com.oy.planit.ios.widget.
+  # 소스는 `Widget/`에 격리되어 있으며 App Group `group.com.oy.planit` 만 공유.
+  CaleniOSWidget:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: Widget
+        excludes:
+          - Info.plist
+          - CaleniOSWidget.entitlements
+    info:
+      path: Widget/Info.plist
+      properties:
+        CFBundleDisplayName: Calen 위젯
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: Widget/CaleniOSWidget.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.oy.planit.ios.widget
+        PRODUCT_NAME: CaleniOSWidget
+        GENERATE_INFOPLIST_FILE: NO
+        SKIP_INSTALL: YES
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SUPPORTS_MACCATALYST: NO
+        CODE_SIGN_ENTITLEMENTS: Widget/CaleniOSWidget.entitlements
+        # iCloud entitlement 없이 App Group 만 사용 (Portal 등록 전 안전).
+        SWIFT_VERSION: "5.9"
