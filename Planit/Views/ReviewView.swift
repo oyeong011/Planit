@@ -568,21 +568,20 @@ struct ReviewView: View {
         return accentShade(for: day.rate)
     }
 
-    /// accent hue 고정, 채도(S)와 명도(B)를 4단계로 조절 — 어두운 accent에서도 레벨 구분이 명확하도록
-    /// level 1: 옅은 tint (S 낮음, B 높음) → level 4: 원래 accent에 근접
+    /// hue만 accent를 따르고, S·B는 절대 고정값 4단계 — 테마·밝기에 무관하게 색 차이가 명확
+    /// L1: 연한 tint / L2: 파스텔 / L3: 선명 / L4: 짙음 / L5: accent 원색
     private func accentShade(for rate: Double) -> Color {
         guard let ns = NSColor(themeService.current.accent).usingColorSpace(.sRGB) else {
-            return themeService.current.accent.opacity(0.40 + rate * 0.60)
+            return themeService.current.accent
         }
         var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
         ns.getHue(&h, saturation: &s, brightness: &b, alpha: &a)
         switch rate {
-        // 채도를 점진적으로 높이고, 낮은 레벨은 명도 하한(0.82)으로 밝게 유지해 가시성 확보
-        case ..<0.25: return Color(hue: h, saturation: s * 0.25, brightness: max(b, 0.82))
-        case ..<0.50: return Color(hue: h, saturation: s * 0.52, brightness: max(b, 0.76))
-        case ..<0.75: return Color(hue: h, saturation: s * 0.78, brightness: max(b, 0.70))
-        case ..<1.0:  return Color(hue: h, saturation: s * 0.93, brightness: b)
-        default:      return themeService.current.accent
+        case ..<0.25: return Color(hue: h, saturation: 0.22, brightness: 0.88)  // 연한 tint
+        case ..<0.50: return Color(hue: h, saturation: 0.52, brightness: 0.80)  // 파스텔
+        case ..<0.75: return Color(hue: h, saturation: 0.80, brightness: 0.74)  // 선명·짙음
+        case ..<1.0:  return Color(hue: h, saturation: min(s, 1.0), brightness: max(b, 0.62)) // accent에 근접
+        default:      return themeService.current.accent                          // accent 원색
         }
     }
 
