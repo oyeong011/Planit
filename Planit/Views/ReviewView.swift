@@ -398,16 +398,12 @@ struct ReviewView: View {
 
     private func dayStats(for date: Date) -> (done: Int, total: Int) {
         let cal = Calendar.current
-        guard let interval = cal.dateInterval(of: .day, for: date) else { return (0, 0) }
-        let todoEventIds = Set(viewModel.todos.compactMap { $0.googleEventId })
         let completedIDs = viewModel.completedEventIDs
 
-        // all-day 이벤트도 포함 — 사용자가 만든 종일 일정(예: "캘린 데모영상촬영", "렌즈수령")도
-        // 할 일로 카운트되어야 우측 DailyDetailView와 총 개수가 일치한다.
-        let events = viewModel.historyEvents.filter { ev in
-            !todoEventIds.contains(ev.id) &&
-            ev.startDate >= interval.start && ev.startDate < interval.end
-        }
+        // eventsForDate는 calendarEvents 기반 — DailyDetailView와 동일한 소스를 써야
+        // completedEventIDs의 ID가 일치한다. historyEvents는 별도 sync라 ID가 다를 수 있음.
+        let events = viewModel.eventsForDate(date)
+
         let localTodos = viewModel.todos.filter {
             cal.startOfDay(for: $0.date) == cal.startOfDay(for: date)
         }
@@ -418,12 +414,6 @@ struct ReviewView: View {
 
         let doneEvents = events.filter { completedIDs.contains($0.id) }.count
         let doneTodos = allTodos.filter { $0.isCompleted }.count
-
-        // 진단 로그 — 7일 차트가 all-or-nothing으로 보이는 버그 추적
-        let fmt = DateFormatter(); fmt.dateFormat = "MM-dd(E)"; fmt.locale = Locale(identifier: "ko_KR")
-        PlanitLoggers.review.info(
-            "dayStats \(fmt.string(from: date), privacy: .public) events=\(events.count, privacy: .public) todos=\(localTodos.count, privacy: .public) reminders=\(reminderTodos.count, privacy: .public) doneEv=\(doneEvents, privacy: .public) doneTd=\(doneTodos, privacy: .public)"
-        )
 
         return (doneEvents + doneTodos, events.count + allTodos.count)
     }
