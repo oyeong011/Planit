@@ -66,6 +66,18 @@ targets:
               - com.googleusercontent.apps.1067993984953-ac7apjln9gaqjsgbcha5irbb5srsvmfh
     entitlements:
       path: Sources/Resources/CaleniOS.entitlements
+      properties:
+        # Apple Developer Portal iCloud Container + App Group 등록 완료 상태.
+        com.apple.developer.icloud-container-identifiers:
+          - iCloud.com.oy.planit
+        com.apple.developer.icloud-services:
+          - CloudKit
+        com.apple.developer.ubiquity-container-identifiers:
+          - iCloud.com.oy.planit
+        com.apple.security.application-groups:
+          - group.com.oy.planit
+        keychain-access-groups:
+          - $(AppIdentifierPrefix)group.com.oy.planit
     dependencies:
       - package: Calen
         product: CalenShared
@@ -107,6 +119,10 @@ targets:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     entitlements:
       path: Widget/CaleniOSWidget.entitlements
+      properties:
+        # 위젯은 App Group 공유만 사용 (메인 앱과 이벤트 캐시 공유).
+        com.apple.security.application-groups:
+          - group.com.oy.planit
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.oy.planit.ios.widget
