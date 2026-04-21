@@ -15,10 +15,10 @@ enum Tab: String, CaseIterable {
 
     var title: String {
         switch self {
-        case .today:    return "오늘"
-        case .chat:     return "채팅"
-        case .review:   return "리뷰"
-        case .profile:  return "설정"
+        case .today:    return NSLocalizedString("tab.today",   comment: "")
+        case .chat:     return NSLocalizedString("tab.chat",    comment: "")
+        case .review:   return NSLocalizedString("tab.review",  comment: "")
+        case .profile:  return NSLocalizedString("tab.profile", comment: "")
         }
     }
 

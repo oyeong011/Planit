@@ -412,6 +412,26 @@ struct CalendarGridView: View {
                 Text(viewModel.monthTitle())
                     .font(.system(size: 28, weight: .bold))
 
+                // 오프라인 / 대기 중인 편집 배지
+                if viewModel.isOffline || viewModel.pendingEditsCount > 0 {
+                    HStack(spacing: 4) {
+                        if viewModel.isOffline {
+                            Image(systemName: "wifi.slash")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundColor(.orange)
+                        }
+                        if viewModel.pendingEditsCount > 0 {
+                            Text("\(viewModel.pendingEditsCount)건 대기")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundColor(.orange)
+                        }
+                    }
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(Color.orange.opacity(0.12))
+                    .clipShape(Capsule())
+                }
+
                 if viewModel.authManager.isAuthenticated {
                     if viewModel.needsReauth {
                         Button {

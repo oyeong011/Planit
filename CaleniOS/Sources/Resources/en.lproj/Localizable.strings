@@ -1,0 +1,89 @@
+/* Calen iOS — English Localization (v0.1.2) */
+
+/* ===== Tabs ===== */
+"tab.today"     = "Today";
+"tab.chat"      = "Chat";
+"tab.review"    = "Review";
+"tab.profile"   = "Settings";
+
+/* ===== Common ===== */
+"common.save"    = "Save";
+"common.cancel"  = "Cancel";
+"common.delete"  = "Delete";
+"common.edit"    = "Edit";
+"common.done"    = "Done";
+"common.close"   = "Close";
+"common.confirm" = "Confirm";
+"common.add"     = "Add";
+"common.retry"   = "Retry";
+
+/* ===== Settings ===== */
+"settings.title"                   = "Settings";
+"settings.section.account"         = "Account";
+"settings.section.ai"              = "AI";
+"settings.section.appearance"      = "Appearance";
+"settings.section.app"             = "App";
+"settings.section.info"            = "About";
+"settings.theme.title"             = "Theme";
+"settings.theme.subtitle"          = "App accent — tab bar, buttons, today dot";
+"settings.language.title"          = "Language";
+"settings.language.subtitle"       = "Force in-app language";
+"settings.google.clientid"         = "OAuth Client ID";
+"settings.google.configured"       = "Configured";
+"settings.google.needed"           = "Required";
+"settings.google.signin"           = "Sign in with Google";
+"settings.google.signout"          = "Sign out";
+"settings.google.connected"        = "Google account connected";
+"settings.user.default"            = "Calen user";
+"settings.ai.claude.key"           = "Claude API Key";
+"settings.ai.saved"                = "Saved";
+"settings.ai.not.saved"            = "Not saved";
+"settings.ai.model.info"           = "AI Model Info";
+"settings.ai.reset"                = "Reset Data";
+"settings.app.notifications"       = "Notifications";
+"settings.app.calsync"             = "Calendar sync";
+"settings.app.icloud.hermes"       = "iCloud sync (Hermes memory)";
+"settings.app.icloud.hermes.hint"  = "Read AI memory learned on your Mac";
+"settings.info.version"            = "Version";
+"settings.info.privacy"            = "Privacy Policy";
+"settings.info.contact"            = "Contact";
+"settings.reset.alert.title"       = "Reset Data";
+"settings.reset.alert.message"     = "Your Google sign-in and Claude API key will be removed.\nThis cannot be undone.";
+"settings.reset.button"            = "Reset";
+
+/* ===== Language picker values ===== */
+"language.ko"  = "한국어";
+"language.en"  = "English";
+
+/* ===== Home ===== */
+"home.title.today"            = "Today";
+"home.day.empty"              = "No events";
+"home.day.empty.hint"         = "Tap + to add one";
+"home.fab.add"                = "Add event";
+"home.replan.today"           = "Replan today";
+
+/* ===== Event Edit Sheet ===== */
+"edit.title"              = "Edit event";
+"edit.basic"              = "Basic";
+"edit.title.placeholder"  = "Title";
+"edit.location.placeholder" = "Location (optional)";
+"edit.time"               = "Time";
+"edit.allday"             = "All-day";
+"edit.start"              = "Starts";
+"edit.end"                = "Ends";
+"edit.category"           = "Category";
+"edit.memo"               = "Notes";
+"edit.delete"             = "Delete event";
+"edit.save.fail"          = "Action failed — restored";
+"edit.confirm.cancel"     = "Discard changes?";
+"edit.confirm.discard"    = "Discard";
+"edit.confirm.keep"       = "Keep editing";
+"edit.confirm.delete"     = "Delete this event?";
+
+/* ===== Categories ===== */
+"category.work"      = "Work";
+"category.meeting"   = "Meeting";
+"category.meal"      = "Meal";
+"category.exercise"  = "Exercise";
+"category.personal"  = "Personal";
+"category.general"   = "General";

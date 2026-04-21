@@ -98,10 +98,10 @@ struct DayDetailSheet<Repo: iOSEventRepository>: View {
             Image(systemName: "calendar.badge.plus")
                 .font(.system(size: 44, weight: .light))
                 .foregroundStyle(Color.calenBlue.opacity(0.4))
-            Text("일정이 없어요")
+            Text("home.day.empty")
                 .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(.secondary)
-            Text("+ 버튼으로 추가해보세요")
+            Text("home.day.empty.hint")
                 .font(.system(size: 13))
                 .foregroundStyle(Color(.tertiaryLabel))
         }
@@ -170,7 +170,7 @@ struct DayDetailSheet<Repo: iOSEventRepository>: View {
         }
         .padding(.trailing, 20)
         .padding(.bottom, 24)
-        .accessibilityLabel("새 일정 추가")
+        .accessibilityLabel(Text("home.fab.add"))
     }
 
     // MARK: - Gestures / Navigation

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MainTabView: View {
     @EnvironmentObject private var appState: AppState
+    @EnvironmentObject private var theme: iOSThemeService
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -40,6 +41,7 @@ struct MainTabView: View {
 
 struct CustomTabBar: View {
     @Binding var selectedTab: Tab
+    @EnvironmentObject private var theme: iOSThemeService
 
     private let tabBarHeight: CGFloat = 64
 
@@ -79,9 +81,8 @@ struct CustomTabBar: View {
                     // 4칸 확장 — 라벨을 9pt로 살짝 줄여 crowded 방지.
                     .font(.system(size: 9, weight: isSelected ? .semibold : .medium))
             }
-            // UX Critic fix: Color(.darkGray)는 다크모드에서 거의 안 보임.
-            // 시스템 의미적 색상으로 교체 — 자동 light/dark 대응.
-            .foregroundStyle(isSelected ? Color.calenBlue : Color.secondary)
+            // v0.1.2: 선택 색상은 활성 테마의 primary — 탭바에서 강조.
+            .foregroundStyle(isSelected ? theme.current.primary : Color.secondary)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .contentShape(Rectangle())
             .accessibilityLabel(tab.title)
