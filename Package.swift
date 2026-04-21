@@ -38,6 +38,8 @@ let package = Package(
             resources: [
                 .copy("Resources/PrivacyInfo.xcprivacy"),
                 .copy("Resources/AppIcon.icns"),
+                .copy("Resources/StatusBarIcon.png"),
+                .copy("Resources/StatusBarIcon@2x.png"),
                 .process("Resources/ko.lproj"),
                 .process("Resources/en.lproj"),
                 .process("Resources/ja.lproj"),

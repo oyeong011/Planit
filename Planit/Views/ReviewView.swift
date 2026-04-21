@@ -175,7 +175,7 @@ struct ReviewView: View {
     /// 섹션별 추정 높이 (드래그 임계값 계산용)
     private func estimatedHeight(for sid: ReviewSectionID) -> CGFloat {
         switch sid {
-        case .habitGraph:    return 80 + CGFloat(habitService.habits.count) * 64
+        case .habitGraph:    return 80 + CGFloat(habitService.habits.count) * 28
         case .weeklyChart:   return 148
         case .todoGrass:     return 172
         case .myHabits:      return 70 + CGFloat(habitService.habits.count) * 66
@@ -1074,9 +1074,9 @@ struct ReviewView: View {
 
     private var habitGraphSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // 헤더 + 주간 요약
+            // 헤더 + 이번 주 전체 평균
             HStack {
-                Label(String(localized: "habit.graph.title"), systemImage: "chart.bar.fill")
+                Label(String(localized: "habit.graph.title"), systemImage: "flame.fill")
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(themeService.current.accent)
                 Spacer()
@@ -1088,7 +1088,6 @@ struct ReviewView: View {
                 }
             }
 
-            // 첫 주 격려 메시지 — 전체 평균 0%일 때
             if habitsWeeklyAverage == 0 {
                 HStack(spacing: 6) {
                     Image(systemName: "sparkles")
@@ -1101,9 +1100,13 @@ struct ReviewView: View {
                 .padding(.vertical, 2)
             }
 
-            VStack(spacing: 10) {
+            // 날짜 컬럼 헤더 (최근 28일, 7열 기준)
+            habitGrassHeader
+
+            // 습관별 잔디 행
+            VStack(spacing: 5) {
                 ForEach(habitService.habits) { habit in
-                    habitAdherenceRow(habit)
+                    habitGrassRow(habit)
                 }
             }
         }
@@ -1111,67 +1114,79 @@ struct ReviewView: View {
         .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground).overlay(RoundedRectangle(cornerRadius: 10).fill(themeService.current.cardTint)))
     }
 
-    private func habitAdherenceRow(_ habit: Habit) -> some View {
-        let rates = weeklyRates(for: habit)
-        let accent = habit.accentColor
-        let avgRate = rates.reduce(0, +) / Double(rates.count)
-        // graphWeekLabels: 정확히 4개, rates[i]와 1:1 매칭 (0=4주전, 3=이번주)
-        let labels = graphWeekLabels
+    /// 4주 헤더: 주 라벨 (4주전 / 3주전 / 지난주 / 이번주)
+    private var habitGrassHeader: some View {
+        HStack(spacing: 3) {
+            Spacer().frame(width: 68)
+            ForEach(graphWeekLabels.indices, id: \.self) { i in
+                Text(graphWeekLabels[i])
+                    .font(.system(size: 7))
+                    .foregroundStyle(.tertiary)
+                    .frame(maxWidth: .infinity)
+            }
+            Spacer().frame(width: 24)
+        }
+    }
 
-        return VStack(alignment: .leading, spacing: 5) {
-            // 이름 + 평균 달성률
-            HStack(spacing: 5) {
-                Text(habit.emoji)
-                    .font(.system(size: 12))
+    /// 특정 날짜에 습관이 완료됐는지 확인 (28일 범위)
+    private func grassCompleted(_ habit: Habit, daysAgo: Int) -> Bool {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        guard let d = cal.date(byAdding: .day, value: -daysAgo, to: today) else { return false }
+        return habit.completedDates.contains(graphDateFormatter.string(from: d))
+    }
+
+    /// 이번 주(최근 7일) 달성 횟수
+    private func thisWeekCount(_ habit: Habit) -> Int {
+        (0..<7).filter { grassCompleted(habit, daysAgo: $0) }.count
+    }
+
+    /// 주간 달성률 (weekOffset: 0=이번주, 1=지난주, ... 3=4주전)
+    private func weekRate(_ habit: Habit, weekOffset: Int) -> Double {
+        let count = (0..<7).filter { grassCompleted(habit, daysAgo: weekOffset * 7 + $0) }.count
+        return min(1.0, Double(count) / Double(max(1, habit.weeklyTarget)))
+    }
+
+    private func habitGrassRow(_ habit: Habit) -> some View {
+        let accent = habit.accentColor
+        let thisRate = weekRate(habit, weekOffset: 0)
+
+        return HStack(spacing: 3) {
+            // 이름
+            HStack(spacing: 3) {
+                Text(habit.emoji).font(.system(size: 10))
                 Text(habit.name)
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.system(size: 9, weight: .medium))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
-                Spacer()
-                Text(String(format: "%.0f%%", avgRate * 100))
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(avgRate >= 0.8 ? accent : avgRate >= 0.5 ? .orange : .red)
             }
+            .frame(width: 68, alignment: .leading)
 
-            // 주간 바 차트 + 라벨
-            HStack(alignment: .bottom, spacing: 5) {
-                ForEach(0..<4, id: \.self) { i in
-                    let rate = rates[i]
-                    let isThisWeek = i == 3
-                    VStack(spacing: 3) {
-                        // 달성률 퍼센트 (100%일 때만)
-                        if rate >= 1.0 {
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 6, weight: .bold))
-                                .foregroundStyle(accent)
-                        }
-                        // 바 (최소 높이 2pt)
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(
-                                rate >= 0.8 ? accent :
-                                rate >= 0.5 ? accent.opacity(0.55) :
-                                rate > 0    ? accent.opacity(0.25) :
-                                Color.secondary.opacity(0.12)
-                            )
-                            .frame(height: max(2, rate * 32))
+            // 4주 × 7일 잔디 (오래된 순: 왼=4주전, 오=이번주)
+            // weekIdx 0=4주전, 3=이번주
+            ForEach(0..<4, id: \.self) { weekIdx in
+                let weekOffset = 3 - weekIdx  // 3=4주전, 0=이번주
+                HStack(spacing: 1.5) {
+                    ForEach(0..<7, id: \.self) { dayIdx in
+                        // dayIdx 0=해당 주 가장 오래된 날, 6=가장 최근
+                        let daysAgo = weekOffset * 7 + (6 - dayIdx)
+                        let done = grassCompleted(habit, daysAgo: daysAgo)
+                        RoundedRectangle(cornerRadius: 1.5)
+                            .fill(done ? accent : Color.secondary.opacity(0.12))
+                            .frame(height: 9)
                             .frame(maxWidth: .infinity)
-
-                        // 주 라벨
-                        Text(labels[i])
-                            .font(.system(size: 7))
-                            .foregroundStyle(isThisWeek ? accent : Color.secondary.opacity(0.55))
-                            .frame(maxWidth: .infinity)
-                            .multilineTextAlignment(.center)
-                            .lineLimit(1)
                     }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 48, alignment: .bottom)
                 }
+                .frame(maxWidth: .infinity)
             }
+
+            // 이번 주 달성률
+            Text(String(format: "%.0f%%", thisRate * 100))
+                .font(.system(size: 9, weight: .bold))
+                .foregroundStyle(thisRate >= 0.8 ? accent : thisRate >= 0.5 ? .orange : .secondary)
+                .frame(width: 24, alignment: .trailing)
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(RoundedRectangle(cornerRadius: 8).fill(Color.platformWindowBackground))
+        .frame(height: 18)
     }
 
     // MARK: - Progress Section
