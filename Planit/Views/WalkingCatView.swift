@@ -94,7 +94,7 @@ struct WalkingCatView: View {
 
     private static func loadFrames(prefix: String) -> [NSImage] {
         (1...8).compactMap { i in
-            guard let url = Bundle.main.url(forResource: "CatWalk_\(prefix)\(i)", withExtension: "png"),
+            guard let url = Bundle.module.url(forResource: "CatWalk_\(prefix)\(i)", withExtension: "png"),
                   let img = NSImage(contentsOf: url) else { return nil }
             return img
         }
