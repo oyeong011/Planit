@@ -181,13 +181,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private static func makeStatusBarImage(update: Bool) -> NSImage {
-        if !update, let url = Bundle.main.url(forResource: "StatusBarIcon", withExtension: "png"),
+        if !update, let url = Bundle.module.url(forResource: "StatusBarIcon", withExtension: "png"),
            let img = NSImage(contentsOf: url) {
             img.isTemplate = true
             img.size = NSSize(width: 18, height: 18)
             return img
         }
-        // 업데이트 있거나 파일 없을 때 fallback
         let symbol = update ? "calendar.badge.exclamationmark" : "calendar"
         return NSImage(systemSymbolName: symbol, accessibilityDescription: "Calen") ?? NSImage()
     }
