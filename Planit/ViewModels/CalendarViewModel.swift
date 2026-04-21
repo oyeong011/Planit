@@ -1192,6 +1192,9 @@ final class CalendarViewModel: ObservableObject {
     }
 
     func deleteGoogleEvent(eventID: String, calendarID: String = "google:primary") {
+        // Optimistic removal: 연속 삭제 시 fetch 스킵으로 이벤트가 되살아나는 레이스 방지
+        calendarEvents.removeAll { $0.id == eventID }
+        cacheEvents(calendarEvents)
         Task {
             do {
                 if try await googleService.deleteEvent(eventID: eventID, calendarID: calendarID) == false {
@@ -1209,12 +1212,10 @@ final class CalendarViewModel: ObservableObject {
                 PlanitLoggers.sync.info("Offline Google delete queued eventID=\(eventID, privacy: .public)")
                 queuePendingEdit(PendingCalendarEdit(
                     action: "delete", eventId: eventID, calendarID: calendarID))
-                // Optimistic local removal
-                calendarEvents.removeAll { $0.id == eventID }
+                // 이미 위에서 optimistic removal 완료 — completedEvents만 처리
                 completedEventIDs.remove(eventID)
                 goalService?.removeCompletion(eventId: eventID)
                 saveCompletedEvents()
-                cacheEvents(calendarEvents)
             }
         }
     }
