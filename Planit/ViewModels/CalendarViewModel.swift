@@ -1211,6 +1211,12 @@ final class CalendarViewModel: ObservableObject {
     }
 
     func deleteGoogleEvent(eventID: String, calendarID: String = "google:primary") {
+        // Apple Calendar 미러 재출현 방지: 삭제 전 이벤트 정보로 Apple 미러 suppress
+        if let target = calendarEvents.first(where: { $0.id == eventID }) {
+            suppressAppleMirror(title: target.title, startDate: target.startDate,
+                                calendarID: calendarID,
+                                for: CalendarViewModel.appleMirrorSuppressTTL * 4)
+        }
         // Optimistic removal: 연속 삭제 시 fetch 스킵으로 이벤트가 되살아나는 레이스 방지
         calendarEvents.removeAll { $0.id == eventID }
         markRecentlyDeletedGoogle(eventID)
