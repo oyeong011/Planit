@@ -450,7 +450,7 @@ struct ReviewView: View {
                 }
                 Text(String(format: String(localized: "review.todo.grass.total"), stats.totalDone, stats.totalTodos))
                     .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(stats.totalDone > 0 ? .green : .secondary)
+                    .foregroundStyle(stats.totalDone > 0 ? themeService.current.accent : .secondary)
             }
 
             yearGrassGrid(stats: stats)
@@ -565,17 +565,13 @@ struct ReviewView: View {
         guard day.total > 0, day.done > 0 else {
             return Color.secondary.opacity(day.total > 0 ? 0.18 : 0.10)
         }
+        let accent = themeService.current.accent
         switch day.rate {
-        case ..<0.25:
-            return Color.green.opacity(0.32)
-        case ..<0.50:
-            return Color.green.opacity(0.50)
-        case ..<0.75:
-            return Color.green.opacity(0.68)
-        case ..<1.0:
-            return Color.green.opacity(0.84)
-        default:
-            return Color.green
+        case ..<0.25: return accent.opacity(0.32)
+        case ..<0.50: return accent.opacity(0.50)
+        case ..<0.75: return accent.opacity(0.68)
+        case ..<1.0:  return accent.opacity(0.84)
+        default:      return accent
         }
     }
 
@@ -1078,7 +1074,7 @@ struct ReviewView: View {
                 if weekly > 0 {
                     Text(String(format: NSLocalizedString("review.habit.weekly.average", comment: ""), Int(weekly * 100)))
                         .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(weekly >= 0.8 ? .green : weekly >= 0.5 ? .orange : .secondary)
+                        .foregroundStyle(weekly >= 0.8 ? themeService.current.accent : weekly >= 0.5 ? .orange : .secondary)
                 }
             }
 
@@ -1170,13 +1166,10 @@ struct ReviewView: View {
 
     // MARK: - Progress Section
 
-    /// HSB 공간에서 빨강(0°) → 노랑(60°) → 연두(120°)를 rate에 따라 연속 보간
-    /// pastel 톤: saturation 0.48, brightness 0.90
+    /// 테마 accent 색을 기반으로 rate에 따라 opacity 보간 (낮은 달성률 → 옅게, 높은 달성률 → 진하게)
     private func progressColor(for rate: Double) -> Color {
         let clamped = max(0, min(1, rate))
-        // hue: 0.0(빨강) → 0.167(노랑) → 0.333(연두)
-        let hue = clamped * (120.0 / 360.0)
-        return Color(hue: hue, saturation: 0.48, brightness: 0.90)
+        return themeService.current.accent.opacity(0.30 + clamped * 0.70)
     }
 
     private var progressSection: some View {
@@ -1272,7 +1265,7 @@ struct ReviewView: View {
             HStack(spacing: 8) {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 18))
-                    .foregroundStyle(.green)
+                    .foregroundStyle(themeService.current.accent)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(String(localized: "review.on.track"))
                         .font(.system(size: 12, weight: .semibold))
@@ -1283,7 +1276,7 @@ struct ReviewView: View {
                 Spacer()
             }
             .padding(12)
-            .background(RoundedRectangle(cornerRadius: 10).fill(Color.green.opacity(0.06)))
+            .background(RoundedRectangle(cornerRadius: 10).fill(themeService.current.accent.opacity(0.06)))
         } else {
             VStack(alignment: .leading, spacing: 6) {
                 Label(String(localized: "review.today.lookback"), systemImage: "sparkles")
@@ -2144,13 +2137,13 @@ struct ReviewView: View {
                         HStack(spacing: 8) {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.system(size: 18))
-                                .foregroundStyle(.green)
+                                .foregroundStyle(themeService.current.accent)
                             Text(String(localized: "review.tomorrow.sufficient"))
                                 .font(.system(size: 12, weight: .medium))
                         }
                         .padding(12)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(RoundedRectangle(cornerRadius: 8).fill(Color.green.opacity(0.06)))
+                        .background(RoundedRectangle(cornerRadius: 8).fill(themeService.current.accent.opacity(0.06)))
                     } else {
                         VStack(alignment: .leading, spacing: 6) {
                             ForEach(Array(plan.events.enumerated()), id: \.offset) { _, event in
@@ -2215,7 +2208,7 @@ struct ReviewView: View {
 
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 14))
-                .foregroundStyle(.green.opacity(0.7))
+                .foregroundStyle(themeService.current.accent.opacity(0.7))
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
