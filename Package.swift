@@ -40,6 +40,8 @@ let package = Package(
                 .copy("Resources/AppIcon.icns"),
                 .copy("Resources/StatusBarIcon.png"),
                 .copy("Resources/StatusBarIcon@2x.png"),
+                .copy("Resources/WalkingCat.png"),
+                .copy("Resources/WalkingCat@2x.png"),
                 .process("Resources/ko.lproj"),
                 .process("Resources/en.lproj"),
                 .process("Resources/ja.lproj"),

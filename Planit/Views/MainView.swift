@@ -108,6 +108,10 @@ struct MainCalendarView: View {
             }
         }
         .frame(width: showLeftPanel ? 1320 : 1040, height: 860)
+        .overlay(alignment: .bottomLeading) {
+            WalkingCatView(containerWidth: showLeftPanel ? 1320 : 1040)
+                .padding(.bottom, 6)
+        }
         .task {
             // Hermes CloudKit upstream sync 시작 (UserDefaults 플래그 기반).
             // 활성화 안 돼 있으면 startIfEnabled가 nil 반환 → no-op.
