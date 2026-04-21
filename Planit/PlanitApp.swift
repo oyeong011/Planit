@@ -44,7 +44,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "calendar", accessibilityDescription: "Calen")
+            button.image = Self.makeStatusBarImage(update: false)
             button.target = self
             button.action = #selector(handleStatusItemClick)
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
@@ -177,8 +177,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func refreshStatusIcon() {
-        let symbolName = updater.updateAvailable ? "calendar.badge.exclamationmark" : "calendar"
-        statusItem.button?.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "Calen")
+        statusItem.button?.image = Self.makeStatusBarImage(update: updater.updateAvailable)
+    }
+
+    private static func makeStatusBarImage(update: Bool) -> NSImage {
+        if !update, let url = Bundle.main.url(forResource: "StatusBarIcon", withExtension: "png"),
+           let img = NSImage(contentsOf: url) {
+            img.isTemplate = true
+            img.size = NSSize(width: 18, height: 18)
+            return img
+        }
+        // 업데이트 있거나 파일 없을 때 fallback
+        let symbol = update ? "calendar.badge.exclamationmark" : "calendar"
+        return NSImage(systemSymbolName: symbol, accessibilityDescription: "Calen") ?? NSImage()
     }
 }
 
