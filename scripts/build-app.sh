@@ -117,7 +117,20 @@ if [ -n "$SIGN" ]; then
     codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE"
     spctl --assess --type execute --verbose "$APP_BUNDLE" 2>&1 || true
 else
-    echo "⚠️  DEVELOPER_ID not set — skipping code signing (unsigned build)"
+    echo "→ Ad-hoc signing (no DEVELOPER_ID) — Sparkle 서명 검증 통과용"
+    SPARKLE_FW="$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
+    if [ -d "$SPARKLE_FW" ]; then
+        for xpc in "$SPARKLE_FW/Versions/B/XPCServices"/*.xpc; do
+            [ -d "$xpc" ] && codesign --force --deep --sign - "$xpc" 2>/dev/null || true
+        done
+        codesign --force --sign - "$SPARKLE_FW/Versions/B/Autoupdate" 2>/dev/null || true
+        codesign --force --sign - "$SPARKLE_FW/Versions/B/Updater.app" 2>/dev/null || true
+        codesign --force --sign - "$SPARKLE_FW" 2>/dev/null || true
+    fi
+    codesign --force --deep --sign - \
+        --entitlements "$PROJECT_DIR/Planit/Planit.entitlements" \
+        "$APP_BUNDLE"
+    echo "→ Ad-hoc signing complete"
 fi
 
 "$PROJECT_DIR/scripts/sparkle-static-check.sh" "$APP_BUNDLE"

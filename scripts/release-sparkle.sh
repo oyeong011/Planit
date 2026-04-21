@@ -29,8 +29,15 @@ if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     exit 1
 fi
 
-# 1) 빌드
-bash "$PROJECT_DIR/scripts/build-app.sh" "$VERSION"
+# 1) 빌드 (DMG 실패는 치명적이지 않으므로 별도 처리)
+bash "$PROJECT_DIR/scripts/build-app.sh" "$VERSION" || {
+    # ZIP이 생성됐으면 계속 진행 (DMG 실패 등은 무시)
+    if [ ! -f "$BUILD_DIR/$ZIP_NAME" ]; then
+        echo "✗ build-app.sh 실패 — ZIP 없음" >&2
+        exit 1
+    fi
+    echo "⚠️  build-app.sh 부분 실패 (ZIP은 생성됨) — 계속 진행"
+}
 
 # 2) EdDSA 서명
 if [ ! -x "$SPARKLE_BIN/sign_update" ]; then
