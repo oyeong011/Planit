@@ -25,7 +25,7 @@ struct PlanitApp: App {
 class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem!
     var popover: NSPopover!
-    var globalClickMonitor: Any?
+    var globalClickMonitor: Any? // unused (applicationDefined behavior)
     private let updater = UpdaterService.shared
     private var cancellables = Set<AnyCancellable>()
 
@@ -52,15 +52,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         popover = NSPopover()
         popover.contentSize = NSSize(width: 1320, height: 860)
-        popover.behavior = .transient
+        popover.behavior = .applicationDefined
         popover.delegate = self
         popover.contentViewController = NSHostingController(rootView: MainView())
 
-        globalClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
-            if let popover = self?.popover, popover.isShown {
-                popover.performClose(nil)
-            }
-        }
+        // .applicationDefined: 외부 클릭에도 팝오버 유지 — 아이콘 클릭으로만 닫힘
+        // globalClickMonitor 불필요하여 제거
 
         // 업데이트 있으면 아이콘 변경 (Sparkle이 자체 스케줄로 백그라운드 체크 수행)
         updater.$updateAvailable

@@ -175,7 +175,7 @@ struct ReviewView: View {
     /// 섹션별 추정 높이 (드래그 임계값 계산용)
     private func estimatedHeight(for sid: ReviewSectionID) -> CGFloat {
         switch sid {
-        case .habitGraph:    return 80 + CGFloat(habitService.habits.count) * 96
+        case .habitGraph:    return 80 + CGFloat(habitService.habits.count) * 64
         case .weeklyChart:   return 148
         case .todoGrass:     return 172
         case .myHabits:      return 70 + CGFloat(habitService.habits.count) * 66
@@ -1153,7 +1153,7 @@ struct ReviewView: View {
                                 rate > 0    ? accent.opacity(0.25) :
                                 Color.secondary.opacity(0.12)
                             )
-                            .frame(height: max(2, rate * 44))
+                            .frame(height: max(2, rate * 32))
                             .frame(maxWidth: .infinity)
 
                         // 주 라벨
@@ -1165,12 +1165,12 @@ struct ReviewView: View {
                             .lineLimit(1)
                     }
                     .frame(maxWidth: .infinity)
-                    .frame(height: 64, alignment: .bottom)
+                    .frame(height: 48, alignment: .bottom)
                 }
             }
         }
         .padding(.horizontal, 8)
-        .padding(.vertical, 7)
+        .padding(.vertical, 4)
         .background(RoundedRectangle(cornerRadius: 8).fill(Color.platformWindowBackground))
     }
 

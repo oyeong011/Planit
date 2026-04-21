@@ -11,12 +11,9 @@ struct OnboardingView: View {
         self.onSkip = onSkip
     }
 
-    @State private var step = 0
     @State private var goalInputs: [(String, Date)] = []
     @State private var newGoalTitle = ""
     @State private var newGoalDate = Calendar.current.date(byAdding: .month, value: 6, to: Date())!
-
-    private let totalSteps = 4
 
     var body: some View {
         VStack(spacing: 0) {
@@ -30,13 +27,7 @@ struct OnboardingView: View {
                 VStack(spacing: 0) {
                     Spacer().frame(height: 20)
 
-                    switch step {
-                    case 0: goalsStep
-                    case 1: scheduleStep
-                    case 2: energyStep
-                    case 3: capacityStep
-                    default: EmptyView()
-                    }
+                    goalsStep
 
                     Spacer().frame(height: 20)
                 }
@@ -59,15 +50,6 @@ struct OnboardingView: View {
             Text(String(localized: "onboarding.title"))
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(.primary)
-
-            Spacer()
-
-            // Step dots
-            HStack(spacing: 6) {
-                ForEach(0..<totalSteps, id: \.self) { i in
-                    stepDot(index: i)
-                }
-            }
 
             Spacer()
 
@@ -97,108 +79,52 @@ struct OnboardingView: View {
         .allowsHitTesting(true)
     }
 
-    private func stepDot(index: Int) -> some View {
-        let isCompleted = index < step
-        let isCurrent = index == step
-
-        return ZStack {
-            if isCompleted {
-                Circle()
-                    .fill(Color.purple)
-                    .frame(width: 7, height: 7)
-                    .overlay(
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 4, weight: .black))
-                            .foregroundStyle(.white)
-                    )
-            } else if isCurrent {
-                Circle()
-                    .fill(Color.purple)
-                    .frame(width: 7, height: 7)
-            } else {
-                Circle()
-                    .stroke(Color.secondary.opacity(0.35), lineWidth: 1.5)
-                    .frame(width: 7, height: 7)
-            }
-        }
-        .animation(.easeInOut(duration: 0.2), value: step)
-    }
-
     // MARK: - Navigation Footer
 
     private var navigationFooter: some View {
         HStack(spacing: 0) {
-            // Previous
-            if step > 0 {
-                Button {
-                    withAnimation(.easeInOut(duration: 0.2)) { step -= 1 }
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 9, weight: .semibold))
-                        Text(String(localized: "common.previous"))
-                            .font(.system(size: 11))
-                    }
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .allowsHitTesting(true)
-            } else {
-                // Skip link (step 0 only)
-                Button {
-                    if let skip = onSkip {
-                        skip()
-                    } else {
-                        onComplete()
-                    }
-                } label: {
-                    Text(String(localized: "common.skip"))
-                        .font(.system(size: 11))
-                        .foregroundStyle(.tertiary)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .allowsHitTesting(true)
-            }
-
-            Spacer()
-
-            // Step label
-            Text("\(step + 1) / \(totalSteps)")
-                .font(.system(size: 10))
-                .foregroundStyle(.tertiary)
-
-            Spacer()
-
-            // Next / Start
+            // 나중에 설정 버튼
             Button {
-                if step < totalSteps - 1 {
-                    withAnimation(.easeInOut(duration: 0.2)) { step += 1 }
+                if let skip = onSkip {
+                    skip()
                 } else {
-                    completeOnboarding()
+                    onComplete()
                 }
             } label: {
-                HStack(spacing: 4) {
-                    Text(step == totalSteps - 1 ? String(localized: "onboarding.start") : String(localized: "common.next"))
-                        .font(.system(size: 11, weight: .semibold))
-                    if step < totalSteps - 1 {
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 9, weight: .semibold))
-                    }
-                }
-                .foregroundStyle(.white)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 6)
-                .background(
-                    RoundedRectangle(cornerRadius: 7)
-                        .fill(Color.purple)
-                )
-                .contentShape(RoundedRectangle(cornerRadius: 7))
+                Text(String(localized: "common.skip"))
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 7)
+                            .fill(Color(.controlBackgroundColor))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 7)
+                                    .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+                            )
+                    )
+                    .contentShape(RoundedRectangle(cornerRadius: 7))
+            }
+            .buttonStyle(.plain)
+            .allowsHitTesting(true)
+
+            Spacer()
+
+            // 시작 버튼
+            Button {
+                completeOnboarding()
+            } label: {
+                Text(String(localized: "onboarding.start"))
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 7)
+                            .fill(Color.purple)
+                    )
+                    .contentShape(RoundedRectangle(cornerRadius: 7))
             }
             .buttonStyle(.plain)
             .allowsHitTesting(true)
@@ -374,273 +300,6 @@ struct OnboardingView: View {
         .allowsHitTesting(true)
     }
 
-    // MARK: - Step 1: Schedule
-
-    private var scheduleStep: some View {
-        VStack(alignment: .center, spacing: 14) {
-            stepHeader(
-                icon: "clock",
-                title: String(localized: "onboarding.schedule.title"),
-                subtitle: String(localized: "onboarding.schedule.subtitle")
-            )
-
-            VStack(spacing: 0) {
-                scheduleRow(
-                    String(localized: "onboarding.schedule.work.start"),
-                    value: $goalService.profile.workStartHour,
-                    range: 6...12
-                )
-                dividerRow
-                scheduleRow(
-                    String(localized: "onboarding.schedule.work.end"),
-                    value: $goalService.profile.workEndHour,
-                    range: 15...22
-                )
-                dividerRow
-                scheduleRow(
-                    String(localized: "onboarding.schedule.lunch"),
-                    value: $goalService.profile.lunchStartHour,
-                    range: 11...14
-                )
-                dividerRow
-                scheduleRow(
-                    String(localized: "onboarding.schedule.commute"),
-                    value: $goalService.profile.commuteMinutes,
-                    range: 0...120,
-                    unit: String(localized: "onboarding.schedule.unit.minute"),
-                    step: 10
-                )
-            }
-            .background(
-                RoundedRectangle(cornerRadius: 9)
-                    .fill(Color(.controlBackgroundColor))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 9)
-                            .stroke(Color.secondary.opacity(0.1), lineWidth: 1)
-                    )
-            )
-        }
-        .padding(.horizontal, 14)
-    }
-
-    private var dividerRow: some View {
-        Divider()
-            .padding(.horizontal, 10)
-    }
-
-    private func scheduleRow(_ label: String, value: Binding<Int>, range: ClosedRange<Int>, unit: String? = nil, step: Int = 1) -> some View {
-        let displayUnit = unit ?? String(localized: "onboarding.schedule.unit.hour")
-        return VStack(spacing: 4) {
-            HStack {
-                Text(label)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.primary)
-                Spacer()
-                Text("\(value.wrappedValue)\(displayUnit)")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.purple)
-                    .monospacedDigit()
-                    .frame(minWidth: 36, alignment: .trailing)
-            }
-            Slider(
-                value: Binding(
-                    get: { Double(value.wrappedValue) },
-                    set: { value.wrappedValue = Int($0) }
-                ),
-                in: Double(range.lowerBound)...Double(range.upperBound),
-                step: Double(step)
-            )
-            .controlSize(.small)
-            .tint(.purple)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 9)
-    }
-
-    // MARK: - Step 2: Energy
-
-    private var energyStep: some View {
-        VStack(alignment: .center, spacing: 14) {
-            stepHeader(
-                icon: "bolt.fill",
-                title: String(localized: "onboarding.energy.title"),
-                subtitle: String(localized: "onboarding.energy.subtitle")
-            )
-
-            VStack(spacing: 6) {
-                ForEach(EnergyType.allCases, id: \.self) { type in
-                    energyOption(type)
-                }
-            }
-        }
-        .padding(.horizontal, 14)
-    }
-
-    private func energyOption(_ type: EnergyType) -> some View {
-        let selected = goalService.profile.energyType == type
-        let icon: String = {
-            switch type {
-            case .morning: return "sunrise.fill"
-            case .evening: return "moon.stars.fill"
-            default:       return "equal.circle.fill"
-            }
-        }()
-        let desc: String = {
-            switch type {
-            case .morning: return String(localized: "onboarding.energy.morning.desc")
-            case .evening: return String(localized: "onboarding.energy.evening.desc")
-            default:       return String(localized: "onboarding.energy.balanced.desc")
-            }
-        }()
-
-        return Button {
-            goalService.profile.energyType = type
-        } label: {
-            HStack(spacing: 10) {
-                ZStack {
-                    Circle()
-                        .fill(selected ? Color.purple.opacity(0.12) : Color(.controlBackgroundColor))
-                        .frame(width: 30, height: 30)
-                    Image(systemName: icon)
-                        .font(.system(size: 14))
-                        .foregroundStyle(selected ? .purple : .secondary)
-                }
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(type.rawValue)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.primary)
-                    Text(desc)
-                        .font(.system(size: 9))
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer()
-
-                ZStack {
-                    Circle()
-                        .stroke(selected ? Color.purple : Color.secondary.opacity(0.25), lineWidth: 1.5)
-                        .frame(width: 16, height: 16)
-                    if selected {
-                        Circle()
-                            .fill(Color.purple)
-                            .frame(width: 8, height: 8)
-                    }
-                }
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .background(
-                RoundedRectangle(cornerRadius: 9)
-                    .fill(selected ? Color.purple.opacity(0.06) : Color(.controlBackgroundColor))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 9)
-                            .stroke(selected ? Color.purple.opacity(0.25) : Color.secondary.opacity(0.1), lineWidth: 1)
-                    )
-            )
-            .contentShape(RoundedRectangle(cornerRadius: 9))
-        }
-        .buttonStyle(.plain)
-        .animation(.easeInOut(duration: 0.15), value: selected)
-        .allowsHitTesting(true)
-    }
-
-    // MARK: - Step 3: Capacity
-
-    private var capacityStep: some View {
-        VStack(alignment: .center, spacing: 14) {
-            stepHeader(
-                icon: "gauge.with.dots.needle.50percent",
-                title: String(localized: "onboarding.capacity.title"),
-                subtitle: String(localized: "onboarding.capacity.subtitle")
-            )
-
-            // Capacity sliders card
-            VStack(spacing: 0) {
-                capacitySlider(String(localized: "onboarding.capacity.weekday"), value: $goalService.profile.weekdayCapacityMinutes)
-                dividerRow
-                capacitySlider(String(localized: "onboarding.capacity.weekend"), value: $goalService.profile.weekendCapacityMinutes)
-            }
-            .background(
-                RoundedRectangle(cornerRadius: 9)
-                    .fill(Color(.controlBackgroundColor))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 9)
-                            .stroke(Color.secondary.opacity(0.1), lineWidth: 1)
-                    )
-            )
-
-            // Aggressiveness card
-            VStack(spacing: 8) {
-                Text(String(localized: "onboarding.capacity.ai.level"))
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.primary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                Picker("", selection: $goalService.profile.aggressiveness) {
-                    ForEach(Aggressiveness.allCases, id: \.self) { a in
-                        Text(a.rawValue).tag(a)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .controlSize(.small)
-
-                Text(aggressivenessDesc)
-                    .font(.system(size: 9))
-                    .foregroundStyle(.tertiary)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
-            }
-            .padding(10)
-            .background(
-                RoundedRectangle(cornerRadius: 9)
-                    .fill(Color(.controlBackgroundColor))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 9)
-                            .stroke(Color.secondary.opacity(0.1), lineWidth: 1)
-                    )
-            )
-        }
-        .padding(.horizontal, 14)
-    }
-
-    private func capacitySlider(_ label: String, value: Binding<Int>) -> some View {
-        VStack(spacing: 4) {
-            HStack {
-                Text(label)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.primary)
-                Spacer()
-                Text(String(format: String(localized: "onboarding.capacity.minutes.format"), value.wrappedValue))
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.purple)
-                    .monospacedDigit()
-                    .frame(minWidth: 40, alignment: .trailing)
-            }
-            Slider(
-                value: Binding(
-                    get: { Double(value.wrappedValue) },
-                    set: { value.wrappedValue = Int($0) }
-                ),
-                in: 30...300,
-                step: 15
-            )
-            .controlSize(.small)
-            .tint(.purple)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 9)
-    }
-
-    private var aggressivenessDesc: String {
-        switch goalService.profile.aggressiveness {
-        case .manual:   return String(localized: "aggressiveness.manual.desc")
-        case .assist:   return String(localized: "aggressiveness.assist.desc")
-        case .semiAuto: return String(localized: "aggressiveness.semiauto.desc")
-        case .auto:     return String(localized: "aggressiveness.auto.desc")
-        }
-    }
-
     // MARK: - Shared Step Header
 
     private func stepHeader(icon: String, title: String, subtitle: String) -> some View {
@@ -669,6 +328,14 @@ struct OnboardingView: View {
     // MARK: - Complete
 
     private func completeOnboarding() {
+        // 기본값 설정 (설정 화면에서 나중에 변경 가능)
+        goalService.profile.workStartHour = 9
+        goalService.profile.workEndHour = 18
+        goalService.profile.commuteMinutes = 30
+        goalService.profile.energyType = .balanced
+        goalService.profile.weekdayCapacityMinutes = 480
+        goalService.profile.weekendCapacityMinutes = 480
+
         for (title, due) in goalInputs {
             // 온보딩에서 받는 목표는 대부분 장기성(대학원, 취업, 자격증 등).
             // 주간 반복 스케줄(recurrence)를 자동으로 붙이지 않음 — 붙이면 매일
