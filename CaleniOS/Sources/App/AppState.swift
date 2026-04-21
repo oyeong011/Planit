@@ -3,18 +3,21 @@ import SwiftUI
 
 // MARK: - Tab Enum
 //
-// v0.1.1 — 3탭 (today / chat / profile).
-// v0.1.0에서는 .today/.profile 2탭이었으나 AI 채팅 탭(v0.1.1 AI-1)을 추가하면서 3칸 pill로 확장.
+// v0.1.1 Review — 4탭 (today / chat / review / profile).
+// v0.1.0: 2탭(today/profile) → v0.1.1 AI-1: 3탭(+chat) → v0.1.1 Review: 4탭(+review).
+// 4칸 pill에서도 혼잡하지 않도록 아이콘 20pt + 라벨 10pt 유지.
 
 enum Tab: String, CaseIterable {
     case today    = "today"
     case chat     = "chat"
+    case review   = "review"
     case profile  = "profile"
 
     var title: String {
         switch self {
         case .today:    return "오늘"
         case .chat:     return "채팅"
+        case .review:   return "리뷰"
         case .profile:  return "설정"
         }
     }
@@ -23,6 +26,7 @@ enum Tab: String, CaseIterable {
         switch self {
         case .today:    return "calendar.circle"
         case .chat:     return "bubble.left.and.bubble.right"
+        case .review:   return "chart.bar.xaxis"
         case .profile:  return "person.circle"
         }
     }
@@ -31,6 +35,9 @@ enum Tab: String, CaseIterable {
         switch self {
         case .today:    return "calendar.circle.fill"
         case .chat:     return "bubble.left.and.bubble.right.fill"
+        // `chart.bar.xaxis.fill`은 SF Symbols 최신 버전에서만 존재 → 안전하게 같은 이름 사용
+        // (선택 상태는 semibold + primary color로만 구분).
+        case .review:   return "chart.bar.xaxis"
         case .profile:  return "person.circle.fill"
         }
     }

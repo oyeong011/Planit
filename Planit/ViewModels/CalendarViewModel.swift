@@ -132,6 +132,7 @@ final class CalendarViewModel: ObservableObject {
     nonisolated static let periodicRefreshInterval: TimeInterval = 180
 
     private var notificationObserver: Any?
+    private var popoverObserver: Any?
     private var authCancellable: AnyCancellable?
     private var authSucceededCancellable: AnyCancellable?
     /// syncPendingEdits 재진입 방지 플래그
@@ -227,6 +228,16 @@ final class CalendarViewModel: ObservableObject {
             self.cacheEvents(self.calendarEvents)
         }
 
+        // 팝오버 열릴 때 force-fetch — 외부 캘린더 앱/웹에서 추가된 이벤트 즉시 반영
+        popoverObserver = NotificationCenter.default.addObserver(
+            forName: .calenPopoverWillShow, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                guard let self, self.authManager.isAuthenticated else { return }
+                self.fetchEventsFromGoogle(for: self.currentMonth, force: true)
+            }
+        }
+
         // OAuth 성공(로그인 + 재연결 모두)마다 이벤트 리프레시
         // — isAuthenticated 변화 없는 재연결(true→true)도 처리
         authSucceededCancellable = authManager.authSucceeded.sink { [weak self] in
@@ -273,6 +284,9 @@ final class CalendarViewModel: ObservableObject {
         dateChangeTimer?.invalidate()
         dateChangeTimer = nil
         if let observer = notificationObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        if let observer = popoverObserver {
             NotificationCenter.default.removeObserver(observer)
         }
         if let observer = reminderObserver {
@@ -1545,14 +1559,23 @@ final class CalendarViewModel: ObservableObject {
     func previousMonth() {
         if let prev = calendar.date(byAdding: .month, value: -1, to: currentMonth) {
             currentMonth = prev
-            refreshEvents()
+            // 월 이동은 TTL 무시 — 이전에 fetch한 달로 돌아올 때도 반드시 최신 데이터 로드
+            if authManager.isAuthenticated {
+                fetchEventsFromGoogle(for: prev, force: true)
+            } else {
+                fetchEventsFromEventKit(for: prev)
+            }
         }
     }
 
     func nextMonth() {
         if let next = calendar.date(byAdding: .month, value: 1, to: currentMonth) {
             currentMonth = next
-            refreshEvents()
+            if authManager.isAuthenticated {
+                fetchEventsFromGoogle(for: next, force: true)
+            } else {
+                fetchEventsFromEventKit(for: next)
+            }
         }
     }
 

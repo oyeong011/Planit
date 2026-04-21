@@ -1,6 +1,7 @@
 #if os(iOS)
 import SwiftUI
 import SwiftData
+import CalenShared
 
 // MARK: - HomeView (v4)
 //
@@ -21,6 +22,8 @@ struct HomeView: View {
 
     @State private var detailItem: ScheduleDisplayItem?
     @State private var showAddSheet = false
+    /// v0.1.1 AI-2: "오늘 다시 짜기" 시트.
+    @State private var showReplanSheet = false
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -132,6 +135,22 @@ struct HomeView: View {
                 )
             }
         }
+        // v0.1.1 AI-2: 오늘 다시 짜기 시트 — 현재 선택된 날짜(selectedDate) 기준.
+        .sheet(isPresented: $showReplanSheet) {
+            let repo: EventRepository = viewModel.googleRepository ?? viewModel.eventRepository
+            TodayReplanSheet(
+                day: viewModel.selectedDate,
+                repository: repo,
+                isPresented: $showReplanSheet,
+                onApplied: { succeeded, _ in
+                    if succeeded > 0 {
+                        viewModel.reloadSchedules()
+                    }
+                }
+            )
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+        }
         .task {
             if viewModel.modelContext == nil {
                 viewModel.modelContext = modelContext
@@ -176,6 +195,11 @@ struct HomeView: View {
                         viewModel.goToToday()
                     }
                 }
+                // v0.1.1 AI-2: "오늘 다시 짜기" — AI가 오늘 일정을 재구성 제안.
+                navButton(icon: "wand.and.stars") {
+                    showReplanSheet = true
+                }
+                .accessibilityLabel("오늘 다시 짜기")
             }
         }
     }
