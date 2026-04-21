@@ -108,10 +108,6 @@ struct MainCalendarView: View {
             }
         }
         .frame(width: showLeftPanel ? 1320 : 1040, height: 860)
-        .overlay(alignment: .bottomLeading) {
-            WalkingCatView(containerWidth: showLeftPanel ? 1320 : 1040)
-                .padding(.bottom, 6)
-        }
         .task {
             // Hermes CloudKit upstream sync 시작 (UserDefaults 플래그 기반).
             // 활성화 안 돼 있으면 startIfEnabled가 nil 반환 → no-op.
@@ -523,70 +519,76 @@ struct CalendarGridView: View {
 
             let rows = viewModel.monthGridRows()
 
-            VStack(spacing: 0) {
-                ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
-                    let rowDates      = row.map { $0.date }
-                    let activeHabits  = habitService.rangedHabits(activeIn: rowDates.compactMap { $0 })
-                    let bandHeight    = barBandHeight(for: activeHabits.count)
+            ZStack(alignment: .bottom) {
+                VStack(spacing: 0) {
+                    ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                        let rowDates      = row.map { $0.date }
+                        let activeHabits  = habitService.rangedHabits(activeIn: rowDates.compactMap { $0 })
+                        let bandHeight    = barBandHeight(for: activeHabits.count)
 
-                    ZStack(alignment: .top) {
-                        HStack(spacing: 0) {
-                            ForEach(row) { day in
-                                if let date = day.date {
-                                    DayCellView(
-                                        date: date,
-                                        isSelected: day.isSelected,
-                                        isToday: day.isToday,
-                                        isSunday: day.isSunday,
-                                        isSaturday: day.isSaturday,
-                                        isCurrentMonth: day.isCurrentMonth,
-                                        events: day.events,
-                                        todos: day.todos,
-                                        categoryFor: { viewModel.category(for: $0) },
-                                        categoryForEvent: { viewModel.categoryForEvent($0) },
-                                        onDrop: { payload, targetDate in
-                                            switch CalendarDragPayload(payload) {
-                                            case .todo(let id):
-                                                viewModel.moveTodo(id: id, toDate: targetDate)
-                                            case .event(let id):
-                                                viewModel.moveCalendarEvent(id: id, toDate: targetDate)
-                                            case nil:
-                                                return
-                                            }
-                                            viewModel.selectedDate = targetDate
-                                        },
-                                        reservedBarHeight: bandHeight
-                                    )
-                                    .onTapGesture { viewModel.selectedDate = date }
-                                } else {
-                                    Color.clear
-                                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        ZStack(alignment: .top) {
+                            HStack(spacing: 0) {
+                                ForEach(row) { day in
+                                    if let date = day.date {
+                                        DayCellView(
+                                            date: date,
+                                            isSelected: day.isSelected,
+                                            isToday: day.isToday,
+                                            isSunday: day.isSunday,
+                                            isSaturday: day.isSaturday,
+                                            isCurrentMonth: day.isCurrentMonth,
+                                            events: day.events,
+                                            todos: day.todos,
+                                            categoryFor: { viewModel.category(for: $0) },
+                                            categoryForEvent: { viewModel.categoryForEvent($0) },
+                                            onDrop: { payload, targetDate in
+                                                switch CalendarDragPayload(payload) {
+                                                case .todo(let id):
+                                                    viewModel.moveTodo(id: id, toDate: targetDate)
+                                                case .event(let id):
+                                                    viewModel.moveCalendarEvent(id: id, toDate: targetDate)
+                                                case nil:
+                                                    return
+                                                }
+                                                viewModel.selectedDate = targetDate
+                                            },
+                                            reservedBarHeight: bandHeight
+                                        )
+                                        .onTapGesture { viewModel.selectedDate = date }
+                                    } else {
+                                        Color.clear
+                                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    }
                                 }
                             }
-                        }
 
-                        if !activeHabits.isEmpty {
-                            // 헤더 높이 (26pt 숫자 + 6pt 상단 패딩 + 2pt 아이템 간격)
-                            let headerH: CGFloat = 26 + 6 + 2
-                            WeekRangeBarOverlay(
-                                weekDays: rowDates,
-                                habits: activeHabits,
-                                service: habitService,
-                                barHeight: rangeBarSingleHeight,
-                                spacing: rangeBarSpacing,
-                                topPad: rangeBarTopPadding,
-                                maxVisible: rangeBarMaxVisible,
-                                horizontalInset: rangeBarHorizontalInset
-                            )
-                            .frame(height: bandHeight)
-                            .offset(y: headerH)
-                            .allowsHitTesting(true)
+                            if !activeHabits.isEmpty {
+                                // 헤더 높이 (26pt 숫자 + 6pt 상단 패딩 + 2pt 아이템 간격)
+                                let headerH: CGFloat = 26 + 6 + 2
+                                WeekRangeBarOverlay(
+                                    weekDays: rowDates,
+                                    habits: activeHabits,
+                                    service: habitService,
+                                    barHeight: rangeBarSingleHeight,
+                                    spacing: rangeBarSpacing,
+                                    topPad: rangeBarTopPadding,
+                                    maxVisible: rangeBarMaxVisible,
+                                    horizontalInset: rangeBarHorizontalInset
+                                )
+                                .frame(height: bandHeight)
+                                .offset(y: headerH)
+                                .allowsHitTesting(true)
+                            }
                         }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
+                .frame(maxHeight: .infinity)
+
+                WalkingCatView()
+                    .padding(.bottom, 6)
+                    .allowsHitTesting(false)
             }
-            .frame(maxHeight: .infinity)
             .padding(.horizontal, 8)
             .padding(.bottom, 8)
         }

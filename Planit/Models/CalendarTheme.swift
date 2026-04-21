@@ -56,15 +56,16 @@ struct CalendarTheme: Identifiable, Equatable, Hashable {
     }
 
     static let builtIn: [CalendarTheme] = [
-        // 고양이 아이콘 컬러와 맞춘 기본 테마
+        // 흑백 선 아트 고양이 아이콘과 맞춘 기본 테마
+        // 따뜻한 차콜(고양이 검정 반점) + 피치 액센트(귀여운 느낌) + 크림 배경(고양이 흰 털)
         CalendarTheme(
             id: "calen",
             name: "Calen",
-            primaryHex: "#E07A6E",
-            secondaryHex: "#9C8680",
-            accentHex: "#E07A6E",
-            eventTintHex: "#E07A6E",
-            backgroundOverlayHex: "#FAF0EE"
+            primaryHex: "#4A3F3A",
+            secondaryHex: "#8A7F7A",
+            accentHex: "#E8956A",
+            eventTintHex: "#C4735A",
+            backgroundOverlayHex: "#FAF4EE"
         ),
         CalendarTheme(
             id: "classic",
