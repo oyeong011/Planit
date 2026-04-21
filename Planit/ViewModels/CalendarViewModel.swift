@@ -1,6 +1,7 @@
 import SwiftUI
 import EventKit
 import Combine
+import Network
 import OSLog
 
 struct MirrorFilterStats: Equatable {
@@ -138,6 +139,9 @@ final class CalendarViewModel: ObservableObject {
     /// syncPendingEdits 재진입 방지 플래그
     private var isSyncingPendingEdits = false
 
+    private var pathMonitor: NWPathMonitor?
+    private let pathMonitorQueue = DispatchQueue(label: "com.oy.calen.pathmonitor", qos: .utility)
+
     private func recordCRUDFailure(
         operation: CRUDOperation,
         source: CRUDSource,
@@ -273,6 +277,9 @@ final class CalendarViewModel: ObservableObject {
         if appleRemindersEnabled {
             enableAppleReminders()
         }
+
+        // 네트워크 복구 감지 → pending edits 자동 플러시
+        startNetworkMonitoring()
     }
 
     deinit {
@@ -283,6 +290,8 @@ final class CalendarViewModel: ObservableObject {
         suppressedAppleMirrors.removeAll()
         dateChangeTimer?.invalidate()
         dateChangeTimer = nil
+        pathMonitor?.cancel()
+        pathMonitor = nil
         if let observer = notificationObserver {
             NotificationCenter.default.removeObserver(observer)
         }
@@ -2531,6 +2540,28 @@ final class CalendarViewModel: ObservableObject {
         return event.calendarID
     }
 
+    // MARK: - Network Monitoring
+
+    private func startNetworkMonitoring() {
+        let monitor = NWPathMonitor()
+        pathMonitor = monitor
+        monitor.pathUpdateHandler = { [weak self] path in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                let wasOffline = self.isOffline
+                let nowOnline = path.status == .satisfied
+                if wasOffline && nowOnline && !self.pendingEdits.isEmpty {
+                    PlanitLoggers.sync.info("Network restored — flushing \(self.pendingEdits.count) pending edits")
+                    await self.syncPendingEdits()
+                    if self.authManager.isAuthenticated {
+                        self.fetchEventsFromGoogle(for: self.currentMonth, force: true)
+                    }
+                }
+            }
+        }
+        monitor.start(queue: pathMonitorQueue)
+    }
+
     // MARK: - Pending Edits Queue (Offline Sync)
 
     private var pendingEdits: [PendingCalendarEdit] = []
@@ -2624,9 +2655,21 @@ final class CalendarViewModel: ObservableObject {
             do {
                 switch edit.action {
                 case "create":
-                    if try await googleService.createEvent(
+                    if let realEvent = try await googleService.createEvent(
                         title: edit.title, startDate: edit.startDate,
-                        endDate: edit.endDate, isAllDay: edit.isAllDay) == nil {
+                        endDate: edit.endDate, isAllDay: edit.isAllDay) {
+                        // temp ID("pending-...")를 Google이 발급한 실제 이벤트 ID로 교체
+                        let editTitle = edit.title
+                        let editStart = edit.startDate
+                        if let idx = self.calendarEvents.firstIndex(where: {
+                            $0.id.hasPrefix("pending-") &&
+                            $0.title == editTitle &&
+                            abs($0.startDate.timeIntervalSince(editStart)) < 60
+                        }) {
+                            self.calendarEvents[idx] = realEvent
+                            self.cacheEvents(self.calendarEvents)
+                        }
+                    } else {
                         recordCRUDFailure(operation: .create, source: .google, userVisible: false)
                     }
                 case "update":
