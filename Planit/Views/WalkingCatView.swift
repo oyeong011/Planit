@@ -10,22 +10,22 @@ struct WalkingCatView: View {
     @State private var pauseTimer: Timer? = nil
     @State private var containerWidth: CGFloat = 700
 
-    let catSize: CGFloat = 48
+    // 스프라이트 표시 크기 — 넉넉하게 키워서 선명도·존재감 확보
+    let catSize: CGFloat = 56
 
-    private let fps: TimeInterval = 1.0 / 10   // 10fps 걷기
-    private let speed: CGFloat = 2.2            // px per frame
+    private let fps: TimeInterval = 1.0 / 10
+    private let speed: CGFloat = 2.2
     private let rFrames: [NSImage] = Self.loadFrames(prefix: "R")
     private let lFrames: [NSImage] = Self.loadFrames(prefix: "L")
 
     var body: some View {
         GeometryReader { geo in
             currentFrameImage
-                .frame(width: catSize, height: catSize)
                 .offset(x: xPos - catSize / 2)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .onAppear {
                     containerWidth = geo.size.width
-                    xPos = CGFloat.random(in: 60...(max(containerWidth - 60, 61)))
+                    xPos = CGFloat.random(in: catSize...(max(containerWidth - catSize, catSize + 1)))
                     startWalking()
                 }
                 .onDisappear { stopTimers() }
@@ -40,16 +40,19 @@ struct WalkingCatView: View {
         let frames = facingRight ? rFrames : lFrames
         if !frames.isEmpty {
             let frame = frames[frameIndex % frames.count]
+            // aspectRatio 유지 + fit으로 프레임간 크기 떨림 방지
             Image(nsImage: frame)
                 .resizable()
                 .interpolation(.high)
+                .antialiased(true)
+                .aspectRatio(contentMode: .fit)
                 .frame(width: catSize, height: catSize)
-                // 다크모드: 흰 고양이가 어두운 배경에서 너무 강하게 튀지 않도록 살짝 dim
-                .colorMultiply(colorScheme == .dark ? Color(white: 0.82) : .white)
-                // 배경 상관없이 고양이 윤곽이 보이도록 부드러운 그림자
+                // 다크모드에서만 살짝 dim — 라이트모드는 원색 유지
+                .opacity(colorScheme == .dark ? 0.88 : 1.0)
+                // 배경과 분리되는 부드러운 그림자
                 .shadow(
-                    color: .black.opacity(colorScheme == .dark ? 0.55 : 0.18),
-                    radius: 3, x: 0, y: 1
+                    color: .black.opacity(colorScheme == .dark ? 0.6 : 0.2),
+                    radius: 2, x: 0, y: 1
                 )
         }
     }
@@ -105,11 +108,13 @@ struct WalkingCatView: View {
     private static func loadFrames(prefix: String) -> [NSImage] {
         let scale = NSScreen.main?.backingScaleFactor ?? 1.0
         return (1...8).compactMap { i in
-            // Retina에서 @2x 명시 로드 후 논리 사이즈를 절반으로 설정
+            // Retina: @2x 명시 로드, 논리 사이즈를 절반으로 설정해 포인트 일치
             if scale >= 2.0,
                let url2x = Bundle.module.url(forResource: "CatWalk_\(prefix)\(i)@2x", withExtension: "png"),
                let img = NSImage(contentsOf: url2x) {
-                img.size = NSSize(width: img.size.width / 2, height: img.size.height / 2)
+                // 이미지 픽셀을 논리 포인트로 정규화 — 프레임간 크기 통일
+                let normalized = NSSize(width: img.size.width / 2, height: img.size.height / 2)
+                img.size = normalized
                 return img
             }
             guard let url = Bundle.module.url(forResource: "CatWalk_\(prefix)\(i)", withExtension: "png"),

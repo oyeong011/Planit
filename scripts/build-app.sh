@@ -127,9 +127,8 @@ else
         codesign --force --sign - "$SPARKLE_FW/Versions/B/Updater.app" 2>/dev/null || true
         codesign --force --sign - "$SPARKLE_FW" 2>/dev/null || true
     fi
-    codesign --force --deep --sign - \
-        --entitlements "$PROJECT_DIR/Planit/Planit.entitlements" \
-        "$APP_BUNDLE"
+    # ad-hoc: entitlements 없이 서명 (entitlements 적용 시 TCC가 불필요한 권한 요청)
+    codesign --force --deep --sign - "$APP_BUNDLE"
     echo "→ Ad-hoc signing complete"
 fi
 
