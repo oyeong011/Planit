@@ -7,6 +7,7 @@ struct WalkingCatView: View {
     @State private var xPos: CGFloat = 6
     @State private var isMovingRight = true
     @State private var frameIndex = 0
+    @State private var frameElapsed: TimeInterval = 0
     @State private var frames: [Image] = WalkingCatView.loadFrames()
     @ObservedObject private var catSettings = CatSettings.shared
 
@@ -14,8 +15,10 @@ struct WalkingCatView: View {
     private static let catSize: CGFloat = 44
     private static let speed: CGFloat = 50
     private static let boundaryInset: CGFloat = 6
+    private static let tickDuration: TimeInterval = 1.0 / 30.0
+    private static let frameDuration: TimeInterval = 1.0 / 12.0
 
-    private let tick = Timer.publish(every: 1.0 / 30.0, on: .main, in: .common).autoconnect()
+    private let tick = Timer.publish(every: Self.tickDuration, on: .main, in: .common).autoconnect()
 
     @ViewBuilder
     var body: some View {
@@ -23,12 +26,11 @@ struct WalkingCatView: View {
             EmptyView()
         } else {
             GeometryReader { geo in
-                currentFrame
-                    .resizable()
-                    .colorMultiply(catTintColor ?? .white)
+                renderedFrame
                     .frame(width: Self.catSize, height: Self.catSize)
                     .scaleEffect(x: isMovingRight ? 1 : -1, y: 1)
                     .offset(x: xPos, y: Self.laneHeight - Self.catSize)
+                    .animation(.linear(duration: Self.tickDuration), value: xPos)
                     .frame(width: geo.size.width, height: Self.laneHeight, alignment: .topLeading)
                     .clipped()
                     .onReceive(tick) { _ in
@@ -43,32 +45,79 @@ struct WalkingCatView: View {
         frames[frameIndex]
     }
 
+    @ViewBuilder
+    private var renderedFrame: some View {
+        if let tint = catTintColor {
+            currentFrame
+                .resizable()
+                .colorMultiply(tint)
+        } else {
+            currentFrame
+                .resizable()
+        }
+    }
+
     private var catTintColor: Color? {
         guard !catSettings.catTint.isEmpty else { return nil }
         return Color(hex: catSettings.catTint)
     }
 
     private func advance(totalWidth: CGFloat) {
-        frameIndex = (frameIndex + 1) % Self.frameCount
+        let next = Self.advancedState(
+            from: MotionState(
+                xPos: xPos,
+                isMovingRight: isMovingRight,
+                frameIndex: frameIndex,
+                frameElapsed: frameElapsed
+            ),
+            totalWidth: totalWidth
+        )
+
+        xPos = next.xPos
+        isMovingRight = next.isMovingRight
+        frameIndex = next.frameIndex
+        frameElapsed = next.frameElapsed
+    }
+
+    struct MotionState {
+        var xPos: CGFloat
+        var isMovingRight: Bool
+        var frameIndex: Int
+        var frameElapsed: TimeInterval
+    }
+
+    static func advancedState(
+        from state: MotionState,
+        totalWidth: CGFloat,
+        tickDuration: TimeInterval = Self.tickDuration
+    ) -> MotionState {
+        var nextState = state
+        nextState.frameElapsed += tickDuration
+
+        while nextState.frameElapsed >= Self.frameDuration {
+            nextState.frameElapsed -= Self.frameDuration
+            nextState.frameIndex = (nextState.frameIndex + 1) % Self.frameCount
+        }
 
         guard totalWidth > 0 else {
-            return
+            return nextState
         }
 
-        let dx = Self.speed / 30.0
+        let dx = Self.speed * CGFloat(tickDuration)
         let minX = Self.boundaryInset
         let maxX = max(minX, totalWidth - Self.catSize - Self.boundaryInset)
-        var next = xPos + (isMovingRight ? dx : -dx)
+        var nextX = nextState.xPos + (nextState.isMovingRight ? dx : -dx)
 
-        if next >= maxX {
-            next = maxX
-            isMovingRight = false
-        } else if next <= minX {
-            next = minX
-            isMovingRight = true
+        if nextX >= maxX {
+            nextX = maxX
+            nextState.isMovingRight = false
+        } else if nextX <= minX {
+            nextX = minX
+            nextState.isMovingRight = true
         }
 
-        xPos = next
+        nextState.xPos = nextX
+        return nextState
     }
 
     private static func loadFrames() -> [Image] {
