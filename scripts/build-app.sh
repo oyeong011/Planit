@@ -117,19 +117,11 @@ if [ -n "$SIGN" ]; then
     codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE"
     spctl --assess --type execute --verbose "$APP_BUNDLE" 2>&1 || true
 else
-    echo "→ Ad-hoc signing (no DEVELOPER_ID) — Sparkle 서명 검증 통과용"
-    SPARKLE_FW="$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
-    if [ -d "$SPARKLE_FW" ]; then
-        for xpc in "$SPARKLE_FW/Versions/B/XPCServices"/*.xpc; do
-            [ -d "$xpc" ] && codesign --force --deep --sign - "$xpc" 2>/dev/null || true
-        done
-        codesign --force --sign - "$SPARKLE_FW/Versions/B/Autoupdate" 2>/dev/null || true
-        codesign --force --sign - "$SPARKLE_FW/Versions/B/Updater.app" 2>/dev/null || true
-        codesign --force --sign - "$SPARKLE_FW" 2>/dev/null || true
-    fi
-    # ad-hoc: entitlements 없이 서명 (entitlements 적용 시 TCC가 불필요한 권한 요청)
-    codesign --force --deep --sign - "$APP_BUNDLE"
-    echo "→ Ad-hoc signing complete"
+    # DEVELOPER_ID 없을 때: 메인 앱만 ad-hoc 서명 (--deep 없이 Sparkle XPC 건들지 않음)
+    # Sparkle은 자체 Developer ID로 사전 서명됨 → TCC 권한 프롬프트 없음
+    # ad-hoc→ad-hoc Sparkle 자동 업데이트 정상 작동
+    echo "→ Ad-hoc signing main bundle (Sparkle components untouched)..."
+    codesign --force --sign - "$APP_BUNDLE"
 fi
 
 "$PROJECT_DIR/scripts/sparkle-static-check.sh" "$APP_BUNDLE"
