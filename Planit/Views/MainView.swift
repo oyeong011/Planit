@@ -581,10 +581,11 @@ struct CalendarGridView: View {
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
+                WalkingCatView()
             }
             .frame(maxHeight: .infinity)
             .padding(.horizontal, 8)
-            .padding(.bottom, 8)
+            .padding(.bottom, 4)
         }
     }
 }
