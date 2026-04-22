@@ -41,6 +41,7 @@ struct SettingsView: View {
     @State private var selectedSection: SettingsSection = .profile
     @State private var profile: UserProfile
     @ObservedObject private var appearance = AppearanceService.shared
+    @ObservedObject private var catSettings = CatSettings.shared
     @ObservedObject private var calendarThemeService = CalendarThemeService.shared
     @ObservedObject private var wallpaperService = WallpaperService.shared
 
@@ -1120,6 +1121,7 @@ struct SettingsView: View {
             )
 
             appearanceCard
+            catSettingsCard
             calendarThemeCard
             wallpaperCard
         }
@@ -1163,6 +1165,39 @@ struct SettingsView: View {
                             isSelected: calendarThemeService.current.id == theme.id
                         ) {
                             calendarThemeService.selectTheme(theme)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var catSettingsCard: some View {
+        settingsCard("Cat") {
+            VStack(alignment: .leading, spacing: 14) {
+                Toggle(isOn: Binding(
+                    get: { catSettings.catEnabled },
+                    set: { catSettings.setEnabled($0) }
+                )) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("고양이 표시")
+                            .font(.system(size: 13, weight: .medium))
+                        Text("캘린더 하단을 걷는 고양이를 표시합니다.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .toggleStyle(.switch)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("색상")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.secondary)
+
+                    let columns = [GridItem(.adaptive(minimum: 110), spacing: 8)]
+                    LazyVGrid(columns: columns, spacing: 8) {
+                        ForEach(CatTintPreset.allCases) { preset in
+                            catTintButton(preset)
                         }
                     }
                 }
@@ -1299,6 +1334,55 @@ struct SettingsView: View {
         }
     }
 
+    private func catTintButton(_ preset: CatTintPreset) -> some View {
+        let isSelected = catSettings.catTint == preset.hex
+
+        return Button {
+            catSettings.selectTint(preset.hex)
+        } label: {
+            HStack(spacing: 8) {
+                ZStack {
+                    Circle()
+                        .fill(preset.swatchColor ?? Color.platformControl)
+                        .frame(width: 18, height: 18)
+
+                    if preset.swatchColor == nil {
+                        Circle()
+                            .stroke(Color.secondary.opacity(0.35), lineWidth: 1)
+                            .frame(width: 18, height: 18)
+                        Image(systemName: "circle.slash")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Text(preset.title)
+                    .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
+                    .foregroundStyle(.primary)
+
+                Spacer()
+
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(calendarThemeService.current.accent)
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isSelected ? calendarThemeService.current.accent.opacity(0.12) : Color.platformControl)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isSelected ? calendarThemeService.current.accent.opacity(0.4) : Color.clear, lineWidth: 1.5)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
     private func dataResetRow(title: String, detail: String, buttonLabel: String,
                                isDestructive: Bool = false, action: @escaping () -> Void) -> some View {
         HStack {
@@ -1431,4 +1515,20 @@ private struct CalendarThemeTile: View {
         .buttonStyle(.plain)
         .accessibilityLabel("\(theme.name) calendar theme")
     }
+}
+
+private struct CatTintPreset: Identifiable, CaseIterable {
+    let title: String
+    let hex: String
+
+    var id: String { hex.isEmpty ? "original" : hex }
+    var swatchColor: Color? { Color(hex: hex) }
+
+    static let allCases: [CatTintPreset] = [
+        CatTintPreset(title: "원본", hex: ""),
+        CatTintPreset(title: "주황", hex: "#FF9933"),
+        CatTintPreset(title: "파랑", hex: "#6699FF"),
+        CatTintPreset(title: "회색", hex: "#999999"),
+        CatTintPreset(title: "분홍", hex: "#F28E99"),
+    ]
 }

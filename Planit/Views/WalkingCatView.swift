@@ -8,6 +8,7 @@ struct WalkingCatView: View {
     @State private var isMovingRight = true
     @State private var frameIndex = 0
     @State private var frames: [Image] = WalkingCatView.loadFrames()
+    @ObservedObject private var catSettings = CatSettings.shared
 
     private static let frameCount = 8
     private static let catSize: CGFloat = 44
@@ -16,24 +17,35 @@ struct WalkingCatView: View {
 
     private let tick = Timer.publish(every: 1.0 / 30.0, on: .main, in: .common).autoconnect()
 
+    @ViewBuilder
     var body: some View {
-        GeometryReader { geo in
-            currentFrame
-                .resizable()
-                .frame(width: Self.catSize, height: Self.catSize)
-                .scaleEffect(x: isMovingRight ? 1 : -1, y: 1)
-                .offset(x: xPos, y: Self.laneHeight - Self.catSize)
-                .frame(width: geo.size.width, height: Self.laneHeight, alignment: .topLeading)
-                .clipped()
-                .onReceive(tick) { _ in
-                    advance(totalWidth: geo.size.width)
-                }
+        if !catSettings.catEnabled {
+            EmptyView()
+        } else {
+            GeometryReader { geo in
+                currentFrame
+                    .resizable()
+                    .colorMultiply(catTintColor ?? .white)
+                    .frame(width: Self.catSize, height: Self.catSize)
+                    .scaleEffect(x: isMovingRight ? 1 : -1, y: 1)
+                    .offset(x: xPos, y: Self.laneHeight - Self.catSize)
+                    .frame(width: geo.size.width, height: Self.laneHeight, alignment: .topLeading)
+                    .clipped()
+                    .onReceive(tick) { _ in
+                        advance(totalWidth: geo.size.width)
+                    }
+            }
+            .frame(height: Self.laneHeight)
         }
-        .frame(height: Self.laneHeight)
     }
 
     private var currentFrame: Image {
         frames[frameIndex]
+    }
+
+    private var catTintColor: Color? {
+        guard !catSettings.catTint.isEmpty else { return nil }
+        return Color(hex: catSettings.catTint)
     }
 
     private func advance(totalWidth: CGFloat) {
