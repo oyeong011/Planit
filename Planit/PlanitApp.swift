@@ -25,6 +25,7 @@ struct PlanitApp: App {
 class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem!
     var popover: NSPopover!
+    var globalClickMonitor: Any?
     private let updater = UpdaterService.shared
     private var cancellables = Set<AnyCancellable>()
 
@@ -54,6 +55,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         popover.behavior = .transient
         popover.delegate = self
         popover.contentViewController = NSHostingController(rootView: MainView())
+        globalClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+            if let popover = self?.popover, popover.isShown {
+                popover.performClose(nil)
+            }
+        }
 
         // 업데이트 있으면 아이콘 변경 (Sparkle이 자체 스케줄로 백그라운드 체크 수행)
         updater.$updateAvailable
@@ -77,6 +83,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // 앱이 메뉴바에 조용히 떠 있어도 새 버전을 자동 감지해 알림으로 알리도록 주기 폴링 시작.
         // (Sparkle의 accessory 앱 UI가 안 뜨는 환경에서도 배너 + 시스템 알림 동작)
         updater.startPeriodicAppcastPolling()
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        if let monitor = globalClickMonitor {
+            NSEvent.removeMonitor(monitor)
+            globalClickMonitor = nil
+        }
     }
 
     @objc func handleStatusItemClick() {
