@@ -7,12 +7,24 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 SWIFT=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift
 
+echo "🧹 Cleaning stale SwiftPM resource bundles..."
+find "$PROJECT_DIR/.build" -path "*/Calen_Calen.bundle" -type d -prune -exec rm -rf {} + 2>/dev/null || true
+
 echo "🔨 Building..."
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
     $SWIFT build --package-path "$PROJECT_DIR" -c release 2>&1 | grep -E "error:|warning:|Build complete"
 
 BUILD_DIR="$PROJECT_DIR/.build/release"
 APP=/tmp/Calen.app
+
+kill_installed_calen_copies() {
+    pkill -f "/Applications/Calen.app/Contents/MacOS/Calen" 2>/dev/null || true
+}
+
+kill_dev_calen_copies() {
+    pkill -f "/tmp/Calen.app/Contents/MacOS/Calen" 2>/dev/null || true
+    pkill -f "/private/tmp/Calen.app/Contents/MacOS/Calen" 2>/dev/null || true
+}
 
 echo "📦 Creating app bundle..."
 rm -rf "$APP"
@@ -29,6 +41,10 @@ for lproj in "$PROJECT_DIR/Planit/Resources"/*.lproj; do
 done
 
 # 기타 리소스
+if [ -d "$BUILD_DIR/Calen_Calen.bundle" ]; then
+    rm -rf "$APP/Contents/Resources/Calen_Calen.bundle"
+    ditto "$BUILD_DIR/Calen_Calen.bundle" "$APP/Contents/Resources/Calen_Calen.bundle"
+fi
 cp "$BUILD_DIR/Calen_Calen.bundle/AppIcon.icns" "$APP/Contents/Resources/" 2>/dev/null || true
 cp "$BUILD_DIR/Calen_Calen.bundle/PrivacyInfo.xcprivacy" "$APP/Contents/Resources/" 2>/dev/null || true
 cp "$PROJECT_DIR/Planit/Planit.entitlements" "$APP/Contents/Resources/" 2>/dev/null || true
@@ -78,8 +94,18 @@ else
 fi
 
 echo "🔄 Restarting Calen..."
-pkill -f "Calen.app/Contents/MacOS/Calen" 2>/dev/null || true
+pkill -x "Calen" 2>/dev/null || true
+kill_dev_calen_copies
+kill_installed_calen_copies
+for _ in {1..20}; do
+    pgrep -x "Calen" >/dev/null 2>&1 || break
+    sleep 0.1
+done
 sleep 0.3
-open "$APP"
+open -n --env CALEN_SHOW_STATUS_TITLE=1 "$APP"
+for _ in {1..50}; do
+    kill_installed_calen_copies
+    sleep 0.1
+done
 
 echo "✅ Calen launched from $APP"

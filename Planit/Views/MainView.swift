@@ -578,7 +578,11 @@ struct CalendarGridView: View {
             }
             .frame(maxHeight: .infinity)
             .padding(.horizontal, 8)
-            .padding(.bottom, 8)
+            .padding(.bottom, 4)
+
+            WalkingAnimalView()
+                .padding(.horizontal, 8)
+                .padding(.bottom, 4)
         }
     }
 }

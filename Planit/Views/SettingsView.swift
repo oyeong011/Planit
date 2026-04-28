@@ -41,6 +41,7 @@ struct SettingsView: View {
     @State private var selectedSection: SettingsSection = .profile
     @State private var profile: UserProfile
     @ObservedObject private var appearance = AppearanceService.shared
+    @ObservedObject private var animalSettings = AnimalSettings.shared
     @ObservedObject private var calendarThemeService = CalendarThemeService.shared
     @ObservedObject private var wallpaperService = WallpaperService.shared
 
@@ -1120,6 +1121,7 @@ struct SettingsView: View {
             )
 
             appearanceCard
+            animalSettingsCard
             calendarThemeCard
             wallpaperCard
         }
@@ -1146,6 +1148,77 @@ struct SettingsView: View {
                 .frame(width: 260)
             }
         }
+    }
+
+    private var animalSettingsCard: some View {
+        settingsCard("동물") {
+            VStack(alignment: .leading, spacing: 14) {
+                Toggle(isOn: Binding(
+                    get: { animalSettings.isEnabled },
+                    set: { animalSettings.setEnabled($0) }
+                )) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("동물 표시")
+                            .font(.system(size: 13, weight: .medium))
+                        Text("캘린더 하단을 걷는 동물을 표시합니다.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .toggleStyle(.switch)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("모양")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.secondary)
+
+                    let columns = [GridItem(.adaptive(minimum: 118), spacing: 8)]
+                    LazyVGrid(columns: columns, spacing: 8) {
+                        ForEach(WalkingAnimalStyle.allCases) { style in
+                            animalStyleButton(style)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func animalStyleButton(_ style: WalkingAnimalStyle) -> some View {
+        let isSelected = animalSettings.selectedStyle == style
+
+        return Button {
+            animalSettings.selectStyle(style)
+        } label: {
+            HStack(spacing: 8) {
+                AnimalSpritePreview(style: style)
+                    .frame(width: 34, height: 34)
+                    .background(Circle().fill(Color.secondary.opacity(0.08)))
+
+                Text(style.title)
+                    .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
+                    .foregroundStyle(.primary)
+
+                Spacer()
+
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(calendarThemeService.current.accent)
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isSelected ? calendarThemeService.current.accent.opacity(0.12) : Color.platformControl.opacity(0.55))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isSelected ? calendarThemeService.current.accent.opacity(0.5) : Color.secondary.opacity(0.12), lineWidth: 1.5)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     private var calendarThemeCard: some View {
@@ -1430,5 +1503,26 @@ private struct CalendarThemeTile: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(theme.name) calendar theme")
+    }
+}
+
+private struct AnimalSpritePreview: View {
+    let style: WalkingAnimalStyle
+
+    var body: some View {
+        Group {
+            if let image = AnimalSpriteImageCache.shared.image(style: style, frameIndex: 0) {
+                Image(nsImage: image)
+                    .resizable()
+                    .interpolation(.none)
+                    .scaledToFit()
+                    .accessibilityLabel(Text(style.title))
+            } else {
+                Image(systemName: "pawprint.fill")
+                    .font(.system(size: 15))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(width: 30, height: 30)
     }
 }

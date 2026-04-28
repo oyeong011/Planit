@@ -29,6 +29,8 @@ echo "=== Building Calen v${VERSION} ==="
 # 1. Release build — arch별 개별 빌드 후 lipo로 합치기
 #    (최신 Xcode SwiftBuild에서 `--arch arm64 --arch x86_64` 동시 호출이 hang하는 이슈 회피)
 cd "$PROJECT_DIR"
+echo "→ Cleaning stale SwiftPM resource bundles..."
+find "$PROJECT_DIR/.build" -path "*/Calen_Calen.bundle" -type d -prune -exec rm -rf {} + 2>/dev/null || true
 echo "→ Building release binary (arm64)..."
 swift build -c release --arch arm64
 echo "→ Building release binary (x86_64)..."
