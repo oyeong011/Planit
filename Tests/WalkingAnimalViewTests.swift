@@ -13,8 +13,6 @@ struct WalkingAnimalViewTests {
             "dog",
             "cheetah",
             "duck",
-            "penguin",
-            "hamster",
             "rabbit"
         ])
         #expect(WalkingAnimalStyle.allCases.map(\.title) == [
@@ -22,8 +20,6 @@ struct WalkingAnimalViewTests {
             "강아지",
             "치타",
             "오리",
-            "펭귄",
-            "햄스터",
             "토끼"
         ])
     }
@@ -124,11 +120,11 @@ struct WalkingAnimalViewTests {
     @Test("rendered animal frames are cached per backing scale")
     func renderedAnimalFramesAreCachedPerBackingScale() throws {
         let cache = AnimalSpriteImageCache.shared
-        let first = cache.renderedFrames(style: .penguin, prefersRetina: true)
-        let second = cache.renderedFrames(style: .penguin, prefersRetina: true)
-        let standard = cache.renderedFrames(style: .penguin, prefersRetina: false)
+        let first = cache.renderedFrames(style: .rabbit, prefersRetina: true)
+        let second = cache.renderedFrames(style: .rabbit, prefersRetina: true)
+        let standard = cache.renderedFrames(style: .rabbit, prefersRetina: false)
 
-        #expect(first.count == WalkingAnimalStyle.penguin.frameCount)
+        #expect(first.count == WalkingAnimalStyle.rabbit.frameCount)
         #expect(second.count == first.count)
         #expect(standard.count == first.count)
         for index in first.indices {
@@ -173,12 +169,14 @@ struct WalkingAnimalViewTests {
 
 @MainActor
 @Test func animalSettings_mapsRemovedFoxStyleToCat() {
-    let defaults = makeAnimalDefaults()
-    defaults.set("fox", forKey: AnimalSettings.styleKey)
+    for removedStyle in ["fox", "hamster", "penguin"] {
+        let defaults = makeAnimalDefaults()
+        defaults.set(removedStyle, forKey: AnimalSettings.styleKey)
 
-    let settings = AnimalSettings(userDefaults: defaults)
+        let settings = AnimalSettings(userDefaults: defaults)
 
-    #expect(settings.selectedStyle == .cat)
+        #expect(settings.selectedStyle == .cat)
+    }
 }
 
 @MainActor
