@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - Section drag-reorder support
 
 /// 드래그로 순서를 바꿀 수 있는 섹션 ID
-private enum ReviewSectionID: String, CaseIterable, Codable, Identifiable {
+enum ReviewSectionID: String, CaseIterable, Codable, Identifiable {
     case myHabits     = "my_habits"
     case longTermGoals = "long_term_goals"
 
@@ -15,12 +15,19 @@ private enum ReviewSectionID: String, CaseIterable, Codable, Identifiable {
 
     static func loadFromDefaults() -> [ReviewSectionID] {
         guard let data = UserDefaults.standard.data(forKey: "planit.review.sectionOrder"),
-              let decoded = try? JSONDecoder().decode([ReviewSectionID].self, from: data) else {
+              let rawValues = try? JSONDecoder().decode([String].self, from: data) else {
             return defaultOrder
         }
+        return normalizedOrder(fromStoredRawValues: rawValues)
+    }
+
+    static func normalizedOrder(fromStoredRawValues rawValues: [String]) -> [ReviewSectionID] {
         var normalized: [ReviewSectionID] = []
         var seen = Set<ReviewSectionID>()
-        for sid in decoded where ReviewSectionID.allCases.contains(sid) && !seen.contains(sid) {
+        for rawValue in rawValues {
+            guard let sid = ReviewSectionID(rawValue: rawValue), !seen.contains(sid) else {
+                continue
+            }
             normalized.append(sid)
             seen.insert(sid)
         }

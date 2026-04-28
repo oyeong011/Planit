@@ -47,7 +47,7 @@ struct ReviewSectionLayoutTests {
     @Test("review tab excludes statistics-owned sections")
     func reviewTabExcludesStatisticsOwnedSections() throws {
         let source = try projectFile("Planit/Views/ReviewView.swift")
-        let enumStart = try #require(source.range(of: "private enum ReviewSectionID"))
+        let enumStart = try #require(source.range(of: "enum ReviewSectionID"))
         let enumEnd = try #require(source.range(of: "private enum ReviewSheetRoute"))
         let enumSource = String(source[enumStart.lowerBound..<enumEnd.lowerBound])
 
@@ -59,6 +59,30 @@ struct ReviewSectionLayoutTests {
         #expect(enumSource.contains("my_habits"))
         #expect(enumSource.contains("long_term_goals"))
         #expect(source.contains("static let defaultOrder: [ReviewSectionID] = [\n        .myHabits, .longTermGoals\n    ]"))
+    }
+
+    @Test("legacy review section order drops removed statistics and keeps surviving order")
+    func legacyReviewSectionOrderDropsRemovedStatisticsAndKeepsSurvivingOrder() {
+        let migrated = ReviewSectionID.normalizedOrder(fromStoredRawValues: [
+            "long_term_goals",
+            "habit_graph",
+            "progress",
+            "my_habits",
+            "todo_grass"
+        ])
+
+        #expect(migrated == [.longTermGoals, .myHabits])
+    }
+
+    @Test("legacy review section order falls back when only removed statistics remain")
+    func legacyReviewSectionOrderFallsBackWhenOnlyRemovedStatisticsRemain() {
+        let migrated = ReviewSectionID.normalizedOrder(fromStoredRawValues: [
+            "habit_graph",
+            "weekly_chart",
+            "progress"
+        ])
+
+        #expect(migrated == ReviewSectionID.defaultOrder)
     }
 }
 
