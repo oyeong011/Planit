@@ -41,7 +41,7 @@ struct SettingsView: View {
     @State private var selectedSection: SettingsSection = .profile
     @State private var profile: UserProfile
     @ObservedObject private var appearance = AppearanceService.shared
-    @ObservedObject private var catSettings = CatSettings.shared
+    @ObservedObject private var animalSettings = AnimalSettings.shared
     @ObservedObject private var calendarThemeService = CalendarThemeService.shared
     @ObservedObject private var wallpaperService = WallpaperService.shared
 
@@ -76,6 +76,7 @@ struct SettingsView: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .keyboardShortcut(.cancelAction)
             .padding(12)
         }
     }
@@ -1121,7 +1122,7 @@ struct SettingsView: View {
             )
 
             appearanceCard
-            catSettingsCard
+            animalSettingsCard
             calendarThemeCard
             wallpaperCard
         }
@@ -1150,6 +1151,124 @@ struct SettingsView: View {
         }
     }
 
+    private var animalSettingsCard: some View {
+        settingsCard(String(localized: "settings.animal.card")) {
+            VStack(alignment: .leading, spacing: 14) {
+                Toggle(isOn: Binding(
+                    get: { animalSettings.isEnabled },
+                    set: { animalSettings.setEnabled($0) }
+                )) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(String(localized: "settings.animal.enabled.title"))
+                            .font(.system(size: 13, weight: .medium))
+                        Text(String(localized: "settings.animal.enabled.desc"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .toggleStyle(.switch)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(String(localized: "settings.animal.display.mode"))
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.secondary)
+
+                    HStack(spacing: 8) {
+                        ForEach(WalkingPetDisplayMode.allCases) { mode in
+                            animalDisplayModeButton(mode)
+                        }
+                    }
+
+                    if animalSettings.displayMode == .parade {
+                        Stepper(
+                            String(format: String(localized: "settings.animal.parade.count"), animalSettings.paradeCount),
+                            value: Binding(
+                                get: { animalSettings.paradeCount },
+                                set: { animalSettings.setParadeCount($0) }
+                            ),
+                            in: AnimalSettings.paradeCountRange
+                        )
+                        .font(.system(size: 12, weight: .medium))
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(String(localized: "settings.animal.shape"))
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.secondary)
+
+                    let columns = [GridItem(.adaptive(minimum: 118), spacing: 8)]
+                    LazyVGrid(columns: columns, spacing: 8) {
+                        ForEach(WalkingAnimalStyle.allCases) { style in
+                            animalStyleButton(style)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func animalStyleButton(_ style: WalkingAnimalStyle) -> some View {
+        let isSelected = animalSettings.selectedStyle == style
+
+        return Button {
+            animalSettings.selectStyle(style)
+        } label: {
+            HStack(spacing: 8) {
+                AnimalSpritePreview(style: style)
+                    .frame(width: 34, height: 34)
+                    .background(Circle().fill(Color.secondary.opacity(0.08)))
+
+                Text(style.title)
+                    .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
+                    .foregroundStyle(.primary)
+
+                Spacer()
+
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(calendarThemeService.current.accent)
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isSelected ? calendarThemeService.current.accent.opacity(0.12) : Color.platformControl.opacity(0.55))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isSelected ? calendarThemeService.current.accent.opacity(0.5) : Color.secondary.opacity(0.12), lineWidth: 1.5)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func animalDisplayModeButton(_ mode: WalkingPetDisplayMode) -> some View {
+        let isSelected = animalSettings.displayMode == mode
+
+        return Button {
+            animalSettings.setDisplayMode(mode)
+        } label: {
+            Text(mode.title)
+                .font(.system(size: 12, weight: isSelected ? .semibold : .medium))
+                .foregroundStyle(isSelected ? .white : .primary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 7)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(isSelected ? calendarThemeService.current.accent : Color.platformControl.opacity(0.55))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(isSelected ? Color.clear : Color.secondary.opacity(0.12), lineWidth: 1)
+                )
+        }
+        .buttonStyle(.plain)
+    }
+
     private var calendarThemeCard: some View {
         settingsCard(String(localized: "settings.calendar.theme.card")) {
             VStack(alignment: .leading, spacing: 12) {
@@ -1165,39 +1284,6 @@ struct SettingsView: View {
                             isSelected: calendarThemeService.current.id == theme.id
                         ) {
                             calendarThemeService.selectTheme(theme)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private var catSettingsCard: some View {
-        settingsCard("Cat") {
-            VStack(alignment: .leading, spacing: 14) {
-                Toggle(isOn: Binding(
-                    get: { catSettings.catEnabled },
-                    set: { catSettings.setEnabled($0) }
-                )) {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("고양이 표시")
-                            .font(.system(size: 13, weight: .medium))
-                        Text("캘린더 하단을 걷는 고양이를 표시합니다.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .toggleStyle(.switch)
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("색상")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(.secondary)
-
-                    let columns = [GridItem(.adaptive(minimum: 110), spacing: 8)]
-                    LazyVGrid(columns: columns, spacing: 8) {
-                        ForEach(CatTintPreset.allCases) { preset in
-                            catTintButton(preset)
                         }
                     }
                 }
@@ -1249,9 +1335,7 @@ struct SettingsView: View {
                             wallpaperService.select(preset)
                         } label: {
                             ZStack(alignment: .topTrailing) {
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(preset.gradient)
-                                    .frame(height: 56)
+                                wallpaperPreview(for: preset)
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 8)
                                             .stroke(
@@ -1284,6 +1368,20 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+
+    @ViewBuilder
+    private func wallpaperPreview(for preset: WallpaperPreset) -> some View {
+        ZStack {
+            preset.gradient
+            if let thumbnailAssetName = preset.thumbnailAssetName {
+                WallpaperResourceImage(resourceName: thumbnailAssetName)
+                    .scaledToFill()
+                    .overlay(preset.gradient.opacity(preset.readabilityOverlayOpacity))
+            }
+        }
+        .frame(height: 56)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
     private var languageCard: some View {
@@ -1332,55 +1430,6 @@ struct SettingsView: View {
                 }
             }
         }
-    }
-
-    private func catTintButton(_ preset: CatTintPreset) -> some View {
-        let isSelected = catSettings.catTint == preset.hex
-
-        return Button {
-            catSettings.selectTint(preset.hex)
-        } label: {
-            HStack(spacing: 8) {
-                ZStack {
-                    Circle()
-                        .fill(preset.swatchColor ?? Color.platformControl)
-                        .frame(width: 18, height: 18)
-
-                    if preset.swatchColor == nil {
-                        Circle()
-                            .stroke(Color.secondary.opacity(0.35), lineWidth: 1)
-                            .frame(width: 18, height: 18)
-                        Image(systemName: "circle.slash")
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                Text(preset.title)
-                    .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
-                    .foregroundStyle(.primary)
-
-                Spacer()
-
-                if isSelected {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(calendarThemeService.current.accent)
-                }
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(isSelected ? calendarThemeService.current.accent.opacity(0.12) : Color.platformControl)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(isSelected ? calendarThemeService.current.accent.opacity(0.4) : Color.clear, lineWidth: 1.5)
-            )
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
     }
 
     private func dataResetRow(title: String, detail: String, buttonLabel: String,
@@ -1517,18 +1566,36 @@ private struct CalendarThemeTile: View {
     }
 }
 
-private struct CatTintPreset: Identifiable, CaseIterable {
-    let title: String
-    let hex: String
+private struct AnimalSpritePreview: View {
+    let style: WalkingAnimalStyle
 
-    var id: String { hex.isEmpty ? "original" : hex }
-    var swatchColor: Color? { Color(hex: hex) }
+    var body: some View {
+        Group {
+            if let image = Self.previewImage(for: style) {
+                Image(nsImage: image)
+                    .resizable()
+                    .interpolation(.none)
+                    .scaledToFit()
+                    .accessibilityLabel(Text(style.title))
+            } else {
+                Image(systemName: "pawprint.fill")
+                    .font(.system(size: 15))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(width: 30, height: 30)
+    }
 
-    static let allCases: [CatTintPreset] = [
-        CatTintPreset(title: "원본", hex: ""),
-        CatTintPreset(title: "주황", hex: "#FF9933"),
-        CatTintPreset(title: "파랑", hex: "#6699FF"),
-        CatTintPreset(title: "회색", hex: "#999999"),
-        CatTintPreset(title: "분홍", hex: "#F28E99"),
-    ]
+    private static let previewImageCache: [WalkingAnimalStyle: NSImage] = {
+        Dictionary(uniqueKeysWithValues: WalkingAnimalStyle.allCases.compactMap { style in
+            guard let image = AnimalSpriteImageCache.shared.image(style: style, frameIndex: 0) else {
+                return nil
+            }
+            return (style, image)
+        })
+    }()
+
+    private static func previewImage(for style: WalkingAnimalStyle) -> NSImage? {
+        previewImageCache[style]
+    }
 }

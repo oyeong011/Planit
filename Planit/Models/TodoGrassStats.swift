@@ -9,6 +9,18 @@ struct TodoGrassDay: Identifiable, Equatable {
 }
 
 struct TodoGrassStats: Equatable {
+    private struct DayCounts {
+        var done = 0
+        var total = 0
+
+        mutating func add(isDone: Bool) {
+            total += 1
+            if isDone {
+                done += 1
+            }
+        }
+    }
+
     let days: [TodoGrassDay]
     let weeks: [[TodoGrassDay?]]
     let totalDone: Int
@@ -27,29 +39,28 @@ struct TodoGrassStats: Equatable {
     ) -> TodoGrassStats {
         let cal = calendar
         let today = cal.startOfDay(for: now)
+        let firstDay = cal.date(byAdding: .day, value: -364, to: today) ?? today
         let allTodos = todos + reminders
         let todoEventIDSet = Set(todos.compactMap { $0.googleEventId })
+        var countsByDay: [Date: DayCounts] = [:]
+
+        for todo in allTodos {
+            let day = cal.startOfDay(for: todo.date)
+            guard day >= firstDay, day <= today else { continue }
+            countsByDay[day, default: DayCounts()].add(isDone: todo.isCompleted)
+        }
+
+        for event in calendarEvents {
+            guard !todoEventIDSet.contains(event.id) else { continue }
+            let day = cal.startOfDay(for: event.startDate)
+            guard day >= firstDay, day <= today else { continue }
+            countsByDay[day, default: DayCounts()].add(isDone: completedEventIDs.contains(event.id))
+        }
 
         let days: [TodoGrassDay] = (0..<365).reversed().map { offset in
             let date = cal.date(byAdding: .day, value: -offset, to: today)!
-            guard let interval = cal.dateInterval(of: .day, for: date) else {
-                return TodoGrassDay(date: date, done: 0, total: 0)
-            }
-
-            let dayTodos = allTodos.filter {
-                cal.isDate(cal.startOfDay(for: $0.date), inSameDayAs: date)
-            }
-            let dayEvents = calendarEvents.filter { ev in
-                !todoEventIDSet.contains(ev.id) &&
-                ev.startDate >= interval.start && ev.startDate < interval.end
-            }
-
-            let doneTodos = dayTodos.filter(\.isCompleted).count
-            let doneEvents = dayEvents.filter { completedEventIDs.contains($0.id) }.count
-            let totalTodos = dayTodos.count + dayEvents.count
-            let totalDone = doneTodos + doneEvents
-
-            return TodoGrassDay(date: date, done: totalDone, total: totalTodos)
+            let counts = countsByDay[date] ?? DayCounts()
+            return TodoGrassDay(date: date, done: counts.done, total: counts.total)
         }
         let weeks = Self.makeWeeks(days: days, today: today, calendar: cal)
 

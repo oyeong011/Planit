@@ -24,6 +24,7 @@ struct MainView: View {
 enum LeftPanelMode: String {
     case chat
     case review
+    case statistics
     case onboarding
 }
 
@@ -116,14 +117,7 @@ struct MainCalendarView: View {
             }
         }
         .background(
-            ZStack {
-                if let preset = wallpaperService.activePreset {
-                    preset.gradient.ignoresSafeArea()
-                } else {
-                    Color.platformControlBackground
-                    themeService.current.paneTint
-                }
-            }
+            calendarBackground
         )
         .animation(.easeInOut(duration: 0.28), value: themeService.current.id)
         .animation(.easeInOut(duration: 0.35), value: wallpaperService.activePreset?.id)
@@ -165,12 +159,39 @@ struct MainCalendarView: View {
                 viewModel: viewModel,
                 userContextService: userContextService,
                 hermesMemoryService: hermesMemoryService,
-                onDismiss: { showSettings = false }
+                onDismiss: closeSettings
             )
         }
         // popover가 바깥 클릭으로 닫히면 설정 시트도 함께 닫기
         .onReceive(NotificationCenter.default.publisher(for: .calenPopoverDidClose)) { _ in
-            showSettings = false
+            closeSettings()
+        }
+    }
+
+    private func openSettings() {
+        showSettings = SettingsPresentationIntent.open.resolvedValue(from: showSettings)
+    }
+
+    private func closeSettings() {
+        showSettings = SettingsPresentationIntent.close.resolvedValue(from: showSettings)
+    }
+
+    @ViewBuilder
+    private var calendarBackground: some View {
+        ZStack {
+            if let preset = wallpaperService.activePreset {
+                preset.gradient.ignoresSafeArea()
+                if let imageAssetName = preset.imageAssetName {
+                    WallpaperResourceImage(resourceName: imageAssetName)
+                        .scaledToFill()
+                        .overlay(preset.gradient.opacity(preset.readabilityOverlayOpacity))
+                        .clipped()
+                        .ignoresSafeArea()
+                }
+            } else {
+                Color.platformControlBackground
+                themeService.current.paneTint
+            }
         }
     }
 
@@ -219,6 +240,7 @@ struct MainCalendarView: View {
                 HStack(spacing: 0) {
                     panelTab(String(localized: "panel.review"), mode: .review, icon: "sparkles")
                     panelTab(String(localized: "panel.chat"), mode: .chat, icon: "bubble.left")
+                    panelTab(String(localized: "panel.statistics"), mode: .statistics, icon: "chart.bar.xaxis")
                 }
                 .padding(.horizontal, 8)
                 .padding(.top, 6)
@@ -267,12 +289,19 @@ struct MainCalendarView: View {
                     }
                 )
 
+            case .statistics:
+                StatisticsView(
+                    goalMemoryService: goalMemoryService,
+                    habitService: habitService,
+                    viewModel: viewModel
+                )
+
             case .chat:
                 ChatView(aiService: aiService, viewModel: viewModel,
                          goalMemoryService: goalMemoryService,
                          habitService: habitService,
                          hermesMemoryService: hermesMemoryService,
-                         onOpenSettings: { showSettings = true })
+                         onOpenSettings: openSettings)
             }
         }
     }
@@ -302,15 +331,9 @@ struct MainCalendarView: View {
     // MARK: - Mode Detection
 
     private func checkLeftPanelMode() {
-        // 온보딩 미완료면 기본값으로 자동 완료 처리 (강제 목표 입력 제거)
         if !goalService.profile.onboardingDone {
-            goalService.profile.workStartHour = 9
-            goalService.profile.workEndHour = 18
-            goalService.profile.energyType = .balanced
-            goalService.profile.weekdayCapacityMinutes = 480
-            goalService.profile.weekendCapacityMinutes = 480
-            goalService.profile.onboardingDone = true
-            goalService.saveProfile()
+            leftPanelMode = .onboarding
+            return
         }
 
         // Check if it's review time
@@ -521,71 +544,74 @@ struct CalendarGridView: View {
 
             VStack(spacing: 0) {
                 ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
-                        let rowDates      = row.map { $0.date }
-                        let activeHabits  = habitService.rangedHabits(activeIn: rowDates.compactMap { $0 })
-                        let bandHeight    = barBandHeight(for: activeHabits.count)
+                    let rowDates      = row.map { $0.date }
+                    let activeHabits  = habitService.rangedHabits(activeIn: rowDates.compactMap { $0 })
+                    let bandHeight    = barBandHeight(for: activeHabits.count)
 
-                        ZStack(alignment: .top) {
-                            HStack(spacing: 0) {
-                                ForEach(row) { day in
-                                    if let date = day.date {
-                                        DayCellView(
-                                            date: date,
-                                            isSelected: day.isSelected,
-                                            isToday: day.isToday,
-                                            isSunday: day.isSunday,
-                                            isSaturday: day.isSaturday,
-                                            isCurrentMonth: day.isCurrentMonth,
-                                            events: day.events,
-                                            todos: day.todos,
-                                            categoryFor: { viewModel.category(for: $0) },
-                                            categoryForEvent: { viewModel.categoryForEvent($0) },
-                                            onDrop: { payload, targetDate in
-                                                switch CalendarDragPayload(payload) {
-                                                case .todo(let id):
-                                                    viewModel.moveTodo(id: id, toDate: targetDate)
-                                                case .event(let id):
-                                                    viewModel.moveCalendarEvent(id: id, toDate: targetDate)
-                                                case nil:
-                                                    return
-                                                }
-                                                viewModel.selectedDate = targetDate
-                                            },
-                                            reservedBarHeight: bandHeight
-                                        )
-                                        .onTapGesture { viewModel.selectedDate = date }
-                                    } else {
-                                        Color.clear
-                                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                    }
+                    ZStack(alignment: .top) {
+                        HStack(spacing: 0) {
+                            ForEach(row) { day in
+                                if let date = day.date {
+                                    DayCellView(
+                                        date: date,
+                                        isSelected: day.isSelected,
+                                        isToday: day.isToday,
+                                        isSunday: day.isSunday,
+                                        isSaturday: day.isSaturday,
+                                        isCurrentMonth: day.isCurrentMonth,
+                                        events: day.events,
+                                        todos: day.todos,
+                                        categoryFor: { viewModel.category(for: $0) },
+                                        categoryForEvent: { viewModel.categoryForEvent($0) },
+                                        onDrop: { payload, targetDate in
+                                            switch CalendarDragPayload(payload) {
+                                            case .todo(let id):
+                                                viewModel.moveTodo(id: id, toDate: targetDate)
+                                            case .event(let id):
+                                                viewModel.moveCalendarEvent(id: id, toDate: targetDate)
+                                            case nil:
+                                                return
+                                            }
+                                            viewModel.selectedDate = targetDate
+                                        },
+                                        reservedBarHeight: bandHeight
+                                    )
+                                    .onTapGesture { viewModel.selectedDate = date }
+                                } else {
+                                    Color.clear
+                                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 }
                             }
-
-                            if !activeHabits.isEmpty {
-                                // 헤더 높이 (26pt 숫자 + 6pt 상단 패딩 + 2pt 아이템 간격)
-                                let headerH: CGFloat = 26 + 6 + 2
-                                WeekRangeBarOverlay(
-                                    weekDays: rowDates,
-                                    habits: activeHabits,
-                                    service: habitService,
-                                    barHeight: rangeBarSingleHeight,
-                                    spacing: rangeBarSpacing,
-                                    topPad: rangeBarTopPadding,
-                                    maxVisible: rangeBarMaxVisible,
-                                    horizontalInset: rangeBarHorizontalInset
-                                )
-                                .frame(height: bandHeight)
-                                .offset(y: headerH)
-                                .allowsHitTesting(true)
-                            }
                         }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                        if !activeHabits.isEmpty {
+                            // 헤더 높이 (26pt 숫자 + 6pt 상단 패딩 + 2pt 아이템 간격)
+                            let headerH: CGFloat = 26 + 6 + 2
+                            WeekRangeBarOverlay(
+                                weekDays: rowDates,
+                                habits: activeHabits,
+                                service: habitService,
+                                barHeight: rangeBarSingleHeight,
+                                spacing: rangeBarSpacing,
+                                topPad: rangeBarTopPadding,
+                                maxVisible: rangeBarMaxVisible,
+                                horizontalInset: rangeBarHorizontalInset
+                            )
+                            .frame(height: bandHeight)
+                            .offset(y: headerH)
+                            .allowsHitTesting(true)
+                        }
                     }
-                WalkingCatView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
             }
             .frame(maxHeight: .infinity)
             .padding(.horizontal, 8)
             .padding(.bottom, 4)
+
+            WalkingAnimalView()
+                .padding(.horizontal, 8)
+                .padding(.bottom, 4)
         }
     }
 }
@@ -915,6 +941,10 @@ struct DailyDetailView: View {
         tappedTodo != nil || tappedEvent != nil
     }
 
+    private func toggleSettings() {
+        showSettings = SettingsPresentationIntent.toggle.resolvedValue(from: showSettings)
+    }
+
     var body: some View {
         ZStack {
             VStack(alignment: .leading, spacing: 0) {
@@ -957,12 +987,12 @@ struct DailyDetailView: View {
                         .help("카테고리 관리")
 
                         Button {
-                            showSettings = true
+                            toggleSettings()
                         } label: {
                             ZStack(alignment: .topTrailing) {
                                 Image(systemName: "gearshape")
                                     .font(.system(size: 16))
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(showSettings ? themeService.current.accent : .secondary)
                                     .frame(width: 28, height: 28)
                                 // 업데이트 있으면 빨간 점 뱃지
                                 if updater.updateAvailable {
