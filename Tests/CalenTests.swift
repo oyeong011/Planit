@@ -2097,6 +2097,32 @@ func cleanCodexOutput(_ raw: String) -> String {
     #expect(AttachmentSecurity.validateFile(url: url, maxBytes: 512) == nil)
 }
 
+@Test func attachmentSecurity_rejectsProtectedUserAndNetworkLocationsBeforeReading() {
+    let home = URL(fileURLWithPath: NSHomeDirectory())
+    let protectedURLs = [
+        home.appendingPathComponent("Downloads/private.pdf"),
+        home.appendingPathComponent("Music/private.pdf"),
+        home.appendingPathComponent("Pictures/Photos Library.photoslibrary/private.jpg"),
+        URL(fileURLWithPath: "/Volumes/Shared/private.pdf"),
+        URL(fileURLWithPath: "/Network/Servers/private.pdf"),
+    ]
+
+    for url in protectedURLs {
+        #expect(AttachmentSecurity.isDisallowedLocation(url: url))
+        #expect(AttachmentSecurity.validateFile(url: url) == nil)
+    }
+}
+
+@Test func attachmentSecurity_allowsTemporaryAttachments() throws {
+    let url = FileManager.default.temporaryDirectory
+        .appendingPathComponent("allowed-\(UUID().uuidString).pdf")
+    try Data("%PDF-1.4\n".utf8).write(to: url)
+    defer { try? FileManager.default.removeItem(at: url) }
+
+    #expect(!AttachmentSecurity.isDisallowedLocation(url: url))
+    #expect(AttachmentSecurity.validateFile(url: url, maxBytes: 2048) == .pdf)
+}
+
 // ============================================================================
 // MARK: - TC-53~56: UX 버그 회귀 테스트
 // ============================================================================

@@ -904,6 +904,7 @@ struct ChatView: View {
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = false
         panel.allowedContentTypes = Self.allowedTypes
+        panel.directoryURL = AttachmentSecurity.safePickerDirectory()
         panel.message = String(localized: "chat.attach.picker.message")
 
         guard panel.runModal() == .OK else { return }
