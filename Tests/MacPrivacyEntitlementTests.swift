@@ -15,6 +15,7 @@ struct MacPrivacyEntitlementTests {
             #expect(!keys.contains("com.apple.security.files.network-volumes.read-write"))
             #expect(!keys.contains("com.apple.security.network.server"))
             #expect(!keys.contains("com.apple.security.network.client"))
+            #expect(!keys.contains("com.apple.security.automation.apple-events"))
         }
     }
 
