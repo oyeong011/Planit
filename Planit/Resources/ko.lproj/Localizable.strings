@@ -590,3 +590,31 @@
 "wallpaper.summer" = "여름";
 "wallpaper.autumn" = "가을";
 "wallpaper.winter" = "겨울";
+
+/* ===== Statistics ===== */
+"panel.statistics" = "통계";
+"statistics.title" = "통계";
+"statistics.subtitle" = "습관과 달성률을 한눈에 확인하세요";
+
+/* ===== Animal Settings ===== */
+"settings.animal.card" = "동물";
+"settings.animal.enabled.title" = "동물 표시";
+"settings.animal.enabled.desc" = "캘린더 하단을 걷는 동물을 표시합니다.";
+"settings.animal.display.mode" = "표시 방식";
+"settings.animal.parade.count" = "함께 걷는 동물 %d마리";
+"settings.animal.shape" = "모양";
+"settings.animal.style.cat" = "고양이";
+"settings.animal.style.dog" = "강아지";
+"settings.animal.style.cheetah" = "치타";
+"settings.animal.style.duck" = "오리";
+"settings.animal.style.rabbit" = "토끼";
+"settings.animal.display.selected" = "선택한 동물";
+"settings.animal.display.random" = "랜덤 동물";
+"settings.animal.display.parade" = "동물 퍼레이드";
+
+/* ===== Pet Wallpapers ===== */
+"wallpaper.softStudioLight" = "소프트 스튜디오";
+"wallpaper.quietMidnightDark" = "조용한 미드나이트";
+"wallpaper.pixelPetBeige" = "픽셀 펫 베이지";
+"wallpaper.pixelPetPattern" = "픽셀 펫 패턴";
+"wallpaper.cozyPetRoom" = "아늑한 펫 룸";

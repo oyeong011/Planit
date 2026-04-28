@@ -593,3 +593,40 @@
 "wallpaper.summer" = "Verano";
 "wallpaper.autumn" = "Otoño";
 "wallpaper.winter" = "Invierno";
+
+/* ===== Statistics ===== */
+"panel.statistics" = "Stats";
+"statistics.title" = "Statistics";
+"statistics.subtitle" = "Track habits and completion at a glance";
+
+/* ===== Animal Settings ===== */
+"settings.animal.card" = "Animal";
+"settings.animal.enabled.title" = "Show animals";
+"settings.animal.enabled.desc" = "Shows a walking animal along the bottom of the calendar.";
+"settings.animal.display.mode" = "Display mode";
+"settings.animal.parade.count" = "%d animals walking together";
+"settings.animal.shape" = "Shape";
+"settings.animal.style.cat" = "Cat";
+"settings.animal.style.dog" = "Dog";
+"settings.animal.style.cheetah" = "Cheetah";
+"settings.animal.style.duck" = "Duck";
+"settings.animal.style.rabbit" = "Rabbit";
+"settings.animal.display.selected" = "Selected animal";
+"settings.animal.display.random" = "Random animal";
+"settings.animal.display.parade" = "Animal parade";
+
+/* ===== Pet Wallpapers ===== */
+"wallpaper.softStudioLight" = "Soft Studio";
+"wallpaper.quietMidnightDark" = "Quiet Midnight";
+"wallpaper.pixelPetBeige" = "Pixel Pet Beige";
+"wallpaper.pixelPetPattern" = "Pixel Pet Pattern";
+"wallpaper.cozyPetRoom" = "Cozy Pet Room";
+
+/* ===== Login View Value Proposition ===== */
+"login.headline" = "The menubar calendar that plans\nyour tomorrow with AI";
+"login.subcopy" = "See all your events and reminders in one place, and let AI quickly organize your day.";
+"login.feature.menubar" = "Instant menubar access";
+"login.feature.integration" = "Calendar + Reminders";
+"login.feature.ai" = "AI daily planning";
+"login.cta.primary" = "Load My Schedule";
+"login.cta.local" = "Start with local calendar";

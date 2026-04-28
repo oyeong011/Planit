@@ -3,37 +3,36 @@ import SwiftUI
 // MARK: - Section drag-reorder support
 
 /// 드래그로 순서를 바꿀 수 있는 섹션 ID
-private enum ReviewSectionID: String, CaseIterable, Codable, Identifiable {
-    case habitGraph   = "habit_graph"
-    case weeklyChart  = "weekly_chart"
-    case todoGrass    = "todo_grass"
+enum ReviewSectionID: String, CaseIterable, Codable, Identifiable {
     case myHabits     = "my_habits"
-    case progress     = "progress"
     case longTermGoals = "long_term_goals"
 
     var id: String { rawValue }
 
     static let defaultOrder: [ReviewSectionID] = [
-        .habitGraph, .weeklyChart, .todoGrass, .myHabits, .progress, .longTermGoals
+        .myHabits, .longTermGoals
     ]
 
     static func loadFromDefaults() -> [ReviewSectionID] {
         guard let data = UserDefaults.standard.data(forKey: "planit.review.sectionOrder"),
-              let decoded = try? JSONDecoder().decode([ReviewSectionID].self, from: data) else {
+              let rawValues = try? JSONDecoder().decode([String].self, from: data) else {
             return defaultOrder
         }
+        return normalizedOrder(fromStoredRawValues: rawValues)
+    }
+
+    static func normalizedOrder(fromStoredRawValues rawValues: [String]) -> [ReviewSectionID] {
         var normalized: [ReviewSectionID] = []
         var seen = Set<ReviewSectionID>()
-        for sid in decoded where ReviewSectionID.allCases.contains(sid) && !seen.contains(sid) {
+        for rawValue in rawValues {
+            guard let sid = ReviewSectionID(rawValue: rawValue), !seen.contains(sid) else {
+                continue
+            }
             normalized.append(sid)
             seen.insert(sid)
         }
         for sid in ReviewSectionID.allCases where !seen.contains(sid) {
-            if sid == .todoGrass, let weeklyIndex = normalized.firstIndex(of: .weeklyChart) {
-                normalized.insert(sid, at: normalized.index(after: weeklyIndex))
-            } else {
-                normalized.append(sid)
-            }
+            normalized.append(sid)
             seen.insert(sid)
         }
         return Set(normalized) == Set(ReviewSectionID.allCases) ? normalized : defaultOrder
@@ -73,7 +72,6 @@ struct ReviewView: View {
     @State private var isGenerating = false
     @State private var showPlanResult = false
     @State private var aiPlan: ReviewAIPlan?
-    @State private var selectedPeriod: GoalService.CompletionPeriod = .day
     // CRUD sheet — 목표·습관 모두 하나의 route로 관리 (SwiftUI sheet 충돌 방지)
     @State private var sheetRoute: ReviewSheetRoute? = nil
     // 목표 편집 임시값
@@ -175,11 +173,7 @@ struct ReviewView: View {
     /// 섹션별 추정 높이 (드래그 임계값 계산용)
     private func estimatedHeight(for sid: ReviewSectionID) -> CGFloat {
         switch sid {
-        case .habitGraph:    return 80 + CGFloat(habitService.habits.count) * 28
-        case .weeklyChart:   return 148
-        case .todoGrass:     return 172
         case .myHabits:      return 70 + CGFloat(habitService.habits.count) * 66
-        case .progress:      return 130
         case .longTermGoals: return 80 + CGFloat(max(1, goalMemoryService.goals.count)) * 64
         }
     }
@@ -216,16 +210,8 @@ struct ReviewView: View {
     @ViewBuilder
     private func sectionContent(for sid: ReviewSectionID) -> some View {
         switch sid {
-        case .habitGraph:
-            if !habitService.habits.isEmpty { habitGraphSection }
-        case .weeklyChart:
-            weeklyChartSection
-        case .todoGrass:
-            todoGrassSection
         case .myHabits:
             myHabitsSection
-        case .progress:
-            progressSection
         case .longTermGoals:
             longTermGoalsSection
         }
@@ -339,277 +325,6 @@ struct ReviewView: View {
                 .padding(.vertical, 8)
             }
         }
-    }
-
-    // MARK: - Weekly Chart (7일 달성 바 차트)
-
-    private var weeklyChartSection: some View {
-        let cal = Calendar.current
-        let today = cal.startOfDay(for: Date())
-        let days = (0..<7).compactMap { cal.date(byAdding: .day, value: -6 + $0, to: today) }
-
-        return VStack(alignment: .leading, spacing: 8) {
-            Label(String(localized: "review.weekly.chart.title"), systemImage: "chart.bar.xaxis")
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(themeService.current.accent)
-
-            HStack(alignment: .bottom, spacing: 5) {
-                ForEach(days, id: \.self) { day in
-                    weekDayBar(day)
-                }
-            }
-            .frame(height: 56)
-        }
-        .padding(12)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground).overlay(RoundedRectangle(cornerRadius: 10).fill(themeService.current.cardTint)))
-    }
-
-    private func weekDayBar(_ day: Date) -> some View {
-        let cal = Calendar.current
-        let (done, total) = dayStats(for: day)
-        let rate = total > 0 ? Double(done) / Double(total) : 0
-        let isToday = cal.isDateInToday(day)
-        let barColor = progressColor(for: rate)
-        let maxBarH: CGFloat = 40
-
-        return VStack(spacing: 3) {
-            // 바 — bottom-aligned
-            ZStack(alignment: .bottom) {
-                RoundedRectangle(cornerRadius: 3)
-                    .fill(Color.secondary.opacity(0.10))
-                    .frame(height: maxBarH)
-
-                if total > 0 {
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(isToday
-                              ? AnyShapeStyle(themeService.current.gradient)
-                              : AnyShapeStyle(barColor.opacity(0.65)))
-                        .frame(height: max(maxBarH * CGFloat(rate), 4))
-                        .animation(.spring(duration: 0.4), value: rate)
-                }
-            }
-            // 요일 레이블
-            Text(weekDayLabel(day))
-                .font(.system(size: 9, weight: isToday ? .bold : .regular))
-                .foregroundStyle(isToday ? .primary : .secondary)
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    private func dayStats(for date: Date) -> (done: Int, total: Int) {
-        let cal = Calendar.current
-        let completedIDs = viewModel.completedEventIDs
-
-        // eventsForDate는 calendarEvents 기반 — DailyDetailView와 동일한 소스를 써야
-        // completedEventIDs의 ID가 일치한다. historyEvents는 별도 sync라 ID가 다를 수 있음.
-        let events = viewModel.eventsForDate(date)
-
-        let localTodos = viewModel.todos.filter {
-            cal.startOfDay(for: $0.date) == cal.startOfDay(for: date)
-        }
-        let reminderTodos = viewModel.appleReminders.filter {
-            cal.startOfDay(for: $0.date) == cal.startOfDay(for: date)
-        }
-        let allTodos = localTodos + reminderTodos
-
-        let doneEvents = events.filter { completedIDs.contains($0.id) }.count
-        let doneTodos = allTodos.filter { $0.isCompleted }.count
-
-        return (doneEvents + doneTodos, events.count + allTodos.count)
-    }
-
-    private let weekDayFormatter: DateFormatter = {
-        let f = DateFormatter(); f.dateFormat = "E"; return f
-    }()
-
-    private func weekDayLabel(_ date: Date) -> String {
-        Calendar.current.isDateInToday(date)
-            ? String(localized: "review.day.today.short")
-            : weekDayFormatter.string(from: date)
-    }
-
-    // MARK: - Todo Grass Section (최근 1년 할일 잔디)
-
-    private var todoGrassSection: some View {
-        let stats = TodoGrassStats.make(
-            todos: viewModel.todos,
-            reminders: viewModel.appleReminders,
-            calendarEvents: viewModel.historyEvents,
-            completedEventIDs: viewModel.completedEventIDs
-        )
-
-        return VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Label(String(localized: "review.todo.grass.title"), systemImage: "square.grid.3x3.fill")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(themeService.current.accent)
-                Spacer()
-                if viewModel.isLoadingHistory {
-                    ProgressView()
-                        .scaleEffect(0.5)
-                }
-                Text(String(format: String(localized: "review.todo.grass.total"), stats.totalDone, stats.totalTodos))
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(stats.totalDone > 0 ? themeService.current.accent : .secondary)
-            }
-
-            yearGrassGrid(stats: stats)
-
-            HStack(spacing: 12) {
-                todoGrassMetric(
-                    title: String(localized: "review.todo.grass.best"),
-                    value: "\(stats.maxDoneInDay)/\(stats.maxTotalInDay)"
-                )
-                Divider().frame(height: 18)
-                todoGrassMetric(
-                    title: String(localized: "review.todo.grass.streak"),
-                    value: String(format: String(localized: "review.todo.grass.days"), stats.currentFullCompletionStreak)
-                )
-                Spacer(minLength: 0)
-            }
-        }
-        .padding(12)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground).overlay(RoundedRectangle(cornerRadius: 10).fill(themeService.current.cardTint)))
-    }
-
-    private func yearGrassGrid(stats: TodoGrassStats) -> some View {
-        let cellSize: CGFloat = 9
-        let gap: CGFloat = 2
-        let dayLabelWidth: CGFloat = 10
-        let dayLabels = todoGrassWeekdayLabels()
-
-        return GeometryReader { geo in
-            // 카드 너비에 맞는 최대 주 수 계산 후 가장 최근 N주만 표시
-            let available = geo.size.width - dayLabelWidth - 4
-            let maxWeeks = max(1, Int(floor((available + gap) / (cellSize + gap))))
-            let visibleWeeks = Array(stats.weeks.suffix(maxWeeks))
-
-            HStack(alignment: .top, spacing: 0) {
-                VStack(spacing: gap) {
-                    Color.clear.frame(width: dayLabelWidth, height: cellSize + 2)
-                    ForEach(0..<7, id: \.self) { index in
-                        Text(index % 2 == 1 ? dayLabels[index] : "")
-                            .font(.system(size: 7))
-                            .foregroundStyle(.secondary)
-                            .frame(width: dayLabelWidth, height: cellSize)
-                    }
-                }
-
-                HStack(alignment: .top, spacing: gap) {
-                    ForEach(Array(visibleWeeks.enumerated()), id: \.offset) { weekIndex, week in
-                        VStack(spacing: gap) {
-                            monthLabel(for: week, weekIndex: weekIndex)
-                                .frame(height: cellSize + 2)
-                            ForEach(0..<7, id: \.self) { dayIndex in
-                                grassCell(dayIndex < week.count ? week[dayIndex] : nil, size: cellSize)
-                            }
-                        }
-                        .frame(width: cellSize)
-                    }
-                }
-            }
-            .padding(.horizontal, 2)
-        }
-        .frame(height: cellSize + 2 + 7 * (cellSize + gap) - gap)
-    }
-
-    @ViewBuilder
-    private func monthLabel(for week: [TodoGrassDay?], weekIndex: Int) -> some View {
-        let dates = week.compactMap { $0?.date }
-        let firstOfMonth = dates.first { Calendar.current.component(.day, from: $0) == 1 }
-        let leadingDate = weekIndex == 0 ? dates.first : nil
-        let labelDate = firstOfMonth ?? leadingDate.flatMap { date in
-            Calendar.current.component(.day, from: date) <= 7 ? date : nil
-        }
-
-        if let labelDate {
-            Text(todoGrassMonthFormatter.string(from: labelDate))
-                .font(.system(size: 7, weight: .medium))
-                .foregroundStyle(.secondary)
-        } else {
-            Color.clear
-        }
-    }
-
-    private func grassCell(_ day: TodoGrassDay?, size: CGFloat) -> some View {
-        Group {
-            if let day {
-                let isToday = Calendar.current.isDateInToday(day.date)
-                let label = "\(todoGrassDateLabel(day.date)) · \(day.done)/\(day.total)"
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(todoGrassColor(for: day))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 2)
-                            .stroke(isToday ? Color.primary.opacity(0.45) : Color.clear, lineWidth: 1)
-                    )
-                    .help(label)
-                    .accessibilityLabel(label)
-            } else {
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(Color.clear)
-                    .accessibilityHidden(true)
-            }
-        }
-        .frame(width: size, height: size)
-    }
-
-    private func todoGrassWeekdayLabels() -> [String] {
-        let formatter = DateFormatter()
-        formatter.locale = Locale.current
-        let symbols = formatter.veryShortWeekdaySymbols ?? ["S", "M", "T", "W", "T", "F", "S"]
-        let start = max(0, Calendar.current.firstWeekday - 1)
-        return (0..<7).map { symbols[(start + $0) % symbols.count] }
-    }
-
-    private func todoGrassColor(for day: TodoGrassDay) -> Color {
-        guard day.total > 0, day.done > 0 else {
-            return Color.secondary.opacity(day.total > 0 ? 0.18 : 0.10)
-        }
-        return accentShade(for: day.rate)
-    }
-
-    /// hue만 accent를 따르고, S·B는 절대 고정값 4단계 — 테마·밝기에 무관하게 색 차이가 명확
-    /// L1: 연한 tint / L2: 파스텔 / L3: 선명 / L4: 짙음 / L5: accent 원색
-    private func accentShade(for rate: Double) -> Color {
-        guard let ns = NSColor(themeService.current.accent).usingColorSpace(.sRGB) else {
-            return themeService.current.accent
-        }
-        var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-        ns.getHue(&h, saturation: &s, brightness: &b, alpha: &a)
-        switch rate {
-        case ..<0.25: return Color(hue: h, saturation: 0.22, brightness: 0.88)  // 연한 tint
-        case ..<0.50: return Color(hue: h, saturation: 0.52, brightness: 0.80)  // 파스텔
-        case ..<0.75: return Color(hue: h, saturation: 0.80, brightness: 0.74)  // 선명·짙음
-        case ..<1.0:  return Color(hue: h, saturation: min(s, 1.0), brightness: max(b, 0.62)) // accent에 근접
-        default:      return themeService.current.accent                          // accent 원색
-        }
-    }
-
-    private func todoGrassMetric(title: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 1) {
-            Text(title)
-                .font(.system(size: 9))
-                .foregroundStyle(.secondary)
-            Text(value)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.primary)
-        }
-    }
-
-    private let todoGrassDateFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "M/d (E)"
-        return f
-    }()
-
-    private let todoGrassMonthFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "MMM"
-        return f
-    }()
-
-    private func todoGrassDateLabel(_ date: Date) -> String {
-        todoGrassDateFormatter.string(from: date)
     }
 
     // MARK: - My Habits Section (사용자 정의 습관 추적)
@@ -1010,280 +725,15 @@ struct ReviewView: View {
         }
     }
 
-    // MARK: - Habit Graph Section (주간 달성률 추이)
-
-    // DateFormatter는 뷰 수명 동안 재사용 (매 호출 생성 방지)
-    private let graphDateFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
-        return f
-    }()
-
-    /// 편집 시트에 보여줄 "N일간 · Apr 6 – Apr 12" 스타일 요약.
-    /// start > end 인 stale 입력도 방어적으로 swap 후 계산.
-    private func rangeSummary(start: Date, end: Date) -> String {
-        let cal = Calendar.current
-        let s = cal.startOfDay(for: min(start, end))
-        let e = cal.startOfDay(for: max(start, end))
-        let days = (cal.dateComponents([.day], from: s, to: e).day ?? 0) + 1
-        let fmt = DateFormatter()
-        fmt.dateStyle = .medium
-        fmt.timeStyle = .none
-        // %d days 는 단수 "1 days" 깨짐 — 1일일 때 별도 키로 분기.
-        let daysLabel: String
-        if days == 1 {
-            daysLabel = String(localized: "habit.field.range.days.one")
-        } else {
-            daysLabel = String.localizedStringWithFormat(
-                String(localized: "habit.field.range.days"), days)
-        }
-        return "\(daysLabel) · \(fmt.string(from: s)) – \(fmt.string(from: e))"
-    }
-
-    /// 특정 습관의 최근 4주 주간 달성률 (0.0~1.0) 배열 (오래된 순, index 0=4주전, 3=이번주)
-    private func weeklyRates(for habit: Habit) -> [Double] {
-        let cal = Calendar.current
-        let today = cal.startOfDay(for: Date())
-        // reversed: weekOffset 3→2→1→0 → rates[0]=4주전, rates[3]=이번주
-        return (0..<4).reversed().map { weekOffset in
-            let count = (0..<7).filter { dayOffset in
-                guard let day = cal.date(byAdding: .day, value: -(weekOffset * 7 + dayOffset), to: today) else { return false }
-                return habit.completedDates.contains(graphDateFormatter.string(from: day))
-            }.count
-            return min(Double(count) / Double(max(1, habit.weeklyTarget)), 1.0)
-        }
-    }
-
-    // 4주 라벨 (index 0=4주전, 1=3주전, 2=지난주, 3=이번주) — rates 순서와 1:1 매칭
-    private let graphWeekLabels: [LocalizedStringKey] = [
-        "habit.graph.4weeksago",
-        "habit.graph.3weeksago",
-        "habit.graph.lastweek",
-        "habit.graph.thisweek",
-    ]
-
-    /// 모든 습관의 이번 주 전체 평균 달성률
-    private var habitsWeeklyAverage: Double {
-        guard !habitService.habits.isEmpty else { return 0 }
-        let rates = habitService.habits.map { habit in
-            let rates = weeklyRates(for: habit)
-            return rates.last ?? 0  // 이번 주
-        }
-        return rates.reduce(0, +) / Double(rates.count)
-    }
-
-    private var habitGraphSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // 헤더 + 이번 주 전체 평균
-            HStack {
-                Label(String(localized: "habit.graph.title"), systemImage: "flame.fill")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(themeService.current.accent)
-                Spacer()
-                let weekly = habitsWeeklyAverage
-                if weekly > 0 {
-                    Text(String(format: NSLocalizedString("review.habit.weekly.average", comment: ""), Int(weekly * 100)))
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(weekly >= 0.8 ? themeService.current.accent : weekly >= 0.5 ? .orange : .secondary)
-                }
-            }
-
-            if habitsWeeklyAverage == 0 {
-                HStack(spacing: 6) {
-                    Image(systemName: "sparkles")
-                        .foregroundStyle(.yellow)
-                        .font(.system(size: 10))
-                    Text(String(localized: "review.habit.empty.encourage"))
-                        .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.vertical, 2)
-            }
-
-            // 날짜 컬럼 헤더 (최근 28일, 7열 기준)
-            habitGrassHeader
-
-            // 습관별 잔디 행
-            VStack(spacing: 5) {
-                ForEach(habitService.habits) { habit in
-                    habitGrassRow(habit)
-                }
-            }
-        }
-        .padding(12)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground).overlay(RoundedRectangle(cornerRadius: 10).fill(themeService.current.cardTint)))
-    }
-
-    /// 4주 헤더: 주 라벨 (4주전 / 3주전 / 지난주 / 이번주)
-    private var habitGrassHeader: some View {
-        HStack(spacing: 3) {
-            Spacer().frame(width: 68)
-            ForEach(graphWeekLabels.indices, id: \.self) { i in
-                Text(graphWeekLabels[i])
-                    .font(.system(size: 7))
-                    .foregroundStyle(.tertiary)
-                    .frame(maxWidth: .infinity)
-            }
-            Spacer().frame(width: 24)
-        }
-    }
-
-    /// 특정 날짜에 습관이 완료됐는지 확인 (28일 범위)
-    private func grassCompleted(_ habit: Habit, daysAgo: Int) -> Bool {
-        let cal = Calendar.current
-        let today = cal.startOfDay(for: Date())
-        guard let d = cal.date(byAdding: .day, value: -daysAgo, to: today) else { return false }
-        return habit.completedDates.contains(graphDateFormatter.string(from: d))
-    }
-
-    /// 이번 주(최근 7일) 달성 횟수
-    private func thisWeekCount(_ habit: Habit) -> Int {
-        (0..<7).filter { grassCompleted(habit, daysAgo: $0) }.count
-    }
-
-    /// 주간 달성률 (weekOffset: 0=이번주, 1=지난주, ... 3=4주전)
-    private func weekRate(_ habit: Habit, weekOffset: Int) -> Double {
-        let count = (0..<7).filter { grassCompleted(habit, daysAgo: weekOffset * 7 + $0) }.count
-        return min(1.0, Double(count) / Double(max(1, habit.weeklyTarget)))
-    }
-
-    private func habitGrassRow(_ habit: Habit) -> some View {
-        let accent = habit.accentColor
-        let thisRate = weekRate(habit, weekOffset: 0)
-
-        return HStack(spacing: 3) {
-            // 이름
-            HStack(spacing: 3) {
-                Text(habit.emoji).font(.system(size: 10))
-                Text(habit.name)
-                    .font(.system(size: 9, weight: .medium))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-            }
-            .frame(width: 68, alignment: .leading)
-
-            // 4주 × 7일 잔디 (오래된 순: 왼=4주전, 오=이번주)
-            // weekIdx 0=4주전, 3=이번주
-            ForEach(0..<4, id: \.self) { weekIdx in
-                let weekOffset = 3 - weekIdx  // 3=4주전, 0=이번주
-                HStack(spacing: 1.5) {
-                    ForEach(0..<7, id: \.self) { dayIdx in
-                        // dayIdx 0=해당 주 가장 오래된 날, 6=가장 최근
-                        let daysAgo = weekOffset * 7 + (6 - dayIdx)
-                        let done = grassCompleted(habit, daysAgo: daysAgo)
-                        RoundedRectangle(cornerRadius: 1.5)
-                            .fill(done ? accent : Color.secondary.opacity(0.12))
-                            .frame(height: 9)
-                            .frame(maxWidth: .infinity)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-            }
-
-            // 이번 주 달성률
-            Text(String(format: "%.0f%%", thisRate * 100))
-                .font(.system(size: 9, weight: .bold))
-                .foregroundStyle(thisRate >= 0.8 ? accent : thisRate >= 0.5 ? .orange : .secondary)
-                .frame(width: 24, alignment: .trailing)
-        }
-        .frame(height: 18)
-    }
-
     // MARK: - Progress Section
 
-    /// 4단계 discrete opacity — 바 차트에서 레벨 간 색 차이가 명확하도록
+    /// HSB 공간에서 빨강(0°) → 노랑(60°) → 연두(120°)를 rate에 따라 연속 보간
+    /// pastel 톤: saturation 0.48, brightness 0.90
     private func progressColor(for rate: Double) -> Color {
         let clamped = max(0, min(1, rate))
-        let opacity: Double = clamped < 0.25 ? 0.42
-                            : clamped < 0.50 ? 0.62
-                            : clamped < 0.75 ? 0.82
-                            : 1.0
-        return themeService.current.accent.opacity(opacity)
-    }
-
-    private var progressSection: some View {
-        let (done, total) = progressCounts(for: selectedPeriod)
-        let rate = total > 0 ? Double(done) / Double(total) : 0
-        let barColor = progressColor(for: rate)
-
-        return VStack(alignment: .leading, spacing: 10) {
-            // 기간 탭 — 언더라인 스타일 (탭 색도 현재 달성률 색으로)
-            HStack(spacing: 0) {
-                ForEach([
-                    (GoalService.CompletionPeriod.day,   String(localized: "common.today")),
-                    (.week,  String(localized: "review.period.week")),
-                    (.month, String(localized: "review.period.month")),
-                    (.year,  String(localized: "review.period.year")),
-                ], id: \.1) { period, label in
-                    let isSelected = selectedPeriod == period
-                    Button { selectedPeriod = period } label: {
-                        VStack(spacing: 3) {
-                            Text(label)
-                                .font(.system(size: 10, weight: isSelected ? .semibold : .regular))
-                                .foregroundStyle(isSelected ? Color.primary : Color.secondary)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 4)
-                            Capsule()
-                                .fill(isSelected ? barColor : Color.clear)
-                                .frame(height: 2)
-                        }
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .animation(.easeInOut(duration: 0.25), value: isSelected)
-                }
-            }
-
-            if total > 0 {
-                VStack(alignment: .leading, spacing: 8) {
-                    // 카운트 + 비율 한 줄
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text("\(done)")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(.primary)
-                        Text("/ \(total)")
-                            .font(.system(size: 13))
-                            .foregroundStyle(.secondary)
-                        Text(String(localized: "review.completion.rate"))
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Text("\(Int(rate * 100))%")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(barColor)
-                            .animation(.easeInOut(duration: 0.4), value: rate)
-                    }
-
-                    // 단색 진행 바 — 진행률에 따라 색이 빨강→노랑→연두로 변함
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            // 배경 트랙
-                            RoundedRectangle(cornerRadius: 6)
-                                .fill(Color.secondary.opacity(0.12))
-                            // 진행된 영역 — 단색 (rate에 따라 색 자체가 변함)
-                            RoundedRectangle(cornerRadius: 6)
-                                .fill(barColor)
-                                .frame(width: max(geo.size.width * CGFloat(rate), rate > 0 ? 8 : 0))
-                                .animation(.spring(duration: 0.5), value: rate)
-                        }
-                    }
-                    .frame(height: 10)
-                }
-            } else {
-                HStack(spacing: 6) {
-                    Image(systemName: "tray")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
-                    Text(String(localized: "review.no.todos"))
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.vertical, 10)
-            }
-        }
-        .padding(12)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground).overlay(RoundedRectangle(cornerRadius: 10).fill(themeService.current.cardTint)))
+        // hue: 0.0(빨강) → 0.167(노랑) → 0.333(연두)
+        let hue = clamped * (120.0 / 360.0)
+        return Color(hue: hue, saturation: 0.48, brightness: 0.90)
     }
 
     // MARK: - Suggestions Section
@@ -1294,7 +744,7 @@ struct ReviewView: View {
             HStack(spacing: 8) {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 18))
-                    .foregroundStyle(themeService.current.accent)
+                    .foregroundStyle(.green)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(String(localized: "review.on.track"))
                         .font(.system(size: 12, weight: .semibold))
@@ -1305,7 +755,7 @@ struct ReviewView: View {
                 Spacer()
             }
             .padding(12)
-            .background(RoundedRectangle(cornerRadius: 10).fill(themeService.current.accent.opacity(0.06)))
+            .background(RoundedRectangle(cornerRadius: 10).fill(Color.green.opacity(0.06)))
         } else {
             VStack(alignment: .leading, spacing: 6) {
                 Label(String(localized: "review.today.lookback"), systemImage: "sparkles")
@@ -1451,115 +901,25 @@ struct ReviewView: View {
         todayItems.compactMap { if case .todo(let t) = $0 { return t } else { return nil } }
     }
 
-    // 자동 계산: 완료한 항목 수
-    private var todayDoneCount: Int {
-        let doneEvents = todayEvents.filter { viewModel.isEventCompleted($0.id) }.count
-        let doneTodos = todayTodos.filter { $0.isCompleted }.count
-        return doneEvents + doneTodos
-    }
-
-    // 자동 계산: 전체 항목 수
-    private var todayTotalCount: Int {
-        todayEvents.count + todayTodos.count
-    }
-
-    // MARK: - Category Breakdown Section
-
-    private struct CategoryStat: Identifiable {
-        let id = UUID()
-        let name: String
-        let color: Color
-        let done: Int
-        let total: Int
-        var rate: Double { total > 0 ? Double(done) / Double(total) : 0 }
-    }
-
-    private var categoryStats: [CategoryStat] {
-        var groups: [String: (color: Color, done: Int, total: Int)] = [:]
-        let completedIDs = viewModel.completedEventIDs
-        let todoEventIds = Set(viewModel.todos.compactMap { $0.googleEventId })
-
-        var cal = Calendar(identifier: .gregorian)
-        cal.firstWeekday = 1
-        let component: Calendar.Component
-        switch selectedPeriod {
-        case .day:   component = .day
-        case .week:  component = .weekOfYear
-        case .month: component = .month
-        case .year:  component = .year
+    /// 편집 시트에 보여줄 "N일간 · Apr 6 - Apr 12" 스타일 요약.
+    /// start > end 인 stale 입력도 방어적으로 swap 후 계산.
+    private func rangeSummary(start: Date, end: Date) -> String {
+        let cal = Calendar.current
+        let s = cal.startOfDay(for: min(start, end))
+        let e = cal.startOfDay(for: max(start, end))
+        let days = (cal.dateComponents([.day], from: s, to: e).day ?? 0) + 1
+        let fmt = DateFormatter()
+        fmt.dateStyle = .medium
+        fmt.timeStyle = .none
+        let daysLabel: String
+        if days == 1 {
+            daysLabel = String(localized: "habit.field.range.days.one")
+        } else {
+            daysLabel = String.localizedStringWithFormat(
+                String(localized: "habit.field.range.days"), days)
         }
-        guard let interval = cal.dateInterval(of: component, for: Date()) else { return [] }
-
-        for event in viewModel.calendarEvents {
-            // all-day 이벤트도 포함 (종일 일정도 달성률 카운트)
-            guard !todoEventIds.contains(event.id) else { continue }
-            guard event.startDate >= interval.start && event.startDate < interval.end else { continue }
-            let rawName = event.calendarName
-            // 이메일 주소가 캘린더 이름으로 표시되면 "기본 캘린더"로 대체
-            let name: String
-            if rawName.isEmpty {
-                name = String(localized: "review.category.other")
-            } else if rawName.contains("@") || rawName.contains(".com") || rawName.contains(".net") {
-                name = String(localized: "review.category.primary")
-            } else {
-                name = rawName
-            }
-            var g = groups[name] ?? (color: event.color, done: 0, total: 0)
-            g.total += 1
-            if completedIDs.contains(event.id) { g.done += 1 }
-            groups[name] = g
-        }
-
-        return groups
-            .map { CategoryStat(name: $0.key, color: $0.value.color, done: $0.value.done, total: $0.value.total) }
-            .filter { $0.total > 0 }
-            .sorted { $0.total > $1.total }
-            .prefix(6).map { $0 }
+        return "\(daysLabel) · \(fmt.string(from: s)) - \(fmt.string(from: e))"
     }
-
-    private var categorySection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Label(String(localized: "review.category.title"), systemImage: "chart.bar.fill")
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(themeService.current.accent)
-
-            VStack(spacing: 6) {
-                ForEach(categoryStats) { stat in
-                    categoryStat(stat)
-                }
-            }
-        }
-        .padding(12)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color.platformControlBackground).overlay(RoundedRectangle(cornerRadius: 10).fill(themeService.current.cardTint)))
-    }
-
-    private func categoryStat(_ stat: CategoryStat) -> some View {
-        let barColor = stat.color
-        return HStack(spacing: 8) {
-            Text(stat.name)
-                .font(.system(size: 11))
-                .lineLimit(1)
-                .frame(width: 68, alignment: .leading)
-                .foregroundStyle(.primary)
-
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 4).fill(Color.secondary.opacity(0.12))
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(barColor)
-                        .frame(width: max(geo.size.width * CGFloat(stat.rate), stat.rate > 0 ? 6 : 0))
-                        .animation(.spring(duration: 0.5), value: stat.rate)
-                }
-            }
-            .frame(height: 7)
-
-            Text("\(stat.done)/\(stat.total)")
-                .font(.system(size: 10))
-                .foregroundStyle(.secondary)
-                .frame(width: 28, alignment: .trailing)
-        }
-    }
-
 
     // MARK: - Tomorrow Preview Section (저녁 전용)
 
@@ -2166,13 +1526,13 @@ struct ReviewView: View {
                         HStack(spacing: 8) {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.system(size: 18))
-                                .foregroundStyle(themeService.current.accent)
+                                .foregroundStyle(.green)
                             Text(String(localized: "review.tomorrow.sufficient"))
                                 .font(.system(size: 12, weight: .medium))
                         }
                         .padding(12)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(RoundedRectangle(cornerRadius: 8).fill(themeService.current.accent.opacity(0.06)))
+                        .background(RoundedRectangle(cornerRadius: 8).fill(Color.green.opacity(0.06)))
                     } else {
                         VStack(alignment: .leading, spacing: 6) {
                             ForEach(Array(plan.events.enumerated()), id: \.offset) { _, event in
@@ -2237,7 +1597,7 @@ struct ReviewView: View {
 
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 14))
-                .foregroundStyle(themeService.current.accent.opacity(0.7))
+                .foregroundStyle(.green.opacity(0.7))
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
@@ -2307,68 +1667,6 @@ struct ReviewView: View {
             plannedMinutes: max(minutes, 30)
         )
         reviewService.suggestions.remove(at: index)
-    }
-
-    // MARK: - Progress Helpers
-
-    private func progressCounts(for period: GoalService.CompletionPeriod) -> (done: Int, total: Int) {
-        // '오늘' 탭은 DailyDetailView와 동일하게 itemsForDate()를 기준으로 계산해
-        // 우측 패널에 보이는 개수와 분모가 정확히 일치하도록 한다.
-        // 이전 구현은 viewModel.todos 전체 + appleReminders + all-day events까지
-        // 합산해 중복/과다 카운트(3/7 현상)를 만들었다.
-        if period == .day {
-            // all-day 이벤트도 포함 — DailyDetailView와 동일 기준
-            let items = viewModel.itemsForDate(Calendar.current.startOfDay(for: Date()))
-            let done = items.filter { item in
-                switch item {
-                case .event(let e): return viewModel.isEventCompleted(e.id)
-                case .todo(let t):  return t.isCompleted
-                }
-            }.count
-            PlanitLoggers.review.info(
-                "progressCounts(day) items=\(items.count, privacy: .public) done=\(done, privacy: .public)"
-            )
-            return (done, items.count)
-        }
-
-        var cal = Calendar(identifier: .gregorian)
-        cal.firstWeekday = 1
-        cal.minimumDaysInFirstWeek = 1
-
-        let component: Calendar.Component
-        switch period {
-        case .day:   component = .day
-        case .week:  component = .weekOfYear
-        case .month: component = .month
-        case .year:  component = .year
-        }
-        guard let interval = cal.dateInterval(of: component, for: Date()) else { return (0, 0) }
-
-        let todoEventIds = Set(viewModel.todos.compactMap { $0.googleEventId })
-        let completedIDs = viewModel.completedEventIDs
-
-        let events = viewModel.calendarEvents.filter { event in
-            guard !todoEventIds.contains(event.id) else { return false }
-            let eventEnd = event.endDate > event.startDate ? event.endDate : event.startDate.addingTimeInterval(1)
-            return event.startDate < interval.end && eventEnd > interval.start
-        }
-
-        let localTodos = viewModel.todos.filter {
-            let d = cal.startOfDay(for: $0.date)
-            return d >= interval.start && d < interval.end
-        }
-        let reminderTodos = viewModel.appleReminders.filter {
-            let d = cal.startOfDay(for: $0.date)
-            return d >= interval.start && d < interval.end
-        }
-        let baseTodos = localTodos + reminderTodos
-
-        let doneTodos = baseTodos.filter { todo in
-            todo.isCompleted || (todo.googleEventId.map { completedIDs.contains($0) } ?? false)
-        }.count
-        let doneEvents = events.filter { completedIDs.contains($0.id) }.count
-
-        return (doneTodos + doneEvents, baseTodos.count + events.count)
     }
 
     // MARK: - Formatting Helpers

@@ -590,3 +590,31 @@
 "wallpaper.summer" = "Summer";
 "wallpaper.autumn" = "Autumn";
 "wallpaper.winter" = "Winter";
+
+/* ===== Statistics ===== */
+"panel.statistics" = "Stats";
+"statistics.title" = "Statistics";
+"statistics.subtitle" = "Track habits and completion at a glance";
+
+/* ===== Animal Settings ===== */
+"settings.animal.card" = "Animal";
+"settings.animal.enabled.title" = "Show animals";
+"settings.animal.enabled.desc" = "Shows a walking animal along the bottom of the calendar.";
+"settings.animal.display.mode" = "Display mode";
+"settings.animal.parade.count" = "%d animals walking together";
+"settings.animal.shape" = "Shape";
+"settings.animal.style.cat" = "Cat";
+"settings.animal.style.dog" = "Dog";
+"settings.animal.style.cheetah" = "Cheetah";
+"settings.animal.style.duck" = "Duck";
+"settings.animal.style.rabbit" = "Rabbit";
+"settings.animal.display.selected" = "Selected animal";
+"settings.animal.display.random" = "Random animal";
+"settings.animal.display.parade" = "Animal parade";
+
+/* ===== Pet Wallpapers ===== */
+"wallpaper.softStudioLight" = "Soft Studio";
+"wallpaper.quietMidnightDark" = "Quiet Midnight";
+"wallpaper.pixelPetBeige" = "Pixel Pet Beige";
+"wallpaper.pixelPetPattern" = "Pixel Pet Pattern";
+"wallpaper.cozyPetRoom" = "Cozy Pet Room";
