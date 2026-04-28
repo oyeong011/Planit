@@ -28,12 +28,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var globalClickMonitor: Any?
     private let updater = UpdaterService.shared
     private var cancellables = Set<AnyCancellable>()
+    private static let devStatusTitleEnvironmentKey = "CALEN_SHOW_STATUS_TITLE"
+    private var showDevStatusTitle = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         _ = NotificationService()
 
         AppearanceService.shared.bootstrap()
         NSApp.setActivationPolicy(.accessory)
+        showDevStatusTitle = ProcessInfo.processInfo.environment[Self.devStatusTitleEnvironmentKey] == "1"
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             NSApp.windows
@@ -41,13 +44,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 .forEach { $0.close() }
         }
 
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        statusItem = NSStatusBar.system.statusItem(
+            withLength: showDevStatusTitle ? NSStatusItem.variableLength : NSStatusItem.squareLength
+        )
 
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "calendar", accessibilityDescription: "Calen")
-            button.target = self
-            button.action = #selector(handleStatusItemClick)
-            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+            configureStatusButton(button, showDevStatusTitle: showDevStatusTitle)
         }
 
         popover = NSPopover()
@@ -103,6 +105,31 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
             NSApp.activate(ignoringOtherApps: true)
         }
+    }
+
+    private func configureStatusButton(_ button: NSStatusBarButton, showDevStatusTitle: Bool) {
+        button.image = Self.makeStatusBarImage(update: updater.updateAvailable)
+        button.imagePosition = showDevStatusTitle ? .imageLeading : .imageOnly
+        button.title = showDevStatusTitle ? " Calen" : ""
+        button.toolTip = "Calen"
+        button.target = self
+        button.action = #selector(handleStatusItemClick)
+        button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+    }
+
+    private static func makeStatusBarImage(update: Bool) -> NSImage? {
+        if !update,
+           let url = Bundle.module.url(forResource: "StatusBarIcon", withExtension: "png"),
+           let image = NSImage(contentsOf: url) {
+            image.isTemplate = true
+            image.size = NSSize(width: 18, height: 18)
+            return image
+        }
+
+        let symbolName = update ? "calendar.badge.exclamationmark" : "calendar"
+        guard let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "Calen") else { return nil }
+        image.isTemplate = true
+        return image
     }
 
     private func showContextMenu() {
@@ -180,8 +207,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func refreshStatusIcon() {
-        let symbolName = updater.updateAvailable ? "calendar.badge.exclamationmark" : "calendar"
-        statusItem.button?.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "Calen")
+        guard let button = statusItem.button else { return }
+        configureStatusButton(button, showDevStatusTitle: showDevStatusTitle)
     }
 }
 
