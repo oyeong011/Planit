@@ -98,6 +98,16 @@ struct MenuBarProgressTests {
         }
     }
 
+    @Test("progress icon resolves colors at draw time")
+    func progressIconResolvesColorsAtDrawTime() throws {
+        let source = try projectFile("Planit/Models/MenuBarProgressIcon.swift")
+
+        #expect(source.contains("drawingHandler"),
+                "Menu bar icons must resolve NSColor.labelColor during drawing so light/dark menu bars stay legible.")
+        #expect(!source.contains("lockFocus()"),
+                "A one-time lockFocus bitmap can become stale across appearance changes.")
+    }
+
     private func todo(_ title: String, date: Date, completed: Bool) -> TodoItem {
         TodoItem(title: title, categoryID: categoryID, isCompleted: completed, date: date)
     }
@@ -118,5 +128,15 @@ struct MenuBarProgressTests {
         let options: ISO8601DateFormatter.Options = [.withInternetDateTime]
         formatter.formatOptions = options
         return try #require(formatter.date(from: isoString))
+    }
+
+    private func projectFile(_ path: String) throws -> String {
+        try String(contentsOf: repositoryRoot.appendingPathComponent(path), encoding: .utf8)
+    }
+
+    private var repositoryRoot: URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
     }
 }

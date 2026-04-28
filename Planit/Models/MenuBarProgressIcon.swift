@@ -3,13 +3,17 @@ import AppKit
 enum MenuBarProgressIcon {
     static func makeImage(snapshot: MenuBarProgressSnapshot, updateAvailable: Bool) -> NSImage {
         let size = NSSize(width: 28, height: 18)
-        let image = NSImage(size: size)
+        let image = NSImage(size: size, flipped: false, drawingHandler: { bounds in
+            draw(snapshot: snapshot, updateAvailable: updateAvailable, in: bounds)
+            return true
+        })
+        image.isTemplate = false
+        return image
+    }
 
-        image.lockFocus()
-        defer { image.unlockFocus() }
-
+    private static func draw(snapshot: MenuBarProgressSnapshot, updateAvailable: Bool, in bounds: NSRect) {
         NSColor.clear.setFill()
-        NSBezierPath(rect: NSRect(origin: .zero, size: size)).fill()
+        NSBezierPath(rect: bounds).fill()
 
         let bodyRect = NSRect(x: 2.0, y: 3.5, width: 21.0, height: 11.0)
         let capRect = NSRect(x: 24.0, y: 6.5, width: 2.6, height: 5.0)
@@ -46,9 +50,6 @@ enum MenuBarProgressIcon {
             NSBezierPath(ovalIn: NSRect(x: 20.2, y: 11.0, width: 5.0, height: 5.0))
                 .fill(with: NSColor.systemPink)
         }
-
-        image.isTemplate = false
-        return image
     }
 
     private static func fillColor(for snapshot: MenuBarProgressSnapshot) -> NSColor {
