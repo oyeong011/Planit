@@ -231,10 +231,6 @@
 "energy.type.balanced" = "संतुलित";
 
 /* ===== Aggressiveness ===== */
-"aggressiveness.manual" = "मैन्युअल";
-"aggressiveness.assist" = "सहायक";
-"aggressiveness.semiauto" = "अर्ध-स्वचालित";
-"aggressiveness.auto" = "स्वचालित";
 
 /* ===== Settings View ===== */
 "settings.title" = "सेटिंग्स";
@@ -392,10 +388,6 @@
 "review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
-"review.plan.complete.title" = "Tomorrow's Plan Ready";
-"review.help.done" = "Done";
-"review.help.tomorrow" = "Move to Tomorrow";
-"review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
 
 /* ===== AI Context Section ===== */
@@ -521,7 +513,7 @@
 "chat.action.categorize" = "Categorize (%d)";
 "chat.action.replan-day.tooltip" = "Reorganize today using Hermes memory";
 "chat.action.fill-slots.tooltip" = "Suggest activities for open time";
-"chat.action.categorize.tooltip.empty" = "No uncategorized Google events";
+"chat.action.categorize.tooltip.empty" = "बिना श्रेणी वाले Google इवेंट नहीं हैं";
 "chat.action.categorize.tooltip" = "AI will batch-categorize events";
 "chat.history.clear.tooltip" = "Clear chat history";
 "chat.planning.error.no-categorize" = "No categorization suggestions.";
@@ -546,12 +538,12 @@
 "review.goal.multi.hint" = "Comma-separated";
 
 // MARK: - Settings Hermes memory card
-"settings.hermes.patterns.count" = "User patterns learned from chat & actions (%d)";
-"settings.hermes.clear.all" = "Clear all";
-"settings.hermes.empty" = "No patterns learned yet.";
-"settings.hermes.empty.hint" = "Hermes auto-learns when you chat things like 'I focus best in mornings', 'no work in evenings', '30-min blocks only'.";
-"settings.hermes.decisions.recent" = "Recent plan decisions";
-"settings.hermes.forget.tooltip" = "Forget this memory";
+"settings.hermes.patterns.count" = "चैट और कार्यों से सीखे गए उपयोगकर्ता पैटर्न (%d)";
+"settings.hermes.clear.all" = "सब साफ़ करें";
+"settings.hermes.empty" = "अभी कोई पैटर्न नहीं सीखा गया है।";
+"settings.hermes.empty.hint" = "Hermes चैट से फ़ोकस समय, शाम की सीमाएँ और पसंदीदा ब्लॉक लंबाई अपने-आप सीखता है।";
+"settings.hermes.decisions.recent" = "हाल के योजना निर्णय";
+"settings.hermes.forget.tooltip" = "इस स्मृति को भूलें";
 
 // MARK: - Settings app info buttons
 "settings.update.check" = "Check for updates";
@@ -579,9 +571,9 @@
 "settings.appearance.mode.system" = "सिस्टम";
 "settings.appearance.mode.light" = "लाइट";
 "settings.appearance.mode.dark" = "डार्क";
-"settings.wallpaper.card" = "Background";
-"settings.wallpaper.desc" = "Choose a gradient background displayed behind the calendar.";
-"settings.wallpaper.none" = "None";
+"settings.wallpaper.card" = "पृष्ठभूमि";
+"settings.wallpaper.desc" = "कैलेंडर के पीछे दिखने वाली पृष्ठभूमि चुनें।";
+"settings.wallpaper.none" = "कोई नहीं";
 "wallpaper.aurora" = "Aurora";
 "wallpaper.sunset" = "Sunset";
 "wallpaper.ocean" = "Ocean";
@@ -596,25 +588,25 @@
 "wallpaper.winter" = "Winter";
 
 /* ===== Statistics ===== */
-"panel.statistics" = "Stats";
-"statistics.title" = "Statistics";
-"statistics.subtitle" = "Track habits and completion at a glance";
+"panel.statistics" = "आँकड़े";
+"statistics.title" = "आँकड़े";
+"statistics.subtitle" = "आदतें और पूर्णता एक नज़र में देखें";
 
 /* ===== Animal Settings ===== */
-"settings.animal.card" = "Animal";
-"settings.animal.enabled.title" = "Show animals";
-"settings.animal.enabled.desc" = "Shows a walking animal along the bottom of the calendar.";
-"settings.animal.display.mode" = "Display mode";
-"settings.animal.parade.count" = "%d animals walking together";
-"settings.animal.shape" = "Shape";
-"settings.animal.style.cat" = "Cat";
-"settings.animal.style.dog" = "Dog";
-"settings.animal.style.cheetah" = "Cheetah";
-"settings.animal.style.duck" = "Duck";
-"settings.animal.style.rabbit" = "Rabbit";
-"settings.animal.display.selected" = "Selected animal";
-"settings.animal.display.random" = "Random animal";
-"settings.animal.display.parade" = "Animal parade";
+"settings.animal.card" = "जानवर";
+"settings.animal.enabled.title" = "जानवर दिखाएँ";
+"settings.animal.enabled.desc" = "कैलेंडर के नीचे चलता हुआ जानवर दिखाता है।";
+"settings.animal.display.mode" = "दिखाने का मोड";
+"settings.animal.parade.count" = "%d जानवर साथ चल रहे हैं";
+"settings.animal.shape" = "आकृति";
+"settings.animal.style.cat" = "बिल्ली";
+"settings.animal.style.dog" = "कुत्ता";
+"settings.animal.style.cheetah" = "चीता";
+"settings.animal.style.duck" = "बतख";
+"settings.animal.style.rabbit" = "खरगोश";
+"settings.animal.display.selected" = "चुना हुआ जानवर";
+"settings.animal.display.random" = "यादृच्छिक जानवर";
+"settings.animal.display.parade" = "जानवरों की परेड";
 
 /* ===== Pet Wallpapers ===== */
 "wallpaper.softStudioLight" = "Soft Studio";
@@ -631,3 +623,41 @@
 "login.feature.ai" = "AI daily planning";
 "login.cta.primary" = "Load My Schedule";
 "login.cta.local" = "Start with local calendar";
+"settings.hermes.outcome.partial" = "आंशिक रूप से लागू";
+"settings.hermes.decision.summary.categorized" = "%d इवेंट वर्गीकृत किए गए";
+"memory.category.preference" = "पसंद";
+"memory.category.schedulePattern" = "शेड्यूल पैटर्न";
+"memory.category.habitPattern" = "आदत पैटर्न";
+"memory.category.goalPriority" = "लक्ष्य प्राथमिकता";
+"memory.category.planningHistory" = "योजना इतिहास";
+"memory.category.communicationStyle" = "संचार शैली";
+"planning.intent.replanDay" = "आज फिर योजना बनाएँ";
+"planning.intent.fillFreeSlots" = "खाली समय भरें";
+"planning.intent.rescheduleUrgent" = "ज़रूरी चीज़ें पुनर्निर्धारित करें";
+"planning.intent.buildWeekPlan" = "इस सप्ताह की योजना बनाएँ";
+"planning.intent.categorizeUntagged" = "बिना श्रेणी वाले इवेंट वर्गीकृत करें";
+"planning.action.create" = "नया इवेंट";
+"planning.action.move" = "इवेंट स्थानांतरित करें";
+"planning.action.delete" = "इवेंट हटाएँ";
+"planning.action.createTodo" = "टू-डू जोड़ें";
+"planning.action.moveTodo" = "टू-डू स्थानांतरित करें";
+"planning.action.updateTodo" = "टू-डू संपादित करें";
+"planning.action.categorize" = "श्रेणी";
+"settings.hermes.fact.key.preferredBlockLength" = "पसंदीदा ब्लॉक लंबाई";
+"settings.hermes.fact.value.preferredBlockLength.short" = "लगभग 30 मिनट के छोटे ब्लॉक";
+"settings.hermes.fact.value.preferredBlockLength.deep" = "90-120 मिनट के डीप-वर्क ब्लॉक";
+
+"settings.hermes.fact.key.preferredMorningWork" = "सुबह फोकस पसंद";
+"settings.hermes.fact.value.preferredMorningWork" = "सुबह केंद्रित काम करना पसंद करता है";
+"settings.hermes.fact.key.avoidsMorningWork" = "सुबह काम से बचता है";
+"settings.hermes.fact.value.avoidsMorningWork" = "सुबह के काम ब्लॉक से बचता है";
+"settings.hermes.fact.key.preferredEveningWork" = "शाम फोकस पसंद";
+"settings.hermes.fact.value.preferredEveningWork" = "शाम को केंद्रित काम करना पसंद करता है";
+"settings.hermes.fact.key.avoidsEveningWork" = "शाम काम से बचता है";
+"settings.hermes.fact.value.avoidsEveningWork" = "शाम के काम ब्लॉक से बचता है";
+"settings.hermes.fact.key.meetingFatigue" = "मीटिंग थकान";
+"settings.hermes.fact.value.meetingFatigue" = "बहुत अधिक मीटिंग से थकान";
+"settings.hermes.fact.key.wantsSlotSuggestions" = "खाली समय के सुझाव चाहता है";
+"settings.hermes.fact.value.wantsSlotSuggestions" = "खाली समय के लिए स्वचालित सुझाव पसंद करता है";
+"settings.hermes.fact.key.urgentReschedulingNeeds" = "तत्काल पुनर्निर्धारण की ज़रूरत";
+"settings.hermes.fact.value.urgentReschedulingNeeds" = "पहले तत्काल शेड्यूल बदलाव की ज़रूरत पड़ी है";

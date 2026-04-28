@@ -300,10 +300,17 @@ struct SuggestionPreviewSheet: View {
         }
         hermesMemoryService.recordDecision(PlanningDecision(
             intent: suggestion.intent.rawValue,
-            summary: suggestion.summary,
+            summary: decisionSummary(applied: applied),
             outcome: outcome,
             learnedFacts: []  // 보수적 기준 — 단일 수락으로는 fact 생성 안 함
         ))
+    }
+
+    private func decisionSummary(applied: Int) -> String {
+        if suggestion.intent == .categorizeUntagged {
+            return "categorizedEvents:\(applied)"
+        }
+        return suggestion.summary
     }
 
     private func formatTimeRange(start: Date, end: Date) -> String {

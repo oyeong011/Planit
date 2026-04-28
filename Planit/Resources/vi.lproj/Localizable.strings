@@ -231,10 +231,6 @@
 "energy.type.balanced" = "Cân Bằng";
 
 /* ===== Aggressiveness ===== */
-"aggressiveness.manual" = "Thủ Công";
-"aggressiveness.assist" = "Hỗ Trợ";
-"aggressiveness.semiauto" = "Bán Tự Động";
-"aggressiveness.auto" = "Tự Động";
 
 /* ===== Settings View ===== */
 "settings.title" = "Cài đặt";
@@ -392,10 +388,6 @@
 "review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
-"review.plan.complete.title" = "Tomorrow's Plan Ready";
-"review.help.done" = "Done";
-"review.help.tomorrow" = "Move to Tomorrow";
-"review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
 
 /* ===== AI Context Section ===== */
@@ -521,7 +513,7 @@
 "chat.action.categorize" = "Categorize (%d)";
 "chat.action.replan-day.tooltip" = "Reorganize today using Hermes memory";
 "chat.action.fill-slots.tooltip" = "Suggest activities for open time";
-"chat.action.categorize.tooltip.empty" = "No uncategorized Google events";
+"chat.action.categorize.tooltip.empty" = "Không có sự kiện Google chưa phân loại";
 "chat.action.categorize.tooltip" = "AI will batch-categorize events";
 "chat.history.clear.tooltip" = "Clear chat history";
 "chat.planning.error.no-categorize" = "No categorization suggestions.";
@@ -546,12 +538,12 @@
 "review.goal.multi.hint" = "Comma-separated";
 
 // MARK: - Settings Hermes memory card
-"settings.hermes.patterns.count" = "User patterns learned from chat & actions (%d)";
-"settings.hermes.clear.all" = "Clear all";
-"settings.hermes.empty" = "No patterns learned yet.";
-"settings.hermes.empty.hint" = "Hermes auto-learns when you chat things like 'I focus best in mornings', 'no work in evenings', '30-min blocks only'.";
-"settings.hermes.decisions.recent" = "Recent plan decisions";
-"settings.hermes.forget.tooltip" = "Forget this memory";
+"settings.hermes.patterns.count" = "Mẫu người dùng học từ trò chuyện và thao tác (%d)";
+"settings.hermes.clear.all" = "Xóa tất cả";
+"settings.hermes.empty" = "Chưa học được mẫu nào.";
+"settings.hermes.empty.hint" = "Hermes tự học từ các cuộc trò chuyện về thời gian tập trung, giới hạn buổi tối và độ dài khối ưa thích.";
+"settings.hermes.decisions.recent" = "Quyết định kế hoạch gần đây";
+"settings.hermes.forget.tooltip" = "Quên ghi nhớ này";
 
 // MARK: - Settings app info buttons
 "settings.update.check" = "Check for updates";
@@ -579,9 +571,9 @@
 "settings.appearance.mode.system" = "Hệ thống";
 "settings.appearance.mode.light" = "Sáng";
 "settings.appearance.mode.dark" = "Tối";
-"settings.wallpaper.card" = "Background";
-"settings.wallpaper.desc" = "Choose a gradient background displayed behind the calendar.";
-"settings.wallpaper.none" = "None";
+"settings.wallpaper.card" = "Nền";
+"settings.wallpaper.desc" = "Chọn nền hiển thị phía sau lịch.";
+"settings.wallpaper.none" = "Không có";
 "wallpaper.aurora" = "Aurora";
 "wallpaper.sunset" = "Sunset";
 "wallpaper.ocean" = "Ocean";
@@ -596,25 +588,25 @@
 "wallpaper.winter" = "Winter";
 
 /* ===== Statistics ===== */
-"panel.statistics" = "Stats";
-"statistics.title" = "Statistics";
-"statistics.subtitle" = "Track habits and completion at a glance";
+"panel.statistics" = "Thống kê";
+"statistics.title" = "Thống kê";
+"statistics.subtitle" = "Theo dõi thói quen và mức hoàn thành trong nháy mắt";
 
 /* ===== Animal Settings ===== */
-"settings.animal.card" = "Animal";
-"settings.animal.enabled.title" = "Show animals";
-"settings.animal.enabled.desc" = "Shows a walking animal along the bottom of the calendar.";
-"settings.animal.display.mode" = "Display mode";
-"settings.animal.parade.count" = "%d animals walking together";
-"settings.animal.shape" = "Shape";
-"settings.animal.style.cat" = "Cat";
-"settings.animal.style.dog" = "Dog";
-"settings.animal.style.cheetah" = "Cheetah";
-"settings.animal.style.duck" = "Duck";
-"settings.animal.style.rabbit" = "Rabbit";
-"settings.animal.display.selected" = "Selected animal";
-"settings.animal.display.random" = "Random animal";
-"settings.animal.display.parade" = "Animal parade";
+"settings.animal.card" = "Động vật";
+"settings.animal.enabled.title" = "Hiển thị động vật";
+"settings.animal.enabled.desc" = "Hiển thị một con vật đi bộ ở cạnh dưới lịch.";
+"settings.animal.display.mode" = "Chế độ hiển thị";
+"settings.animal.parade.count" = "%d con vật đi cùng nhau";
+"settings.animal.shape" = "Hình dạng";
+"settings.animal.style.cat" = "Mèo";
+"settings.animal.style.dog" = "Chó";
+"settings.animal.style.cheetah" = "Báo săn";
+"settings.animal.style.duck" = "Vịt";
+"settings.animal.style.rabbit" = "Thỏ";
+"settings.animal.display.selected" = "Động vật đã chọn";
+"settings.animal.display.random" = "Động vật ngẫu nhiên";
+"settings.animal.display.parade" = "Diễu hành động vật";
 
 /* ===== Pet Wallpapers ===== */
 "wallpaper.softStudioLight" = "Soft Studio";
@@ -631,3 +623,41 @@
 "login.feature.ai" = "AI daily planning";
 "login.cta.primary" = "Load My Schedule";
 "login.cta.local" = "Start with local calendar";
+"settings.hermes.outcome.partial" = "áp dụng một phần";
+"settings.hermes.decision.summary.categorized" = "Đã phân loại %d sự kiện";
+"memory.category.preference" = "Sở thích";
+"memory.category.schedulePattern" = "Mẫu lịch trình";
+"memory.category.habitPattern" = "Mẫu thói quen";
+"memory.category.goalPriority" = "Ưu tiên mục tiêu";
+"memory.category.planningHistory" = "Lịch sử kế hoạch";
+"memory.category.communicationStyle" = "Phong cách giao tiếp";
+"planning.intent.replanDay" = "Lập lại kế hoạch hôm nay";
+"planning.intent.fillFreeSlots" = "Lấp chỗ trống";
+"planning.intent.rescheduleUrgent" = "Sắp xếp lại việc khẩn cấp";
+"planning.intent.buildWeekPlan" = "Lập kế hoạch tuần này";
+"planning.intent.categorizeUntagged" = "Phân loại sự kiện chưa phân loại";
+"planning.action.create" = "Sự kiện mới";
+"planning.action.move" = "Di chuyển sự kiện";
+"planning.action.delete" = "Xóa sự kiện";
+"planning.action.createTodo" = "Thêm việc cần làm";
+"planning.action.moveTodo" = "Di chuyển việc cần làm";
+"planning.action.updateTodo" = "Sửa việc cần làm";
+"planning.action.categorize" = "Danh mục";
+"settings.hermes.fact.key.preferredBlockLength" = "Độ dài khối ưa thích";
+"settings.hermes.fact.value.preferredBlockLength.short" = "Khối ngắn khoảng 30 phút";
+"settings.hermes.fact.value.preferredBlockLength.deep" = "Khối làm việc sâu 90-120 phút";
+
+"settings.hermes.fact.key.preferredMorningWork" = "Ưu tiên tập trung buổi sáng";
+"settings.hermes.fact.value.preferredMorningWork" = "Thích làm việc tập trung vào buổi sáng";
+"settings.hermes.fact.key.avoidsMorningWork" = "Tránh làm việc buổi sáng";
+"settings.hermes.fact.value.avoidsMorningWork" = "Tránh các khối làm việc vào buổi sáng";
+"settings.hermes.fact.key.preferredEveningWork" = "Ưu tiên tập trung buổi tối";
+"settings.hermes.fact.value.preferredEveningWork" = "Thích làm việc tập trung vào buổi tối";
+"settings.hermes.fact.key.avoidsEveningWork" = "Tránh làm việc buổi tối";
+"settings.hermes.fact.value.avoidsEveningWork" = "Tránh các khối làm việc vào buổi tối";
+"settings.hermes.fact.key.meetingFatigue" = "Mệt vì họp";
+"settings.hermes.fact.value.meetingFatigue" = "Mệt mỏi khi có quá nhiều cuộc họp";
+"settings.hermes.fact.key.wantsSlotSuggestions" = "Muốn gợi ý khoảng trống";
+"settings.hermes.fact.value.wantsSlotSuggestions" = "Thích gợi ý tự động cho thời gian trống";
+"settings.hermes.fact.key.urgentReschedulingNeeds" = "Cần sắp xếp lại khẩn cấp";
+"settings.hermes.fact.value.urgentReschedulingNeeds" = "Từng cần điều chỉnh lịch khẩn cấp";

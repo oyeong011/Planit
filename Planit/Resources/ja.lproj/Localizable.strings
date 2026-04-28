@@ -231,10 +231,6 @@
 "energy.type.balanced" = "バランス型";
 
 /* ===== Aggressiveness ===== */
-"aggressiveness.manual" = "手動";
-"aggressiveness.assist" = "アシスト";
-"aggressiveness.semiauto" = "半自動";
-"aggressiveness.auto" = "自動";
 
 /* ===== Settings View ===== */
 "settings.title" = "設定";
@@ -392,10 +388,6 @@
 "review.done.all" = "完了";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
-"review.plan.complete.title" = "Tomorrow's Plan Ready";
-"review.help.done" = "Done";
-"review.help.tomorrow" = "Move to Tomorrow";
-"review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
 
 /* ===== AI Context Section ===== */
@@ -520,7 +512,7 @@
 "chat.action.categorize" = "Categorize (%d)";
 "chat.action.replan-day.tooltip" = "Reorganize today using Hermes memory";
 "chat.action.fill-slots.tooltip" = "Suggest activities for open time";
-"chat.action.categorize.tooltip.empty" = "No uncategorized Google events";
+"chat.action.categorize.tooltip.empty" = "未分類のGoogle予定はありません";
 "chat.action.categorize.tooltip" = "AI will batch-categorize events";
 "chat.history.clear.tooltip" = "Clear chat history";
 "chat.planning.error.no-categorize" = "No categorization suggestions.";
@@ -545,12 +537,12 @@
 "review.goal.multi.hint" = "Comma-separated";
 
 // MARK: - Settings Hermes memory card
-"settings.hermes.patterns.count" = "User patterns learned from chat & actions (%d)";
-"settings.hermes.clear.all" = "Clear all";
-"settings.hermes.empty" = "No patterns learned yet.";
-"settings.hermes.empty.hint" = "Hermes auto-learns when you chat things like 'I focus best in mornings', 'no work in evenings', '30-min blocks only'.";
-"settings.hermes.decisions.recent" = "Recent plan decisions";
-"settings.hermes.forget.tooltip" = "Forget this memory";
+"settings.hermes.patterns.count" = "チャットと操作から学習したユーザーパターン（%d）";
+"settings.hermes.clear.all" = "すべて削除";
+"settings.hermes.empty" = "まだ学習したパターンはありません。";
+"settings.hermes.empty.hint" = "Hermesは集中時間、夜の制限、好みのブロック長をチャットから自動学習します。";
+"settings.hermes.decisions.recent" = "最近の計画判断";
+"settings.hermes.forget.tooltip" = "この記憶を削除";
 
 // MARK: - Settings app info buttons
 "settings.update.check" = "Check for updates";
@@ -578,9 +570,9 @@
 "settings.appearance.mode.system" = "システム";
 "settings.appearance.mode.light" = "ライト";
 "settings.appearance.mode.dark" = "ダーク";
-"settings.wallpaper.card" = "Background";
-"settings.wallpaper.desc" = "Choose a gradient background displayed behind the calendar.";
-"settings.wallpaper.none" = "None";
+"settings.wallpaper.card" = "背景";
+"settings.wallpaper.desc" = "カレンダー背面に表示する背景を選択します。";
+"settings.wallpaper.none" = "なし";
 "wallpaper.aurora" = "Aurora";
 "wallpaper.sunset" = "Sunset";
 "wallpaper.ocean" = "Ocean";
@@ -595,25 +587,25 @@
 "wallpaper.winter" = "冬";
 
 /* ===== Statistics ===== */
-"panel.statistics" = "Stats";
-"statistics.title" = "Statistics";
-"statistics.subtitle" = "Track habits and completion at a glance";
+"panel.statistics" = "統計";
+"statistics.title" = "統計";
+"statistics.subtitle" = "習慣と達成状況をひと目で確認";
 
 /* ===== Animal Settings ===== */
-"settings.animal.card" = "Animal";
-"settings.animal.enabled.title" = "Show animals";
-"settings.animal.enabled.desc" = "Shows a walking animal along the bottom of the calendar.";
-"settings.animal.display.mode" = "Display mode";
-"settings.animal.parade.count" = "%d animals walking together";
-"settings.animal.shape" = "Shape";
-"settings.animal.style.cat" = "Cat";
-"settings.animal.style.dog" = "Dog";
-"settings.animal.style.cheetah" = "Cheetah";
-"settings.animal.style.duck" = "Duck";
-"settings.animal.style.rabbit" = "Rabbit";
-"settings.animal.display.selected" = "Selected animal";
-"settings.animal.display.random" = "Random animal";
-"settings.animal.display.parade" = "Animal parade";
+"settings.animal.card" = "動物";
+"settings.animal.enabled.title" = "動物を表示";
+"settings.animal.enabled.desc" = "カレンダー下部を歩く動物を表示します。";
+"settings.animal.display.mode" = "表示モード";
+"settings.animal.parade.count" = "%d匹の動物が一緒に歩く";
+"settings.animal.shape" = "形";
+"settings.animal.style.cat" = "猫";
+"settings.animal.style.dog" = "犬";
+"settings.animal.style.cheetah" = "チーター";
+"settings.animal.style.duck" = "アヒル";
+"settings.animal.style.rabbit" = "ウサギ";
+"settings.animal.display.selected" = "選択した動物";
+"settings.animal.display.random" = "ランダムな動物";
+"settings.animal.display.parade" = "動物パレード";
 
 /* ===== Pet Wallpapers ===== */
 "wallpaper.softStudioLight" = "Soft Studio";
@@ -630,3 +622,41 @@
 "login.feature.ai" = "AI daily planning";
 "login.cta.primary" = "Load My Schedule";
 "login.cta.local" = "Start with local calendar";
+"settings.hermes.outcome.partial" = "一部適用";
+"settings.hermes.decision.summary.categorized" = "%d件のイベントを分類しました";
+"memory.category.preference" = "好み";
+"memory.category.schedulePattern" = "予定パターン";
+"memory.category.habitPattern" = "習慣パターン";
+"memory.category.goalPriority" = "目標優先度";
+"memory.category.planningHistory" = "計画履歴";
+"memory.category.communicationStyle" = "コミュニケーションスタイル";
+"planning.intent.replanDay" = "今日を再計画";
+"planning.intent.fillFreeSlots" = "空き時間を埋める";
+"planning.intent.rescheduleUrgent" = "急ぎの予定を再配置";
+"planning.intent.buildWeekPlan" = "今週の計画を作成";
+"planning.intent.categorizeUntagged" = "未分類イベントを分類";
+"planning.action.create" = "新規予定";
+"planning.action.move" = "予定を移動";
+"planning.action.delete" = "予定を削除";
+"planning.action.createTodo" = "ToDoを追加";
+"planning.action.moveTodo" = "ToDoを移動";
+"planning.action.updateTodo" = "ToDoを編集";
+"planning.action.categorize" = "カテゴリ";
+"settings.hermes.fact.key.preferredBlockLength" = "好みのブロック長";
+"settings.hermes.fact.value.preferredBlockLength.short" = "約30分の短いブロック";
+"settings.hermes.fact.value.preferredBlockLength.deep" = "90〜120分のディープワークブロック";
+
+"settings.hermes.fact.key.preferredMorningWork" = "午前の集中を好む";
+"settings.hermes.fact.value.preferredMorningWork" = "午前中の集中作業を好む";
+"settings.hermes.fact.key.avoidsMorningWork" = "午前の作業を避ける";
+"settings.hermes.fact.value.avoidsMorningWork" = "午前中の作業ブロックを避ける";
+"settings.hermes.fact.key.preferredEveningWork" = "夜の集中を好む";
+"settings.hermes.fact.value.preferredEveningWork" = "夜の集中作業を好む";
+"settings.hermes.fact.key.avoidsEveningWork" = "夜の作業を避ける";
+"settings.hermes.fact.value.avoidsEveningWork" = "夜の作業ブロックを避ける";
+"settings.hermes.fact.key.meetingFatigue" = "会議疲れ";
+"settings.hermes.fact.value.meetingFatigue" = "会議が多すぎると疲れを感じる";
+"settings.hermes.fact.key.wantsSlotSuggestions" = "空き時間の提案を希望";
+"settings.hermes.fact.value.wantsSlotSuggestions" = "空き時間への自動提案を好む";
+"settings.hermes.fact.key.urgentReschedulingNeeds" = "緊急リスケの必要";
+"settings.hermes.fact.value.urgentReschedulingNeeds" = "急な予定調整が必要だった経験がある";

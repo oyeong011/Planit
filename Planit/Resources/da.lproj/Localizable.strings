@@ -231,10 +231,6 @@
 "energy.type.balanced" = "Afbalanceret";
 
 /* ===== Aggressiveness ===== */
-"aggressiveness.manual" = "Manuel";
-"aggressiveness.assist" = "Assisteret";
-"aggressiveness.semiauto" = "Halvautomatisk";
-"aggressiveness.auto" = "Automatisk";
 
 /* ===== Settings View ===== */
 "settings.title" = "Indstillinger";
@@ -392,10 +388,6 @@
 "review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
-"review.plan.complete.title" = "Tomorrow's Plan Ready";
-"review.help.done" = "Done";
-"review.help.tomorrow" = "Move to Tomorrow";
-"review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
 
 /* ===== AI Context Section ===== */
@@ -521,7 +513,7 @@
 "chat.action.categorize" = "Categorize (%d)";
 "chat.action.replan-day.tooltip" = "Reorganize today using Hermes memory";
 "chat.action.fill-slots.tooltip" = "Suggest activities for open time";
-"chat.action.categorize.tooltip.empty" = "No uncategorized Google events";
+"chat.action.categorize.tooltip.empty" = "Ingen ukategoriserede Google-begivenheder";
 "chat.action.categorize.tooltip" = "AI will batch-categorize events";
 "chat.history.clear.tooltip" = "Clear chat history";
 "chat.planning.error.no-categorize" = "No categorization suggestions.";
@@ -546,12 +538,12 @@
 "review.goal.multi.hint" = "Comma-separated";
 
 // MARK: - Settings Hermes memory card
-"settings.hermes.patterns.count" = "User patterns learned from chat & actions (%d)";
-"settings.hermes.clear.all" = "Clear all";
-"settings.hermes.empty" = "No patterns learned yet.";
-"settings.hermes.empty.hint" = "Hermes auto-learns when you chat things like 'I focus best in mornings', 'no work in evenings', '30-min blocks only'.";
-"settings.hermes.decisions.recent" = "Recent plan decisions";
-"settings.hermes.forget.tooltip" = "Forget this memory";
+"settings.hermes.patterns.count" = "Brugermønstre lært fra chat og handlinger (%d)";
+"settings.hermes.clear.all" = "Ryd alle";
+"settings.hermes.empty" = "Ingen mønstre lært endnu.";
+"settings.hermes.empty.hint" = "Hermes lærer automatisk fra chats om fokustider, aftenbegrænsninger og foretrukken bloklængde.";
+"settings.hermes.decisions.recent" = "Seneste planbeslutninger";
+"settings.hermes.forget.tooltip" = "Glem denne hukommelse";
 
 // MARK: - Settings app info buttons
 "settings.update.check" = "Check for updates";
@@ -566,7 +558,7 @@
 "review.todo.grass.days" = "%d dage";
 
 // MARK: - Hermes card
-"settings.hermes.card.title" = "🧠 Hermes Langtidshukommelse";
+"settings.hermes.card.title" = "🧠 Hermes langtidshukommelse";
 "settings.hermes.outcome.accepted" = "accepteret";
 "settings.hermes.outcome.rejected" = "afvist";
 
@@ -579,9 +571,9 @@
 "settings.appearance.mode.system" = "System";
 "settings.appearance.mode.light" = "Lyst";
 "settings.appearance.mode.dark" = "Mørkt";
-"settings.wallpaper.card" = "Background";
-"settings.wallpaper.desc" = "Choose a gradient background displayed behind the calendar.";
-"settings.wallpaper.none" = "None";
+"settings.wallpaper.card" = "Baggrund";
+"settings.wallpaper.desc" = "Vælg en baggrund bag kalenderen.";
+"settings.wallpaper.none" = "Ingen";
 "wallpaper.aurora" = "Aurora";
 "wallpaper.sunset" = "Sunset";
 "wallpaper.ocean" = "Ocean";
@@ -596,25 +588,25 @@
 "wallpaper.winter" = "Winter";
 
 /* ===== Statistics ===== */
-"panel.statistics" = "Stats";
-"statistics.title" = "Statistics";
-"statistics.subtitle" = "Track habits and completion at a glance";
+"panel.statistics" = "Statistik";
+"statistics.title" = "Statistik";
+"statistics.subtitle" = "Følg vaner og fuldførelse hurtigt";
 
 /* ===== Animal Settings ===== */
-"settings.animal.card" = "Animal";
-"settings.animal.enabled.title" = "Show animals";
-"settings.animal.enabled.desc" = "Shows a walking animal along the bottom of the calendar.";
-"settings.animal.display.mode" = "Display mode";
-"settings.animal.parade.count" = "%d animals walking together";
-"settings.animal.shape" = "Shape";
-"settings.animal.style.cat" = "Cat";
-"settings.animal.style.dog" = "Dog";
-"settings.animal.style.cheetah" = "Cheetah";
-"settings.animal.style.duck" = "Duck";
-"settings.animal.style.rabbit" = "Rabbit";
-"settings.animal.display.selected" = "Selected animal";
-"settings.animal.display.random" = "Random animal";
-"settings.animal.display.parade" = "Animal parade";
+"settings.animal.card" = "Dyr";
+"settings.animal.enabled.title" = "Vis dyr";
+"settings.animal.enabled.desc" = "Viser et gående dyr nederst i kalenderen.";
+"settings.animal.display.mode" = "Visningstilstand";
+"settings.animal.parade.count" = "%d dyr går sammen";
+"settings.animal.shape" = "Form";
+"settings.animal.style.cat" = "Kat";
+"settings.animal.style.dog" = "Hund";
+"settings.animal.style.cheetah" = "Gepard";
+"settings.animal.style.duck" = "And";
+"settings.animal.style.rabbit" = "Kanin";
+"settings.animal.display.selected" = "Valgt dyr";
+"settings.animal.display.random" = "Tilfældigt dyr";
+"settings.animal.display.parade" = "Dyreparade";
 
 /* ===== Pet Wallpapers ===== */
 "wallpaper.softStudioLight" = "Soft Studio";
@@ -631,3 +623,41 @@
 "login.feature.ai" = "AI daily planning";
 "login.cta.primary" = "Load My Schedule";
 "login.cta.local" = "Start with local calendar";
+"settings.hermes.outcome.partial" = "delvist anvendt";
+"settings.hermes.decision.summary.categorized" = "%d begivenheder kategoriseret";
+"memory.category.preference" = "Præference";
+"memory.category.schedulePattern" = "Skemamønster";
+"memory.category.habitPattern" = "Vanemønster";
+"memory.category.goalPriority" = "Målprioritet";
+"memory.category.planningHistory" = "Planhistorik";
+"memory.category.communicationStyle" = "Kommunikationsstil";
+"planning.intent.replanDay" = "Planlæg i dag igen";
+"planning.intent.fillFreeSlots" = "Fyld ledige tider";
+"planning.intent.rescheduleUrgent" = "Omlæg hastesager";
+"planning.intent.buildWeekPlan" = "Lav ugeplan";
+"planning.intent.categorizeUntagged" = "Kategoriser ukategoriserede begivenheder";
+"planning.action.create" = "Ny begivenhed";
+"planning.action.move" = "Flyt begivenhed";
+"planning.action.delete" = "Slet begivenhed";
+"planning.action.createTodo" = "Tilføj opgave";
+"planning.action.moveTodo" = "Flyt opgave";
+"planning.action.updateTodo" = "Rediger opgave";
+"planning.action.categorize" = "Kategori";
+"settings.hermes.fact.key.preferredBlockLength" = "Foretrukken bloklængde";
+"settings.hermes.fact.value.preferredBlockLength.short" = "Korte blokke omkring 30 minutter";
+"settings.hermes.fact.value.preferredBlockLength.deep" = "Deep-work-blokke på 90-120 minutter";
+
+"settings.hermes.fact.key.preferredMorningWork" = "Foretrukket morgenfokus";
+"settings.hermes.fact.value.preferredMorningWork" = "Foretrækker fokuseret arbejde om morgenen";
+"settings.hermes.fact.key.avoidsMorningWork" = "Undgår morgenarbejde";
+"settings.hermes.fact.value.avoidsMorningWork" = "Undgår arbejdsblokke om morgenen";
+"settings.hermes.fact.key.preferredEveningWork" = "Foretrukket aftenfokus";
+"settings.hermes.fact.value.preferredEveningWork" = "Foretrækker fokuseret arbejde om aftenen";
+"settings.hermes.fact.key.avoidsEveningWork" = "Undgår aftenarbejde";
+"settings.hermes.fact.value.avoidsEveningWork" = "Undgår arbejdsblokke om aftenen";
+"settings.hermes.fact.key.meetingFatigue" = "Mødetræthed";
+"settings.hermes.fact.value.meetingFatigue" = "Træthed fra for mange møder";
+"settings.hermes.fact.key.wantsSlotSuggestions" = "Ønsker forslag til ledige tider";
+"settings.hermes.fact.value.wantsSlotSuggestions" = "Foretrækker automatiske forslag til ledig tid";
+"settings.hermes.fact.key.urgentReschedulingNeeds" = "Akut behov for omplanlægning";
+"settings.hermes.fact.value.urgentReschedulingNeeds" = "Har tidligere haft brug for akutte kalenderjusteringer";

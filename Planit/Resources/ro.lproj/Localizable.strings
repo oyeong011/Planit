@@ -231,10 +231,6 @@
 "energy.type.balanced" = "Echilibrat";
 
 /* ===== Aggressiveness ===== */
-"aggressiveness.manual" = "Manual";
-"aggressiveness.assist" = "Asistat";
-"aggressiveness.semiauto" = "Semiautomat";
-"aggressiveness.auto" = "Automat";
 
 /* ===== Settings View ===== */
 "settings.title" = "Setări";
@@ -392,10 +388,6 @@
 "review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
-"review.plan.complete.title" = "Tomorrow's Plan Ready";
-"review.help.done" = "Done";
-"review.help.tomorrow" = "Move to Tomorrow";
-"review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
 
 /* ===== AI Context Section ===== */
@@ -521,7 +513,7 @@
 "chat.action.categorize" = "Categorize (%d)";
 "chat.action.replan-day.tooltip" = "Reorganize today using Hermes memory";
 "chat.action.fill-slots.tooltip" = "Suggest activities for open time";
-"chat.action.categorize.tooltip.empty" = "No uncategorized Google events";
+"chat.action.categorize.tooltip.empty" = "Nu există evenimente Google necategorizate";
 "chat.action.categorize.tooltip" = "AI will batch-categorize events";
 "chat.history.clear.tooltip" = "Clear chat history";
 "chat.planning.error.no-categorize" = "No categorization suggestions.";
@@ -546,12 +538,12 @@
 "review.goal.multi.hint" = "Comma-separated";
 
 // MARK: - Settings Hermes memory card
-"settings.hermes.patterns.count" = "User patterns learned from chat & actions (%d)";
-"settings.hermes.clear.all" = "Clear all";
-"settings.hermes.empty" = "No patterns learned yet.";
-"settings.hermes.empty.hint" = "Hermes auto-learns when you chat things like 'I focus best in mornings', 'no work in evenings', '30-min blocks only'.";
-"settings.hermes.decisions.recent" = "Recent plan decisions";
-"settings.hermes.forget.tooltip" = "Forget this memory";
+"settings.hermes.patterns.count" = "Tipare de utilizator învățate din chat și acțiuni (%d)";
+"settings.hermes.clear.all" = "Șterge tot";
+"settings.hermes.empty" = "Nu există încă tipare învățate.";
+"settings.hermes.empty.hint" = "Hermes învață automat din chat orele de concentrare, limitele de seară și lungimea preferată a blocurilor.";
+"settings.hermes.decisions.recent" = "Decizii recente de planificare";
+"settings.hermes.forget.tooltip" = "Uită această memorie";
 
 // MARK: - Settings app info buttons
 "settings.update.check" = "Check for updates";
@@ -566,7 +558,7 @@
 "review.todo.grass.days" = "%d zile";
 
 // MARK: - Hermes card
-"settings.hermes.card.title" = "🧠 Hermes Memorie pe termen lung";
+"settings.hermes.card.title" = "🧠 Memorie pe termen lung Hermes";
 "settings.hermes.outcome.accepted" = "acceptat";
 "settings.hermes.outcome.rejected" = "respins";
 
@@ -579,9 +571,9 @@
 "settings.appearance.mode.system" = "Sistem";
 "settings.appearance.mode.light" = "Luminos";
 "settings.appearance.mode.dark" = "Întunecat";
-"settings.wallpaper.card" = "Background";
-"settings.wallpaper.desc" = "Choose a gradient background displayed behind the calendar.";
-"settings.wallpaper.none" = "None";
+"settings.wallpaper.card" = "Fundal";
+"settings.wallpaper.desc" = "Alegeți un fundal afișat în spatele calendarului.";
+"settings.wallpaper.none" = "Niciunul";
 "wallpaper.aurora" = "Aurora";
 "wallpaper.sunset" = "Sunset";
 "wallpaper.ocean" = "Ocean";
@@ -596,25 +588,25 @@
 "wallpaper.winter" = "Winter";
 
 /* ===== Statistics ===== */
-"panel.statistics" = "Stats";
-"statistics.title" = "Statistics";
-"statistics.subtitle" = "Track habits and completion at a glance";
+"panel.statistics" = "Statistici";
+"statistics.title" = "Statistici";
+"statistics.subtitle" = "Urmăriți obiceiurile și progresul dintr-o privire";
 
 /* ===== Animal Settings ===== */
 "settings.animal.card" = "Animal";
-"settings.animal.enabled.title" = "Show animals";
-"settings.animal.enabled.desc" = "Shows a walking animal along the bottom of the calendar.";
-"settings.animal.display.mode" = "Display mode";
-"settings.animal.parade.count" = "%d animals walking together";
-"settings.animal.shape" = "Shape";
-"settings.animal.style.cat" = "Cat";
-"settings.animal.style.dog" = "Dog";
-"settings.animal.style.cheetah" = "Cheetah";
-"settings.animal.style.duck" = "Duck";
-"settings.animal.style.rabbit" = "Rabbit";
-"settings.animal.display.selected" = "Selected animal";
-"settings.animal.display.random" = "Random animal";
-"settings.animal.display.parade" = "Animal parade";
+"settings.animal.enabled.title" = "Afișează animale";
+"settings.animal.enabled.desc" = "Afișează un animal care merge în partea de jos a calendarului.";
+"settings.animal.display.mode" = "Mod de afișare";
+"settings.animal.parade.count" = "%d animale merg împreună";
+"settings.animal.shape" = "Formă";
+"settings.animal.style.cat" = "Pisică";
+"settings.animal.style.dog" = "Câine";
+"settings.animal.style.cheetah" = "Ghepard";
+"settings.animal.style.duck" = "Rață";
+"settings.animal.style.rabbit" = "Iepure";
+"settings.animal.display.selected" = "Animal selectat";
+"settings.animal.display.random" = "Animal aleatoriu";
+"settings.animal.display.parade" = "Paradă de animale";
 
 /* ===== Pet Wallpapers ===== */
 "wallpaper.softStudioLight" = "Soft Studio";
@@ -631,3 +623,41 @@
 "login.feature.ai" = "AI daily planning";
 "login.cta.primary" = "Load My Schedule";
 "login.cta.local" = "Start with local calendar";
+"settings.hermes.outcome.partial" = "aplicat parțial";
+"settings.hermes.decision.summary.categorized" = "%d evenimente categorizate";
+"memory.category.preference" = "Preferință";
+"memory.category.schedulePattern" = "Tipar de program";
+"memory.category.habitPattern" = "Tipar de obicei";
+"memory.category.goalPriority" = "Prioritatea obiectivului";
+"memory.category.planningHistory" = "Istoric planificare";
+"memory.category.communicationStyle" = "Stil de comunicare";
+"planning.intent.replanDay" = "Replanifică azi";
+"planning.intent.fillFreeSlots" = "Umple intervalele libere";
+"planning.intent.rescheduleUrgent" = "Reprogramează urgentele";
+"planning.intent.buildWeekPlan" = "Construiește planul săptămânii";
+"planning.intent.categorizeUntagged" = "Categorizează evenimentele fără categorie";
+"planning.action.create" = "Eveniment nou";
+"planning.action.move" = "Mută evenimentul";
+"planning.action.delete" = "Șterge evenimentul";
+"planning.action.createTodo" = "Adaugă sarcină";
+"planning.action.moveTodo" = "Mută sarcina";
+"planning.action.updateTodo" = "Editează sarcina";
+"planning.action.categorize" = "Categorie";
+"settings.hermes.fact.key.preferredBlockLength" = "Lungimea preferată a blocului";
+"settings.hermes.fact.value.preferredBlockLength.short" = "Blocuri scurte de aproximativ 30 de minute";
+"settings.hermes.fact.value.preferredBlockLength.deep" = "Blocuri de lucru profund de 90-120 de minute";
+
+"settings.hermes.fact.key.preferredMorningWork" = "Focus de dimineață preferat";
+"settings.hermes.fact.value.preferredMorningWork" = "Preferă munca concentrată dimineața";
+"settings.hermes.fact.key.avoidsMorningWork" = "Evită munca de dimineață";
+"settings.hermes.fact.value.avoidsMorningWork" = "Evită blocurile de lucru dimineața";
+"settings.hermes.fact.key.preferredEveningWork" = "Focus de seară preferat";
+"settings.hermes.fact.value.preferredEveningWork" = "Preferă munca concentrată seara";
+"settings.hermes.fact.key.avoidsEveningWork" = "Evită munca de seară";
+"settings.hermes.fact.value.avoidsEveningWork" = "Evită blocurile de lucru seara";
+"settings.hermes.fact.key.meetingFatigue" = "Oboseală de la ședințe";
+"settings.hermes.fact.value.meetingFatigue" = "Oboseală din cauza prea multor ședințe";
+"settings.hermes.fact.key.wantsSlotSuggestions" = "Vrea sugestii pentru intervale libere";
+"settings.hermes.fact.value.wantsSlotSuggestions" = "Preferă sugestii automate pentru timpul liber";
+"settings.hermes.fact.key.urgentReschedulingNeeds" = "Nevoie urgentă de reprogramare";
+"settings.hermes.fact.value.urgentReschedulingNeeds" = "A avut nevoie anterior de ajustări urgente ale programului";

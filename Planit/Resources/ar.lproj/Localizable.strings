@@ -231,10 +231,6 @@
 "energy.type.balanced" = "متوازن";
 
 /* ===== Aggressiveness ===== */
-"aggressiveness.manual" = "يدوي";
-"aggressiveness.assist" = "مساعد";
-"aggressiveness.semiauto" = "شبه تلقائي";
-"aggressiveness.auto" = "تلقائي";
 
 /* ===== Settings View ===== */
 "settings.title" = "الإعدادات";
@@ -392,10 +388,6 @@
 "review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
-"review.plan.complete.title" = "Tomorrow's Plan Ready";
-"review.help.done" = "Done";
-"review.help.tomorrow" = "Move to Tomorrow";
-"review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
 
 /* ===== AI Context Section ===== */
@@ -521,7 +513,7 @@
 "chat.action.categorize" = "Categorize (%d)";
 "chat.action.replan-day.tooltip" = "Reorganize today using Hermes memory";
 "chat.action.fill-slots.tooltip" = "Suggest activities for open time";
-"chat.action.categorize.tooltip.empty" = "No uncategorized Google events";
+"chat.action.categorize.tooltip.empty" = "لا توجد أحداث Google غير مصنفة";
 "chat.action.categorize.tooltip" = "AI will batch-categorize events";
 "chat.history.clear.tooltip" = "Clear chat history";
 "chat.planning.error.no-categorize" = "No categorization suggestions.";
@@ -546,12 +538,12 @@
 "review.goal.multi.hint" = "Comma-separated";
 
 // MARK: - Settings Hermes memory card
-"settings.hermes.patterns.count" = "User patterns learned from chat & actions (%d)";
-"settings.hermes.clear.all" = "Clear all";
-"settings.hermes.empty" = "No patterns learned yet.";
-"settings.hermes.empty.hint" = "Hermes auto-learns when you chat things like 'I focus best in mornings', 'no work in evenings', '30-min blocks only'.";
-"settings.hermes.decisions.recent" = "Recent plan decisions";
-"settings.hermes.forget.tooltip" = "Forget this memory";
+"settings.hermes.patterns.count" = "أنماط المستخدم المتعلّمة من الدردشة والإجراءات (%d)";
+"settings.hermes.clear.all" = "مسح الكل";
+"settings.hermes.empty" = "لم يتم تعلّم أي أنماط بعد.";
+"settings.hermes.empty.hint" = "يتعلم Hermes تلقائيًا من الدردشات أوقات التركيز وحدود المساء وطول الكتلة المفضل.";
+"settings.hermes.decisions.recent" = "قرارات التخطيط الأخيرة";
+"settings.hermes.forget.tooltip" = "انسَ هذه الذاكرة";
 
 // MARK: - Settings app info buttons
 "settings.update.check" = "Check for updates";
@@ -566,7 +558,7 @@
 "review.todo.grass.days" = "%d أيام";
 
 // MARK: - Hermes card
-"settings.hermes.card.title" = "🧠 Hermes الذاكرة طويلة المدى";
+"settings.hermes.card.title" = "🧠 ذاكرة Hermes طويلة المدى";
 "settings.hermes.outcome.accepted" = "مقبول";
 "settings.hermes.outcome.rejected" = "مرفوض";
 
@@ -579,9 +571,9 @@
 "settings.appearance.mode.system" = "النظام";
 "settings.appearance.mode.light" = "فاتح";
 "settings.appearance.mode.dark" = "داكن";
-"settings.wallpaper.card" = "Background";
-"settings.wallpaper.desc" = "Choose a gradient background displayed behind the calendar.";
-"settings.wallpaper.none" = "None";
+"settings.wallpaper.card" = "الخلفية";
+"settings.wallpaper.desc" = "اختر خلفية تظهر خلف التقويم.";
+"settings.wallpaper.none" = "لا شيء";
 "wallpaper.aurora" = "Aurora";
 "wallpaper.sunset" = "Sunset";
 "wallpaper.ocean" = "Ocean";
@@ -596,25 +588,25 @@
 "wallpaper.winter" = "Winter";
 
 /* ===== Statistics ===== */
-"panel.statistics" = "Stats";
-"statistics.title" = "Statistics";
-"statistics.subtitle" = "Track habits and completion at a glance";
+"panel.statistics" = "الإحصاءات";
+"statistics.title" = "الإحصاءات";
+"statistics.subtitle" = "تابع العادات والإنجاز بنظرة سريعة";
 
 /* ===== Animal Settings ===== */
-"settings.animal.card" = "Animal";
-"settings.animal.enabled.title" = "Show animals";
-"settings.animal.enabled.desc" = "Shows a walking animal along the bottom of the calendar.";
-"settings.animal.display.mode" = "Display mode";
-"settings.animal.parade.count" = "%d animals walking together";
-"settings.animal.shape" = "Shape";
-"settings.animal.style.cat" = "Cat";
-"settings.animal.style.dog" = "Dog";
-"settings.animal.style.cheetah" = "Cheetah";
-"settings.animal.style.duck" = "Duck";
-"settings.animal.style.rabbit" = "Rabbit";
-"settings.animal.display.selected" = "Selected animal";
-"settings.animal.display.random" = "Random animal";
-"settings.animal.display.parade" = "Animal parade";
+"settings.animal.card" = "حيوان";
+"settings.animal.enabled.title" = "إظهار الحيوانات";
+"settings.animal.enabled.desc" = "يعرض حيوانًا يمشي أسفل التقويم.";
+"settings.animal.display.mode" = "وضع العرض";
+"settings.animal.parade.count" = "%d حيوانات تمشي معًا";
+"settings.animal.shape" = "الشكل";
+"settings.animal.style.cat" = "قط";
+"settings.animal.style.dog" = "كلب";
+"settings.animal.style.cheetah" = "فهد";
+"settings.animal.style.duck" = "بطة";
+"settings.animal.style.rabbit" = "أرنب";
+"settings.animal.display.selected" = "الحيوان المحدد";
+"settings.animal.display.random" = "حيوان عشوائي";
+"settings.animal.display.parade" = "استعراض الحيوانات";
 
 /* ===== Pet Wallpapers ===== */
 "wallpaper.softStudioLight" = "Soft Studio";
@@ -631,3 +623,41 @@
 "login.feature.ai" = "AI daily planning";
 "login.cta.primary" = "Load My Schedule";
 "login.cta.local" = "Start with local calendar";
+"settings.hermes.outcome.partial" = "مطبق جزئيًا";
+"settings.hermes.decision.summary.categorized" = "تم تصنيف %d أحداث";
+"memory.category.preference" = "تفضيل";
+"memory.category.schedulePattern" = "نمط الجدول";
+"memory.category.habitPattern" = "نمط العادة";
+"memory.category.goalPriority" = "أولوية الهدف";
+"memory.category.planningHistory" = "سجل التخطيط";
+"memory.category.communicationStyle" = "أسلوب التواصل";
+"planning.intent.replanDay" = "إعادة تخطيط اليوم";
+"planning.intent.fillFreeSlots" = "ملء الأوقات الفارغة";
+"planning.intent.rescheduleUrgent" = "إعادة جدولة العاجل";
+"planning.intent.buildWeekPlan" = "إنشاء خطة الأسبوع";
+"planning.intent.categorizeUntagged" = "تصنيف الأحداث غير المصنفة";
+"planning.action.create" = "حدث جديد";
+"planning.action.move" = "نقل الحدث";
+"planning.action.delete" = "حذف الحدث";
+"planning.action.createTodo" = "إضافة مهمة";
+"planning.action.moveTodo" = "نقل المهمة";
+"planning.action.updateTodo" = "تعديل المهمة";
+"planning.action.categorize" = "الفئة";
+"settings.hermes.fact.key.preferredBlockLength" = "طول الكتلة المفضل";
+"settings.hermes.fact.value.preferredBlockLength.short" = "كتل قصيرة حوالي 30 دقيقة";
+"settings.hermes.fact.value.preferredBlockLength.deep" = "كتل عمل عميق 90-120 دقيقة";
+
+"settings.hermes.fact.key.preferredMorningWork" = "تفضيل التركيز صباحًا";
+"settings.hermes.fact.value.preferredMorningWork" = "يفضل العمل المركز في الصباح";
+"settings.hermes.fact.key.avoidsMorningWork" = "يتجنب العمل صباحًا";
+"settings.hermes.fact.value.avoidsMorningWork" = "يتجنب كتل العمل في الصباح";
+"settings.hermes.fact.key.preferredEveningWork" = "تفضيل التركيز مساءً";
+"settings.hermes.fact.value.preferredEveningWork" = "يفضل العمل المركز في المساء";
+"settings.hermes.fact.key.avoidsEveningWork" = "يتجنب العمل مساءً";
+"settings.hermes.fact.value.avoidsEveningWork" = "يتجنب كتل العمل في المساء";
+"settings.hermes.fact.key.meetingFatigue" = "إرهاق الاجتماعات";
+"settings.hermes.fact.value.meetingFatigue" = "إرهاق بسبب كثرة الاجتماعات";
+"settings.hermes.fact.key.wantsSlotSuggestions" = "يريد اقتراحات للأوقات الفارغة";
+"settings.hermes.fact.value.wantsSlotSuggestions" = "يفضل الاقتراحات التلقائية للأوقات الفارغة";
+"settings.hermes.fact.key.urgentReschedulingNeeds" = "حاجة عاجلة لإعادة الجدولة";
+"settings.hermes.fact.value.urgentReschedulingNeeds" = "احتاج سابقًا إلى تعديلات عاجلة في الجدول";

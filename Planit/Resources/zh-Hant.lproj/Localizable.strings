@@ -231,10 +231,6 @@
 "energy.type.balanced" = "均衡型";
 
 /* ===== Aggressiveness ===== */
-"aggressiveness.manual" = "手動";
-"aggressiveness.assist" = "輔助";
-"aggressiveness.semiauto" = "半自動";
-"aggressiveness.auto" = "自動";
 
 /* ===== Settings View ===== */
 "settings.title" = "設定";
@@ -392,10 +388,6 @@
 "review.done.all" = "全部完成";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
-"review.plan.complete.title" = "Tomorrow's Plan Ready";
-"review.help.done" = "Done";
-"review.help.tomorrow" = "Move to Tomorrow";
-"review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
 
 /* ===== AI Context Section ===== */
@@ -520,7 +512,7 @@
 "chat.action.categorize" = "Categorize (%d)";
 "chat.action.replan-day.tooltip" = "Reorganize today using Hermes memory";
 "chat.action.fill-slots.tooltip" = "Suggest activities for open time";
-"chat.action.categorize.tooltip.empty" = "No uncategorized Google events";
+"chat.action.categorize.tooltip.empty" = "沒有未分類的 Google 行程";
 "chat.action.categorize.tooltip" = "AI will batch-categorize events";
 "chat.history.clear.tooltip" = "Clear chat history";
 "chat.planning.error.no-categorize" = "No categorization suggestions.";
@@ -545,12 +537,12 @@
 "review.goal.multi.hint" = "Comma-separated";
 
 // MARK: - Settings Hermes memory card
-"settings.hermes.patterns.count" = "User patterns learned from chat & actions (%d)";
-"settings.hermes.clear.all" = "Clear all";
-"settings.hermes.empty" = "No patterns learned yet.";
-"settings.hermes.empty.hint" = "Hermes auto-learns when you chat things like 'I focus best in mornings', 'no work in evenings', '30-min blocks only'.";
-"settings.hermes.decisions.recent" = "Recent plan decisions";
-"settings.hermes.forget.tooltip" = "Forget this memory";
+"settings.hermes.patterns.count" = "從聊天與操作學到的使用者模式（%d）";
+"settings.hermes.clear.all" = "全部清除";
+"settings.hermes.empty" = "尚未學到任何模式。";
+"settings.hermes.empty.hint" = "Hermes 會從聊天中自動學習專注時間、晚間限制與偏好的時間區塊長度。";
+"settings.hermes.decisions.recent" = "最近的計畫決策";
+"settings.hermes.forget.tooltip" = "忘記這段記憶";
 
 // MARK: - Settings app info buttons
 "settings.update.check" = "Check for updates";
@@ -578,9 +570,9 @@
 "settings.appearance.mode.system" = "系統";
 "settings.appearance.mode.light" = "淺色";
 "settings.appearance.mode.dark" = "深色";
-"settings.wallpaper.card" = "Background";
-"settings.wallpaper.desc" = "Choose a gradient background displayed behind the calendar.";
-"settings.wallpaper.none" = "None";
+"settings.wallpaper.card" = "背景";
+"settings.wallpaper.desc" = "選擇顯示在行事曆後方的背景。";
+"settings.wallpaper.none" = "無";
 "wallpaper.aurora" = "Aurora";
 "wallpaper.sunset" = "Sunset";
 "wallpaper.ocean" = "Ocean";
@@ -595,25 +587,25 @@
 "wallpaper.winter" = "冬";
 
 /* ===== Statistics ===== */
-"panel.statistics" = "Stats";
-"statistics.title" = "Statistics";
-"statistics.subtitle" = "Track habits and completion at a glance";
+"panel.statistics" = "統計";
+"statistics.title" = "統計";
+"statistics.subtitle" = "快速查看習慣與完成狀態";
 
 /* ===== Animal Settings ===== */
-"settings.animal.card" = "Animal";
-"settings.animal.enabled.title" = "Show animals";
-"settings.animal.enabled.desc" = "Shows a walking animal along the bottom of the calendar.";
-"settings.animal.display.mode" = "Display mode";
-"settings.animal.parade.count" = "%d animals walking together";
-"settings.animal.shape" = "Shape";
-"settings.animal.style.cat" = "Cat";
-"settings.animal.style.dog" = "Dog";
-"settings.animal.style.cheetah" = "Cheetah";
-"settings.animal.style.duck" = "Duck";
-"settings.animal.style.rabbit" = "Rabbit";
-"settings.animal.display.selected" = "Selected animal";
-"settings.animal.display.random" = "Random animal";
-"settings.animal.display.parade" = "Animal parade";
+"settings.animal.card" = "動物";
+"settings.animal.enabled.title" = "顯示動物";
+"settings.animal.enabled.desc" = "在行事曆底部顯示行走的動物。";
+"settings.animal.display.mode" = "顯示模式";
+"settings.animal.parade.count" = "%d 隻動物一起行走";
+"settings.animal.shape" = "外觀";
+"settings.animal.style.cat" = "貓";
+"settings.animal.style.dog" = "狗";
+"settings.animal.style.cheetah" = "獵豹";
+"settings.animal.style.duck" = "鴨子";
+"settings.animal.style.rabbit" = "兔子";
+"settings.animal.display.selected" = "選取的動物";
+"settings.animal.display.random" = "隨機動物";
+"settings.animal.display.parade" = "動物遊行";
 
 /* ===== Pet Wallpapers ===== */
 "wallpaper.softStudioLight" = "Soft Studio";
@@ -630,3 +622,41 @@
 "login.feature.ai" = "AI daily planning";
 "login.cta.primary" = "Load My Schedule";
 "login.cta.local" = "Start with local calendar";
+"settings.hermes.outcome.partial" = "部分套用";
+"settings.hermes.decision.summary.categorized" = "已分類 %d 個事件";
+"memory.category.preference" = "偏好";
+"memory.category.schedulePattern" = "行程模式";
+"memory.category.habitPattern" = "習慣模式";
+"memory.category.goalPriority" = "目標優先順序";
+"memory.category.planningHistory" = "計畫歷史";
+"memory.category.communicationStyle" = "溝通風格";
+"planning.intent.replanDay" = "重新規劃今天";
+"planning.intent.fillFreeSlots" = "填入空閒時間";
+"planning.intent.rescheduleUrgent" = "重新安排緊急事項";
+"planning.intent.buildWeekPlan" = "建立本週計畫";
+"planning.intent.categorizeUntagged" = "分類未分類事件";
+"planning.action.create" = "新增事件";
+"planning.action.move" = "移動事件";
+"planning.action.delete" = "刪除事件";
+"planning.action.createTodo" = "新增待辦";
+"planning.action.moveTodo" = "移動待辦";
+"planning.action.updateTodo" = "編輯待辦";
+"planning.action.categorize" = "類別";
+"settings.hermes.fact.key.preferredBlockLength" = "偏好的時間區塊長度";
+"settings.hermes.fact.value.preferredBlockLength.short" = "約 30 分鐘的短區塊";
+"settings.hermes.fact.value.preferredBlockLength.deep" = "90-120 分鐘深度工作區塊";
+
+"settings.hermes.fact.key.preferredMorningWork" = "偏好上午專注";
+"settings.hermes.fact.value.preferredMorningWork" = "偏好在上午進行專注工作";
+"settings.hermes.fact.key.avoidsMorningWork" = "避免上午工作";
+"settings.hermes.fact.value.avoidsMorningWork" = "避免在上午安排工作區塊";
+"settings.hermes.fact.key.preferredEveningWork" = "偏好晚上專注";
+"settings.hermes.fact.value.preferredEveningWork" = "偏好在晚上進行專注工作";
+"settings.hermes.fact.key.avoidsEveningWork" = "避免晚上工作";
+"settings.hermes.fact.value.avoidsEveningWork" = "避免在晚上安排工作區塊";
+"settings.hermes.fact.key.meetingFatigue" = "會議疲勞";
+"settings.hermes.fact.value.meetingFatigue" = "會議過多時會感到疲勞";
+"settings.hermes.fact.key.wantsSlotSuggestions" = "需要空檔建議";
+"settings.hermes.fact.value.wantsSlotSuggestions" = "偏好為空閒時間自動給出建議";
+"settings.hermes.fact.key.urgentReschedulingNeeds" = "緊急改期需求";
+"settings.hermes.fact.value.urgentReschedulingNeeds" = "曾經需要緊急調整日程";

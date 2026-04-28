@@ -231,10 +231,6 @@
 "energy.type.balanced" = "Ισορροπημένο";
 
 /* ===== Aggressiveness ===== */
-"aggressiveness.manual" = "Χειροκίνητο";
-"aggressiveness.assist" = "Βοηθούμενο";
-"aggressiveness.semiauto" = "Ημιαυτόματο";
-"aggressiveness.auto" = "Αυτόματο";
 
 /* ===== Settings View ===== */
 "settings.title" = "Ρυθμίσεις";
@@ -392,10 +388,6 @@
 "review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
-"review.plan.complete.title" = "Tomorrow's Plan Ready";
-"review.help.done" = "Done";
-"review.help.tomorrow" = "Move to Tomorrow";
-"review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
 
 /* ===== AI Context Section ===== */
@@ -521,7 +513,7 @@
 "chat.action.categorize" = "Categorize (%d)";
 "chat.action.replan-day.tooltip" = "Reorganize today using Hermes memory";
 "chat.action.fill-slots.tooltip" = "Suggest activities for open time";
-"chat.action.categorize.tooltip.empty" = "No uncategorized Google events";
+"chat.action.categorize.tooltip.empty" = "Δεν υπάρχουν αταξινόμητα συμβάντα Google";
 "chat.action.categorize.tooltip" = "AI will batch-categorize events";
 "chat.history.clear.tooltip" = "Clear chat history";
 "chat.planning.error.no-categorize" = "No categorization suggestions.";
@@ -546,12 +538,12 @@
 "review.goal.multi.hint" = "Comma-separated";
 
 // MARK: - Settings Hermes memory card
-"settings.hermes.patterns.count" = "User patterns learned from chat & actions (%d)";
-"settings.hermes.clear.all" = "Clear all";
-"settings.hermes.empty" = "No patterns learned yet.";
-"settings.hermes.empty.hint" = "Hermes auto-learns when you chat things like 'I focus best in mornings', 'no work in evenings', '30-min blocks only'.";
-"settings.hermes.decisions.recent" = "Recent plan decisions";
-"settings.hermes.forget.tooltip" = "Forget this memory";
+"settings.hermes.patterns.count" = "Μοτίβα χρήστη που μαθεύτηκαν από συνομιλία και ενέργειες (%d)";
+"settings.hermes.clear.all" = "Εκκαθάριση όλων";
+"settings.hermes.empty" = "Δεν έχουν μαθευτεί ακόμα μοτίβα.";
+"settings.hermes.empty.hint" = "Το Hermes μαθαίνει αυτόματα από συνομιλίες ώρες εστίασης, βραδινούς περιορισμούς και προτιμώμενη διάρκεια μπλοκ.";
+"settings.hermes.decisions.recent" = "Πρόσφατες αποφάσεις σχεδιασμού";
+"settings.hermes.forget.tooltip" = "Ξέχασε αυτή τη μνήμη";
 
 // MARK: - Settings app info buttons
 "settings.update.check" = "Check for updates";
@@ -566,7 +558,7 @@
 "review.todo.grass.days" = "%d ημέρες";
 
 // MARK: - Hermes card
-"settings.hermes.card.title" = "🧠 Hermes Μακροπρόθεσμη μνήμη";
+"settings.hermes.card.title" = "🧠 Μακροπρόθεσμη μνήμη Hermes";
 "settings.hermes.outcome.accepted" = "αποδεκτό";
 "settings.hermes.outcome.rejected" = "απορρίφθηκε";
 
@@ -579,9 +571,9 @@
 "settings.appearance.mode.system" = "Σύστημα";
 "settings.appearance.mode.light" = "Φωτεινό";
 "settings.appearance.mode.dark" = "Σκοτεινό";
-"settings.wallpaper.card" = "Background";
-"settings.wallpaper.desc" = "Choose a gradient background displayed behind the calendar.";
-"settings.wallpaper.none" = "None";
+"settings.wallpaper.card" = "Φόντο";
+"settings.wallpaper.desc" = "Επιλέξτε φόντο πίσω από το ημερολόγιο.";
+"settings.wallpaper.none" = "Κανένα";
 "wallpaper.aurora" = "Aurora";
 "wallpaper.sunset" = "Sunset";
 "wallpaper.ocean" = "Ocean";
@@ -596,25 +588,25 @@
 "wallpaper.winter" = "Winter";
 
 /* ===== Statistics ===== */
-"panel.statistics" = "Stats";
-"statistics.title" = "Statistics";
-"statistics.subtitle" = "Track habits and completion at a glance";
+"panel.statistics" = "Στατιστικά";
+"statistics.title" = "Στατιστικά";
+"statistics.subtitle" = "Παρακολουθήστε συνήθειες και ολοκλήρωση με μια ματιά";
 
 /* ===== Animal Settings ===== */
-"settings.animal.card" = "Animal";
-"settings.animal.enabled.title" = "Show animals";
-"settings.animal.enabled.desc" = "Shows a walking animal along the bottom of the calendar.";
-"settings.animal.display.mode" = "Display mode";
-"settings.animal.parade.count" = "%d animals walking together";
-"settings.animal.shape" = "Shape";
-"settings.animal.style.cat" = "Cat";
-"settings.animal.style.dog" = "Dog";
-"settings.animal.style.cheetah" = "Cheetah";
-"settings.animal.style.duck" = "Duck";
-"settings.animal.style.rabbit" = "Rabbit";
-"settings.animal.display.selected" = "Selected animal";
-"settings.animal.display.random" = "Random animal";
-"settings.animal.display.parade" = "Animal parade";
+"settings.animal.card" = "Ζώο";
+"settings.animal.enabled.title" = "Εμφάνιση ζώων";
+"settings.animal.enabled.desc" = "Εμφανίζει ένα ζώο που περπατά στο κάτω μέρος του ημερολογίου.";
+"settings.animal.display.mode" = "Λειτουργία εμφάνισης";
+"settings.animal.parade.count" = "%d ζώα περπατούν μαζί";
+"settings.animal.shape" = "Σχήμα";
+"settings.animal.style.cat" = "Γάτα";
+"settings.animal.style.dog" = "Σκύλος";
+"settings.animal.style.cheetah" = "Τσίτα";
+"settings.animal.style.duck" = "Πάπια";
+"settings.animal.style.rabbit" = "Κουνέλι";
+"settings.animal.display.selected" = "Επιλεγμένο ζώο";
+"settings.animal.display.random" = "Τυχαίο ζώο";
+"settings.animal.display.parade" = "Παρέλαση ζώων";
 
 /* ===== Pet Wallpapers ===== */
 "wallpaper.softStudioLight" = "Soft Studio";
@@ -631,3 +623,41 @@
 "login.feature.ai" = "AI daily planning";
 "login.cta.primary" = "Load My Schedule";
 "login.cta.local" = "Start with local calendar";
+"settings.hermes.outcome.partial" = "εφαρμόστηκε μερικώς";
+"settings.hermes.decision.summary.categorized" = "Κατηγοριοποιήθηκαν %d συμβάντα";
+"memory.category.preference" = "Προτίμηση";
+"memory.category.schedulePattern" = "Μοτίβο προγράμματος";
+"memory.category.habitPattern" = "Μοτίβο συνήθειας";
+"memory.category.goalPriority" = "Προτεραιότητα στόχου";
+"memory.category.planningHistory" = "Ιστορικό σχεδιασμού";
+"memory.category.communicationStyle" = "Στυλ επικοινωνίας";
+"planning.intent.replanDay" = "Επανασχεδιασμός σήμερα";
+"planning.intent.fillFreeSlots" = "Συμπλήρωση κενών χρόνων";
+"planning.intent.rescheduleUrgent" = "Επαναπρογραμματισμός επειγόντων";
+"planning.intent.buildWeekPlan" = "Δημιουργία πλάνου εβδομάδας";
+"planning.intent.categorizeUntagged" = "Κατηγοριοποίηση αταξινόμητων συμβάντων";
+"planning.action.create" = "Νέο συμβάν";
+"planning.action.move" = "Μετακίνηση συμβάντος";
+"planning.action.delete" = "Διαγραφή συμβάντος";
+"planning.action.createTodo" = "Προσθήκη εργασίας";
+"planning.action.moveTodo" = "Μετακίνηση εργασίας";
+"planning.action.updateTodo" = "Επεξεργασία εργασίας";
+"planning.action.categorize" = "Κατηγορία";
+"settings.hermes.fact.key.preferredBlockLength" = "Προτιμώμενη διάρκεια μπλοκ";
+"settings.hermes.fact.value.preferredBlockLength.short" = "Σύντομα μπλοκ περίπου 30 λεπτών";
+"settings.hermes.fact.value.preferredBlockLength.deep" = "Μπλοκ βαθιάς εργασίας 90-120 λεπτών";
+
+"settings.hermes.fact.key.preferredMorningWork" = "Προτιμώμενη πρωινή συγκέντρωση";
+"settings.hermes.fact.value.preferredMorningWork" = "Προτιμά συγκεντρωμένη εργασία το πρωί";
+"settings.hermes.fact.key.avoidsMorningWork" = "Αποφεύγει την πρωινή εργασία";
+"settings.hermes.fact.value.avoidsMorningWork" = "Αποφεύγει μπλοκ εργασίας το πρωί";
+"settings.hermes.fact.key.preferredEveningWork" = "Προτιμώμενη βραδινή συγκέντρωση";
+"settings.hermes.fact.value.preferredEveningWork" = "Προτιμά συγκεντρωμένη εργασία το βράδυ";
+"settings.hermes.fact.key.avoidsEveningWork" = "Αποφεύγει τη βραδινή εργασία";
+"settings.hermes.fact.value.avoidsEveningWork" = "Αποφεύγει μπλοκ εργασίας το βράδυ";
+"settings.hermes.fact.key.meetingFatigue" = "Κόπωση από συσκέψεις";
+"settings.hermes.fact.value.meetingFatigue" = "Κόπωση από πάρα πολλές συσκέψεις";
+"settings.hermes.fact.key.wantsSlotSuggestions" = "Θέλει προτάσεις για κενά";
+"settings.hermes.fact.value.wantsSlotSuggestions" = "Προτιμά αυτόματες προτάσεις για ελεύθερο χρόνο";
+"settings.hermes.fact.key.urgentReschedulingNeeds" = "Επείγουσα ανάγκη αναπρογραμματισμού";
+"settings.hermes.fact.value.urgentReschedulingNeeds" = "Έχει χρειαστεί επείγουσες αλλαγές προγράμματος στο παρελθόν";

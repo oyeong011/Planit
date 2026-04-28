@@ -834,16 +834,14 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                     ForEach(hermesMemoryService.decisions.prefix(5)) { decision in
                         HStack(spacing: 8) {
-                            Text(decision.intent)
+                            Text(localizedPlanningIntent(decision.intent))
                                 .font(.system(size: 10, design: .monospaced))
                                 .foregroundStyle(.blue)
-                            Text(decision.summary)
+                            Text(localizedDecisionSummary(decision))
                                 .font(.system(size: 11))
                                 .lineLimit(1)
                             Spacer()
-                            Text(decision.outcome == .accepted
-                                 ? String(localized: "settings.hermes.outcome.accepted")
-                                 : String(localized: "settings.hermes.outcome.rejected"))
+                            Text(localizedDecisionOutcome(decision.outcome))
                                 .font(.system(size: 10))
                                 .foregroundStyle(decision.outcome == .accepted ? .green : .secondary)
                         }
@@ -855,7 +853,7 @@ struct SettingsView: View {
 
     private func hermesMemoryRow(_ fact: MemoryFact) -> some View {
         HStack(alignment: .top, spacing: 10) {
-            Text(fact.category.displayName)
+            Text(localizedMemoryCategory(fact.category))
                 .font(.system(size: 9, weight: .semibold))
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
@@ -864,9 +862,9 @@ struct SettingsView: View {
                 .frame(minWidth: 52, alignment: .leading)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(fact.key)
+                Text(localizedMemoryFactKey(fact.key))
                     .font(.system(size: 11, weight: .medium, design: .monospaced))
-                Text(fact.value)
+                Text(localizedMemoryFactValue(fact))
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
@@ -893,6 +891,81 @@ struct SettingsView: View {
             .help(String(localized: "settings.hermes.forget.tooltip"))
         }
         .padding(.vertical, 4)
+    }
+
+    private func localizedMemoryCategory(_ category: MemoryCategory) -> String {
+        NSLocalizedString("memory.category.\(category.rawValue)", bundle: .module, comment: "")
+    }
+
+    private func localizedMemoryFactKey(_ key: String) -> String {
+        let localized = NSLocalizedString("settings.hermes.fact.key.\(key)", bundle: .module, comment: "")
+        return localized == "settings.hermes.fact.key.\(key)" ? key : localized
+    }
+
+    private func localizedMemoryFactValue(_ fact: MemoryFact) -> String {
+        let valueKey: String?
+        switch (fact.key, fact.value) {
+        case ("preferredMorningWork", "오전 집중 선호"):
+            valueKey = "settings.hermes.fact.value.preferredMorningWork"
+        case ("avoidsMorningWork", "오전 작업 회피"):
+            valueKey = "settings.hermes.fact.value.avoidsMorningWork"
+        case ("preferredEveningWork", "저녁 집중 선호"):
+            valueKey = "settings.hermes.fact.value.preferredEveningWork"
+        case ("avoidsEveningWork", "저녁 작업 회피"):
+            valueKey = "settings.hermes.fact.value.avoidsEveningWork"
+        case ("preferredBlockLength", "30분 내외 짧은 블록"):
+            valueKey = "settings.hermes.fact.value.preferredBlockLength.short"
+        case ("preferredBlockLength", "90~120분 딥워크 블록"):
+            valueKey = "settings.hermes.fact.value.preferredBlockLength.deep"
+        case ("meetingFatigue", "회의 과밀 피로"):
+            valueKey = "settings.hermes.fact.value.meetingFatigue"
+        case ("wantsSlotSuggestions", "빈 시간 자동 제안 선호"):
+            valueKey = "settings.hermes.fact.value.wantsSlotSuggestions"
+        case ("urgentReschedulingNeeds", "급한 일정 재배치 필요 경험 있음"):
+            valueKey = "settings.hermes.fact.value.urgentReschedulingNeeds"
+        default:
+            valueKey = nil
+        }
+
+        guard let valueKey else { return fact.value }
+        let localized = NSLocalizedString(valueKey, bundle: .module, comment: "")
+        return localized == valueKey ? fact.value : localized
+    }
+
+    private func localizedPlanningIntent(_ rawIntent: String) -> String {
+        guard let intent = PlanningIntent(rawValue: rawIntent) else { return rawIntent }
+        return intent.displayName
+    }
+
+    private func localizedDecisionSummary(_ decision: PlanningDecision) -> String {
+        if decision.intent == PlanningIntent.categorizeUntagged.rawValue,
+           let count = categorizedEventCount(from: decision.summary) {
+            return String(format: NSLocalizedString("settings.hermes.decision.summary.categorized", bundle: .module, comment: ""), count)
+        }
+        return decision.summary
+    }
+
+    private func categorizedEventCount(from summary: String) -> Int? {
+        if summary.hasPrefix("categorizedEvents:") {
+            return Int(summary.replacingOccurrences(of: "categorizedEvents:", with: ""))
+        }
+
+        guard let match = summary.range(of: #"^\s*(\d+)개의 이벤트를 분류했습니다\s*$"#, options: .regularExpression) else {
+            return nil
+        }
+        let matched = String(summary[match])
+        return matched.components(separatedBy: CharacterSet.decimalDigits.inverted).first(where: { !$0.isEmpty }).flatMap(Int.init)
+    }
+
+    private func localizedDecisionOutcome(_ outcome: PlanningDecision.DecisionOutcome) -> String {
+        switch outcome {
+        case .accepted:
+            return String(localized: "settings.hermes.outcome.accepted")
+        case .rejected:
+            return String(localized: "settings.hermes.outcome.rejected")
+        case .partial:
+            return String(localized: "settings.hermes.outcome.partial")
+        }
     }
 
     private func confidenceColor(_ c: Double) -> Color {
