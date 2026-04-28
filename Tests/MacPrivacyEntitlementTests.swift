@@ -7,13 +7,24 @@ struct MacPrivacyEntitlementTests {
     func shippingEntitlementsAvoidUserFileAreas() throws {
         for path in ["Planit/Planit.entitlements", "Planit/Planit-dev.entitlements"] {
             let keys = try entitlementKeys(path)
+            let forbidden = [
+                "com.apple.security.files.user-selected.read-only",
+                "com.apple.security.files.user-selected.read-write",
+                "com.apple.security.files.downloads.read-only",
+                "com.apple.security.files.downloads.read-write",
+                "com.apple.security.files.music.read-only",
+                "com.apple.security.files.music.read-write",
+                "com.apple.security.files.pictures.read-only",
+                "com.apple.security.files.pictures.read-write",
+                "com.apple.security.files.network-volumes.read-only",
+                "com.apple.security.files.network-volumes.read-write",
+                "com.apple.security.network.server",
+                "com.apple.security.automation.apple-events",
+            ]
 
-            #expect(!keys.contains("com.apple.security.files.user-selected.read-write"))
-            #expect(!keys.contains("com.apple.security.files.downloads.read-write"))
-            #expect(!keys.contains("com.apple.security.files.music.read-write"))
-            #expect(!keys.contains("com.apple.security.files.pictures.read-write"))
-            #expect(!keys.contains("com.apple.security.files.network-volumes.read-write"))
-            #expect(!keys.contains("com.apple.security.network.server"))
+            for key in forbidden {
+                #expect(!keys.contains(key))
+            }
             #expect(!keys.contains("com.apple.security.network.client"))
         }
     }

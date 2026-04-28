@@ -58,7 +58,11 @@ enum AttachmentSecurity {
     static let maxAttachmentBytes = 20_971_520
 
     static func validateFile(url: URL, maxBytes: Int = maxAttachmentBytes) -> ChatAttachmentType? {
+        guard !isDisallowedLocation(url: url) else { return nil }
+
         let resolved = url.resolvingSymlinksInPath()
+        guard !isDisallowedLocation(url: resolved) else { return nil }
+
         var isDirectory: ObjCBool = false
         guard FileManager.default.fileExists(atPath: resolved.path, isDirectory: &isDirectory),
               !isDirectory.boolValue else { return nil }
@@ -75,6 +79,47 @@ enum AttachmentSecurity {
         default:
             return nil
         }
+    }
+
+    static func isDisallowedLocation(url: URL) -> Bool {
+        let path = normalizedPath(url.path)
+        let protectedUserFolders = ["Downloads", "Music", "Pictures"]
+
+        for home in homeDirectoryCandidates() {
+            for folder in protectedUserFolders {
+                if path == "\(home)/\(folder)" || path.hasPrefix("\(home)/\(folder)/") {
+                    return true
+                }
+            }
+        }
+
+        return path == "/Volumes" ||
+            path.hasPrefix("/Volumes/") ||
+            path == "/Network" ||
+            path.hasPrefix("/Network/")
+    }
+
+    static func safePickerDirectory() -> URL {
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Library/Application Support")
+        let directory = support.appendingPathComponent("Planit/Attachments", isDirectory: true)
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true,
+                                                  attributes: [.posixPermissions: 0o700])
+        return directory
+    }
+
+    private static func homeDirectoryCandidates() -> Set<String> {
+        let home = normalizedPath(NSHomeDirectory())
+        let resolvedHome = normalizedPath(URL(fileURLWithPath: NSHomeDirectory()).resolvingSymlinksInPath().path)
+        return [home, resolvedHome]
+    }
+
+    private static func normalizedPath(_ path: String) -> String {
+        var normalized = NSString(string: path).standardizingPath
+        while normalized.count > 1 && normalized.hasSuffix("/") {
+            normalized.removeLast()
+        }
+        return normalized
     }
 }
 
