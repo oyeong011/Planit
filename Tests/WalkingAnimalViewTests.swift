@@ -13,7 +13,10 @@ struct WalkingAnimalViewTests {
             "dog",
             "cheetah",
             "duck",
-            "rabbit"
+            "rabbit",
+            "panda",
+            "turtle",
+            "squirrel"
         ])
 
         for style in WalkingAnimalStyle.allCases {

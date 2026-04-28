@@ -604,6 +604,9 @@
 "settings.animal.style.cheetah" = "Τσίτα";
 "settings.animal.style.duck" = "Πάπια";
 "settings.animal.style.rabbit" = "Κουνέλι";
+"settings.animal.style.panda" = "Πάντα";
+"settings.animal.style.turtle" = "Χελώνα";
+"settings.animal.style.squirrel" = "Σκίουρος";
 "settings.animal.display.selected" = "Επιλεγμένο ζώο";
 "settings.animal.display.random" = "Τυχαίο ζώο";
 "settings.animal.display.parade" = "Παρέλαση ζώων";

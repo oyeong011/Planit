@@ -604,6 +604,9 @@
 "settings.animal.style.cheetah" = "Ghepard";
 "settings.animal.style.duck" = "Rață";
 "settings.animal.style.rabbit" = "Iepure";
+"settings.animal.style.panda" = "Panda";
+"settings.animal.style.turtle" = "Broască țestoasă";
+"settings.animal.style.squirrel" = "Veveriță";
 "settings.animal.display.selected" = "Animal selectat";
 "settings.animal.display.random" = "Animal aleatoriu";
 "settings.animal.display.parade" = "Paradă de animale";

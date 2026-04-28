@@ -604,6 +604,9 @@
 "settings.animal.style.cheetah" = "Gepárd";
 "settings.animal.style.duck" = "Kacsa";
 "settings.animal.style.rabbit" = "Nyúl";
+"settings.animal.style.panda" = "Panda";
+"settings.animal.style.turtle" = "Teknős";
+"settings.animal.style.squirrel" = "Mókus";
 "settings.animal.display.selected" = "Kiválasztott állat";
 "settings.animal.display.random" = "Véletlen állat";
 "settings.animal.display.parade" = "Állatparádé";

@@ -604,6 +604,9 @@
 "settings.animal.style.cheetah" = "Гепард";
 "settings.animal.style.duck" = "Качка";
 "settings.animal.style.rabbit" = "Кролик";
+"settings.animal.style.panda" = "Панда";
+"settings.animal.style.turtle" = "Черепаха";
+"settings.animal.style.squirrel" = "Білка";
 "settings.animal.display.selected" = "Вибрана тварина";
 "settings.animal.display.random" = "Випадкова тварина";
 "settings.animal.display.parade" = "Парад тварин";

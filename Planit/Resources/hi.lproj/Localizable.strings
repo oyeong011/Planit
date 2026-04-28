@@ -604,6 +604,9 @@
 "settings.animal.style.cheetah" = "चीता";
 "settings.animal.style.duck" = "बतख";
 "settings.animal.style.rabbit" = "खरगोश";
+"settings.animal.style.panda" = "पांडा";
+"settings.animal.style.turtle" = "कछुआ";
+"settings.animal.style.squirrel" = "गिलहरी";
 "settings.animal.display.selected" = "चुना हुआ जानवर";
 "settings.animal.display.random" = "यादृच्छिक जानवर";
 "settings.animal.display.parade" = "जानवरों की परेड";

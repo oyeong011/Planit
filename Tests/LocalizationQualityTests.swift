@@ -96,6 +96,29 @@ struct LocalizationQualityTests {
         #expect(vietnamese["settings.animal.display.selected"] == "Động vật đã chọn")
     }
 
+    @Test("animal style names exist in every locale")
+    func animalStyleNamesExistInEveryLocale() throws {
+        let keys = [
+            "settings.animal.style.cat",
+            "settings.animal.style.dog",
+            "settings.animal.style.cheetah",
+            "settings.animal.style.duck",
+            "settings.animal.style.rabbit",
+            "settings.animal.style.panda",
+            "settings.animal.style.turtle",
+            "settings.animal.style.squirrel"
+        ]
+
+        for locale in try availableLocales() {
+            let table = try localizedStrings(for: locale)
+            for key in keys {
+                let value = try requiredValue(table, key: key, locale: locale)
+                #expect(!value.isEmpty, "\(locale) \(key) is empty")
+                #expect(!value.contains("settings.animal"), "\(locale) \(key) is showing a raw key")
+            }
+        }
+    }
+
     @Test("localization files do not contain duplicate keys")
     func localizationFilesDoNotContainDuplicateKeys() throws {
         for locale in try availableLocales() {

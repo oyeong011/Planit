@@ -608,6 +608,9 @@
 "settings.animal.style.cheetah" = "Cheetah";
 "settings.animal.style.duck" = "Duck";
 "settings.animal.style.rabbit" = "Rabbit";
+"settings.animal.style.panda" = "Panda";
+"settings.animal.style.turtle" = "Turtle";
+"settings.animal.style.squirrel" = "Squirrel";
 "settings.animal.display.selected" = "Selected animal";
 "settings.animal.display.random" = "Random animal";
 "settings.animal.display.parade" = "Animal parade";

@@ -603,6 +603,9 @@
 "settings.animal.style.cheetah" = "Guepardo";
 "settings.animal.style.duck" = "Pato";
 "settings.animal.style.rabbit" = "Conejo";
+"settings.animal.style.panda" = "Panda";
+"settings.animal.style.turtle" = "Tortuga";
+"settings.animal.style.squirrel" = "Ardilla";
 "settings.animal.display.selected" = "Animal seleccionado";
 "settings.animal.display.random" = "Animal aleatorio";
 "settings.animal.display.parade" = "Desfile de animales";

@@ -603,6 +603,9 @@
 "settings.animal.style.cheetah" = "チーター";
 "settings.animal.style.duck" = "アヒル";
 "settings.animal.style.rabbit" = "ウサギ";
+"settings.animal.style.panda" = "パンダ";
+"settings.animal.style.turtle" = "カメ";
+"settings.animal.style.squirrel" = "リス";
 "settings.animal.display.selected" = "選択した動物";
 "settings.animal.display.random" = "ランダムな動物";
 "settings.animal.display.parade" = "動物パレード";

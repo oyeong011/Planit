@@ -604,6 +604,9 @@
 "settings.animal.style.cheetah" = "Báo săn";
 "settings.animal.style.duck" = "Vịt";
 "settings.animal.style.rabbit" = "Thỏ";
+"settings.animal.style.panda" = "Gấu trúc";
+"settings.animal.style.turtle" = "Rùa";
+"settings.animal.style.squirrel" = "Sóc";
 "settings.animal.display.selected" = "Động vật đã chọn";
 "settings.animal.display.random" = "Động vật ngẫu nhiên";
 "settings.animal.display.parade" = "Diễu hành động vật";

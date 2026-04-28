@@ -7,6 +7,9 @@ enum WalkingAnimalStyle: String, CaseIterable, Identifiable {
     case cheetah
     case duck
     case rabbit
+    case panda
+    case turtle
+    case squirrel
 
     var id: String { rawValue }
 
@@ -29,7 +32,7 @@ enum WalkingAnimalStyle: String, CaseIterable, Identifiable {
             return "cat_pixel_R\(safeIndex + 1)"
         case .dog:
             return "character_dog_R\(safeIndex + 1)"
-        case .cheetah, .duck, .rabbit:
+        case .cheetah, .duck, .rabbit, .panda, .turtle, .squirrel:
             return "character_\(rawValue)_R\(safeIndex + 1)"
         }
     }

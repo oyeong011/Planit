@@ -604,6 +604,9 @@
 "settings.animal.style.cheetah" = "Citah";
 "settings.animal.style.duck" = "Itik";
 "settings.animal.style.rabbit" = "Arnab";
+"settings.animal.style.panda" = "Panda";
+"settings.animal.style.turtle" = "Kura-kura";
+"settings.animal.style.squirrel" = "Tupai";
 "settings.animal.display.selected" = "Haiwan dipilih";
 "settings.animal.display.random" = "Haiwan rawak";
 "settings.animal.display.parade" = "Perarakan haiwan";

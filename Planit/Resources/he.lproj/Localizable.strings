@@ -604,6 +604,9 @@
 "settings.animal.style.cheetah" = "צ'יטה";
 "settings.animal.style.duck" = "ברווז";
 "settings.animal.style.rabbit" = "ארנב";
+"settings.animal.style.panda" = "פנדה";
+"settings.animal.style.turtle" = "צב";
+"settings.animal.style.squirrel" = "סנאי";
 "settings.animal.display.selected" = "חיה נבחרת";
 "settings.animal.display.random" = "חיה אקראית";
 "settings.animal.display.parade" = "מצעד חיות";

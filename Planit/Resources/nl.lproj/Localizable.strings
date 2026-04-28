@@ -604,6 +604,9 @@
 "settings.animal.style.cheetah" = "Jachtluipaard";
 "settings.animal.style.duck" = "Eend";
 "settings.animal.style.rabbit" = "Konijn";
+"settings.animal.style.panda" = "Panda";
+"settings.animal.style.turtle" = "Schildpad";
+"settings.animal.style.squirrel" = "Eekhoorn";
 "settings.animal.display.selected" = "Geselecteerd dier";
 "settings.animal.display.random" = "Willekeurig dier";
 "settings.animal.display.parade" = "Dierenparade";
