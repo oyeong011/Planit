@@ -13,7 +13,6 @@ struct WalkingAnimalViewTests {
             "dog",
             "cheetah",
             "duck",
-            "fox",
             "penguin",
             "hamster",
             "rabbit"
@@ -23,7 +22,6 @@ struct WalkingAnimalViewTests {
             "강아지",
             "치타",
             "오리",
-            "여우",
             "펭귄",
             "햄스터",
             "토끼"
@@ -171,6 +169,16 @@ struct WalkingAnimalViewTests {
 
         #expect(settings.selectedStyle == .cat)
     }
+}
+
+@MainActor
+@Test func animalSettings_mapsRemovedFoxStyleToCat() {
+    let defaults = makeAnimalDefaults()
+    defaults.set("fox", forKey: AnimalSettings.styleKey)
+
+    let settings = AnimalSettings(userDefaults: defaults)
+
+    #expect(settings.selectedStyle == .cat)
 }
 
 @MainActor

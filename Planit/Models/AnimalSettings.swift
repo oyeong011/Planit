@@ -6,7 +6,6 @@ enum WalkingAnimalStyle: String, CaseIterable, Identifiable {
     case dog
     case cheetah
     case duck
-    case fox
     case penguin
     case hamster
     case rabbit
@@ -19,7 +18,6 @@ enum WalkingAnimalStyle: String, CaseIterable, Identifiable {
         case .dog:     return "강아지"
         case .cheetah: return "치타"
         case .duck:    return "오리"
-        case .fox:     return "여우"
         case .penguin: return "펭귄"
         case .hamster: return "햄스터"
         case .rabbit:  return "토끼"
@@ -41,7 +39,7 @@ enum WalkingAnimalStyle: String, CaseIterable, Identifiable {
             return "cat_pixel_R\(safeIndex + 1)"
         case .dog:
             return "character_dog_R\(safeIndex + 1)"
-        case .cheetah, .duck, .fox, .penguin, .hamster, .rabbit:
+        case .cheetah, .duck, .penguin, .hamster, .rabbit:
             return "character_\(rawValue)_R\(safeIndex + 1)"
         }
     }
