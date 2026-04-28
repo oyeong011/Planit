@@ -11,6 +11,8 @@ struct WalkingAnimalViewTests {
         #expect(WalkingAnimalStyle.allCases.map(\.id) == [
             "cat",
             "dog",
+            "cheetah",
+            "duck",
             "fox",
             "penguin",
             "hamster",
@@ -19,6 +21,8 @@ struct WalkingAnimalViewTests {
         #expect(WalkingAnimalStyle.allCases.map(\.title) == [
             "고양이",
             "강아지",
+            "치타",
+            "오리",
             "여우",
             "펭귄",
             "햄스터",

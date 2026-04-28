@@ -1,4 +1,5 @@
 import CoreGraphics
+import Foundation
 import Testing
 @testable import Calen
 
@@ -42,4 +43,29 @@ struct ReviewSectionLayoutTests {
 
         #expect(first == second)
     }
+
+    @Test("review tab excludes statistics-owned sections")
+    func reviewTabExcludesStatisticsOwnedSections() throws {
+        let source = try projectFile("Planit/Views/ReviewView.swift")
+        let enumStart = try #require(source.range(of: "private enum ReviewSectionID"))
+        let enumEnd = try #require(source.range(of: "private enum ReviewSheetRoute"))
+        let enumSource = String(source[enumStart.lowerBound..<enumEnd.lowerBound])
+
+        #expect(!enumSource.contains("habit_graph"))
+        #expect(!enumSource.contains("weekly_chart"))
+        #expect(!enumSource.contains("todo_grass"))
+        #expect(!enumSource.contains("\"progress\""))
+        #expect(!enumSource.contains("\"category\""))
+        #expect(enumSource.contains("my_habits"))
+        #expect(enumSource.contains("long_term_goals"))
+        #expect(source.contains("static let defaultOrder: [ReviewSectionID] = [\n        .myHabits, .longTermGoals\n    ]"))
+    }
+}
+
+private func projectFile(_ path: String) throws -> String {
+    try String(
+        contentsOf: URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            .appendingPathComponent(path),
+        encoding: .utf8
+    )
 }
