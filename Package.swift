@@ -34,10 +34,18 @@ let package = Package(
                 .product(name: "Sparkle", package: "Sparkle")
             ],
             path: "Planit",
-            exclude: ["Info.plist", "Planit.entitlements"],
+            exclude: [
+                "Info.plist",
+                "Planit.entitlements",
+                "Planit-dev.entitlements"
+            ],
             resources: [
                 .copy("Resources/PrivacyInfo.xcprivacy"),
                 .copy("Resources/AppIcon.icns"),
+                .copy("Resources/StatusBarIcon.png"),
+                .copy("Resources/StatusBarIcon@2x.png"),
+                .copy("Resources/CatSprites"),
+                .copy("Resources/Wallpapers"),
                 .process("Resources/ko.lproj"),
                 .process("Resources/en.lproj"),
                 .process("Resources/ja.lproj"),

@@ -6,6 +6,29 @@ struct WallpaperPreset: Identifiable, Equatable, Hashable {
     let colorHexes: [String]
     let startPoint: UnitPoint
     let endPoint: UnitPoint
+    let imageAssetName: String?
+    let thumbnailAssetName: String?
+    let readabilityOverlayOpacity: Double
+
+    init(
+        id: String,
+        nameKey: String,
+        colorHexes: [String],
+        startPoint: UnitPoint,
+        endPoint: UnitPoint,
+        imageAssetName: String? = nil,
+        thumbnailAssetName: String? = nil,
+        readabilityOverlayOpacity: Double = 0
+    ) {
+        self.id = id
+        self.nameKey = nameKey
+        self.colorHexes = colorHexes
+        self.startPoint = startPoint
+        self.endPoint = endPoint
+        self.imageAssetName = imageAssetName
+        self.thumbnailAssetName = thumbnailAssetName ?? imageAssetName
+        self.readabilityOverlayOpacity = readabilityOverlayOpacity
+    }
 
     static func == (lhs: WallpaperPreset, rhs: WallpaperPreset) -> Bool { lhs.id == rhs.id }
     func hash(into hasher: inout Hasher) { hasher.combine(id) }
@@ -91,6 +114,52 @@ struct WallpaperPreset: Identifiable, Equatable, Hashable {
             nameKey: "wallpaper.winter",
             colorHexes: ["#1A2980", "#26D0CE", "#E0F7FA"],
             startPoint: .topLeading, endPoint: .bottomTrailing
+        ),
+        // MARK: - 이미지 배경
+        WallpaperPreset(
+            id: "soft-studio-light",
+            nameKey: "wallpaper.softStudioLight",
+            colorHexes: ["#FFF5E8", "#F3D7BD", "#D8E8E4"],
+            startPoint: .topLeading, endPoint: .bottomTrailing,
+            imageAssetName: "calen_soft_studio_light",
+            thumbnailAssetName: "calen_soft_studio_light_thumb",
+            readabilityOverlayOpacity: 0.16
+        ),
+        WallpaperPreset(
+            id: "quiet-midnight-dark",
+            nameKey: "wallpaper.quietMidnightDark",
+            colorHexes: ["#101820", "#1E2A3A", "#3A2D4A"],
+            startPoint: .topLeading, endPoint: .bottomTrailing,
+            imageAssetName: "calen_quiet_midnight_dark",
+            thumbnailAssetName: "calen_quiet_midnight_dark_thumb",
+            readabilityOverlayOpacity: 0.28
+        ),
+        WallpaperPreset(
+            id: "pixel-pet-beige",
+            nameKey: "wallpaper.pixelPetBeige",
+            colorHexes: ["#F6E7D1", "#E8CFAE", "#FFF7EA"],
+            startPoint: .topLeading, endPoint: .bottomTrailing,
+            imageAssetName: "calen_pixel_pet_beige",
+            thumbnailAssetName: "calen_pixel_pet_beige_thumb",
+            readabilityOverlayOpacity: 0.18
+        ),
+        WallpaperPreset(
+            id: "pixel-pet-pattern",
+            nameKey: "wallpaper.pixelPetPattern",
+            colorHexes: ["#F3DFC2", "#F9EBD5", "#DDBB92"],
+            startPoint: .topLeading, endPoint: .bottomTrailing,
+            imageAssetName: "calen_pixel_pet_pattern",
+            thumbnailAssetName: "calen_pixel_pet_pattern_thumb",
+            readabilityOverlayOpacity: 0.30
+        ),
+        WallpaperPreset(
+            id: "cozy-pet-room",
+            nameKey: "wallpaper.cozyPetRoom",
+            colorHexes: ["#E8CBA3", "#A66F45", "#F4E4CA"],
+            startPoint: .topLeading, endPoint: .bottomTrailing,
+            imageAssetName: "calen_cozy_pet_room",
+            thumbnailAssetName: "calen_cozy_pet_room_thumb",
+            readabilityOverlayOpacity: 0.24
         ),
     ]
 }

@@ -231,10 +231,6 @@
 "energy.type.balanced" = "Dengeli";
 
 /* ===== Aggressiveness ===== */
-"aggressiveness.manual" = "Manuel";
-"aggressiveness.assist" = "Destekli";
-"aggressiveness.semiauto" = "Yarı-Otomatik";
-"aggressiveness.auto" = "Otomatik";
 
 /* ===== Settings View ===== */
 "settings.title" = "Ayarlar";
@@ -392,10 +388,6 @@
 "review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
-"review.plan.complete.title" = "Tomorrow's Plan Ready";
-"review.help.done" = "Done";
-"review.help.tomorrow" = "Move to Tomorrow";
-"review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
 
 /* ===== AI Context Section ===== */
@@ -521,7 +513,7 @@
 "chat.action.categorize" = "Categorize (%d)";
 "chat.action.replan-day.tooltip" = "Reorganize today using Hermes memory";
 "chat.action.fill-slots.tooltip" = "Suggest activities for open time";
-"chat.action.categorize.tooltip.empty" = "No uncategorized Google events";
+"chat.action.categorize.tooltip.empty" = "Kategorisiz Google etkinliği yok";
 "chat.action.categorize.tooltip" = "AI will batch-categorize events";
 "chat.history.clear.tooltip" = "Clear chat history";
 "chat.planning.error.no-categorize" = "No categorization suggestions.";
@@ -546,12 +538,12 @@
 "review.goal.multi.hint" = "Comma-separated";
 
 // MARK: - Settings Hermes memory card
-"settings.hermes.patterns.count" = "User patterns learned from chat & actions (%d)";
-"settings.hermes.clear.all" = "Clear all";
-"settings.hermes.empty" = "No patterns learned yet.";
-"settings.hermes.empty.hint" = "Hermes auto-learns when you chat things like 'I focus best in mornings', 'no work in evenings', '30-min blocks only'.";
-"settings.hermes.decisions.recent" = "Recent plan decisions";
-"settings.hermes.forget.tooltip" = "Forget this memory";
+"settings.hermes.patterns.count" = "Sohbet ve işlemlerden öğrenilen kullanıcı kalıpları (%d)";
+"settings.hermes.clear.all" = "Tümünü temizle";
+"settings.hermes.empty" = "Henüz öğrenilmiş kalıp yok.";
+"settings.hermes.empty.hint" = "Hermes sohbetlerden odak zamanlarını, akşam sınırlarını ve tercih edilen blok uzunluğunu otomatik öğrenir.";
+"settings.hermes.decisions.recent" = "Son plan kararları";
+"settings.hermes.forget.tooltip" = "Bu anıyı unut";
 
 // MARK: - Settings app info buttons
 "settings.update.check" = "Check for updates";
@@ -566,7 +558,7 @@
 "review.todo.grass.days" = "%d gün";
 
 // MARK: - Hermes card
-"settings.hermes.card.title" = "🧠 Hermes Uzun süreli bellek";
+"settings.hermes.card.title" = "🧠 Hermes uzun süreli bellek";
 "settings.hermes.outcome.accepted" = "kabul edildi";
 "settings.hermes.outcome.rejected" = "reddedildi";
 
@@ -579,9 +571,9 @@
 "settings.appearance.mode.system" = "Sistem";
 "settings.appearance.mode.light" = "Açık";
 "settings.appearance.mode.dark" = "Koyu";
-"settings.wallpaper.card" = "Background";
-"settings.wallpaper.desc" = "Choose a gradient background displayed behind the calendar.";
-"settings.wallpaper.none" = "None";
+"settings.wallpaper.card" = "Arka plan";
+"settings.wallpaper.desc" = "Takvimin arkasında gösterilecek arka planı seçin.";
+"settings.wallpaper.none" = "Yok";
 "wallpaper.aurora" = "Aurora";
 "wallpaper.sunset" = "Sunset";
 "wallpaper.ocean" = "Ocean";
@@ -594,3 +586,78 @@
 "wallpaper.summer" = "Summer";
 "wallpaper.autumn" = "Autumn";
 "wallpaper.winter" = "Winter";
+
+/* ===== Statistics ===== */
+"panel.statistics" = "İstatistik";
+"statistics.title" = "İstatistik";
+"statistics.subtitle" = "Alışkanlıkları ve tamamlanmayı hızlıca izleyin";
+
+/* ===== Animal Settings ===== */
+"settings.animal.card" = "Hayvan";
+"settings.animal.enabled.title" = "Hayvanları göster";
+"settings.animal.enabled.desc" = "Takvimin alt kısmında yürüyen bir hayvan gösterir.";
+"settings.animal.display.mode" = "Görüntüleme modu";
+"settings.animal.parade.count" = "%d hayvan birlikte yürüyor";
+"settings.animal.shape" = "Şekil";
+"settings.animal.style.cat" = "Kedi";
+"settings.animal.style.dog" = "Köpek";
+"settings.animal.style.cheetah" = "Çita";
+"settings.animal.style.duck" = "Ördek";
+"settings.animal.style.rabbit" = "Tavşan";
+"settings.animal.display.selected" = "Seçili hayvan";
+"settings.animal.display.random" = "Rastgele hayvan";
+"settings.animal.display.parade" = "Hayvan geçidi";
+
+/* ===== Pet Wallpapers ===== */
+"wallpaper.softStudioLight" = "Soft Studio";
+"wallpaper.quietMidnightDark" = "Quiet Midnight";
+"wallpaper.pixelPetBeige" = "Pixel Pet Beige";
+"wallpaper.pixelPetPattern" = "Pixel Pet Pattern";
+"wallpaper.cozyPetRoom" = "Cozy Pet Room";
+
+/* ===== Login View Value Proposition ===== */
+"login.headline" = "The menubar calendar that plans\nyour tomorrow with AI";
+"login.subcopy" = "See all your events and reminders in one place, and let AI quickly organize your day.";
+"login.feature.menubar" = "Instant menubar access";
+"login.feature.integration" = "Calendar + Reminders";
+"login.feature.ai" = "AI daily planning";
+"login.cta.primary" = "Load My Schedule";
+"login.cta.local" = "Start with local calendar";
+"settings.hermes.outcome.partial" = "kısmen uygulandı";
+"settings.hermes.decision.summary.categorized" = "%d etkinlik kategorilendi";
+"memory.category.preference" = "Tercih";
+"memory.category.schedulePattern" = "Takvim kalıbı";
+"memory.category.habitPattern" = "Alışkanlık kalıbı";
+"memory.category.goalPriority" = "Hedef önceliği";
+"memory.category.planningHistory" = "Planlama geçmişi";
+"memory.category.communicationStyle" = "İletişim tarzı";
+"planning.intent.replanDay" = "Bugünü yeniden planla";
+"planning.intent.fillFreeSlots" = "Boş zamanları doldur";
+"planning.intent.rescheduleUrgent" = "Acil işleri yeniden planla";
+"planning.intent.buildWeekPlan" = "Bu haftanın planını oluştur";
+"planning.intent.categorizeUntagged" = "Kategorisiz etkinlikleri kategorile";
+"planning.action.create" = "Yeni etkinlik";
+"planning.action.move" = "Etkinliği taşı";
+"planning.action.delete" = "Etkinliği sil";
+"planning.action.createTodo" = "Yapılacak ekle";
+"planning.action.moveTodo" = "Yapılacağı taşı";
+"planning.action.updateTodo" = "Yapılacağı düzenle";
+"planning.action.categorize" = "Kategori";
+"settings.hermes.fact.key.preferredBlockLength" = "Tercih edilen blok uzunluğu";
+"settings.hermes.fact.value.preferredBlockLength.short" = "Yaklaşık 30 dakikalık kısa bloklar";
+"settings.hermes.fact.value.preferredBlockLength.deep" = "90-120 dakikalık derin çalışma blokları";
+
+"settings.hermes.fact.key.preferredMorningWork" = "Tercih edilen sabah odağı";
+"settings.hermes.fact.value.preferredMorningWork" = "Sabahları odaklı çalışmayı tercih eder";
+"settings.hermes.fact.key.avoidsMorningWork" = "Sabah çalışmaktan kaçınır";
+"settings.hermes.fact.value.avoidsMorningWork" = "Sabah çalışma bloklarından kaçınır";
+"settings.hermes.fact.key.preferredEveningWork" = "Tercih edilen akşam odağı";
+"settings.hermes.fact.value.preferredEveningWork" = "Akşamları odaklı çalışmayı tercih eder";
+"settings.hermes.fact.key.avoidsEveningWork" = "Akşam çalışmaktan kaçınır";
+"settings.hermes.fact.value.avoidsEveningWork" = "Akşam çalışma bloklarından kaçınır";
+"settings.hermes.fact.key.meetingFatigue" = "Toplantı yorgunluğu";
+"settings.hermes.fact.value.meetingFatigue" = "Çok fazla toplantıdan kaynaklanan yorgunluk";
+"settings.hermes.fact.key.wantsSlotSuggestions" = "Boş zaman önerileri ister";
+"settings.hermes.fact.value.wantsSlotSuggestions" = "Boş zaman için otomatik önerileri tercih eder";
+"settings.hermes.fact.key.urgentReschedulingNeeds" = "Acil yeniden planlama ihtiyacı";
+"settings.hermes.fact.value.urgentReschedulingNeeds" = "Daha önce acil takvim ayarlamalarına ihtiyaç duymuş";

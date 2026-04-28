@@ -231,10 +231,6 @@
 "energy.type.balanced" = "Збалансований";
 
 /* ===== Aggressiveness ===== */
-"aggressiveness.manual" = "Ручний";
-"aggressiveness.assist" = "Асистований";
-"aggressiveness.semiauto" = "Напівавтоматичний";
-"aggressiveness.auto" = "Автоматичний";
 
 /* ===== Settings View ===== */
 "settings.title" = "Налаштування";
@@ -392,10 +388,6 @@
 "review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
-"review.plan.complete.title" = "Tomorrow's Plan Ready";
-"review.help.done" = "Done";
-"review.help.tomorrow" = "Move to Tomorrow";
-"review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
 
 /* ===== AI Context Section ===== */
@@ -521,7 +513,7 @@
 "chat.action.categorize" = "Categorize (%d)";
 "chat.action.replan-day.tooltip" = "Reorganize today using Hermes memory";
 "chat.action.fill-slots.tooltip" = "Suggest activities for open time";
-"chat.action.categorize.tooltip.empty" = "No uncategorized Google events";
+"chat.action.categorize.tooltip.empty" = "Немає некатегоризованих подій Google";
 "chat.action.categorize.tooltip" = "AI will batch-categorize events";
 "chat.history.clear.tooltip" = "Clear chat history";
 "chat.planning.error.no-categorize" = "No categorization suggestions.";
@@ -546,12 +538,12 @@
 "review.goal.multi.hint" = "Comma-separated";
 
 // MARK: - Settings Hermes memory card
-"settings.hermes.patterns.count" = "User patterns learned from chat & actions (%d)";
-"settings.hermes.clear.all" = "Clear all";
-"settings.hermes.empty" = "No patterns learned yet.";
-"settings.hermes.empty.hint" = "Hermes auto-learns when you chat things like 'I focus best in mornings', 'no work in evenings', '30-min blocks only'.";
-"settings.hermes.decisions.recent" = "Recent plan decisions";
-"settings.hermes.forget.tooltip" = "Forget this memory";
+"settings.hermes.patterns.count" = "Шаблони користувача з чатів і дій (%d)";
+"settings.hermes.clear.all" = "Очистити все";
+"settings.hermes.empty" = "Поки що немає вивчених шаблонів.";
+"settings.hermes.empty.hint" = "Hermes автоматично вчиться з чатів: час фокусу, вечірні обмеження та бажану довжину блоків.";
+"settings.hermes.decisions.recent" = "Останні рішення планування";
+"settings.hermes.forget.tooltip" = "Забути цей спогад";
 
 // MARK: - Settings app info buttons
 "settings.update.check" = "Check for updates";
@@ -566,7 +558,7 @@
 "review.todo.grass.days" = "%d дн.";
 
 // MARK: - Hermes card
-"settings.hermes.card.title" = "🧠 Hermes Довгострокова пам'ять";
+"settings.hermes.card.title" = "🧠 Довгострокова пам'ять Hermes";
 "settings.hermes.outcome.accepted" = "прийнято";
 "settings.hermes.outcome.rejected" = "відхилено";
 
@@ -579,9 +571,9 @@
 "settings.appearance.mode.system" = "Система";
 "settings.appearance.mode.light" = "Світлий";
 "settings.appearance.mode.dark" = "Темний";
-"settings.wallpaper.card" = "Background";
-"settings.wallpaper.desc" = "Choose a gradient background displayed behind the calendar.";
-"settings.wallpaper.none" = "None";
+"settings.wallpaper.card" = "Фон";
+"settings.wallpaper.desc" = "Виберіть фон за календарем.";
+"settings.wallpaper.none" = "Немає";
 "wallpaper.aurora" = "Aurora";
 "wallpaper.sunset" = "Sunset";
 "wallpaper.ocean" = "Ocean";
@@ -594,3 +586,78 @@
 "wallpaper.summer" = "Лето";
 "wallpaper.autumn" = "Осень";
 "wallpaper.winter" = "Зима";
+
+/* ===== Statistics ===== */
+"panel.statistics" = "Статистика";
+"statistics.title" = "Статистика";
+"statistics.subtitle" = "Швидко переглядайте звички та виконання";
+
+/* ===== Animal Settings ===== */
+"settings.animal.card" = "Тварина";
+"settings.animal.enabled.title" = "Показувати тварин";
+"settings.animal.enabled.desc" = "Показує тварину, що йде внизу календаря.";
+"settings.animal.display.mode" = "Режим відображення";
+"settings.animal.parade.count" = "%d тварин ідуть разом";
+"settings.animal.shape" = "Форма";
+"settings.animal.style.cat" = "Кіт";
+"settings.animal.style.dog" = "Собака";
+"settings.animal.style.cheetah" = "Гепард";
+"settings.animal.style.duck" = "Качка";
+"settings.animal.style.rabbit" = "Кролик";
+"settings.animal.display.selected" = "Вибрана тварина";
+"settings.animal.display.random" = "Випадкова тварина";
+"settings.animal.display.parade" = "Парад тварин";
+
+/* ===== Pet Wallpapers ===== */
+"wallpaper.softStudioLight" = "Soft Studio";
+"wallpaper.quietMidnightDark" = "Quiet Midnight";
+"wallpaper.pixelPetBeige" = "Pixel Pet Beige";
+"wallpaper.pixelPetPattern" = "Pixel Pet Pattern";
+"wallpaper.cozyPetRoom" = "Cozy Pet Room";
+
+/* ===== Login View Value Proposition ===== */
+"login.headline" = "The menubar calendar that plans\nyour tomorrow with AI";
+"login.subcopy" = "See all your events and reminders in one place, and let AI quickly organize your day.";
+"login.feature.menubar" = "Instant menubar access";
+"login.feature.integration" = "Calendar + Reminders";
+"login.feature.ai" = "AI daily planning";
+"login.cta.primary" = "Load My Schedule";
+"login.cta.local" = "Start with local calendar";
+"settings.hermes.outcome.partial" = "частково застосовано";
+"settings.hermes.decision.summary.categorized" = "Класифіковано %d подій";
+"memory.category.preference" = "Уподобання";
+"memory.category.schedulePattern" = "Шаблон розкладу";
+"memory.category.habitPattern" = "Шаблон звички";
+"memory.category.goalPriority" = "Пріоритет цілі";
+"memory.category.planningHistory" = "Історія планування";
+"memory.category.communicationStyle" = "Стиль спілкування";
+"planning.intent.replanDay" = "Перепланувати сьогодні";
+"planning.intent.fillFreeSlots" = "Заповнити вільні слоти";
+"planning.intent.rescheduleUrgent" = "Перенести термінові справи";
+"planning.intent.buildWeekPlan" = "Побудувати план тижня";
+"planning.intent.categorizeUntagged" = "Класифікувати події без категорії";
+"planning.action.create" = "Нова подія";
+"planning.action.move" = "Перемістити подію";
+"planning.action.delete" = "Видалити подію";
+"planning.action.createTodo" = "Додати завдання";
+"planning.action.moveTodo" = "Перемістити завдання";
+"planning.action.updateTodo" = "Редагувати завдання";
+"planning.action.categorize" = "Категорія";
+"settings.hermes.fact.key.preferredBlockLength" = "Бажана довжина блоку";
+"settings.hermes.fact.value.preferredBlockLength.short" = "Короткі блоки близько 30 хвилин";
+"settings.hermes.fact.value.preferredBlockLength.deep" = "Блоки глибокої роботи 90-120 хвилин";
+
+"settings.hermes.fact.key.preferredMorningWork" = "Бажаний ранковий фокус";
+"settings.hermes.fact.value.preferredMorningWork" = "Віддає перевагу зосередженій роботі вранці";
+"settings.hermes.fact.key.avoidsMorningWork" = "Уникає ранкової роботи";
+"settings.hermes.fact.value.avoidsMorningWork" = "Уникає робочих блоків вранці";
+"settings.hermes.fact.key.preferredEveningWork" = "Бажаний вечірній фокус";
+"settings.hermes.fact.value.preferredEveningWork" = "Віддає перевагу зосередженій роботі ввечері";
+"settings.hermes.fact.key.avoidsEveningWork" = "Уникає вечірньої роботи";
+"settings.hermes.fact.value.avoidsEveningWork" = "Уникає робочих блоків ввечері";
+"settings.hermes.fact.key.meetingFatigue" = "Втома від зустрічей";
+"settings.hermes.fact.value.meetingFatigue" = "Втома через надто багато зустрічей";
+"settings.hermes.fact.key.wantsSlotSuggestions" = "Потребує пропозицій для вільних вікон";
+"settings.hermes.fact.value.wantsSlotSuggestions" = "Віддає перевагу автоматичним пропозиціям для вільного часу";
+"settings.hermes.fact.key.urgentReschedulingNeeds" = "Термінова потреба перепланування";
+"settings.hermes.fact.value.urgentReschedulingNeeds" = "Раніше потребував термінових змін у розкладі";

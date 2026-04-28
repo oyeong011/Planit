@@ -16,11 +16,11 @@ enum PlanningIntent: String, Codable, Sendable {
 
     var displayName: String {
         switch self {
-        case .replanDay:          return "오늘 다시 짜기"
-        case .fillFreeSlots:      return "빈 시간 채우기"
-        case .rescheduleUrgent:   return "급한 일정 재배치"
-        case .buildWeekPlan:      return "이번 주 계획"
-        case .categorizeUntagged: return "미분류 일정 분류"
+        case .replanDay:          return String(localized: "planning.intent.replanDay")
+        case .fillFreeSlots:      return String(localized: "planning.intent.fillFreeSlots")
+        case .rescheduleUrgent:   return String(localized: "planning.intent.rescheduleUrgent")
+        case .buildWeekPlan:      return String(localized: "planning.intent.buildWeekPlan")
+        case .categorizeUntagged: return String(localized: "planning.intent.categorizeUntagged")
         }
     }
 }
@@ -121,13 +121,13 @@ struct SuggestedAction: Identifiable {
 
         var displayName: String {
             switch self {
-            case .create:     return "새 일정"
-            case .move:       return "일정 이동"
-            case .delete:     return "일정 삭제"
-            case .createTodo: return "할 일 추가"
-            case .moveTodo:   return "할 일 이동"
-            case .updateTodo: return "할 일 수정"
-            case .categorize: return "카테고리"
+            case .create:     return String(localized: "planning.action.create")
+            case .move:       return String(localized: "planning.action.move")
+            case .delete:     return String(localized: "planning.action.delete")
+            case .createTodo: return String(localized: "planning.action.createTodo")
+            case .moveTodo:   return String(localized: "planning.action.moveTodo")
+            case .updateTodo: return String(localized: "planning.action.updateTodo")
+            case .categorize: return String(localized: "planning.action.categorize")
             }
         }
 

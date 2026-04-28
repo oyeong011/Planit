@@ -231,10 +231,6 @@
 "energy.type.balanced" = "Tasapainoinen";
 
 /* ===== Aggressiveness ===== */
-"aggressiveness.manual" = "Manuaalinen";
-"aggressiveness.assist" = "Avustettu";
-"aggressiveness.semiauto" = "Puoliautomaattinen";
-"aggressiveness.auto" = "Automaattinen";
 
 /* ===== Settings View ===== */
 "settings.title" = "Asetukset";
@@ -392,10 +388,6 @@
 "review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
-"review.plan.complete.title" = "Tomorrow's Plan Ready";
-"review.help.done" = "Done";
-"review.help.tomorrow" = "Move to Tomorrow";
-"review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
 
 /* ===== AI Context Section ===== */
@@ -521,7 +513,7 @@
 "chat.action.categorize" = "Categorize (%d)";
 "chat.action.replan-day.tooltip" = "Reorganize today using Hermes memory";
 "chat.action.fill-slots.tooltip" = "Suggest activities for open time";
-"chat.action.categorize.tooltip.empty" = "No uncategorized Google events";
+"chat.action.categorize.tooltip.empty" = "Ei luokittelemattomia Google-tapahtumia";
 "chat.action.categorize.tooltip" = "AI will batch-categorize events";
 "chat.history.clear.tooltip" = "Clear chat history";
 "chat.planning.error.no-categorize" = "No categorization suggestions.";
@@ -546,12 +538,12 @@
 "review.goal.multi.hint" = "Comma-separated";
 
 // MARK: - Settings Hermes memory card
-"settings.hermes.patterns.count" = "User patterns learned from chat & actions (%d)";
-"settings.hermes.clear.all" = "Clear all";
-"settings.hermes.empty" = "No patterns learned yet.";
-"settings.hermes.empty.hint" = "Hermes auto-learns when you chat things like 'I focus best in mornings', 'no work in evenings', '30-min blocks only'.";
-"settings.hermes.decisions.recent" = "Recent plan decisions";
-"settings.hermes.forget.tooltip" = "Forget this memory";
+"settings.hermes.patterns.count" = "Chatista ja toimista opitut käyttäjämallit (%d)";
+"settings.hermes.clear.all" = "Tyhjennä kaikki";
+"settings.hermes.empty" = "Malleja ei ole vielä opittu.";
+"settings.hermes.empty.hint" = "Hermes oppii automaattisesti chateista keskittymisajat, iltarajat ja suosikkilohkon pituuden.";
+"settings.hermes.decisions.recent" = "Viimeisimmät suunnittelupäätökset";
+"settings.hermes.forget.tooltip" = "Unohda tämä muisto";
 
 // MARK: - Settings app info buttons
 "settings.update.check" = "Check for updates";
@@ -566,7 +558,7 @@
 "review.todo.grass.days" = "%d päivää";
 
 // MARK: - Hermes card
-"settings.hermes.card.title" = "🧠 Hermes Pitkäkestoinen muisti";
+"settings.hermes.card.title" = "🧠 Hermes pitkäaikaismuisti";
 "settings.hermes.outcome.accepted" = "hyväksytty";
 "settings.hermes.outcome.rejected" = "hylätty";
 
@@ -579,9 +571,9 @@
 "settings.appearance.mode.system" = "Järjestelmä";
 "settings.appearance.mode.light" = "Vaalea";
 "settings.appearance.mode.dark" = "Tumma";
-"settings.wallpaper.card" = "Background";
-"settings.wallpaper.desc" = "Choose a gradient background displayed behind the calendar.";
-"settings.wallpaper.none" = "None";
+"settings.wallpaper.card" = "Tausta";
+"settings.wallpaper.desc" = "Valitse kalenterin takana näkyvä tausta.";
+"settings.wallpaper.none" = "Ei mitään";
 "wallpaper.aurora" = "Aurora";
 "wallpaper.sunset" = "Sunset";
 "wallpaper.ocean" = "Ocean";
@@ -594,3 +586,78 @@
 "wallpaper.summer" = "Summer";
 "wallpaper.autumn" = "Autumn";
 "wallpaper.winter" = "Winter";
+
+/* ===== Statistics ===== */
+"panel.statistics" = "Tilastot";
+"statistics.title" = "Tilastot";
+"statistics.subtitle" = "Seuraa tapoja ja valmistumista yhdellä silmäyksellä";
+
+/* ===== Animal Settings ===== */
+"settings.animal.card" = "Eläin";
+"settings.animal.enabled.title" = "Näytä eläimet";
+"settings.animal.enabled.desc" = "Näyttää kävelevän eläimen kalenterin alareunassa.";
+"settings.animal.display.mode" = "Näyttötila";
+"settings.animal.parade.count" = "%d eläintä kävelee yhdessä";
+"settings.animal.shape" = "Muoto";
+"settings.animal.style.cat" = "Kissa";
+"settings.animal.style.dog" = "Koira";
+"settings.animal.style.cheetah" = "Gepardi";
+"settings.animal.style.duck" = "Ankka";
+"settings.animal.style.rabbit" = "Kani";
+"settings.animal.display.selected" = "Valittu eläin";
+"settings.animal.display.random" = "Satunnainen eläin";
+"settings.animal.display.parade" = "Eläinparaati";
+
+/* ===== Pet Wallpapers ===== */
+"wallpaper.softStudioLight" = "Soft Studio";
+"wallpaper.quietMidnightDark" = "Quiet Midnight";
+"wallpaper.pixelPetBeige" = "Pixel Pet Beige";
+"wallpaper.pixelPetPattern" = "Pixel Pet Pattern";
+"wallpaper.cozyPetRoom" = "Cozy Pet Room";
+
+/* ===== Login View Value Proposition ===== */
+"login.headline" = "The menubar calendar that plans\nyour tomorrow with AI";
+"login.subcopy" = "See all your events and reminders in one place, and let AI quickly organize your day.";
+"login.feature.menubar" = "Instant menubar access";
+"login.feature.integration" = "Calendar + Reminders";
+"login.feature.ai" = "AI daily planning";
+"login.cta.primary" = "Load My Schedule";
+"login.cta.local" = "Start with local calendar";
+"settings.hermes.outcome.partial" = "osittain käytetty";
+"settings.hermes.decision.summary.categorized" = "%d tapahtumaa luokiteltu";
+"memory.category.preference" = "Asetus";
+"memory.category.schedulePattern" = "Aikataulumalli";
+"memory.category.habitPattern" = "Tapatrendi";
+"memory.category.goalPriority" = "Tavoiteprioriteetti";
+"memory.category.planningHistory" = "Suunnitteluhistoria";
+"memory.category.communicationStyle" = "Viestintätyyli";
+"planning.intent.replanDay" = "Suunnittele tämä päivä uudelleen";
+"planning.intent.fillFreeSlots" = "Täytä vapaat ajat";
+"planning.intent.rescheduleUrgent" = "Aikatauluta kiireelliset uudelleen";
+"planning.intent.buildWeekPlan" = "Rakenna viikon suunnitelma";
+"planning.intent.categorizeUntagged" = "Luokittele luokittelemattomat tapahtumat";
+"planning.action.create" = "Uusi tapahtuma";
+"planning.action.move" = "Siirrä tapahtuma";
+"planning.action.delete" = "Poista tapahtuma";
+"planning.action.createTodo" = "Lisää tehtävä";
+"planning.action.moveTodo" = "Siirrä tehtävä";
+"planning.action.updateTodo" = "Muokkaa tehtävää";
+"planning.action.categorize" = "Kategoria";
+"settings.hermes.fact.key.preferredBlockLength" = "Suosittu lohkon pituus";
+"settings.hermes.fact.value.preferredBlockLength.short" = "Noin 30 minuutin lyhyet lohkot";
+"settings.hermes.fact.value.preferredBlockLength.deep" = "90-120 minuutin syvätyölohkot";
+
+"settings.hermes.fact.key.preferredMorningWork" = "Suosii aamun keskittymistä";
+"settings.hermes.fact.value.preferredMorningWork" = "Suosii keskittynyttä työtä aamulla";
+"settings.hermes.fact.key.avoidsMorningWork" = "Välttää aamutyötä";
+"settings.hermes.fact.value.avoidsMorningWork" = "Välttää työlohkoja aamulla";
+"settings.hermes.fact.key.preferredEveningWork" = "Suosii illan keskittymistä";
+"settings.hermes.fact.value.preferredEveningWork" = "Suosii keskittynyttä työtä illalla";
+"settings.hermes.fact.key.avoidsEveningWork" = "Välttää iltatyötä";
+"settings.hermes.fact.value.avoidsEveningWork" = "Välttää työlohkoja illalla";
+"settings.hermes.fact.key.meetingFatigue" = "Kokousväsymys";
+"settings.hermes.fact.value.meetingFatigue" = "Väsymys liian monista kokouksista";
+"settings.hermes.fact.key.wantsSlotSuggestions" = "Haluaa ehdotuksia vapaisiin aikoihin";
+"settings.hermes.fact.value.wantsSlotSuggestions" = "Suosii automaattisia ehdotuksia vapaaseen aikaan";
+"settings.hermes.fact.key.urgentReschedulingNeeds" = "Kiireellinen uudelleenajoituksen tarve";
+"settings.hermes.fact.value.urgentReschedulingNeeds" = "On aiemmin tarvinnut kiireellisiä aikataulumuutoksia";

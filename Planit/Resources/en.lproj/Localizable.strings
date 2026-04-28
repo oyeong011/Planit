@@ -19,6 +19,13 @@
 "common.repeat" = "Repeat";
 
 /* ===== Login View ===== */
+"login.headline" = "The menubar calendar that plans\nyour tomorrow with AI";
+"login.subcopy" = "See all your events and reminders in one place, and let AI quickly organize your day.";
+"login.feature.menubar" = "Instant menubar access";
+"login.feature.integration" = "Calendar + Reminders";
+"login.feature.ai" = "AI daily planning";
+"login.cta.primary" = "Load My Schedule";
+"login.cta.local" = "Start with local calendar";
 "login.subtitle" = "Connect with Google Calendar\nto manage your schedule";
 "login.google.api.setup" = "Google API Setup";
 "login.google.api.description" = "Create an OAuth client in Google Cloud Console and enter the credentials.";
@@ -92,7 +99,7 @@
 "chat.codex.install.hint" = "brew install codex\nor npm install -g @openai/codex";
 "chat.redetect" = "Re-detect";
 "chat.select.other.ai" = "Select Other AI";
-"chat.assistant.title" = "Calendar AI Assistant";
+"chat.assistant.title" = "AI Daily Planner";
 "chat.examples" = "\"Add a meeting at 3pm tomorrow\"\n\"Show this week's schedule\"\n\"Delete the exam event\"";
 "chat.thinking" = "Thinking...";
 "chat.input.placeholder" = "Type a message...";
@@ -382,7 +389,7 @@
 "rollover.moved.body" = "%d incomplete task(s) moved to today";
 
 /* ===== Chat Quick Actions ===== */
-"chat.empty.subtitle" = "Try one of the examples below";
+"chat.empty.subtitle" = "Based on your events and tasks,\nI'll help you plan tomorrow.";
 "chat.quick.today" = "What's on my schedule today?";
 "chat.quick.add.meeting" = "Add a meeting tomorrow at 3pm";
 "chat.quick.free.time" = "Find free time this week";
@@ -538,7 +545,7 @@
 "settings.hermes.patterns.count" = "User patterns learned from chat & actions (%d)";
 "settings.hermes.clear.all" = "Clear all";
 "settings.hermes.empty" = "No patterns learned yet.";
-"settings.hermes.empty.hint" = "Hermes auto-learns when you chat things like 'I focus best in mornings', 'no work in evenings', '30-min blocks only'.";
+"settings.hermes.empty.hint" = "Hermes learns automatically from chats about focus times, evening limits, and preferred block lengths.";
 "settings.hermes.decisions.recent" = "Recent plan decisions";
 "settings.hermes.forget.tooltip" = "Forget this memory";
 
@@ -569,7 +576,7 @@
 "settings.appearance.mode.light" = "Light";
 "settings.appearance.mode.dark" = "Dark";
 "settings.wallpaper.card" = "Background";
-"settings.wallpaper.desc" = "Choose a gradient background displayed behind the calendar.";
+"settings.wallpaper.desc" = "Choose a background displayed behind the calendar.";
 "settings.wallpaper.none" = "None";
 "wallpaper.aurora" = "Aurora";
 "wallpaper.sunset" = "Sunset";
@@ -583,3 +590,69 @@
 "wallpaper.summer" = "Summer";
 "wallpaper.autumn" = "Autumn";
 "wallpaper.winter" = "Winter";
+
+/* ===== Statistics ===== */
+"panel.statistics" = "Stats";
+"statistics.title" = "Statistics";
+"statistics.subtitle" = "Track habits and completion at a glance";
+
+/* ===== Animal Settings ===== */
+"settings.animal.card" = "Animal";
+"settings.animal.enabled.title" = "Show animals";
+"settings.animal.enabled.desc" = "Shows a walking animal along the bottom of the calendar.";
+"settings.animal.display.mode" = "Display mode";
+"settings.animal.parade.count" = "%d animals walking together";
+"settings.animal.shape" = "Shape";
+"settings.animal.style.cat" = "Cat";
+"settings.animal.style.dog" = "Dog";
+"settings.animal.style.cheetah" = "Cheetah";
+"settings.animal.style.duck" = "Duck";
+"settings.animal.style.rabbit" = "Rabbit";
+"settings.animal.display.selected" = "Selected animal";
+"settings.animal.display.random" = "Random animal";
+"settings.animal.display.parade" = "Animal parade";
+
+/* ===== Pet Wallpapers ===== */
+"wallpaper.softStudioLight" = "Soft Studio";
+"wallpaper.quietMidnightDark" = "Quiet Midnight";
+"wallpaper.pixelPetBeige" = "Pixel Pet Beige";
+"wallpaper.pixelPetPattern" = "Pixel Pet Pattern";
+"wallpaper.cozyPetRoom" = "Cozy Pet Room";
+"settings.hermes.outcome.partial" = "partially applied";
+"settings.hermes.decision.summary.categorized" = "Categorized %d events";
+"memory.category.preference" = "Preference";
+"memory.category.schedulePattern" = "Schedule pattern";
+"memory.category.habitPattern" = "Habit pattern";
+"memory.category.goalPriority" = "Goal priority";
+"memory.category.planningHistory" = "Planning history";
+"memory.category.communicationStyle" = "Communication style";
+"planning.intent.replanDay" = "Replan today";
+"planning.intent.fillFreeSlots" = "Fill free slots";
+"planning.intent.rescheduleUrgent" = "Reschedule urgent items";
+"planning.intent.buildWeekPlan" = "Build this week plan";
+"planning.intent.categorizeUntagged" = "Categorize uncategorized events";
+"planning.action.create" = "New event";
+"planning.action.move" = "Move event";
+"planning.action.delete" = "Delete event";
+"planning.action.createTodo" = "Add todo";
+"planning.action.moveTodo" = "Move todo";
+"planning.action.updateTodo" = "Edit todo";
+"planning.action.categorize" = "Category";
+"settings.hermes.fact.key.preferredBlockLength" = "Preferred block length";
+"settings.hermes.fact.value.preferredBlockLength.short" = "Short blocks around 30 minutes";
+"settings.hermes.fact.value.preferredBlockLength.deep" = "90-120 minute deep-work blocks";
+
+"settings.hermes.fact.key.preferredMorningWork" = "Preferred morning focus";
+"settings.hermes.fact.value.preferredMorningWork" = "Prefers focused work in the morning";
+"settings.hermes.fact.key.avoidsMorningWork" = "Avoids morning work";
+"settings.hermes.fact.value.avoidsMorningWork" = "Avoids work blocks in the morning";
+"settings.hermes.fact.key.preferredEveningWork" = "Preferred evening focus";
+"settings.hermes.fact.value.preferredEveningWork" = "Prefers focused work in the evening";
+"settings.hermes.fact.key.avoidsEveningWork" = "Avoids evening work";
+"settings.hermes.fact.value.avoidsEveningWork" = "Avoids work blocks in the evening";
+"settings.hermes.fact.key.meetingFatigue" = "Meeting fatigue";
+"settings.hermes.fact.value.meetingFatigue" = "Fatigue from too many meetings";
+"settings.hermes.fact.key.wantsSlotSuggestions" = "Wants open-slot suggestions";
+"settings.hermes.fact.value.wantsSlotSuggestions" = "Prefers automatic suggestions for open time";
+"settings.hermes.fact.key.urgentReschedulingNeeds" = "Urgent rescheduling need";
+"settings.hermes.fact.value.urgentReschedulingNeeds" = "Has needed urgent schedule adjustments before";

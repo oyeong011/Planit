@@ -4,28 +4,70 @@ struct LoginView: View {
     @ObservedObject var authManager: GoogleAuthManager
     @State private var isLoading = false
 
+    private let features: [(String, String)] = [
+        ("calendar.badge.clock", "login.feature.menubar"),
+        ("checklist", "login.feature.integration"),
+        ("sparkles", "login.feature.ai"),
+    ]
+
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
 
-            VStack(spacing: 16) {
-                Image(systemName: "calendar.badge.clock")
-                    .font(.system(size: 48))
-                    .foregroundStyle(.blue)
+            // Hero
+            VStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(Color.blue.opacity(0.1))
+                        .frame(width: 72, height: 72)
+                    Image(systemName: "calendar.badge.clock")
+                        .font(.system(size: 32, weight: .medium))
+                        .foregroundStyle(.blue)
+                }
 
-                Text("Calen")
-                    .font(.system(size: 28, weight: .bold))
+                Text(String(localized: "login.headline"))
+                    .font(.system(size: 22, weight: .bold))
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
 
-                Text(String(localized: "login.subtitle"))
-                    .font(.system(size: 14))
+                Text(String(localized: "login.subcopy"))
+                    .font(.system(size: 13))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.horizontal, 60)
+
+            Spacer().frame(height: 36)
+
+            // Feature pills
+            HStack(spacing: 12) {
+                ForEach(features, id: \.0) { icon, key in
+                    HStack(spacing: 6) {
+                        Image(systemName: icon)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.blue)
+                        Text(String(localized: String.LocalizationValue(key)))
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(Color.blue.opacity(0.06))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .stroke(Color.blue.opacity(0.12), lineWidth: 1)
+                            )
+                    )
+                }
             }
 
-            Spacer().frame(height: 48)
+            Spacer().frame(height: 40)
 
-            // 번들에 자격증명이 항상 포함되어 있으므로 Google 로그인 버튼만 표시
-            VStack(spacing: 16) {
+            // CTAs
+            VStack(spacing: 12) {
                 Button {
                     isLoading = true
                     Task {
@@ -35,18 +77,22 @@ struct LoginView: View {
                 } label: {
                     HStack(spacing: 10) {
                         if isLoading {
-                            ProgressView().controlSize(.small)
+                            ProgressView().controlSize(.small).tint(.white)
                         } else {
-                            Image(systemName: "person.crop.circle.badge.checkmark")
-                                .font(.system(size: 18))
+                            Image(systemName: "calendar.badge.plus")
+                                .font(.system(size: 16, weight: .medium))
                         }
-                        Text(String(localized: "login.google.signin"))
+                        Text(String(localized: "login.cta.primary"))
                             .font(.system(size: 15, weight: .semibold))
                     }
                     .foregroundStyle(.white)
-                    .frame(width: 280)
-                    .padding(.vertical, 14)
-                    .background(RoundedRectangle(cornerRadius: 12).fill(Color.blue))
+                    .frame(width: 300)
+                    .padding(.vertical, 15)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14)
+                            .fill(Color.blue)
+                            .shadow(color: .blue.opacity(0.3), radius: 8, y: 4)
+                    )
                 }
                 .buttonStyle(.plain)
                 .disabled(isLoading)
@@ -61,16 +107,18 @@ struct LoginView: View {
 
             Spacer()
 
+            // 로컬 캘린더로 시작
             Button {
                 UserDefaults.standard.set(true, forKey: "planit.skipGoogleAuth")
                 authManager.objectWillChange.send()
             } label: {
-                Text(String(localized: "login.skip.google"))
+                Text(String(localized: "login.cta.local"))
                     .font(.system(size: 11))
                     .foregroundStyle(.tertiary)
+                    .underline()
             }
             .buttonStyle(.plain)
-            .padding(.bottom, 24)
+            .padding(.bottom, 28)
         }
         .frame(width: 880, height: 700)
         .background(Color.platformWindowBackground)

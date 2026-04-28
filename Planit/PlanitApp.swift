@@ -44,7 +44,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "calendar", accessibilityDescription: "Calen")
+            button.image = Self.makeStatusBarImage(update: false)
             button.target = self
             button.action = #selector(handleStatusItemClick)
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
@@ -55,7 +55,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         popover.behavior = .transient
         popover.delegate = self
         popover.contentViewController = NSHostingController(rootView: MainView())
-
         globalClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             if let popover = self?.popover, popover.isShown {
                 popover.performClose(nil)
@@ -84,6 +83,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // 앱이 메뉴바에 조용히 떠 있어도 새 버전을 자동 감지해 알림으로 알리도록 주기 폴링 시작.
         // (Sparkle의 accessory 앱 UI가 안 뜨는 환경에서도 배너 + 시스템 알림 동작)
         updater.startPeriodicAppcastPolling()
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        if let monitor = globalClickMonitor {
+            NSEvent.removeMonitor(monitor)
+            globalClickMonitor = nil
+        }
     }
 
     @objc func handleStatusItemClick() {
@@ -180,17 +186,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func refreshStatusIcon() {
-        let symbolName = updater.updateAvailable ? "calendar.badge.exclamationmark" : "calendar"
-        statusItem.button?.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "Calen")
+        statusItem.button?.image = Self.makeStatusBarImage(update: updater.updateAvailable)
     }
-}
 
-extension AppDelegate {
-    func applicationWillTerminate(_ notification: Notification) {
-        if let monitor = globalClickMonitor {
-            NSEvent.removeMonitor(monitor)
-            globalClickMonitor = nil
+    private static func makeStatusBarImage(update: Bool) -> NSImage {
+        if !update, let url = Bundle.module.url(forResource: "StatusBarIcon", withExtension: "png"),
+           let img = NSImage(contentsOf: url) {
+            img.isTemplate = true
+            img.size = NSSize(width: 18, height: 18)
+            return img
         }
+        let symbol = update ? "calendar.badge.exclamationmark" : "calendar"
+        return NSImage(systemSymbolName: symbol, accessibilityDescription: "Calen") ?? NSImage()
     }
 }
 

@@ -41,6 +41,7 @@ struct SettingsView: View {
     @State private var selectedSection: SettingsSection = .profile
     @State private var profile: UserProfile
     @ObservedObject private var appearance = AppearanceService.shared
+    @ObservedObject private var animalSettings = AnimalSettings.shared
     @ObservedObject private var calendarThemeService = CalendarThemeService.shared
     @ObservedObject private var wallpaperService = WallpaperService.shared
 
@@ -75,6 +76,7 @@ struct SettingsView: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .keyboardShortcut(.cancelAction)
             .padding(12)
         }
     }
@@ -832,16 +834,14 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                     ForEach(hermesMemoryService.decisions.prefix(5)) { decision in
                         HStack(spacing: 8) {
-                            Text(decision.intent)
+                            Text(localizedPlanningIntent(decision.intent))
                                 .font(.system(size: 10, design: .monospaced))
                                 .foregroundStyle(.blue)
-                            Text(decision.summary)
+                            Text(localizedDecisionSummary(decision))
                                 .font(.system(size: 11))
                                 .lineLimit(1)
                             Spacer()
-                            Text(decision.outcome == .accepted
-                                 ? String(localized: "settings.hermes.outcome.accepted")
-                                 : String(localized: "settings.hermes.outcome.rejected"))
+                            Text(localizedDecisionOutcome(decision.outcome))
                                 .font(.system(size: 10))
                                 .foregroundStyle(decision.outcome == .accepted ? .green : .secondary)
                         }
@@ -853,7 +853,7 @@ struct SettingsView: View {
 
     private func hermesMemoryRow(_ fact: MemoryFact) -> some View {
         HStack(alignment: .top, spacing: 10) {
-            Text(fact.category.displayName)
+            Text(localizedMemoryCategory(fact.category))
                 .font(.system(size: 9, weight: .semibold))
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
@@ -862,9 +862,9 @@ struct SettingsView: View {
                 .frame(minWidth: 52, alignment: .leading)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(fact.key)
+                Text(localizedMemoryFactKey(fact.key))
                     .font(.system(size: 11, weight: .medium, design: .monospaced))
-                Text(fact.value)
+                Text(localizedMemoryFactValue(fact))
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
             }
@@ -891,6 +891,81 @@ struct SettingsView: View {
             .help(String(localized: "settings.hermes.forget.tooltip"))
         }
         .padding(.vertical, 4)
+    }
+
+    private func localizedMemoryCategory(_ category: MemoryCategory) -> String {
+        NSLocalizedString("memory.category.\(category.rawValue)", bundle: .module, comment: "")
+    }
+
+    private func localizedMemoryFactKey(_ key: String) -> String {
+        let localized = NSLocalizedString("settings.hermes.fact.key.\(key)", bundle: .module, comment: "")
+        return localized == "settings.hermes.fact.key.\(key)" ? key : localized
+    }
+
+    private func localizedMemoryFactValue(_ fact: MemoryFact) -> String {
+        let valueKey: String?
+        switch (fact.key, fact.value) {
+        case ("preferredMorningWork", "오전 집중 선호"):
+            valueKey = "settings.hermes.fact.value.preferredMorningWork"
+        case ("avoidsMorningWork", "오전 작업 회피"):
+            valueKey = "settings.hermes.fact.value.avoidsMorningWork"
+        case ("preferredEveningWork", "저녁 집중 선호"):
+            valueKey = "settings.hermes.fact.value.preferredEveningWork"
+        case ("avoidsEveningWork", "저녁 작업 회피"):
+            valueKey = "settings.hermes.fact.value.avoidsEveningWork"
+        case ("preferredBlockLength", "30분 내외 짧은 블록"):
+            valueKey = "settings.hermes.fact.value.preferredBlockLength.short"
+        case ("preferredBlockLength", "90~120분 딥워크 블록"):
+            valueKey = "settings.hermes.fact.value.preferredBlockLength.deep"
+        case ("meetingFatigue", "회의 과밀 피로"):
+            valueKey = "settings.hermes.fact.value.meetingFatigue"
+        case ("wantsSlotSuggestions", "빈 시간 자동 제안 선호"):
+            valueKey = "settings.hermes.fact.value.wantsSlotSuggestions"
+        case ("urgentReschedulingNeeds", "급한 일정 재배치 필요 경험 있음"):
+            valueKey = "settings.hermes.fact.value.urgentReschedulingNeeds"
+        default:
+            valueKey = nil
+        }
+
+        guard let valueKey else { return fact.value }
+        let localized = NSLocalizedString(valueKey, bundle: .module, comment: "")
+        return localized == valueKey ? fact.value : localized
+    }
+
+    private func localizedPlanningIntent(_ rawIntent: String) -> String {
+        guard let intent = PlanningIntent(rawValue: rawIntent) else { return rawIntent }
+        return intent.displayName
+    }
+
+    private func localizedDecisionSummary(_ decision: PlanningDecision) -> String {
+        if decision.intent == PlanningIntent.categorizeUntagged.rawValue,
+           let count = categorizedEventCount(from: decision.summary) {
+            return String(format: NSLocalizedString("settings.hermes.decision.summary.categorized", bundle: .module, comment: ""), count)
+        }
+        return decision.summary
+    }
+
+    private func categorizedEventCount(from summary: String) -> Int? {
+        if summary.hasPrefix("categorizedEvents:") {
+            return Int(summary.replacingOccurrences(of: "categorizedEvents:", with: ""))
+        }
+
+        guard let match = summary.range(of: #"^\s*(\d+)개의 이벤트를 분류했습니다\s*$"#, options: .regularExpression) else {
+            return nil
+        }
+        let matched = String(summary[match])
+        return matched.components(separatedBy: CharacterSet.decimalDigits.inverted).first(where: { !$0.isEmpty }).flatMap(Int.init)
+    }
+
+    private func localizedDecisionOutcome(_ outcome: PlanningDecision.DecisionOutcome) -> String {
+        switch outcome {
+        case .accepted:
+            return String(localized: "settings.hermes.outcome.accepted")
+        case .rejected:
+            return String(localized: "settings.hermes.outcome.rejected")
+        case .partial:
+            return String(localized: "settings.hermes.outcome.partial")
+        }
     }
 
     private func confidenceColor(_ c: Double) -> Color {
@@ -1120,6 +1195,7 @@ struct SettingsView: View {
             )
 
             appearanceCard
+            animalSettingsCard
             calendarThemeCard
             wallpaperCard
         }
@@ -1146,6 +1222,124 @@ struct SettingsView: View {
                 .frame(width: 260)
             }
         }
+    }
+
+    private var animalSettingsCard: some View {
+        settingsCard(String(localized: "settings.animal.card")) {
+            VStack(alignment: .leading, spacing: 14) {
+                Toggle(isOn: Binding(
+                    get: { animalSettings.isEnabled },
+                    set: { animalSettings.setEnabled($0) }
+                )) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(String(localized: "settings.animal.enabled.title"))
+                            .font(.system(size: 13, weight: .medium))
+                        Text(String(localized: "settings.animal.enabled.desc"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .toggleStyle(.switch)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(String(localized: "settings.animal.display.mode"))
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.secondary)
+
+                    HStack(spacing: 8) {
+                        ForEach(WalkingPetDisplayMode.allCases) { mode in
+                            animalDisplayModeButton(mode)
+                        }
+                    }
+
+                    if animalSettings.displayMode == .parade {
+                        Stepper(
+                            String(format: String(localized: "settings.animal.parade.count"), animalSettings.paradeCount),
+                            value: Binding(
+                                get: { animalSettings.paradeCount },
+                                set: { animalSettings.setParadeCount($0) }
+                            ),
+                            in: AnimalSettings.paradeCountRange
+                        )
+                        .font(.system(size: 12, weight: .medium))
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(String(localized: "settings.animal.shape"))
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.secondary)
+
+                    let columns = [GridItem(.adaptive(minimum: 118), spacing: 8)]
+                    LazyVGrid(columns: columns, spacing: 8) {
+                        ForEach(WalkingAnimalStyle.allCases) { style in
+                            animalStyleButton(style)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func animalStyleButton(_ style: WalkingAnimalStyle) -> some View {
+        let isSelected = animalSettings.selectedStyle == style
+
+        return Button {
+            animalSettings.selectStyle(style)
+        } label: {
+            HStack(spacing: 8) {
+                AnimalSpritePreview(style: style)
+                    .frame(width: 34, height: 34)
+                    .background(Circle().fill(Color.secondary.opacity(0.08)))
+
+                Text(style.title)
+                    .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
+                    .foregroundStyle(.primary)
+
+                Spacer()
+
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(calendarThemeService.current.accent)
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isSelected ? calendarThemeService.current.accent.opacity(0.12) : Color.platformControl.opacity(0.55))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isSelected ? calendarThemeService.current.accent.opacity(0.5) : Color.secondary.opacity(0.12), lineWidth: 1.5)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func animalDisplayModeButton(_ mode: WalkingPetDisplayMode) -> some View {
+        let isSelected = animalSettings.displayMode == mode
+
+        return Button {
+            animalSettings.setDisplayMode(mode)
+        } label: {
+            Text(mode.title)
+                .font(.system(size: 12, weight: isSelected ? .semibold : .medium))
+                .foregroundStyle(isSelected ? .white : .primary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 7)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(isSelected ? calendarThemeService.current.accent : Color.platformControl.opacity(0.55))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(isSelected ? Color.clear : Color.secondary.opacity(0.12), lineWidth: 1)
+                )
+        }
+        .buttonStyle(.plain)
     }
 
     private var calendarThemeCard: some View {
@@ -1214,9 +1408,7 @@ struct SettingsView: View {
                             wallpaperService.select(preset)
                         } label: {
                             ZStack(alignment: .topTrailing) {
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(preset.gradient)
-                                    .frame(height: 56)
+                                wallpaperPreview(for: preset)
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 8)
                                             .stroke(
@@ -1249,6 +1441,20 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+
+    @ViewBuilder
+    private func wallpaperPreview(for preset: WallpaperPreset) -> some View {
+        ZStack {
+            preset.gradient
+            if let thumbnailAssetName = preset.thumbnailAssetName {
+                WallpaperResourceImage(resourceName: thumbnailAssetName)
+                    .scaledToFill()
+                    .overlay(preset.gradient.opacity(preset.readabilityOverlayOpacity))
+            }
+        }
+        .frame(height: 56)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
     private var languageCard: some View {
@@ -1430,5 +1636,39 @@ private struct CalendarThemeTile: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(theme.name) calendar theme")
+    }
+}
+
+private struct AnimalSpritePreview: View {
+    let style: WalkingAnimalStyle
+
+    var body: some View {
+        Group {
+            if let image = Self.previewImage(for: style) {
+                Image(nsImage: image)
+                    .resizable()
+                    .interpolation(.none)
+                    .scaledToFit()
+                    .accessibilityLabel(Text(style.title))
+            } else {
+                Image(systemName: "pawprint.fill")
+                    .font(.system(size: 15))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(width: 30, height: 30)
+    }
+
+    private static let previewImageCache: [WalkingAnimalStyle: NSImage] = {
+        Dictionary(uniqueKeysWithValues: WalkingAnimalStyle.allCases.compactMap { style in
+            guard let image = AnimalSpriteImageCache.shared.image(style: style, frameIndex: 0) else {
+                return nil
+            }
+            return (style, image)
+        })
+    }()
+
+    private static func previewImage(for style: WalkingAnimalStyle) -> NSImage? {
+        previewImageCache[style]
     }
 }

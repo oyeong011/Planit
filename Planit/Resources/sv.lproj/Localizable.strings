@@ -231,10 +231,6 @@
 "energy.type.balanced" = "Balanserad";
 
 /* ===== Aggressiveness ===== */
-"aggressiveness.manual" = "Manuell";
-"aggressiveness.assist" = "Assisterad";
-"aggressiveness.semiauto" = "Halvautomatisk";
-"aggressiveness.auto" = "Automatisk";
 
 /* ===== Settings View ===== */
 "settings.title" = "Inställningar";
@@ -392,10 +388,6 @@
 "review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
-"review.plan.complete.title" = "Tomorrow's Plan Ready";
-"review.help.done" = "Done";
-"review.help.tomorrow" = "Move to Tomorrow";
-"review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
 
 /* ===== AI Context Section ===== */
@@ -521,7 +513,7 @@
 "chat.action.categorize" = "Categorize (%d)";
 "chat.action.replan-day.tooltip" = "Reorganize today using Hermes memory";
 "chat.action.fill-slots.tooltip" = "Suggest activities for open time";
-"chat.action.categorize.tooltip.empty" = "No uncategorized Google events";
+"chat.action.categorize.tooltip.empty" = "Inga okategoriserade Google-händelser";
 "chat.action.categorize.tooltip" = "AI will batch-categorize events";
 "chat.history.clear.tooltip" = "Clear chat history";
 "chat.planning.error.no-categorize" = "No categorization suggestions.";
@@ -546,12 +538,12 @@
 "review.goal.multi.hint" = "Comma-separated";
 
 // MARK: - Settings Hermes memory card
-"settings.hermes.patterns.count" = "User patterns learned from chat & actions (%d)";
-"settings.hermes.clear.all" = "Clear all";
-"settings.hermes.empty" = "No patterns learned yet.";
-"settings.hermes.empty.hint" = "Hermes auto-learns when you chat things like 'I focus best in mornings', 'no work in evenings', '30-min blocks only'.";
-"settings.hermes.decisions.recent" = "Recent plan decisions";
-"settings.hermes.forget.tooltip" = "Forget this memory";
+"settings.hermes.patterns.count" = "Användarmönster lärda från chatt och åtgärder (%d)";
+"settings.hermes.clear.all" = "Rensa allt";
+"settings.hermes.empty" = "Inga mönster har lärts än.";
+"settings.hermes.empty.hint" = "Hermes lär sig automatiskt från chattar om fokustider, kvällsgränser och önskad blocklängd.";
+"settings.hermes.decisions.recent" = "Senaste planeringsbeslut";
+"settings.hermes.forget.tooltip" = "Glöm detta minne";
 
 // MARK: - Settings app info buttons
 "settings.update.check" = "Check for updates";
@@ -566,9 +558,9 @@
 "review.todo.grass.days" = "%d dagar";
 
 // MARK: - Hermes card
-"settings.hermes.card.title" = "🧠 Hermes Långtidsminne";
-"settings.hermes.outcome.accepted" = "accepterad";
-"settings.hermes.outcome.rejected" = "avvisad";
+"settings.hermes.card.title" = "🧠 Hermes långtidsminne";
+"settings.hermes.outcome.accepted" = "accepterat";
+"settings.hermes.outcome.rejected" = "avvisat";
 
 // MARK: - Appearance section
 "settings.appearance.card" = "Utseende";
@@ -579,9 +571,9 @@
 "settings.appearance.mode.system" = "System";
 "settings.appearance.mode.light" = "Ljust";
 "settings.appearance.mode.dark" = "Mörkt";
-"settings.wallpaper.card" = "Background";
-"settings.wallpaper.desc" = "Choose a gradient background displayed behind the calendar.";
-"settings.wallpaper.none" = "None";
+"settings.wallpaper.card" = "Bakgrund";
+"settings.wallpaper.desc" = "Välj en bakgrund bakom kalendern.";
+"settings.wallpaper.none" = "Ingen";
 "wallpaper.aurora" = "Aurora";
 "wallpaper.sunset" = "Sunset";
 "wallpaper.ocean" = "Ocean";
@@ -594,3 +586,78 @@
 "wallpaper.summer" = "Summer";
 "wallpaper.autumn" = "Autumn";
 "wallpaper.winter" = "Winter";
+
+/* ===== Statistics ===== */
+"panel.statistics" = "Statistik";
+"statistics.title" = "Statistik";
+"statistics.subtitle" = "Följ vanor och slutförande snabbt";
+
+/* ===== Animal Settings ===== */
+"settings.animal.card" = "Djur";
+"settings.animal.enabled.title" = "Visa djur";
+"settings.animal.enabled.desc" = "Visar ett gående djur längst ned i kalendern.";
+"settings.animal.display.mode" = "Visningsläge";
+"settings.animal.parade.count" = "%d djur går tillsammans";
+"settings.animal.shape" = "Form";
+"settings.animal.style.cat" = "Katt";
+"settings.animal.style.dog" = "Hund";
+"settings.animal.style.cheetah" = "Gepard";
+"settings.animal.style.duck" = "Anka";
+"settings.animal.style.rabbit" = "Kanin";
+"settings.animal.display.selected" = "Valt djur";
+"settings.animal.display.random" = "Slumpmässigt djur";
+"settings.animal.display.parade" = "Djurparad";
+
+/* ===== Pet Wallpapers ===== */
+"wallpaper.softStudioLight" = "Soft Studio";
+"wallpaper.quietMidnightDark" = "Quiet Midnight";
+"wallpaper.pixelPetBeige" = "Pixel Pet Beige";
+"wallpaper.pixelPetPattern" = "Pixel Pet Pattern";
+"wallpaper.cozyPetRoom" = "Cozy Pet Room";
+
+/* ===== Login View Value Proposition ===== */
+"login.headline" = "The menubar calendar that plans\nyour tomorrow with AI";
+"login.subcopy" = "See all your events and reminders in one place, and let AI quickly organize your day.";
+"login.feature.menubar" = "Instant menubar access";
+"login.feature.integration" = "Calendar + Reminders";
+"login.feature.ai" = "AI daily planning";
+"login.cta.primary" = "Load My Schedule";
+"login.cta.local" = "Start with local calendar";
+"settings.hermes.outcome.partial" = "delvis tillämpat";
+"settings.hermes.decision.summary.categorized" = "%d händelser kategoriserade";
+"memory.category.preference" = "Preferens";
+"memory.category.schedulePattern" = "Schemaläggningsmönster";
+"memory.category.habitPattern" = "Vanemönster";
+"memory.category.goalPriority" = "Målprioritet";
+"memory.category.planningHistory" = "Planeringshistorik";
+"memory.category.communicationStyle" = "Kommunikationsstil";
+"planning.intent.replanDay" = "Planera om idag";
+"planning.intent.fillFreeSlots" = "Fyll lediga tider";
+"planning.intent.rescheduleUrgent" = "Planera om brådskande saker";
+"planning.intent.buildWeekPlan" = "Bygg veckoplan";
+"planning.intent.categorizeUntagged" = "Kategorisera okategoriserade händelser";
+"planning.action.create" = "Ny händelse";
+"planning.action.move" = "Flytta händelse";
+"planning.action.delete" = "Ta bort händelse";
+"planning.action.createTodo" = "Lägg till uppgift";
+"planning.action.moveTodo" = "Flytta uppgift";
+"planning.action.updateTodo" = "Redigera uppgift";
+"planning.action.categorize" = "Kategori";
+"settings.hermes.fact.key.preferredBlockLength" = "Önskad blocklängd";
+"settings.hermes.fact.value.preferredBlockLength.short" = "Korta block runt 30 minuter";
+"settings.hermes.fact.value.preferredBlockLength.deep" = "Djupjobbsblock på 90-120 minuter";
+
+"settings.hermes.fact.key.preferredMorningWork" = "Föredragen morgonfokus";
+"settings.hermes.fact.value.preferredMorningWork" = "Föredrar fokuserat arbete på morgonen";
+"settings.hermes.fact.key.avoidsMorningWork" = "Undviker morgonarbete";
+"settings.hermes.fact.value.avoidsMorningWork" = "Undviker arbetsblock på morgonen";
+"settings.hermes.fact.key.preferredEveningWork" = "Föredragen kvällsfokus";
+"settings.hermes.fact.value.preferredEveningWork" = "Föredrar fokuserat arbete på kvällen";
+"settings.hermes.fact.key.avoidsEveningWork" = "Undviker kvällsarbete";
+"settings.hermes.fact.value.avoidsEveningWork" = "Undviker arbetsblock på kvällen";
+"settings.hermes.fact.key.meetingFatigue" = "Möteströtthet";
+"settings.hermes.fact.value.meetingFatigue" = "Trötthet från för många möten";
+"settings.hermes.fact.key.wantsSlotSuggestions" = "Vill ha förslag på lediga tider";
+"settings.hermes.fact.value.wantsSlotSuggestions" = "Föredrar automatiska förslag för ledig tid";
+"settings.hermes.fact.key.urgentReschedulingNeeds" = "Akut behov av omplanering";
+"settings.hermes.fact.value.urgentReschedulingNeeds" = "Har tidigare behövt akuta schemaändringar";

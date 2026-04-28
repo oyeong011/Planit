@@ -24,6 +24,7 @@ struct MainView: View {
 enum LeftPanelMode: String {
     case chat
     case review
+    case statistics
     case onboarding
 }
 
@@ -116,14 +117,7 @@ struct MainCalendarView: View {
             }
         }
         .background(
-            ZStack {
-                if let preset = wallpaperService.activePreset {
-                    preset.gradient.ignoresSafeArea()
-                } else {
-                    Color.platformControlBackground
-                    themeService.current.paneTint
-                }
-            }
+            calendarBackground
         )
         .animation(.easeInOut(duration: 0.28), value: themeService.current.id)
         .animation(.easeInOut(duration: 0.35), value: wallpaperService.activePreset?.id)
@@ -165,12 +159,39 @@ struct MainCalendarView: View {
                 viewModel: viewModel,
                 userContextService: userContextService,
                 hermesMemoryService: hermesMemoryService,
-                onDismiss: { showSettings = false }
+                onDismiss: closeSettings
             )
         }
         // popover가 바깥 클릭으로 닫히면 설정 시트도 함께 닫기
         .onReceive(NotificationCenter.default.publisher(for: .calenPopoverDidClose)) { _ in
-            showSettings = false
+            closeSettings()
+        }
+    }
+
+    private func openSettings() {
+        showSettings = SettingsPresentationIntent.open.resolvedValue(from: showSettings)
+    }
+
+    private func closeSettings() {
+        showSettings = SettingsPresentationIntent.close.resolvedValue(from: showSettings)
+    }
+
+    @ViewBuilder
+    private var calendarBackground: some View {
+        ZStack {
+            if let preset = wallpaperService.activePreset {
+                preset.gradient.ignoresSafeArea()
+                if let imageAssetName = preset.imageAssetName {
+                    WallpaperResourceImage(resourceName: imageAssetName)
+                        .scaledToFill()
+                        .overlay(preset.gradient.opacity(preset.readabilityOverlayOpacity))
+                        .clipped()
+                        .ignoresSafeArea()
+                }
+            } else {
+                Color.platformControlBackground
+                themeService.current.paneTint
+            }
         }
     }
 
@@ -219,6 +240,7 @@ struct MainCalendarView: View {
                 HStack(spacing: 0) {
                     panelTab(String(localized: "panel.review"), mode: .review, icon: "sparkles")
                     panelTab(String(localized: "panel.chat"), mode: .chat, icon: "bubble.left")
+                    panelTab(String(localized: "panel.statistics"), mode: .statistics, icon: "chart.bar.xaxis")
                 }
                 .padding(.horizontal, 8)
                 .padding(.top, 6)
@@ -267,12 +289,19 @@ struct MainCalendarView: View {
                     }
                 )
 
+            case .statistics:
+                StatisticsView(
+                    goalMemoryService: goalMemoryService,
+                    habitService: habitService,
+                    viewModel: viewModel
+                )
+
             case .chat:
                 ChatView(aiService: aiService, viewModel: viewModel,
                          goalMemoryService: goalMemoryService,
                          habitService: habitService,
                          hermesMemoryService: hermesMemoryService,
-                         onOpenSettings: { showSettings = true })
+                         onOpenSettings: openSettings)
             }
         }
     }
@@ -578,7 +607,11 @@ struct CalendarGridView: View {
             }
             .frame(maxHeight: .infinity)
             .padding(.horizontal, 8)
-            .padding(.bottom, 8)
+            .padding(.bottom, 4)
+
+            WalkingAnimalView()
+                .padding(.horizontal, 8)
+                .padding(.bottom, 4)
         }
     }
 }
@@ -908,6 +941,10 @@ struct DailyDetailView: View {
         tappedTodo != nil || tappedEvent != nil
     }
 
+    private func toggleSettings() {
+        showSettings = SettingsPresentationIntent.toggle.resolvedValue(from: showSettings)
+    }
+
     var body: some View {
         ZStack {
             VStack(alignment: .leading, spacing: 0) {
@@ -950,12 +987,12 @@ struct DailyDetailView: View {
                         .help("카테고리 관리")
 
                         Button {
-                            showSettings = true
+                            toggleSettings()
                         } label: {
                             ZStack(alignment: .topTrailing) {
                                 Image(systemName: "gearshape")
                                     .font(.system(size: 16))
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(showSettings ? themeService.current.accent : .secondary)
                                     .frame(width: 28, height: 28)
                                 // 업데이트 있으면 빨간 점 뱃지
                                 if updater.updateAvailable {

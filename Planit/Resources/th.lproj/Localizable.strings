@@ -231,10 +231,6 @@
 "energy.type.balanced" = "สมดุล";
 
 /* ===== Aggressiveness ===== */
-"aggressiveness.manual" = "ด้วยตนเอง";
-"aggressiveness.assist" = "ช่วยเหลือ";
-"aggressiveness.semiauto" = "กึ่งอัตโนมัติ";
-"aggressiveness.auto" = "อัตโนมัติ";
 
 /* ===== Settings View ===== */
 "settings.title" = "การตั้งค่า";
@@ -392,10 +388,6 @@
 "review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
-"review.plan.complete.title" = "Tomorrow's Plan Ready";
-"review.help.done" = "Done";
-"review.help.tomorrow" = "Move to Tomorrow";
-"review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
 
 /* ===== AI Context Section ===== */
@@ -521,7 +513,7 @@
 "chat.action.categorize" = "Categorize (%d)";
 "chat.action.replan-day.tooltip" = "Reorganize today using Hermes memory";
 "chat.action.fill-slots.tooltip" = "Suggest activities for open time";
-"chat.action.categorize.tooltip.empty" = "No uncategorized Google events";
+"chat.action.categorize.tooltip.empty" = "ไม่มีเหตุการณ์ Google ที่ยังไม่จัดหมวดหมู่";
 "chat.action.categorize.tooltip" = "AI will batch-categorize events";
 "chat.history.clear.tooltip" = "Clear chat history";
 "chat.planning.error.no-categorize" = "No categorization suggestions.";
@@ -546,12 +538,12 @@
 "review.goal.multi.hint" = "Comma-separated";
 
 // MARK: - Settings Hermes memory card
-"settings.hermes.patterns.count" = "User patterns learned from chat & actions (%d)";
-"settings.hermes.clear.all" = "Clear all";
-"settings.hermes.empty" = "No patterns learned yet.";
-"settings.hermes.empty.hint" = "Hermes auto-learns when you chat things like 'I focus best in mornings', 'no work in evenings', '30-min blocks only'.";
-"settings.hermes.decisions.recent" = "Recent plan decisions";
-"settings.hermes.forget.tooltip" = "Forget this memory";
+"settings.hermes.patterns.count" = "รูปแบบผู้ใช้ที่เรียนรู้จากแชตและการกระทำ (%d)";
+"settings.hermes.clear.all" = "ล้างทั้งหมด";
+"settings.hermes.empty" = "ยังไม่มีรูปแบบที่เรียนรู้";
+"settings.hermes.empty.hint" = "Hermes เรียนรู้เวลาที่โฟกัส ข้อจำกัดตอนเย็น และความยาวบล็อกที่ชอบจากแชตโดยอัตโนมัติ";
+"settings.hermes.decisions.recent" = "การตัดสินใจวางแผนล่าสุด";
+"settings.hermes.forget.tooltip" = "ลืมความจำนี้";
 
 // MARK: - Settings app info buttons
 "settings.update.check" = "Check for updates";
@@ -566,9 +558,9 @@
 "review.todo.grass.days" = "%d วัน";
 
 // MARK: - Hermes card
-"settings.hermes.card.title" = "🧠 Hermes หน่วยความจำระยะยาว";
-"settings.hermes.outcome.accepted" = "ยอมรับ";
-"settings.hermes.outcome.rejected" = "ปฏิเสธ";
+"settings.hermes.card.title" = "🧠 หน่วยความจำระยะยาว Hermes";
+"settings.hermes.outcome.accepted" = "ยอมรับแล้ว";
+"settings.hermes.outcome.rejected" = "ปฏิเสธแล้ว";
 
 // MARK: - Appearance section
 "settings.appearance.card" = "รูปลักษณ์";
@@ -579,9 +571,9 @@
 "settings.appearance.mode.system" = "ระบบ";
 "settings.appearance.mode.light" = "สว่าง";
 "settings.appearance.mode.dark" = "มืด";
-"settings.wallpaper.card" = "Background";
-"settings.wallpaper.desc" = "Choose a gradient background displayed behind the calendar.";
-"settings.wallpaper.none" = "None";
+"settings.wallpaper.card" = "พื้นหลัง";
+"settings.wallpaper.desc" = "เลือกพื้นหลังที่แสดงหลังปฏิทิน";
+"settings.wallpaper.none" = "ไม่มี";
 "wallpaper.aurora" = "Aurora";
 "wallpaper.sunset" = "Sunset";
 "wallpaper.ocean" = "Ocean";
@@ -594,3 +586,78 @@
 "wallpaper.summer" = "Summer";
 "wallpaper.autumn" = "Autumn";
 "wallpaper.winter" = "Winter";
+
+/* ===== Statistics ===== */
+"panel.statistics" = "สถิติ";
+"statistics.title" = "สถิติ";
+"statistics.subtitle" = "ดูนิสัยและความสำเร็จได้อย่างรวดเร็ว";
+
+/* ===== Animal Settings ===== */
+"settings.animal.card" = "สัตว์";
+"settings.animal.enabled.title" = "แสดงสัตว์";
+"settings.animal.enabled.desc" = "แสดงสัตว์เดินที่ด้านล่างของปฏิทิน";
+"settings.animal.display.mode" = "โหมดการแสดงผล";
+"settings.animal.parade.count" = "สัตว์ %d ตัวเดินด้วยกัน";
+"settings.animal.shape" = "รูปร่าง";
+"settings.animal.style.cat" = "แมว";
+"settings.animal.style.dog" = "สุนัข";
+"settings.animal.style.cheetah" = "เสือชีตาห์";
+"settings.animal.style.duck" = "เป็ด";
+"settings.animal.style.rabbit" = "กระต่าย";
+"settings.animal.display.selected" = "สัตว์ที่เลือก";
+"settings.animal.display.random" = "สัตว์สุ่ม";
+"settings.animal.display.parade" = "ขบวนพาเหรดสัตว์";
+
+/* ===== Pet Wallpapers ===== */
+"wallpaper.softStudioLight" = "Soft Studio";
+"wallpaper.quietMidnightDark" = "Quiet Midnight";
+"wallpaper.pixelPetBeige" = "Pixel Pet Beige";
+"wallpaper.pixelPetPattern" = "Pixel Pet Pattern";
+"wallpaper.cozyPetRoom" = "Cozy Pet Room";
+
+/* ===== Login View Value Proposition ===== */
+"login.headline" = "The menubar calendar that plans\nyour tomorrow with AI";
+"login.subcopy" = "See all your events and reminders in one place, and let AI quickly organize your day.";
+"login.feature.menubar" = "Instant menubar access";
+"login.feature.integration" = "Calendar + Reminders";
+"login.feature.ai" = "AI daily planning";
+"login.cta.primary" = "Load My Schedule";
+"login.cta.local" = "Start with local calendar";
+"settings.hermes.outcome.partial" = "ใช้บางส่วน";
+"settings.hermes.decision.summary.categorized" = "จัดหมวดหมู่ %d เหตุการณ์แล้ว";
+"memory.category.preference" = "ความชอบ";
+"memory.category.schedulePattern" = "รูปแบบตารางเวลา";
+"memory.category.habitPattern" = "รูปแบบนิสัย";
+"memory.category.goalPriority" = "ลำดับความสำคัญเป้าหมาย";
+"memory.category.planningHistory" = "ประวัติการวางแผน";
+"memory.category.communicationStyle" = "สไตล์การสื่อสาร";
+"planning.intent.replanDay" = "วางแผนวันนี้ใหม่";
+"planning.intent.fillFreeSlots" = "เติมเวลาว่าง";
+"planning.intent.rescheduleUrgent" = "จัดตารางงานด่วนใหม่";
+"planning.intent.buildWeekPlan" = "สร้างแผนสัปดาห์นี้";
+"planning.intent.categorizeUntagged" = "จัดหมวดหมู่เหตุการณ์ที่ยังไม่มีหมวดหมู่";
+"planning.action.create" = "เหตุการณ์ใหม่";
+"planning.action.move" = "ย้ายเหตุการณ์";
+"planning.action.delete" = "ลบเหตุการณ์";
+"planning.action.createTodo" = "เพิ่มงาน";
+"planning.action.moveTodo" = "ย้ายงาน";
+"planning.action.updateTodo" = "แก้ไขงาน";
+"planning.action.categorize" = "หมวดหมู่";
+"settings.hermes.fact.key.preferredBlockLength" = "ความยาวบล็อกที่ชอบ";
+"settings.hermes.fact.value.preferredBlockLength.short" = "บล็อกสั้นประมาณ 30 นาที";
+"settings.hermes.fact.value.preferredBlockLength.deep" = "บล็อกทำงานลึก 90-120 นาที";
+
+"settings.hermes.fact.key.preferredMorningWork" = "ชอบโฟกัสตอนเช้า";
+"settings.hermes.fact.value.preferredMorningWork" = "ชอบทำงานแบบมีสมาธิในตอนเช้า";
+"settings.hermes.fact.key.avoidsMorningWork" = "หลีกเลี่ยงงานตอนเช้า";
+"settings.hermes.fact.value.avoidsMorningWork" = "หลีกเลี่ยงบล็อกงานในตอนเช้า";
+"settings.hermes.fact.key.preferredEveningWork" = "ชอบโฟกัสตอนเย็น";
+"settings.hermes.fact.value.preferredEveningWork" = "ชอบทำงานแบบมีสมาธิในตอนเย็น";
+"settings.hermes.fact.key.avoidsEveningWork" = "หลีกเลี่ยงงานตอนเย็น";
+"settings.hermes.fact.value.avoidsEveningWork" = "หลีกเลี่ยงบล็อกงานในตอนเย็น";
+"settings.hermes.fact.key.meetingFatigue" = "เหนื่อยจากการประชุม";
+"settings.hermes.fact.value.meetingFatigue" = "เหนื่อยล้าจากการประชุมมากเกินไป";
+"settings.hermes.fact.key.wantsSlotSuggestions" = "ต้องการคำแนะนำช่วงว่าง";
+"settings.hermes.fact.value.wantsSlotSuggestions" = "ชอบคำแนะนำอัตโนมัติสำหรับเวลาว่าง";
+"settings.hermes.fact.key.urgentReschedulingNeeds" = "ต้องจัดตารางใหม่เร่งด่วน";
+"settings.hermes.fact.value.urgentReschedulingNeeds" = "เคยต้องปรับตารางแบบเร่งด่วนมาก่อน";

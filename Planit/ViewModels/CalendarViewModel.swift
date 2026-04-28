@@ -717,8 +717,10 @@ final class CalendarViewModel: ObservableObject {
     /// 이벤트가 재출현하는 문제가 있다. 이 기간 동안은 서버 응답에서 해당 id의
     /// 이벤트를 무시하고 local 값을 유지한다.
     private var recentlyMutatedGoogleIDs: [String: Date] = [:]
+    private var recentlyDeletedGoogleIDs: [String: Date] = [:]
 
     private nonisolated static let recentlyMutatedTTL: TimeInterval = 12
+    private nonisolated static let recentlyDeletedTTL: TimeInterval = 30
 
     /// today 월의 Apple 이벤트 5초 캐시 — 월 이동 시 EventKit 중복 쿼리 부하 경감.
     private var todayAppleCache: (fetchedAt: Date, events: [CalendarEvent])?
@@ -734,6 +736,21 @@ final class CalendarViewModel: ObservableObject {
         guard let expiresAt = recentlyMutatedGoogleIDs[eventID] else { return false }
         if expiresAt <= Date() {
             recentlyMutatedGoogleIDs.removeValue(forKey: eventID)
+            return false
+        }
+        return true
+    }
+
+    private func markRecentlyDeletedGoogle(_ eventID: String) {
+        let now = Date()
+        recentlyDeletedGoogleIDs[eventID] = now.addingTimeInterval(Self.recentlyDeletedTTL)
+        recentlyDeletedGoogleIDs = recentlyDeletedGoogleIDs.filter { $0.value > now }
+    }
+
+    private func isRecentlyDeletedGoogle(_ eventID: String) -> Bool {
+        guard let expiresAt = recentlyDeletedGoogleIDs[eventID] else { return false }
+        if expiresAt <= Date() {
+            recentlyDeletedGoogleIDs.removeValue(forKey: eventID)
             return false
         }
         return true
@@ -1061,8 +1078,10 @@ final class CalendarViewModel: ObservableObject {
                 )
                 // Google eventual consistency로 옛 상태가 올 수 있어, 최근 mutate한
                 // id는 서버 응답 대신 local 값을 유지한다 (드래그 이동 직후 원본 재출현 방지).
+                // 최근 삭제한 id는 서버가 아직 반환하더라도 필터링 (30초 TTL).
                 let localByID = Dictionary(uniqueKeysWithValues: self.calendarEvents.map { ($0.id, $0) })
-                let reconciled: [CalendarEvent] = deduped.map { serverEvent in
+                let reconciled: [CalendarEvent] = deduped.compactMap { serverEvent in
+                    if self.isRecentlyDeletedGoogle(serverEvent.id) { return nil }
                     if self.isRecentlyMutatedGoogle(serverEvent.id),
                        let localCopy = localByID[serverEvent.id] {
                         return localCopy
@@ -1192,6 +1211,31 @@ final class CalendarViewModel: ObservableObject {
     }
 
     func deleteGoogleEvent(eventID: String, calendarID: String = "google:primary") {
+        // Apple Calendar 미러 재출현 방지: 실제 Apple calendarID로 suppress
+        if let target = calendarEvents.first(where: { $0.id == eventID }) {
+            let appleCandidates = calendarEvents.filter { $0.source == .apple }
+            suppressAppleMirrorCandidates(
+                eventID: eventID,
+                title: target.title,
+                startDate: target.startDate,
+                endDate: target.endDate,
+                isAllDay: target.isAllDay,
+                appleCandidates: appleCandidates
+            )
+            // 후보 없을 경우 title+startDate 기반 fallback suppress (TTL 4분)
+            if appleCandidates.filter({
+                SuppressKey.normalizedTitle($0.title) == SuppressKey.normalizedTitle(target.title) &&
+                Self.startMinute($0.startDate) == Self.startMinute(target.startDate)
+            }).isEmpty {
+                suppressAppleMirror(title: target.title, startDate: target.startDate,
+                                    calendarID: calendarID,
+                                    for: CalendarViewModel.appleMirrorSuppressTTL * 4)
+            }
+        }
+        // Optimistic removal: 연속 삭제 시 fetch 스킵으로 이벤트가 되살아나는 레이스 방지
+        calendarEvents.removeAll { $0.id == eventID }
+        markRecentlyDeletedGoogle(eventID)
+        cacheEvents(calendarEvents)
         Task {
             do {
                 if try await googleService.deleteEvent(eventID: eventID, calendarID: calendarID) == false {
@@ -1209,12 +1253,10 @@ final class CalendarViewModel: ObservableObject {
                 PlanitLoggers.sync.info("Offline Google delete queued eventID=\(eventID, privacy: .public)")
                 queuePendingEdit(PendingCalendarEdit(
                     action: "delete", eventId: eventID, calendarID: calendarID))
-                // Optimistic local removal
-                calendarEvents.removeAll { $0.id == eventID }
+                // 이미 위에서 optimistic removal 완료 — completedEvents만 처리
                 completedEventIDs.remove(eventID)
                 goalService?.removeCompletion(eventId: eventID)
                 saveCompletedEvents()
-                cacheEvents(calendarEvents)
             }
         }
     }

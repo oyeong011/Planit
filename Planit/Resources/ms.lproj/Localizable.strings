@@ -231,10 +231,6 @@
 "energy.type.balanced" = "Seimbang";
 
 /* ===== Aggressiveness ===== */
-"aggressiveness.manual" = "Manual";
-"aggressiveness.assist" = "Dibantu";
-"aggressiveness.semiauto" = "Semi-Automatik";
-"aggressiveness.auto" = "Automatik";
 
 /* ===== Settings View ===== */
 "settings.title" = "Tetapan";
@@ -392,10 +388,6 @@
 "review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
-"review.plan.complete.title" = "Tomorrow's Plan Ready";
-"review.help.done" = "Done";
-"review.help.tomorrow" = "Move to Tomorrow";
-"review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
 
 /* ===== AI Context Section ===== */
@@ -521,7 +513,7 @@
 "chat.action.categorize" = "Categorize (%d)";
 "chat.action.replan-day.tooltip" = "Reorganize today using Hermes memory";
 "chat.action.fill-slots.tooltip" = "Suggest activities for open time";
-"chat.action.categorize.tooltip.empty" = "No uncategorized Google events";
+"chat.action.categorize.tooltip.empty" = "Tiada acara Google tanpa kategori";
 "chat.action.categorize.tooltip" = "AI will batch-categorize events";
 "chat.history.clear.tooltip" = "Clear chat history";
 "chat.planning.error.no-categorize" = "No categorization suggestions.";
@@ -546,12 +538,12 @@
 "review.goal.multi.hint" = "Comma-separated";
 
 // MARK: - Settings Hermes memory card
-"settings.hermes.patterns.count" = "User patterns learned from chat & actions (%d)";
-"settings.hermes.clear.all" = "Clear all";
-"settings.hermes.empty" = "No patterns learned yet.";
-"settings.hermes.empty.hint" = "Hermes auto-learns when you chat things like 'I focus best in mornings', 'no work in evenings', '30-min blocks only'.";
-"settings.hermes.decisions.recent" = "Recent plan decisions";
-"settings.hermes.forget.tooltip" = "Forget this memory";
+"settings.hermes.patterns.count" = "Corak pengguna yang dipelajari daripada chat dan tindakan (%d)";
+"settings.hermes.clear.all" = "Kosongkan semua";
+"settings.hermes.empty" = "Belum ada corak dipelajari.";
+"settings.hermes.empty.hint" = "Hermes belajar secara automatik daripada chat tentang masa fokus, had waktu malam dan panjang blok pilihan.";
+"settings.hermes.decisions.recent" = "Keputusan perancangan terkini";
+"settings.hermes.forget.tooltip" = "Lupakan memori ini";
 
 // MARK: - Settings app info buttons
 "settings.update.check" = "Check for updates";
@@ -566,7 +558,7 @@
 "review.todo.grass.days" = "%d hari";
 
 // MARK: - Hermes card
-"settings.hermes.card.title" = "🧠 Hermes Ingatan jangka panjang";
+"settings.hermes.card.title" = "🧠 Memori jangka panjang Hermes";
 "settings.hermes.outcome.accepted" = "diterima";
 "settings.hermes.outcome.rejected" = "ditolak";
 
@@ -579,9 +571,9 @@
 "settings.appearance.mode.system" = "Sistem";
 "settings.appearance.mode.light" = "Cerah";
 "settings.appearance.mode.dark" = "Gelap";
-"settings.wallpaper.card" = "Background";
-"settings.wallpaper.desc" = "Choose a gradient background displayed behind the calendar.";
-"settings.wallpaper.none" = "None";
+"settings.wallpaper.card" = "Latar belakang";
+"settings.wallpaper.desc" = "Pilih latar belakang di belakang kalendar.";
+"settings.wallpaper.none" = "Tiada";
 "wallpaper.aurora" = "Aurora";
 "wallpaper.sunset" = "Sunset";
 "wallpaper.ocean" = "Ocean";
@@ -594,3 +586,78 @@
 "wallpaper.summer" = "Summer";
 "wallpaper.autumn" = "Autumn";
 "wallpaper.winter" = "Winter";
+
+/* ===== Statistics ===== */
+"panel.statistics" = "Statistik";
+"statistics.title" = "Statistik";
+"statistics.subtitle" = "Jejak tabiat dan pencapaian sepintas lalu";
+
+/* ===== Animal Settings ===== */
+"settings.animal.card" = "Haiwan";
+"settings.animal.enabled.title" = "Tunjukkan haiwan";
+"settings.animal.enabled.desc" = "Memaparkan haiwan berjalan di bawah kalendar.";
+"settings.animal.display.mode" = "Mod paparan";
+"settings.animal.parade.count" = "%d haiwan berjalan bersama";
+"settings.animal.shape" = "Bentuk";
+"settings.animal.style.cat" = "Kucing";
+"settings.animal.style.dog" = "Anjing";
+"settings.animal.style.cheetah" = "Citah";
+"settings.animal.style.duck" = "Itik";
+"settings.animal.style.rabbit" = "Arnab";
+"settings.animal.display.selected" = "Haiwan dipilih";
+"settings.animal.display.random" = "Haiwan rawak";
+"settings.animal.display.parade" = "Perarakan haiwan";
+
+/* ===== Pet Wallpapers ===== */
+"wallpaper.softStudioLight" = "Soft Studio";
+"wallpaper.quietMidnightDark" = "Quiet Midnight";
+"wallpaper.pixelPetBeige" = "Pixel Pet Beige";
+"wallpaper.pixelPetPattern" = "Pixel Pet Pattern";
+"wallpaper.cozyPetRoom" = "Cozy Pet Room";
+
+/* ===== Login View Value Proposition ===== */
+"login.headline" = "The menubar calendar that plans\nyour tomorrow with AI";
+"login.subcopy" = "See all your events and reminders in one place, and let AI quickly organize your day.";
+"login.feature.menubar" = "Instant menubar access";
+"login.feature.integration" = "Calendar + Reminders";
+"login.feature.ai" = "AI daily planning";
+"login.cta.primary" = "Load My Schedule";
+"login.cta.local" = "Start with local calendar";
+"settings.hermes.outcome.partial" = "digunakan sebahagian";
+"settings.hermes.decision.summary.categorized" = "%d acara dikategorikan";
+"memory.category.preference" = "Keutamaan";
+"memory.category.schedulePattern" = "Corak jadual";
+"memory.category.habitPattern" = "Corak tabiat";
+"memory.category.goalPriority" = "Keutamaan matlamat";
+"memory.category.planningHistory" = "Sejarah perancangan";
+"memory.category.communicationStyle" = "Gaya komunikasi";
+"planning.intent.replanDay" = "Rancang semula hari ini";
+"planning.intent.fillFreeSlots" = "Isi slot kosong";
+"planning.intent.rescheduleUrgent" = "Jadualkan semula perkara mendesak";
+"planning.intent.buildWeekPlan" = "Bina pelan minggu ini";
+"planning.intent.categorizeUntagged" = "Kategorikan acara tanpa kategori";
+"planning.action.create" = "Acara baharu";
+"planning.action.move" = "Alihkan acara";
+"planning.action.delete" = "Padam acara";
+"planning.action.createTodo" = "Tambah tugasan";
+"planning.action.moveTodo" = "Alihkan tugasan";
+"planning.action.updateTodo" = "Edit tugasan";
+"planning.action.categorize" = "Kategori";
+"settings.hermes.fact.key.preferredBlockLength" = "Panjang blok pilihan";
+"settings.hermes.fact.value.preferredBlockLength.short" = "Blok pendek sekitar 30 minit";
+"settings.hermes.fact.value.preferredBlockLength.deep" = "Blok kerja mendalam 90-120 minit";
+
+"settings.hermes.fact.key.preferredMorningWork" = "Fokus pagi pilihan";
+"settings.hermes.fact.value.preferredMorningWork" = "Lebih suka kerja fokus pada waktu pagi";
+"settings.hermes.fact.key.avoidsMorningWork" = "Mengelak kerja pagi";
+"settings.hermes.fact.value.avoidsMorningWork" = "Mengelak blok kerja pada waktu pagi";
+"settings.hermes.fact.key.preferredEveningWork" = "Fokus malam pilihan";
+"settings.hermes.fact.value.preferredEveningWork" = "Lebih suka kerja fokus pada waktu malam";
+"settings.hermes.fact.key.avoidsEveningWork" = "Mengelak kerja malam";
+"settings.hermes.fact.value.avoidsEveningWork" = "Mengelak blok kerja pada waktu malam";
+"settings.hermes.fact.key.meetingFatigue" = "Keletihan mesyuarat";
+"settings.hermes.fact.value.meetingFatigue" = "Keletihan akibat terlalu banyak mesyuarat";
+"settings.hermes.fact.key.wantsSlotSuggestions" = "Mahukan cadangan slot kosong";
+"settings.hermes.fact.value.wantsSlotSuggestions" = "Lebih suka cadangan automatik untuk masa lapang";
+"settings.hermes.fact.key.urgentReschedulingNeeds" = "Keperluan jadual semula segera";
+"settings.hermes.fact.value.urgentReschedulingNeeds" = "Pernah memerlukan pelarasan jadual segera";

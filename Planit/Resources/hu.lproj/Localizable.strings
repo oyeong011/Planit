@@ -231,10 +231,6 @@
 "energy.type.balanced" = "Kiegyensúlyozott";
 
 /* ===== Aggressiveness ===== */
-"aggressiveness.manual" = "Kézi";
-"aggressiveness.assist" = "Segített";
-"aggressiveness.semiauto" = "Félautomata";
-"aggressiveness.auto" = "Automata";
 
 /* ===== Settings View ===== */
 "settings.title" = "Beállítások";
@@ -392,10 +388,6 @@
 "review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
-"review.plan.complete.title" = "Tomorrow's Plan Ready";
-"review.help.done" = "Done";
-"review.help.tomorrow" = "Move to Tomorrow";
-"review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
 
 /* ===== AI Context Section ===== */
@@ -521,7 +513,7 @@
 "chat.action.categorize" = "Categorize (%d)";
 "chat.action.replan-day.tooltip" = "Reorganize today using Hermes memory";
 "chat.action.fill-slots.tooltip" = "Suggest activities for open time";
-"chat.action.categorize.tooltip.empty" = "No uncategorized Google events";
+"chat.action.categorize.tooltip.empty" = "Nincs kategorizálatlan Google-esemény";
 "chat.action.categorize.tooltip" = "AI will batch-categorize events";
 "chat.history.clear.tooltip" = "Clear chat history";
 "chat.planning.error.no-categorize" = "No categorization suggestions.";
@@ -546,12 +538,12 @@
 "review.goal.multi.hint" = "Comma-separated";
 
 // MARK: - Settings Hermes memory card
-"settings.hermes.patterns.count" = "User patterns learned from chat & actions (%d)";
-"settings.hermes.clear.all" = "Clear all";
-"settings.hermes.empty" = "No patterns learned yet.";
-"settings.hermes.empty.hint" = "Hermes auto-learns when you chat things like 'I focus best in mornings', 'no work in evenings', '30-min blocks only'.";
-"settings.hermes.decisions.recent" = "Recent plan decisions";
-"settings.hermes.forget.tooltip" = "Forget this memory";
+"settings.hermes.patterns.count" = "Csevegésből és műveletekből tanult felhasználói minták (%d)";
+"settings.hermes.clear.all" = "Összes törlése";
+"settings.hermes.empty" = "Még nincs tanult minta.";
+"settings.hermes.empty.hint" = "A Hermes automatikusan tanul a csevegésekből a fókuszidőkről, esti korlátokról és kedvelt blokkhosszról.";
+"settings.hermes.decisions.recent" = "Legutóbbi tervezési döntések";
+"settings.hermes.forget.tooltip" = "Emlék elfelejtése";
 
 // MARK: - Settings app info buttons
 "settings.update.check" = "Check for updates";
@@ -566,7 +558,7 @@
 "review.todo.grass.days" = "%d nap";
 
 // MARK: - Hermes card
-"settings.hermes.card.title" = "🧠 Hermes Hosszú távú memória";
+"settings.hermes.card.title" = "🧠 Hermes hosszú távú memória";
 "settings.hermes.outcome.accepted" = "elfogadva";
 "settings.hermes.outcome.rejected" = "elutasítva";
 
@@ -579,9 +571,9 @@
 "settings.appearance.mode.system" = "Rendszer";
 "settings.appearance.mode.light" = "Világos";
 "settings.appearance.mode.dark" = "Sötét";
-"settings.wallpaper.card" = "Background";
-"settings.wallpaper.desc" = "Choose a gradient background displayed behind the calendar.";
-"settings.wallpaper.none" = "None";
+"settings.wallpaper.card" = "Háttér";
+"settings.wallpaper.desc" = "Válassz hátteret a naptár mögé.";
+"settings.wallpaper.none" = "Nincs";
 "wallpaper.aurora" = "Aurora";
 "wallpaper.sunset" = "Sunset";
 "wallpaper.ocean" = "Ocean";
@@ -594,3 +586,78 @@
 "wallpaper.summer" = "Summer";
 "wallpaper.autumn" = "Autumn";
 "wallpaper.winter" = "Winter";
+
+/* ===== Statistics ===== */
+"panel.statistics" = "Statisztika";
+"statistics.title" = "Statisztika";
+"statistics.subtitle" = "Kövesd a szokásokat és a teljesítést egy pillantással";
+
+/* ===== Animal Settings ===== */
+"settings.animal.card" = "Állat";
+"settings.animal.enabled.title" = "Állatok megjelenítése";
+"settings.animal.enabled.desc" = "Sétáló állatot jelenít meg a naptár alján.";
+"settings.animal.display.mode" = "Megjelenítési mód";
+"settings.animal.parade.count" = "%d állat együtt sétál";
+"settings.animal.shape" = "Forma";
+"settings.animal.style.cat" = "Macska";
+"settings.animal.style.dog" = "Kutya";
+"settings.animal.style.cheetah" = "Gepárd";
+"settings.animal.style.duck" = "Kacsa";
+"settings.animal.style.rabbit" = "Nyúl";
+"settings.animal.display.selected" = "Kiválasztott állat";
+"settings.animal.display.random" = "Véletlen állat";
+"settings.animal.display.parade" = "Állatparádé";
+
+/* ===== Pet Wallpapers ===== */
+"wallpaper.softStudioLight" = "Soft Studio";
+"wallpaper.quietMidnightDark" = "Quiet Midnight";
+"wallpaper.pixelPetBeige" = "Pixel Pet Beige";
+"wallpaper.pixelPetPattern" = "Pixel Pet Pattern";
+"wallpaper.cozyPetRoom" = "Cozy Pet Room";
+
+/* ===== Login View Value Proposition ===== */
+"login.headline" = "The menubar calendar that plans\nyour tomorrow with AI";
+"login.subcopy" = "See all your events and reminders in one place, and let AI quickly organize your day.";
+"login.feature.menubar" = "Instant menubar access";
+"login.feature.integration" = "Calendar + Reminders";
+"login.feature.ai" = "AI daily planning";
+"login.cta.primary" = "Load My Schedule";
+"login.cta.local" = "Start with local calendar";
+"settings.hermes.outcome.partial" = "részben alkalmazva";
+"settings.hermes.decision.summary.categorized" = "%d esemény kategorizálva";
+"memory.category.preference" = "Preferencia";
+"memory.category.schedulePattern" = "Ütemezési minta";
+"memory.category.habitPattern" = "Szokásminta";
+"memory.category.goalPriority" = "Célprioritás";
+"memory.category.planningHistory" = "Tervezési előzmények";
+"memory.category.communicationStyle" = "Kommunikációs stílus";
+"planning.intent.replanDay" = "Mai nap újratervezése";
+"planning.intent.fillFreeSlots" = "Szabad idők kitöltése";
+"planning.intent.rescheduleUrgent" = "Sürgős elemek átütemezése";
+"planning.intent.buildWeekPlan" = "Heti terv készítése";
+"planning.intent.categorizeUntagged" = "Kategorizálatlan események besorolása";
+"planning.action.create" = "Új esemény";
+"planning.action.move" = "Esemény áthelyezése";
+"planning.action.delete" = "Esemény törlése";
+"planning.action.createTodo" = "Teendő hozzáadása";
+"planning.action.moveTodo" = "Teendő áthelyezése";
+"planning.action.updateTodo" = "Teendő szerkesztése";
+"planning.action.categorize" = "Kategória";
+"settings.hermes.fact.key.preferredBlockLength" = "Preferált blokkhossz";
+"settings.hermes.fact.value.preferredBlockLength.short" = "Kb. 30 perces rövid blokkok";
+"settings.hermes.fact.value.preferredBlockLength.deep" = "90-120 perces mélymunka blokkok";
+
+"settings.hermes.fact.key.preferredMorningWork" = "Preferált reggeli fókusz";
+"settings.hermes.fact.value.preferredMorningWork" = "A reggeli fókuszált munkát részesíti előnyben";
+"settings.hermes.fact.key.avoidsMorningWork" = "Kerüli a reggeli munkát";
+"settings.hermes.fact.value.avoidsMorningWork" = "Kerüli a reggeli munkablokkokat";
+"settings.hermes.fact.key.preferredEveningWork" = "Preferált esti fókusz";
+"settings.hermes.fact.value.preferredEveningWork" = "Az esti fókuszált munkát részesíti előnyben";
+"settings.hermes.fact.key.avoidsEveningWork" = "Kerüli az esti munkát";
+"settings.hermes.fact.value.avoidsEveningWork" = "Kerüli az esti munkablokkokat";
+"settings.hermes.fact.key.meetingFatigue" = "Értekezlet-fáradtság";
+"settings.hermes.fact.value.meetingFatigue" = "Fáradtság a túl sok értekezlettől";
+"settings.hermes.fact.key.wantsSlotSuggestions" = "Szabad idős javaslatokat kér";
+"settings.hermes.fact.value.wantsSlotSuggestions" = "Automatikus javaslatokat részesít előnyben a szabad időre";
+"settings.hermes.fact.key.urgentReschedulingNeeds" = "Sürgős átütemezési igény";
+"settings.hermes.fact.value.urgentReschedulingNeeds" = "Korábban már szüksége volt sürgős naptármódosításra";

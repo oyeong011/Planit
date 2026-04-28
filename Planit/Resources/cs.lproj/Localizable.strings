@@ -231,10 +231,6 @@
 "energy.type.balanced" = "Vyvážený";
 
 /* ===== Aggressiveness ===== */
-"aggressiveness.manual" = "Manuální";
-"aggressiveness.assist" = "Asistovaný";
-"aggressiveness.semiauto" = "Poloautomatický";
-"aggressiveness.auto" = "Automatický";
 
 /* ===== Settings View ===== */
 "settings.title" = "Nastavení";
@@ -392,10 +388,6 @@
 "review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
-"review.plan.complete.title" = "Tomorrow's Plan Ready";
-"review.help.done" = "Done";
-"review.help.tomorrow" = "Move to Tomorrow";
-"review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
 
 /* ===== AI Context Section ===== */
@@ -521,7 +513,7 @@
 "chat.action.categorize" = "Categorize (%d)";
 "chat.action.replan-day.tooltip" = "Reorganize today using Hermes memory";
 "chat.action.fill-slots.tooltip" = "Suggest activities for open time";
-"chat.action.categorize.tooltip.empty" = "No uncategorized Google events";
+"chat.action.categorize.tooltip.empty" = "Žádné nekategorizované události Google";
 "chat.action.categorize.tooltip" = "AI will batch-categorize events";
 "chat.history.clear.tooltip" = "Clear chat history";
 "chat.planning.error.no-categorize" = "No categorization suggestions.";
@@ -546,12 +538,12 @@
 "review.goal.multi.hint" = "Comma-separated";
 
 // MARK: - Settings Hermes memory card
-"settings.hermes.patterns.count" = "User patterns learned from chat & actions (%d)";
-"settings.hermes.clear.all" = "Clear all";
-"settings.hermes.empty" = "No patterns learned yet.";
-"settings.hermes.empty.hint" = "Hermes auto-learns when you chat things like 'I focus best in mornings', 'no work in evenings', '30-min blocks only'.";
-"settings.hermes.decisions.recent" = "Recent plan decisions";
-"settings.hermes.forget.tooltip" = "Forget this memory";
+"settings.hermes.patterns.count" = "Uživatelské vzorce naučené z chatu a akcí (%d)";
+"settings.hermes.clear.all" = "Vymazat vše";
+"settings.hermes.empty" = "Zatím nejsou naučené žádné vzorce.";
+"settings.hermes.empty.hint" = "Hermes se z chatů automaticky učí časy soustředění, večerní omezení a preferovanou délku bloků.";
+"settings.hermes.decisions.recent" = "Nedávná plánovací rozhodnutí";
+"settings.hermes.forget.tooltip" = "Zapomenout tuto paměť";
 
 // MARK: - Settings app info buttons
 "settings.update.check" = "Check for updates";
@@ -566,7 +558,7 @@
 "review.todo.grass.days" = "%d dní";
 
 // MARK: - Hermes card
-"settings.hermes.card.title" = "🧠 Hermes Dlouhodobá paměť";
+"settings.hermes.card.title" = "🧠 Dlouhodobá paměť Hermes";
 "settings.hermes.outcome.accepted" = "přijato";
 "settings.hermes.outcome.rejected" = "odmítnuto";
 
@@ -579,9 +571,9 @@
 "settings.appearance.mode.system" = "Systém";
 "settings.appearance.mode.light" = "Světlý";
 "settings.appearance.mode.dark" = "Tmavý";
-"settings.wallpaper.card" = "Background";
-"settings.wallpaper.desc" = "Choose a gradient background displayed behind the calendar.";
-"settings.wallpaper.none" = "None";
+"settings.wallpaper.card" = "Pozadí";
+"settings.wallpaper.desc" = "Vyberte pozadí zobrazené za kalendářem.";
+"settings.wallpaper.none" = "Žádné";
 "wallpaper.aurora" = "Aurora";
 "wallpaper.sunset" = "Sunset";
 "wallpaper.ocean" = "Ocean";
@@ -594,3 +586,78 @@
 "wallpaper.summer" = "Summer";
 "wallpaper.autumn" = "Autumn";
 "wallpaper.winter" = "Winter";
+
+/* ===== Statistics ===== */
+"panel.statistics" = "Statistiky";
+"statistics.title" = "Statistiky";
+"statistics.subtitle" = "Sledujte návyky a dokončení jedním pohledem";
+
+/* ===== Animal Settings ===== */
+"settings.animal.card" = "Zvíře";
+"settings.animal.enabled.title" = "Zobrazit zvířata";
+"settings.animal.enabled.desc" = "Zobrazí kráčející zvíře dole v kalendáři.";
+"settings.animal.display.mode" = "Režim zobrazení";
+"settings.animal.parade.count" = "%d zvířata jdou spolu";
+"settings.animal.shape" = "Tvar";
+"settings.animal.style.cat" = "Kočka";
+"settings.animal.style.dog" = "Pes";
+"settings.animal.style.cheetah" = "Gepard";
+"settings.animal.style.duck" = "Kachna";
+"settings.animal.style.rabbit" = "Králík";
+"settings.animal.display.selected" = "Vybrané zvíře";
+"settings.animal.display.random" = "Náhodné zvíře";
+"settings.animal.display.parade" = "Přehlídka zvířat";
+
+/* ===== Pet Wallpapers ===== */
+"wallpaper.softStudioLight" = "Soft Studio";
+"wallpaper.quietMidnightDark" = "Quiet Midnight";
+"wallpaper.pixelPetBeige" = "Pixel Pet Beige";
+"wallpaper.pixelPetPattern" = "Pixel Pet Pattern";
+"wallpaper.cozyPetRoom" = "Cozy Pet Room";
+
+/* ===== Login View Value Proposition ===== */
+"login.headline" = "The menubar calendar that plans\nyour tomorrow with AI";
+"login.subcopy" = "See all your events and reminders in one place, and let AI quickly organize your day.";
+"login.feature.menubar" = "Instant menubar access";
+"login.feature.integration" = "Calendar + Reminders";
+"login.feature.ai" = "AI daily planning";
+"login.cta.primary" = "Load My Schedule";
+"login.cta.local" = "Start with local calendar";
+"settings.hermes.outcome.partial" = "částečně použito";
+"settings.hermes.decision.summary.categorized" = "Zařazeno %d událostí";
+"memory.category.preference" = "Předvolba";
+"memory.category.schedulePattern" = "Vzorec rozvrhu";
+"memory.category.habitPattern" = "Vzorec návyku";
+"memory.category.goalPriority" = "Priorita cíle";
+"memory.category.planningHistory" = "Historie plánování";
+"memory.category.communicationStyle" = "Styl komunikace";
+"planning.intent.replanDay" = "Přeplánovat dnešek";
+"planning.intent.fillFreeSlots" = "Vyplnit volné sloty";
+"planning.intent.rescheduleUrgent" = "Přeplánovat naléhavé věci";
+"planning.intent.buildWeekPlan" = "Vytvořit plán týdne";
+"planning.intent.categorizeUntagged" = "Zařadit události bez kategorie";
+"planning.action.create" = "Nová událost";
+"planning.action.move" = "Přesunout událost";
+"planning.action.delete" = "Smazat událost";
+"planning.action.createTodo" = "Přidat úkol";
+"planning.action.moveTodo" = "Přesunout úkol";
+"planning.action.updateTodo" = "Upravit úkol";
+"planning.action.categorize" = "Kategorie";
+"settings.hermes.fact.key.preferredBlockLength" = "Preferovaná délka bloku";
+"settings.hermes.fact.value.preferredBlockLength.short" = "Krátké bloky kolem 30 minut";
+"settings.hermes.fact.value.preferredBlockLength.deep" = "Bloky hluboké práce 90-120 minut";
+
+"settings.hermes.fact.key.preferredMorningWork" = "Preferované ranní soustředění";
+"settings.hermes.fact.value.preferredMorningWork" = "Preferuje soustředěnou práci ráno";
+"settings.hermes.fact.key.avoidsMorningWork" = "Vyhýbá se ranní práci";
+"settings.hermes.fact.value.avoidsMorningWork" = "Vyhýbá se pracovním blokům ráno";
+"settings.hermes.fact.key.preferredEveningWork" = "Preferované večerní soustředění";
+"settings.hermes.fact.value.preferredEveningWork" = "Preferuje soustředěnou práci večer";
+"settings.hermes.fact.key.avoidsEveningWork" = "Vyhýbá se večerní práci";
+"settings.hermes.fact.value.avoidsEveningWork" = "Vyhýbá se pracovním blokům večer";
+"settings.hermes.fact.key.meetingFatigue" = "Únava ze schůzek";
+"settings.hermes.fact.value.meetingFatigue" = "Únava z příliš mnoha schůzek";
+"settings.hermes.fact.key.wantsSlotSuggestions" = "Chce návrhy pro volné časy";
+"settings.hermes.fact.value.wantsSlotSuggestions" = "Preferuje automatické návrhy pro volný čas";
+"settings.hermes.fact.key.urgentReschedulingNeeds" = "Naléhavá potřeba přeplánování";
+"settings.hermes.fact.value.urgentReschedulingNeeds" = "Už dříve potřeboval naléhavé úpravy rozvrhu";

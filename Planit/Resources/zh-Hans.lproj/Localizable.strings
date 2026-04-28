@@ -231,10 +231,6 @@
 "energy.type.balanced" = "均衡型";
 
 /* ===== Aggressiveness ===== */
-"aggressiveness.manual" = "手动";
-"aggressiveness.assist" = "辅助";
-"aggressiveness.semiauto" = "半自动";
-"aggressiveness.auto" = "自动";
 
 /* ===== Settings View ===== */
 "settings.title" = "设置";
@@ -392,10 +388,6 @@
 "review.done.all" = "全部完成";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
-"review.plan.complete.title" = "Tomorrow's Plan Ready";
-"review.help.done" = "Done";
-"review.help.tomorrow" = "Move to Tomorrow";
-"review.help.skip" = "Skip";
 "settings.section.context" = "AI Context";
 
 /* ===== AI Context Section ===== */
@@ -520,7 +512,7 @@
 "chat.action.categorize" = "Categorize (%d)";
 "chat.action.replan-day.tooltip" = "Reorganize today using Hermes memory";
 "chat.action.fill-slots.tooltip" = "Suggest activities for open time";
-"chat.action.categorize.tooltip.empty" = "No uncategorized Google events";
+"chat.action.categorize.tooltip.empty" = "没有未分类的 Google 日程";
 "chat.action.categorize.tooltip" = "AI will batch-categorize events";
 "chat.history.clear.tooltip" = "Clear chat history";
 "chat.planning.error.no-categorize" = "No categorization suggestions.";
@@ -545,12 +537,12 @@
 "review.goal.multi.hint" = "Comma-separated";
 
 // MARK: - Settings Hermes memory card
-"settings.hermes.patterns.count" = "User patterns learned from chat & actions (%d)";
-"settings.hermes.clear.all" = "Clear all";
-"settings.hermes.empty" = "No patterns learned yet.";
-"settings.hermes.empty.hint" = "Hermes auto-learns when you chat things like 'I focus best in mornings', 'no work in evenings', '30-min blocks only'.";
-"settings.hermes.decisions.recent" = "Recent plan decisions";
-"settings.hermes.forget.tooltip" = "Forget this memory";
+"settings.hermes.patterns.count" = "从聊天和操作中学习到的用户模式（%d）";
+"settings.hermes.clear.all" = "全部清除";
+"settings.hermes.empty" = "尚未学习到任何模式。";
+"settings.hermes.empty.hint" = "Hermes 会从聊天中自动学习专注时间、晚间限制和偏好的时间块长度。";
+"settings.hermes.decisions.recent" = "最近的计划决策";
+"settings.hermes.forget.tooltip" = "忘记这条记忆";
 
 // MARK: - Settings app info buttons
 "settings.update.check" = "Check for updates";
@@ -578,9 +570,9 @@
 "settings.appearance.mode.system" = "系统";
 "settings.appearance.mode.light" = "浅色";
 "settings.appearance.mode.dark" = "深色";
-"settings.wallpaper.card" = "Background";
-"settings.wallpaper.desc" = "Choose a gradient background displayed behind the calendar.";
-"settings.wallpaper.none" = "None";
+"settings.wallpaper.card" = "背景";
+"settings.wallpaper.desc" = "选择显示在日历后方的背景。";
+"settings.wallpaper.none" = "无";
 "wallpaper.aurora" = "Aurora";
 "wallpaper.sunset" = "Sunset";
 "wallpaper.ocean" = "Ocean";
@@ -593,3 +585,78 @@
 "wallpaper.summer" = "夏";
 "wallpaper.autumn" = "秋";
 "wallpaper.winter" = "冬";
+
+/* ===== Statistics ===== */
+"panel.statistics" = "统计";
+"statistics.title" = "统计";
+"statistics.subtitle" = "一眼查看习惯和完成情况";
+
+/* ===== Animal Settings ===== */
+"settings.animal.card" = "动物";
+"settings.animal.enabled.title" = "显示动物";
+"settings.animal.enabled.desc" = "在日历底部显示行走的动物。";
+"settings.animal.display.mode" = "显示模式";
+"settings.animal.parade.count" = "%d 只动物一起行走";
+"settings.animal.shape" = "外观";
+"settings.animal.style.cat" = "猫";
+"settings.animal.style.dog" = "狗";
+"settings.animal.style.cheetah" = "猎豹";
+"settings.animal.style.duck" = "鸭子";
+"settings.animal.style.rabbit" = "兔子";
+"settings.animal.display.selected" = "选定动物";
+"settings.animal.display.random" = "随机动物";
+"settings.animal.display.parade" = "动物巡游";
+
+/* ===== Pet Wallpapers ===== */
+"wallpaper.softStudioLight" = "Soft Studio";
+"wallpaper.quietMidnightDark" = "Quiet Midnight";
+"wallpaper.pixelPetBeige" = "Pixel Pet Beige";
+"wallpaper.pixelPetPattern" = "Pixel Pet Pattern";
+"wallpaper.cozyPetRoom" = "Cozy Pet Room";
+
+/* ===== Login View Value Proposition ===== */
+"login.headline" = "The menubar calendar that plans\nyour tomorrow with AI";
+"login.subcopy" = "See all your events and reminders in one place, and let AI quickly organize your day.";
+"login.feature.menubar" = "Instant menubar access";
+"login.feature.integration" = "Calendar + Reminders";
+"login.feature.ai" = "AI daily planning";
+"login.cta.primary" = "Load My Schedule";
+"login.cta.local" = "Start with local calendar";
+"settings.hermes.outcome.partial" = "部分应用";
+"settings.hermes.decision.summary.categorized" = "已分类 %d 个事件";
+"memory.category.preference" = "偏好";
+"memory.category.schedulePattern" = "日程模式";
+"memory.category.habitPattern" = "习惯模式";
+"memory.category.goalPriority" = "目标优先级";
+"memory.category.planningHistory" = "计划历史";
+"memory.category.communicationStyle" = "沟通风格";
+"planning.intent.replanDay" = "重新规划今天";
+"planning.intent.fillFreeSlots" = "填充空闲时间";
+"planning.intent.rescheduleUrgent" = "重新安排紧急事项";
+"planning.intent.buildWeekPlan" = "制定本周计划";
+"planning.intent.categorizeUntagged" = "分类未分类事件";
+"planning.action.create" = "新建事件";
+"planning.action.move" = "移动事件";
+"planning.action.delete" = "删除事件";
+"planning.action.createTodo" = "添加待办";
+"planning.action.moveTodo" = "移动待办";
+"planning.action.updateTodo" = "编辑待办";
+"planning.action.categorize" = "类别";
+"settings.hermes.fact.key.preferredBlockLength" = "偏好的时间块长度";
+"settings.hermes.fact.value.preferredBlockLength.short" = "约 30 分钟的短时间块";
+"settings.hermes.fact.value.preferredBlockLength.deep" = "90-120 分钟深度工作块";
+
+"settings.hermes.fact.key.preferredMorningWork" = "偏好上午专注";
+"settings.hermes.fact.value.preferredMorningWork" = "偏好在上午进行专注工作";
+"settings.hermes.fact.key.avoidsMorningWork" = "避免上午工作";
+"settings.hermes.fact.value.avoidsMorningWork" = "避免在上午安排工作块";
+"settings.hermes.fact.key.preferredEveningWork" = "偏好晚上专注";
+"settings.hermes.fact.value.preferredEveningWork" = "偏好在晚上进行专注工作";
+"settings.hermes.fact.key.avoidsEveningWork" = "避免晚上工作";
+"settings.hermes.fact.value.avoidsEveningWork" = "避免在晚上安排工作块";
+"settings.hermes.fact.key.meetingFatigue" = "会议疲劳";
+"settings.hermes.fact.value.meetingFatigue" = "会议过多时会感到疲劳";
+"settings.hermes.fact.key.wantsSlotSuggestions" = "需要空档建议";
+"settings.hermes.fact.value.wantsSlotSuggestions" = "偏好为空闲时间自动给出建议";
+"settings.hermes.fact.key.urgentReschedulingNeeds" = "紧急改期需求";
+"settings.hermes.fact.value.urgentReschedulingNeeds" = "曾经需要紧急调整日程";
