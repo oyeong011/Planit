@@ -118,6 +118,7 @@ final class AnimalSettings: ObservableObject {
 
     func setParadeCount(_ count: Int) {
         let clamped = Self.clampedParadeCount(count)
+        guard paradeCount != clamped else { return }
         paradeCount = clamped
         userDefaults.set(clamped, forKey: Self.paradeCountKey)
     }

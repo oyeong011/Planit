@@ -94,27 +94,7 @@ struct WalkingAnimalView: View {
     }
 
     fileprivate static func loadFrames(style: WalkingAnimalStyle) -> [NSImage] {
-        let prefersRetina = (NSScreen.main?.backingScaleFactor ?? 1.0) >= 2.0
-
-        return (0..<style.frameCount).map { frameIndex in
-            let baseName = style.frameResourceName(for: frameIndex)
-
-            if prefersRetina,
-               let image = AnimalSpriteImageCache.shared.image(named: "\(baseName)@2x", subdirectory: style.spriteSubdirectory) {
-                return image
-            }
-
-            if let image = AnimalSpriteImageCache.shared.image(named: baseName, subdirectory: style.spriteSubdirectory) {
-                return image
-            }
-
-            if !prefersRetina,
-               let image = AnimalSpriteImageCache.shared.image(named: "\(baseName)@2x", subdirectory: style.spriteSubdirectory) {
-                return image
-            }
-
-            return NSImage(size: NSSize(width: animalSize, height: animalSize))
-        }
+        AnimalSpriteImageCache.shared.frames(style: style, prefersRetina: (NSScreen.main?.backingScaleFactor ?? 1.0) >= 2.0)
     }
 }
 
@@ -139,6 +119,8 @@ private final class WalkingAnimalAnimationView: NSView {
         let layer: CALayer
         let renderedFrames: [CGImage]
         var state: WalkingAnimalView.MotionState
+        var appliedFrameIndex: Int?
+        var appliedIsMovingRight: Bool?
     }
 
     private var pets: [AnimatedPet] = []
@@ -208,14 +190,22 @@ private final class WalkingAnimalAnimationView: NSView {
         pets = styles.enumerated().map { index, style in
             let imageLayer = CALayer()
             imageLayer.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+            imageLayer.bounds = CGRect(
+                x: 0,
+                y: 0,
+                width: WalkingAnimalView.animalSize,
+                height: WalkingAnimalView.animalSize
+            )
             imageLayer.contentsGravity = .resizeAspect
             imageLayer.contentsScale = currentBackingScale
             imageLayer.magnificationFilter = .nearest
             imageLayer.minificationFilter = .nearest
             layer?.addSublayer(imageLayer)
 
-            let frames = WalkingAnimalView.loadFrames(style: style)
-            let renderedFrames = frames.compactMap { renderFrame($0) }
+            let renderedFrames = AnimalSpriteImageCache.shared.renderedFrames(
+                style: style,
+                prefersRetina: currentBackingScale >= 2.0
+            )
             let initialX = WalkingAnimalView.boundaryInset + CGFloat(index) * (WalkingAnimalView.animalSize + 22)
             let state = WalkingAnimalView.MotionState(
                 xPos: initialX,
@@ -223,7 +213,13 @@ private final class WalkingAnimalAnimationView: NSView {
                 frameIndex: index % WalkingAnimalView.frameCount,
                 frameElapsed: 0
             )
-            return AnimatedPet(layer: imageLayer, renderedFrames: renderedFrames, state: state)
+            return AnimatedPet(
+                layer: imageLayer,
+                renderedFrames: renderedFrames,
+                state: state,
+                appliedFrameIndex: nil,
+                appliedIsMovingRight: nil
+            )
         }
     }
 
@@ -316,46 +312,108 @@ private final class WalkingAnimalAnimationView: NSView {
                 max(pets[index].state.xPos, WalkingAnimalView.boundaryInset),
                 max(WalkingAnimalView.boundaryInset, bounds.width - WalkingAnimalView.animalSize - WalkingAnimalView.boundaryInset)
             )
+            let frameIndex = pets[index].state.frameIndex % pets[index].renderedFrames.count
+            let isMovingRight = pets[index].state.isMovingRight
 
-            pets[index].layer.bounds = CGRect(
-                x: 0,
-                y: 0,
-                width: WalkingAnimalView.animalSize,
-                height: WalkingAnimalView.animalSize
-            )
             pets[index].layer.position = CGPoint(
                 x: x + WalkingAnimalView.animalSize / 2,
                 y: y + WalkingAnimalView.animalSize / 2
             )
-            pets[index].layer.transform = pets[index].state.isMovingRight
-                ? CATransform3DIdentity
-                : CATransform3DMakeScale(-1, 1, 1)
-            pets[index].layer.contents = pets[index].renderedFrames[pets[index].state.frameIndex % pets[index].renderedFrames.count]
+
+            if pets[index].appliedIsMovingRight != isMovingRight {
+                pets[index].layer.transform = isMovingRight
+                    ? CATransform3DIdentity
+                    : CATransform3DMakeScale(-1, 1, 1)
+                pets[index].appliedIsMovingRight = isMovingRight
+            }
+
+            if pets[index].appliedFrameIndex != frameIndex {
+                pets[index].layer.contents = pets[index].renderedFrames[frameIndex]
+                pets[index].appliedFrameIndex = frameIndex
+            }
         }
         CATransaction.commit()
     }
 
-    private func renderFrame(_ image: NSImage) -> CGImage? {
-        image.cgImage(forProposedRect: nil, context: nil, hints: nil)
-    }
 }
 
 final class AnimalSpriteImageCache {
     static let shared = AnimalSpriteImageCache()
-    private var cache: [String: NSImage] = [:]
+    private let lock = NSRecursiveLock()
+    private var imageCache: [String: NSImage] = [:]
+    private var framesCache: [String: [NSImage]] = [:]
+    private var renderedFramesCache: [String: [CGImage]] = [:]
 
     func image(style: WalkingAnimalStyle, frameIndex: Int) -> NSImage? {
         image(named: style.frameResourceName(for: frameIndex), subdirectory: style.spriteSubdirectory)
     }
 
     func image(named name: String, subdirectory: String = "CatSprites") -> NSImage? {
-        let cacheKey = "\(subdirectory)/\(name)"
-        if let cached = cache[cacheKey] { return cached }
-        guard let url = Bundle.module.url(forResource: name, withExtension: "png", subdirectory: subdirectory),
-              let image = NSImage(contentsOf: url) else {
-            return nil
+        withCacheLock {
+            let cacheKey = "\(subdirectory)/\(name)"
+            if let cached = imageCache[cacheKey] { return cached }
+            guard let url = Bundle.module.url(forResource: name, withExtension: "png", subdirectory: subdirectory),
+                  let image = NSImage(contentsOf: url) else {
+                return nil
+            }
+            imageCache[cacheKey] = image
+            return image
         }
-        cache[cacheKey] = image
-        return image
+    }
+
+    func frames(style: WalkingAnimalStyle, prefersRetina: Bool) -> [NSImage] {
+        withCacheLock {
+            let cacheKey = framesCacheKey(style: style, prefersRetina: prefersRetina)
+            if let cached = framesCache[cacheKey] { return cached }
+
+            let frames = (0..<style.frameCount).map { frameIndex in
+                loadFrame(style: style, frameIndex: frameIndex, prefersRetina: prefersRetina)
+            }
+            framesCache[cacheKey] = frames
+            return frames
+        }
+    }
+
+    func renderedFrames(style: WalkingAnimalStyle, prefersRetina: Bool) -> [CGImage] {
+        withCacheLock {
+            let cacheKey = framesCacheKey(style: style, prefersRetina: prefersRetina)
+            if let cached = renderedFramesCache[cacheKey] { return cached }
+
+            let renderedFrames = frames(style: style, prefersRetina: prefersRetina).compactMap { image in
+                image.cgImage(forProposedRect: nil, context: nil, hints: nil)
+            }
+            renderedFramesCache[cacheKey] = renderedFrames
+            return renderedFrames
+        }
+    }
+
+    private func framesCacheKey(style: WalkingAnimalStyle, prefersRetina: Bool) -> String {
+        "\(style.id)/\(prefersRetina ? "2x" : "1x")"
+    }
+
+    private func loadFrame(style: WalkingAnimalStyle, frameIndex: Int, prefersRetina: Bool) -> NSImage {
+        let baseName = style.frameResourceName(for: frameIndex)
+
+        if prefersRetina,
+           let image = image(named: "\(baseName)@2x", subdirectory: style.spriteSubdirectory) {
+            return image
+        }
+
+        if let image = image(named: baseName, subdirectory: style.spriteSubdirectory) {
+            return image
+        }
+
+        if !prefersRetina,
+           let image = image(named: "\(baseName)@2x", subdirectory: style.spriteSubdirectory) {
+            return image
+        }
+
+        return NSImage(size: NSSize(width: WalkingAnimalView.animalSize, height: WalkingAnimalView.animalSize))
+    }
+
+    private func withCacheLock<T>(_ body: () -> T) -> T {
+        lock.lock()
+        defer { lock.unlock() }
+        return body()
     }
 }

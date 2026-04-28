@@ -118,6 +118,21 @@ struct WalkingAnimalViewTests {
             }
         }
     }
+
+    @Test("rendered animal frames are cached per backing scale")
+    func renderedAnimalFramesAreCachedPerBackingScale() throws {
+        let cache = AnimalSpriteImageCache.shared
+        let first = cache.renderedFrames(style: .penguin, prefersRetina: true)
+        let second = cache.renderedFrames(style: .penguin, prefersRetina: true)
+        let standard = cache.renderedFrames(style: .penguin, prefersRetina: false)
+
+        #expect(first.count == WalkingAnimalStyle.penguin.frameCount)
+        #expect(second.count == first.count)
+        #expect(standard.count == first.count)
+        for index in first.indices {
+            #expect(first[index] === second[index])
+        }
+    }
 }
 
 @MainActor
@@ -160,6 +175,7 @@ struct WalkingAnimalViewTests {
     let settings = AnimalSettings(userDefaults: defaults)
 
     settings.setDisplayMode(.parade)
+    settings.setParadeCount(2)
     settings.setParadeCount(99)
 
     #expect(settings.displayMode == .parade)
@@ -170,6 +186,17 @@ struct WalkingAnimalViewTests {
     settings.setParadeCount(-2)
     #expect(settings.paradeCount == 1)
     #expect(defaults.integer(forKey: AnimalSettings.paradeCountKey) == 1)
+}
+
+@MainActor
+@Test func animalSettings_ignoresNoopParadeCountWrites() {
+    let defaults = makeAnimalDefaults()
+    let settings = AnimalSettings(userDefaults: defaults)
+
+    settings.setParadeCount(3)
+
+    #expect(settings.paradeCount == 3)
+    #expect(defaults.object(forKey: AnimalSettings.paradeCountKey) == nil)
 }
 
 private func makeAnimalDefaults() -> UserDefaults {
