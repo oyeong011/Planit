@@ -1,22 +1,39 @@
 #if os(iOS)
 import SwiftUI
 
-// MARK: - RootView
+// MARK: - RootView (Sprint B — sizeClass 분기)
 //
-// 레퍼런스 `Calen-iOS/Calen/App/RootView.swift` 포팅 (M2 UI v3).
-// 레퍼런스 원본은 Launch → Auth → Onboarding → MainTabView 4단계 분기였으나,
-// v0.1.0 범위에서 `LaunchView` / `AuthView` / `OnboardingView` 화면은 포팅 대상이 아니므로
-// **바로 MainTabView**로 진입한다. (Google 로그인은 SettingsView 안에서 처리.)
+// horizontalSizeClass 에 따라 레이아웃 분기:
+//  - .compact (iPhone, iPad Split View 1/3) → MainTabView (4탭 pill)
+//  - .regular (iPad full / 1/2)              → iPadRootView (3-column SplitView)
+//
+// 참고: 기존 RootView 는 무조건 MainTabView 진입이었으나, Sprint B 부터
+// iPad 전용 IA 를 분리. 향후 LaunchView / AuthView 단계는 v0.2 이후.
+
 struct RootView: View {
+    @Environment(\.horizontalSizeClass) private var hSizeClass
+
     var body: some View {
-        MainTabView()
+        if hSizeClass == .regular {
+            iPadRootView()
+        } else {
+            MainTabView()
+        }
     }
 }
 
 // MARK: - Previews
 
-#Preview {
+#Preview("Compact / iPhone") {
     RootView()
         .environmentObject(AppState())
+        .environmentObject(iOSThemeService.shared)
+}
+
+#Preview("Regular / iPad") {
+    RootView()
+        .environmentObject(AppState())
+        .environmentObject(iOSThemeService.shared)
+        .environment(\.horizontalSizeClass, .regular)
 }
 #endif

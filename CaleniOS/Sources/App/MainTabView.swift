@@ -17,7 +17,10 @@ struct MainTabView: View {
             Group {
                 switch appState.selectedTab {
                 case .today:
-                    HomeView()
+                    // v0.6 Sprint B': 시안 톤 HomeViewV2 (MainTabView 의 4탭 CustomTabBar 와
+                    // 함께 동작하도록 자체 탭바는 비활성화). 기존 HomeView (TimeBlocks 월그리드)
+                    // 는 archive 로 보존 (필요 시 토글 가능).
+                    HomeViewV2()
                 case .chat:
                     ChatTabView()
                 case .review:

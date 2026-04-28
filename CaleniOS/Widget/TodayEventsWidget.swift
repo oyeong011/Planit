@@ -84,8 +84,12 @@ struct TodayEventsWidget: Widget {
                 .containerBackground(.fill.tertiary, for: .widget)
         }
         .configurationDisplayName("오늘의 일정")
-        .description("Calen의 다음 일정을 홈스크린에서 바로 확인하세요.")
-        .supportedFamilies([.systemSmall, .systemMedium])
+        .description("Calen의 다음 일정을 홈스크린·잠금화면·StandBy 에서 바로 확인하세요.")
+        // Sprint D — HomeScreen 3종 + Lock Screen 3종 (StandBy 는 accessoryRectangular 재사용).
+        .supportedFamilies([
+            .systemSmall, .systemMedium, .systemLarge,
+            .accessoryInline, .accessoryRectangular, .accessoryCircular
+        ])
     }
 }
 
@@ -102,8 +106,15 @@ struct TodayEventsWidgetEntryView: View {
             SmallWidgetView(entry: entry)
         case .systemMedium:
             MediumWidgetView(entry: entry)
+        case .systemLarge:
+            LargeWidgetView(entry: entry)
+        case .accessoryInline:
+            AccessoryInlineView(entry: entry)
+        case .accessoryRectangular:
+            AccessoryRectangularView(entry: entry)
+        case .accessoryCircular:
+            AccessoryCircularView(entry: entry)
         default:
-            // systemLarge는 v0.1.2로 미룸 — fallback으로 medium 레이아웃 재사용.
             MediumWidgetView(entry: entry)
         }
     }
@@ -187,6 +198,141 @@ private struct MediumWidgetView: View {
         let start = fmt.string(from: ev.start)
         let end = fmt.string(from: ev.end)
         return "\(start) – \(end)"
+    }
+}
+
+// MARK: - Large (HomeScreen)
+
+private struct LargeWidgetView: View {
+    let entry: TodayEventsEntry
+
+    var body: some View {
+        if entry.events.isEmpty {
+            EmptyStateView()
+        } else {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("오늘의 일정")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .tracking(0.6)
+                ForEach(entry.events.prefix(6)) { ev in
+                    HStack(spacing: 10) {
+                        RoundedRectangle(cornerRadius: 2, style: .continuous)
+                            .fill(WidgetColor.color(forHex: ev.colorHex))
+                            .frame(width: 3)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(ev.title)
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(.primary)
+                                .lineLimit(1)
+                            Text(timeLabel(for: ev))
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                                .monospacedDigit()
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .frame(height: 32)
+                }
+                Spacer(minLength: 0)
+                // 하단 진행률 (오늘 끝난 이벤트 / 전체)
+                let done = entry.events.filter { $0.end < entry.date }.count
+                let total = max(entry.events.count, 1)
+                let pct = Double(done) / Double(total)
+                HStack(spacing: 8) {
+                    Text("진행 \(Int(pct * 100))%")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(.tertiary).frame(height: 4)
+                            Capsule()
+                                .fill(WidgetColor.color(forHex: entry.events.first?.colorHex ?? "#3B82F6"))
+                                .frame(width: geo.size.width * pct, height: 4)
+                        }
+                    }
+                    .frame(height: 4)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+    }
+
+    private func timeLabel(for ev: EventSnapshot) -> String {
+        if ev.isAllDay { return "종일" }
+        let fmt = DateFormatter()
+        fmt.dateFormat = "HH:mm"
+        return "\(fmt.string(from: ev.start)) – \(fmt.string(from: ev.end))"
+    }
+}
+
+// MARK: - Lock Screen / StandBy
+
+private struct AccessoryInlineView: View {
+    let entry: TodayEventsEntry
+    var body: some View {
+        if let first = entry.events.first {
+            let fmt = DateFormatter(); fmt.dateFormat = "HH:mm"
+            Text("● \(fmt.string(from: first.start)) \(first.title)")
+        } else {
+            Text("일정 없음")
+        }
+    }
+}
+
+private struct AccessoryRectangularView: View {
+    let entry: TodayEventsEntry
+    var body: some View {
+        if entry.events.isEmpty {
+            VStack(alignment: .leading) {
+                Text("Calen").font(.caption2).widgetAccentable()
+                Text("오늘 일정 없음").font(.headline)
+            }
+        } else {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("다음 일정").font(.caption2).widgetAccentable()
+                ForEach(entry.events.prefix(2)) { ev in
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(WidgetColor.color(forHex: ev.colorHex))
+                            .frame(width: 5, height: 5)
+                        Text(timeLabel(for: ev))
+                            .font(.system(size: 12, weight: .semibold))
+                            .lineLimit(1)
+                    }
+                }
+            }
+        }
+    }
+    private func timeLabel(for ev: EventSnapshot) -> String {
+        let fmt = DateFormatter(); fmt.dateFormat = "HH:mm"
+        return "\(fmt.string(from: ev.start)) \(ev.title)"
+    }
+}
+
+private struct AccessoryCircularView: View {
+    let entry: TodayEventsEntry
+    var body: some View {
+        ZStack {
+            AccessoryWidgetBackground()
+            if let first = entry.events.first {
+                VStack(spacing: 0) {
+                    Text(minutesUntil(first))
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                    Text("min")
+                        .font(.system(size: 8, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+            } else {
+                Image(systemName: "calendar")
+                    .font(.title3)
+            }
+        }
+    }
+    private func minutesUntil(_ ev: EventSnapshot) -> String {
+        let mins = max(0, Int(ev.start.timeIntervalSince(entry.date) / 60))
+        return mins > 99 ? "99+" : "\(mins)"
     }
 }
 

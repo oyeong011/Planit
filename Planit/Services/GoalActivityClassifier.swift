@@ -4,12 +4,16 @@ import Foundation
 ///
 /// 2단계 파이프라인:
 ///   1) 키워드 매칭 — 빠름·결정적. goal.keywords / goal.targets 가 제목에 포함되면 즉시 매칭.
-///   2) AI 분류   — 키워드 누락 활동에 한해 Claude/Codex CLI로 판정.
+///   2) AI 분류   — 자동 리뷰 경로에서는 비활성화. 명시적 재분류 UX로 옮겨야 함.
 ///
 /// 같은 활동을 반복 분류하지 않도록 UserDefaults에 결과를 캐시한다.
 /// 목표 목록이 바뀌면(hash 변경) 캐시는 자동 무효화.
 @MainActor
 final class GoalActivityClassifier {
+
+    /// 리뷰 탭 자동 갱신은 앱 시작/팝오버 표시만으로 실행될 수 있으므로 외부 CLI를 띄우지 않는다.
+    /// 자동 AI fallback은 CPU/권한 팝업/MCP 실행을 유발하므로 명시적 사용자 액션 뒤에서만 다시 켜야 한다.
+    nonisolated static let automaticActivityAIClassificationEnabled = false
 
     // MARK: - Types
 
@@ -91,12 +95,12 @@ final class GoalActivityClassifier {
         return Match(activityID: activity.id, goalID: nil, source: .none)
     }
 
-    // MARK: - 통합 분류 (키워드 → AI fallback)
+    // MARK: - 통합 분류 (자동 경로: 키워드 only)
 
     /// 활동들을 일괄 분류한다.
     /// - 캐시 적중: 바로 반환 (AI 호출 없음)
     /// - 키워드 매칭: 즉시 결과에 추가
-    /// - 미매칭: 5개씩 묶어 Claude로 배치 분류
+    /// - 미매칭: 자동 경로에서는 .none으로 처리해 외부 CLI 실행을 피함
     /// 결과는 캐시에 저장되어 다음 호출 시 재사용된다.
     func classify(_ activities: [Activity], against goals: [ChatGoal]) async -> [Match] {
         guard !goals.isEmpty, !activities.isEmpty else {
@@ -121,12 +125,16 @@ final class GoalActivityClassifier {
             }
         }
 
-        if !pendingAI.isEmpty {
-            let aiMatches = await classifyByAI(pendingAI, against: goals)
-            for match in aiMatches {
+        if !pendingAI.isEmpty && Self.automaticActivityAIClassificationEnabled {
+            let externalMatches = await classifyByAI(pendingAI, against: goals)
+            for match in externalMatches {
                 cache[match.activityID] = match
             }
-            results.append(contentsOf: aiMatches)
+            results.append(contentsOf: externalMatches)
+        } else {
+            results.append(contentsOf: pendingAI.map {
+                Match(activityID: $0.id, goalID: nil, source: .none)
+            })
         }
 
         saveCache(cache, for: goals)

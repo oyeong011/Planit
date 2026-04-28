@@ -1,0 +1,1061 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Calen iOS · Design Preview v0.6 (실제 시안 정확 반영)</title>
+<style>
+  :root {
+    --canvas: #0E0F12;
+    --panel:  #15171B;
+    --line:   #2A2D33;
+    --fg:     #F2F3F6;
+    --fg2:    #9CA3AF;
+    --fg3:    #6E747C;
+
+    /* Calen 브랜드 — 시안 추출 */
+    --brand:        #2B8BDA;     /* "Calen" 로고, today highlight, primary CTA */
+    --brand-deep:   #1D6FB4;
+    --brand-glow:   #BFE7FF;
+    --brand-bg:     #E8F1FE;     /* Login 배경 그라디언트 시작 */
+
+    /* 카드 톤 — 시안 Home 화면 정확 추출 (모두 라이트 블루 계열, 카테고리는 라벨로 구분) */
+    --card-work:        #DBE7F7;     /* 직장 — 진한 라이트 블루 */
+    --card-meeting:     #EBF2FB;     /* 거래처 회의 — 연한 라이트 블루 */
+    --card-dinner:      #F8E7E7;     /* 저녁식사 — 매우 연한 핑크 (시안 그대로) */
+    --card-morning:     #F0F6FF;     /* 기상(Wake) — 카드 미사용 inline */
+
+    --chip-bg:          #FFFFFF;
+    --chip-blue:        #DEEAF8;
+    --chip-text:        #2B8BDA;
+
+    --grid-event-blue:  #DCEAFE;
+    --grid-event-gray:  #EFF1F4;
+    --grid-event-bar:   #BCBEC1;     /* "호주 출장" multi-day 막대 */
+
+    --text:  #1C1C1E;
+    --text2: #6B7280;
+    --text3: #A0A6AE;
+    --text4: #C7CCD3;
+
+    /* 한국식 SAT/SUN 강조 — Calendar 월간 뷰에서는 회색 통일이지만, 주간 strip에선 살짝 보임 */
+    --sat:  #2B8BDA;
+    --sun:  #E94B4B;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--canvas); color: var(--fg);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Pretendard", system-ui; }
+  header { padding: 32px 32px 8px; max-width: 1500px; margin: 0 auto; }
+  h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
+  h2 { margin: 48px 0 16px; font-size: 18px; color: var(--fg2); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em; }
+  .sub { color: var(--fg2); margin: 8px 0 0; font-size: 13px; }
+  .hint { color: var(--fg3); font-size: 12px; }
+  main { padding: 16px 32px 80px; max-width: 1500px; margin: 0 auto; }
+  .badge { display:inline-block; font-size:10px; padding: 3px 10px; border-radius: 8px;
+    background: rgba(43,139,218,.18); color: #56C0F0; margin-left: 8px; font-weight: 600;}
+
+  /* SVG icon system */
+  .ic { width: 1em; height: 1em; stroke: currentColor; fill: none;
+    stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+    vertical-align: middle; }
+  .ic.fill { fill: currentColor; stroke: none; }
+
+  /* ROW LAYOUT */
+  .row { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+  .device-label { color: var(--fg2); font-size: 12px; margin-top: 8px; text-align: center; }
+
+  /* PHONE FRAME — 시안 사이즈 393×852 비율로 */
+  .iphone {
+    width: 320px; height: 696px; background: #000; border-radius: 44px; padding: 11px;
+    box-shadow: 0 30px 80px rgba(0,0,0,.5), 0 0 0 1px #1A1A1A inset;
+    flex-shrink: 0;
+  }
+  .iphone .screen {
+    width: 100%; height: 100%; background: #FFFFFF; border-radius: 33px;
+    overflow: hidden; position: relative; color: var(--text);
+  }
+  .notch { position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+    width: 100px; height: 26px; background: #000; border-radius: 16px; z-index: 30; }
+  .statusbar { padding: 12px 22px 4px; display:flex; justify-content: space-between;
+    font-weight: 600; font-size: 12px; color: var(--text); }
+
+  /* 공통 — 좌상단 Calen 로고 */
+  .calen-logo { padding: 10px 22px 6px; font-size: 18px; font-weight: 700;
+    color: var(--brand); letter-spacing: -0.01em;
+    font-family: -apple-system, "SF Pro Display", "Pretendard", system-ui;}
+
+  /* TABBAR (5탭, 마이크 inline — 시안 정확 반영) */
+  .tabbar {
+    position: absolute; bottom: 8px; left: 16px; right: 16px; height: 56px;
+    display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; align-items: center;
+    background: #FFFFFF; border-top: 1px solid #F0F1F4;
+    padding-top: 8px;
+  }
+  .tabbar .ti {
+    display:flex; flex-direction: column; align-items:center; justify-content:center;
+    color: var(--text); gap: 0;
+  }
+  .tabbar .ti .ic { width: 24px; height: 24px; }
+  .tabbar .ti.on { color: var(--brand); }
+
+  /* ============ HOME ============ */
+  .home { height: calc(100% - 36px); position: relative; overflow: hidden; background: #FFFFFF;}
+  .home .week-strip {
+    display: grid; grid-template-columns: repeat(7, 1fr); padding: 4px 18px 8px;
+  }
+  .home .week-strip .day { text-align: center; padding: 4px 0; }
+  .home .week-strip .num { font-size: 19px; font-weight: 700; color: var(--text);
+    letter-spacing: -0.02em;}
+  .home .week-strip .day.today .num { color: var(--brand); }
+  .home .week-strip .lbl { font-size: 9px; font-weight: 700; color: var(--text3);
+    margin-top: 2px; letter-spacing: .08em;}
+
+  .home .today-pill {
+    display: inline-block; margin: 6px 22px 4px; padding: 6px 14px;
+    border: 1.2px solid var(--text); border-radius: 18px;
+    font-size: 12px; font-weight: 600; color: var(--text);
+  }
+
+  .home .timeline {
+    position: relative; padding: 8px 18px 64px 56px; height: calc(100% - 200px);
+    overflow: auto;
+  }
+  .home .timeline::-webkit-scrollbar { display: none; }
+  .home .t-time { position: absolute; left: -40px; top: 0; width: 36px; text-align: right;
+    font-size: 11px; color: var(--text3); font-weight: 500; }
+
+  .home .row-inline {
+    position: relative; padding: 4px 0 0; display: flex; align-items: center; gap: 8px;
+    font-size: 15px; font-weight: 600; color: var(--text);
+  }
+  .home .row-inline .ic { width: 16px; height: 16px; color: #E8AC55; }
+
+  /* drive — 라이트 블루 캡슐 + 점선 */
+  .drive {
+    margin: 8px 0 8px -22px; padding-left: 0;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .drive .dotline { flex: 1; height: 0;
+    border-top: 1.5px dashed #B5CDE8; }
+  .drive .car {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, #E8F1FE, #DBE7F7);
+    display: flex; align-items: center; justify-content: center; color: var(--text);
+    box-shadow: 0 0 0 1px rgba(43,139,218,.08);
+  }
+  .drive .car .ic { width: 14px; height: 14px; }
+  .drive .min { font-size: 13px; font-weight: 600; color: var(--text);
+    white-space: nowrap; margin-left: 4px; }
+
+  .home .card {
+    position: relative; border-radius: 18px;
+    padding: 14px 14px 12px 64px; margin: 4px 0 0;
+  }
+  .home .card .ava {
+    position: absolute; left: 12px; top: 12px;
+    width: 44px; height: 44px; border-radius: 50%; background: #FFFFFF;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+  .home .card .ava .ic { width: 22px; height: 22px; color: var(--text); }
+  .home .card.work    { background: var(--card-work); }
+  .home .card.meeting { background: var(--card-meeting); }
+  .home .card.dinner  { background: var(--card-dinner); }
+
+  .home .card-title { font-size: 16px; font-weight: 700; letter-spacing: -0.01em;}
+  .home .card-bullets { margin-top: 6px; font-size: 12px; color: var(--text);
+    line-height: 1.6; }
+  .home .card-bullets ul { padding-left: 16px; margin: 0; list-style: disc;}
+  .home .card-bullets ul ul { padding-left: 16px; list-style: circle; color: var(--text2);}
+  .home .summary { margin-top: 4px; font-size: 12px; color: var(--text);
+    line-height: 1.4; }
+  .home .summary b { color: var(--text); font-weight: 600; }
+  .home .chips { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .home .chip {
+    background: var(--chip-blue); color: var(--chip-text);
+    padding: 6px 12px; border-radius: 14px; font-size: 11px; font-weight: 600;
+  }
+
+  /* ============ CALENDAR ============ */
+  .cal { height: calc(100% - 36px); padding-bottom: 64px; background: #FFFFFF;
+    overflow: auto; position: relative;}
+  .cal::-webkit-scrollbar { display: none; }
+  .cal .head {
+    padding: 4px 22px 6px; display:flex; justify-content:space-between; align-items:center;
+  }
+  .cal .head .month { font-size: 17px; font-weight: 700; }
+  .cal .head .nav { display:flex; gap: 12px; align-items:center; color: var(--brand); }
+  .cal .head .nav .ic { width: 18px; height: 18px; }
+
+  .cal .weekdays {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    padding: 6px 18px 4px; }
+  .cal .weekdays span {
+    text-align: center; font-size: 9px; color: var(--text3); font-weight: 700;
+    letter-spacing: .08em;
+  }
+  .cal .grid { display: grid; grid-template-columns: repeat(7, 1fr);
+    padding: 0 18px; gap: 0; position: relative; }
+  .cal .cell { text-align: center; padding: 6px 2px 14px; min-height: 56px;
+    position: relative; }
+  .cal .cell .num { font-size: 16px; font-weight: 600; color: var(--text); }
+  .cal .cell.today .num { color: var(--brand); }
+  .cal .cell.today::before {
+    content: ""; position: absolute; left: 50%; top: 8px; transform: translateX(-50%);
+    width: 26px; height: 26px; border-radius: 50%; background: rgba(43,139,218,.18);
+    z-index: 0;
+  }
+  .cal .cell .num { position: relative; z-index: 1; }
+  .cal .cell .lbl {
+    margin-top: 4px; display: flex; flex-direction: column; gap: 2px;
+    align-items: stretch;
+  }
+  .cal .cell .lbl span {
+    font-size: 8px; padding: 2px 4px; border-radius: 3px;
+    background: var(--grid-event-gray); color: var(--text2); font-weight: 600;
+    line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .cal .cell .lbl span.b { background: var(--grid-event-blue); color: var(--brand); }
+  .cal .multi-row { padding: 0 18px; height: 14px; display: grid;
+    grid-template-columns: repeat(7, 1fr); margin-top: -8px; margin-bottom: 4px; }
+  .cal .multi-bar {
+    grid-column: 5 / span 3; height: 14px;
+    background: var(--grid-event-bar); border-radius: 4px;
+    color: #FFFFFF; font-size: 9px; font-weight: 700; text-align: center;
+    line-height: 14px; letter-spacing: .04em;
+  }
+  .cal .today-list { padding: 12px 22px 0; }
+  .cal .today-list h4 { margin: 0 0 6px; font-size: 16px; }
+  .cal .today-list .date { font-size: 11px; color: var(--text2);
+    border: 1px solid #EAEBEF; border-radius: 16px; padding: 4px 12px;
+    display: inline-block; margin-bottom: 8px; }
+  .cal .today-list .item { padding: 10px 0; border-top: 1px solid #F0F1F4;
+    display: flex; gap: 10px; }
+  .cal .today-list .item:first-child { border-top: 0; }
+  .cal .today-list .bar { width: 3px; background: var(--brand-glow); border-radius: 2px;}
+  .cal .today-list .ttl { font-size: 14px; font-weight: 600; }
+  .cal .today-list .tm { font-size: 11px; color: var(--text2); margin-top: 2px;
+    font-variant-numeric: tabular-nums; }
+  .cal .today-list .more { margin-left: auto; color: var(--text3); font-size: 14px; }
+
+  /* ============ SETTING ============ */
+  .set { height: calc(100% - 36px); padding: 0 0 64px; background: #FFFFFF;
+    overflow: auto; position: relative;}
+  .set::-webkit-scrollbar { display: none; }
+  .set .profile-wrap { display: flex; flex-direction: column; align-items: center;
+    padding: 18px 22px 8px; }
+  .set .photo {
+    width: 96px; height: 96px; border-radius: 50%;
+    background: linear-gradient(135deg, #d4a4b8, #a76f86, #6b8aa3);
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  }
+  .set .photo .pen {
+    position: absolute; right: 0; bottom: 4px;
+    width: 28px; height: 28px; border-radius: 50%; background: #DCEAFE;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  }
+  .set .photo .pen .ic { width: 14px; height: 14px; color: var(--brand); }
+  .set .name { font-size: 22px; font-weight: 700; margin-top: 12px;}
+  .set .name span { font-size: 13px; color: var(--text2); font-weight: 500;
+    margin-left: 2px; }
+
+  .set .section { padding: 18px 22px 0; }
+  .set .section h4 {
+    margin: 0 0 8px; font-size: 14px; font-weight: 700;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .set .section h4 .ic { width: 14px; height: 14px; color: var(--text2); }
+  .set .row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; font-size: 13px; color: var(--text);
+  }
+  .set .row .key { color: var(--text); }
+  .set .row .val { color: var(--text2); }
+
+  /* ============ AI CALL ============ */
+  .ai { height: calc(100% - 36px); padding-bottom: 64px; background: #FFFFFF;
+    overflow: hidden; position: relative; }
+  .ai .mic-orb {
+    margin: 80px auto 16px; width: 140px; height: 140px; border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #FFFFFF 0%, #F4FAFF 50%, #DCEAFE 100%);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow:
+      0 0 60px rgba(43,139,218,.35),
+      0 0 0 14px rgba(43,139,218,.08),
+      inset 0 0 30px rgba(255,255,255,.6);
+  }
+  .ai .mic-orb .ic { width: 56px; height: 56px; color: var(--brand); }
+  .ai .speak { text-align: center; font-size: 17px; color: var(--text2);
+    font-weight: 500; margin: 0;}
+  .ai .panel-wrap { padding: 32px 22px 0; display:flex; flex-direction: column; gap: 12px;}
+  .ai .panel {
+    background: #F5F6F8; border-radius: 16px; padding: 14px 16px 12px;
+    text-align: center;
+  }
+  .ai .panel h5 { margin: 0 0 8px; font-size: 14px; font-weight: 700;
+    color: var(--brand); }
+  .ai .panel .line { font-size: 12px; color: var(--text); padding: 2px 0;
+    line-height: 1.5; }
+  .ai .panel .line b { color: var(--text); font-weight: 700; }
+  .ai .panel .line.gray { color: var(--text2); }
+  .ai .panel .actions { margin-top: 8px; display:flex; gap: 6px; justify-content:center;}
+  .ai .panel .actions .b {
+    padding: 5px 12px; border-radius: 12px; background: #EFF1F4;
+    font-size: 11px; font-weight: 600; color: var(--text);
+  }
+
+  /* ============ LOGIN ============ */
+  .login { height: calc(100% - 36px); position: relative;
+    background: linear-gradient(180deg, var(--brand-bg) 0%, #F8FBFF 60%, #FFFFFF 100%);
+    padding: 0 28px;
+  }
+  .login .top { text-align: center; padding: 30px 0 28px; }
+  .login .top .greet { font-size: 13px; color: var(--text); margin-bottom: 4px; }
+  .login .top .logo {
+    font-size: 44px; font-weight: 800; color: var(--brand);
+    letter-spacing: -0.02em; line-height: 1;
+    font-family: -apple-system, "SF Pro Display", "Pretendard", system-ui;
+  }
+  .login .label { text-align: center; font-size: 14px; color: var(--text2);
+    margin: 18px 0 14px; font-weight: 500;}
+  .login .field {
+    background: #FFFFFF; border-radius: 14px; padding: 14px 16px;
+    margin-bottom: 8px; font-size: 13px; color: var(--text2);
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  }
+  .login .meta { display:flex; justify-content:space-between; align-items:center;
+    padding: 4px 4px 18px; font-size: 12px; color: var(--text2); }
+  .login .meta .keep { display: flex; align-items: center; gap: 6px;}
+  .login .meta .keep .box { width: 14px; height: 14px; border: 1.5px solid var(--text3);
+    border-radius: 50%; }
+  .login .meta a { color: var(--text2); text-decoration: underline; }
+  .login .cta {
+    background: var(--brand); color: #FFFFFF; border-radius: 28px; padding: 14px;
+    font-weight: 700; text-align: center; font-size: 15px;
+    box-shadow: 0 6px 16px rgba(43,139,218,.32);
+  }
+  .login .signup { text-align: center; padding: 14px 0; font-size: 12px;
+    color: var(--text2); }
+  .login .or {
+    display:flex; align-items:center; gap: 12px; padding: 18px 14px 12px;
+    color: var(--text3); font-size: 11px;
+  }
+  .login .or::before, .login .or::after {
+    content:""; flex:1; height:1px; background:#E5E7EB;
+  }
+  .login .sso { display:flex; gap: 24px; justify-content:center; }
+  .login .sso .b {
+    width: 40px; height: 40px; display:flex; align-items:center; justify-content:center;
+    font-size: 24px; font-weight: 800;
+  }
+  .login .sso .g { color: #DB4437; }
+
+  /* ============ ADD EVENT (Sheet) ============ */
+  .sheet { height: calc(100% - 36px); position: relative;
+    background: #FFFFFF; border-radius: 24px 24px 0 0; padding: 0 0 64px;
+    overflow: hidden;
+  }
+  .sheet::before {
+    content: ""; position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+    width: 36px; height: 4px; background: #DCDCDC; border-radius: 2px;
+  }
+  .sheet .head { display:flex; justify-content: space-between; align-items: center;
+    padding: 28px 22px 12px; }
+  .sheet .head h3 { margin: 0; font-size: 18px; font-weight: 700;}
+  .sheet .head .plus { width: 28px; height: 28px; border-radius: 50%;
+    background: #F0F1F4; display:flex; align-items:center; justify-content:center;
+    color: var(--text); }
+  .sheet .head .plus .ic { width: 14px; height: 14px;}
+  .sheet .input {
+    margin: 8px 22px 14px; background: #FFFFFF; padding: 12px 14px;
+    border: 1px solid #E5E7EB; border-radius: 14px; font-size: 13px; color: var(--text3);
+  }
+  .sheet .row {
+    padding: 8px 22px; display: flex; justify-content:space-between; align-items: center;
+    font-size: 13px;
+  }
+  .sheet .row .toggle {
+    width: 36px; height: 22px; background: #E5E7EB; border-radius: 11px; position: relative;
+  }
+  .sheet .row .toggle::after { content:""; position:absolute; left: 2px; top: 2px;
+    width: 18px; height: 18px; border-radius: 50%; background: #FFF;
+    box-shadow: 0 1px 2px rgba(0,0,0,.15); }
+  .sheet .row .pills { display: flex; gap: 6px; }
+  .sheet .row .pill {
+    padding: 6px 12px; background: #EFF1F4; border-radius: 14px;
+    font-size: 12px; font-weight: 600; color: var(--text);
+  }
+  .sheet .divide { height:1px; background:#F0F1F4; margin: 8px 22px;}
+
+  .sheet .mini-cal-head { display:flex; justify-content: space-between; align-items:center;
+    padding: 6px 22px;}
+  .sheet .mini-cal-head .m { font-size: 14px; font-weight: 700; color: var(--brand);
+    display:flex; align-items:center; gap: 4px;}
+  .sheet .mini-cal-head .nav { color: var(--brand); display:flex; gap:14px; }
+  .sheet .mini-cal-head .nav .ic { width: 18px; height: 18px; }
+  .sheet .mini-w {
+    display: grid; grid-template-columns: repeat(7,1fr); padding: 4px 22px 0;
+  }
+  .sheet .mini-w span { text-align:center; font-size: 9px; color: var(--text3);
+    font-weight: 700; letter-spacing: .08em; }
+  .sheet .mini-grid {
+    display: grid; grid-template-columns: repeat(7,1fr); padding: 0 22px;
+  }
+  .sheet .mini-grid div { text-align: center; padding: 8px 0; font-size: 14px;
+    font-weight: 500; color: var(--text); position: relative; }
+  .sheet .mini-grid div.first { color: var(--brand); }
+  .sheet .mini-grid div.sel { color: var(--text); }
+  .sheet .mini-grid div.sel::before {
+    content:""; position:absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+    width: 28px; height: 28px; border-radius: 50%; background: rgba(43,139,218,.22);
+  }
+  .sheet .mini-grid div span { position: relative; }
+
+  .sheet .wheel { padding: 12px 22px; display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 0; font-variant-numeric: tabular-nums; text-align: center; }
+  .sheet .wheel .col div { padding: 4px 0; font-size: 14px; color: var(--text4); }
+  .sheet .wheel .col .on { color: var(--text); font-weight: 600;
+    background: rgba(0,0,0,.04); border-radius: 8px; }
+
+  .sheet .voice-bar {
+    position: absolute; left: 16px; right: 16px; bottom: 76px;
+    background: #F5F6F8; border-radius: 22px; padding: 10px 14px;
+    display: flex; gap: 10px; align-items: center;
+  }
+  .sheet .voice-bar .ic { width: 18px; height: 18px; color: var(--text); }
+  .sheet .voice-bar .ph { flex: 1; font-size: 12px; color: var(--text2);}
+  .sheet .voice-bar .send {
+    width: 28px; height: 28px; border-radius: 50%; background: #FFFFFF;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  }
+
+  /* COMPARE BOX */
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start;
+    margin-top: 16px;}
+  .compare-box { background: var(--panel); border:1px solid var(--line); border-radius: 16px;
+    padding: 14px; }
+  .compare-box h4 { margin: 0 0 10px; font-size: 13px; color: var(--fg2);
+    display:flex; justify-content:space-between; align-items:center;}
+  .compare-box .pic { background:#fff; border-radius: 12px; padding: 0; overflow: hidden;
+    display:flex; justify-content:center;}
+  .compare-box img { display:block; max-width: 100%; height: auto;}
+  .compare-box .iphone-wrap { background: linear-gradient(180deg, #1A1C20, #0E0F12);
+    border-radius: 12px; padding: 12px; display:flex; justify-content:center;}
+
+  /* CHANGE LOG */
+  details { background: var(--panel); border-radius: 12px; padding: 14px 18px;
+    border: 1px solid var(--line); margin-top: 12px;}
+  summary { cursor:pointer; font-weight: 600; font-size: 14px; color: var(--fg2);}
+  details[open] { padding-bottom: 18px;}
+  code { font-family: ui-monospace, "SF Mono", monospace; font-size: 12px; color: #56C0F0;
+    background: rgba(86,192,240,.1); padding: 2px 6px; border-radius: 4px;}
+
+  /* PALETTE */
+  .palette { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  @media (min-width: 900px) { .palette { grid-template-columns: repeat(3, 1fr); } }
+  .theme-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 14px 14px 28px; cursor: pointer; }
+  .theme-name { font-weight: 600; font-size: 13px; margin-bottom: 8px; display:flex;
+    justify-content: space-between; align-items: center; }
+  .theme-num { color: var(--fg3); font-size: 11px; font-weight: 500; }
+  .theme-swatches { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; height: 36px; }
+  .sw { border-radius: 6px; position: relative; }
+  .sw::after { content: attr(data-hex); position: absolute; bottom: -16px; left: 0; right: 0;
+    text-align: center; font-size: 9px; color: var(--fg3); font-family: ui-monospace, monospace; }
+</style>
+</head>
+<body>
+
+<!-- ICON DEFS -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-house" viewBox="0 0 24 24">
+      <path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9h13v-9"/><path d="M10 19v-5h4v5"/>
+    </symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24">
+      <rect x="3.5" y="5" width="17" height="15" rx="2.5"/>
+      <path d="M3.5 9.5h17"/><path d="M8 3.5v3"/><path d="M16 3.5v3"/>
+    </symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24">
+      <rect x="9" y="3" width="6" height="12" rx="3"/>
+      <path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/>
+    </symbol>
+    <symbol id="i-person" viewBox="0 0 24 24">
+      <circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.5-3.6 4-5 7-5s5.5 1.4 7 5"/>
+    </symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/>
+    </symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24">
+      <path d="M5 14h14"/><circle cx="12" cy="13" r="3.5"/>
+      <path d="M12 7V5"/><path d="M7 9 5.5 7.5"/><path d="M17 9l1.5-1.5"/>
+      <path d="M3 14h1.5"/><path d="M19.5 14H21"/>
+    </symbol>
+    <symbol id="i-car" viewBox="0 0 24 24">
+      <path d="M4 14v3a1 1 0 0 0 1 1h1.5a1.5 1.5 0 0 0 3 0h5a1.5 1.5 0 0 0 3 0H19a1 1 0 0 0 1-1v-3"/>
+      <path d="M4 14l1.6-4.4A2 2 0 0 1 7.5 8.2h9a2 2 0 0 1 1.9 1.4L20 14"/>
+      <path d="M4 14h16"/><circle cx="7.5" cy="15" r="1"/><circle cx="16.5" cy="15" r="1"/>
+    </symbol>
+    <symbol id="i-bldg" viewBox="0 0 24 24">
+      <rect x="4" y="3.5" width="11" height="17" rx="1"/>
+      <rect x="15" y="9" width="5" height="11.5" rx="1"/>
+      <path d="M7 7h2"/><path d="M11 7h2"/>
+      <path d="M7 11h2"/><path d="M11 11h2"/>
+      <path d="M7 15h2"/><path d="M11 15h2"/>
+      <path d="M17 12h1"/><path d="M17 15h1"/><path d="M17 18h1"/>
+    </symbol>
+    <symbol id="i-bust" viewBox="0 0 24 24">
+      <circle cx="12" cy="8" r="3.5"/>
+      <path d="M5.5 20c.5-3 3-5 6.5-5s6 2 6.5 5"/>
+      <path d="M9 14l3 3 3-3"/>
+    </symbol>
+    <symbol id="i-fnk" viewBox="0 0 24 24">
+      <path d="M6 4l12 16"/><path d="M18 4 6 20"/>
+      <path d="M6.5 4.5c-1 1-1.5 2-1.5 3.2 0 1.7 1.2 3 2.7 3"/>
+      <path d="M17.5 4.5c1 1 1.5 2 1.5 3.2 0 1.7-1.2 3-2.7 3"/>
+    </symbol>
+    <symbol id="i-pen" viewBox="0 0 24 24">
+      <path d="M14 4l6 6L8 22H2v-6L14 4z"/>
+    </symbol>
+    <symbol id="i-arr-r" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+    <symbol id="i-arr-l" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-msg" viewBox="0 0 24 24">
+      <path d="M4 6.5a2.5 2.5 0 0 1 2.5-2.5h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17H6.5A2.5 2.5 0 0 1 4 14.5z"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header>
+  <h1>Calen iOS · Design Preview <span style="color:#56C0F0">v0.6</span><span class="badge">실제 시안 정확 반영 · Section 1 (한국어, 호주 (1) 디렉토리 33장 기반)</span></h1>
+  <p class="sub">Home / Calendar / Setting / Ai Call / Login / 새 일정 추가 — 한국어 카피, 시안 정확 컬러, inline 5탭, 라이트 블루 카드 통일</p>
+</header>
+
+<main>
+
+  <!-- ===== Compare ===== -->
+  <h2>1 · Figma 시안 vs HTML 재현 (Home)</h2>
+  <div class="compare">
+    <div class="compare-box">
+      <h4>① Figma Section 1 / Home <span class="hint">호주 (1) / Home.png</span></h4>
+      <div class="pic"><img src="figma-refs/section1/Home.png" alt="Figma Home"/></div>
+    </div>
+    <div class="compare-box">
+      <h4>② HTML 재현 <span class="hint">아래 동일</span></h4>
+      <div class="iphone-wrap">
+        <div class="iphone" style="transform: scale(.92); transform-origin: top center;">
+          <div class="screen">
+            <div class="notch"></div>
+            <div class="statusbar"><span>9:41</span><span>● ●●●● 5G</span></div>
+            <div class="home">
+              <div class="calen-logo">Calen</div>
+              <div class="week-strip">
+                <div class="day"><div class="num">30</div><div class="lbl">MON</div></div>
+                <div class="day"><div class="num">31</div><div class="lbl">TUE</div></div>
+                <div class="day today"><div class="num">1</div><div class="lbl">WED</div></div>
+                <div class="day"><div class="num">2</div><div class="lbl">THU</div></div>
+                <div class="day"><div class="num">3</div><div class="lbl">FRI</div></div>
+                <div class="day"><div class="num">4</div><div class="lbl">SAT</div></div>
+                <div class="day"><div class="num">5</div><div class="lbl">SUN</div></div>
+              </div>
+              <div class="today-pill">오늘의 일정</div>
+              <div class="timeline">
+                <div class="row-inline" style="padding-left:0">
+                  <span class="t-time" style="top:6px">8:00</span>
+                  <svg class="ic"><use href="#i-sun"/></svg> 기상
+                </div>
+                <div class="drive">
+                  <div class="dotline"></div>
+                  <div class="car"><svg class="ic"><use href="#i-car"/></svg></div>
+                  <span class="min">20분 이동</span>
+                </div>
+                <div style="position: relative; padding-top:6px">
+                  <span class="t-time" style="top:18px">9:00</span>
+                  <div class="card work">
+                    <div class="ava"><svg class="ic"><use href="#i-bldg"/></svg></div>
+                    <div class="card-title">직장</div>
+                    <div class="card-bullets">
+                      <ul>
+                        <li>자간 맞추기</li>
+                        <li>랜더링 돌리기</li>
+                        <ul><li>사양 낮추기</li></ul>
+                        <li>리깅 수정하기 → Paint Skin Weight 조절</li>
+                        <li>텍스처 만들기</li>
+                        <li>레퍼런스 찾기
+                          <ul>
+                            <li>예셋도 있으면 비슷한 거 찾아보기</li>
+                            <li>50달러 이내로 (개당)</li>
+                          </ul>
+                        </li>
+                      </ul>
+                    </div>
+                    <div class="chips">
+                      <div class="chip">업무 진행도 보기</div>
+                      <div class="chip">할 일 추가하기</div>
+                    </div>
+                  </div>
+                </div>
+                <div style="position: relative; padding-top:8px">
+                  <span class="t-time" style="top:18px">15:00</span>
+                  <div class="card meeting">
+                    <div class="ava"><svg class="ic"><use href="#i-bust"/></svg></div>
+                    <div class="card-title">거래처 회의</div>
+                    <div class="summary">일정 요약: 지난 9일 미팅에서 얘기한 디자인 컨펌</div>
+                    <div class="chips">
+                      <div class="chip">지난 회의 요약 보기</div>
+                      <div class="chip">회의 내용 저장하기</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="drive">
+                  <div class="dotline"></div>
+                  <div class="car"><svg class="ic"><use href="#i-car"/></svg></div>
+                  <span class="min">1시간 이동</span>
+                </div>
+                <div style="position: relative; padding-top:4px">
+                  <span class="t-time" style="top:14px">18:00</span>
+                  <div class="card dinner">
+                    <div class="ava"><svg class="ic"><use href="#i-fnk"/></svg></div>
+                    <div class="card-title">저녁식사</div>
+                    <div class="summary">일정 요약: 제인과 서클러키에서의 약속</div>
+                  </div>
+                </div>
+              </div>
+              <div class="tabbar">
+                <div class="ti on"><svg class="ic"><use href="#i-house"/></svg></div>
+                <div class="ti"><svg class="ic"><use href="#i-cal"/></svg></div>
+                <div class="ti"><svg class="ic"><use href="#i-mic"/></svg></div>
+                <div class="ti"><svg class="ic"><use href="#i-person"/></svg></div>
+                <div class="ti"><svg class="ic"><use href="#i-gear"/></svg></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 14 Themes ===== -->
+  <h2>2 · 14 테마 팔레트 (테마 클릭 → 라이브 적용)</h2>
+  <div class="palette" id="palette"></div>
+
+  <!-- ===== 5 Screens ===== -->
+  <h2>3 · 다섯 가지 핵심 화면</h2>
+  <div class="row">
+
+    <!-- HOME -->
+    <div>
+      <div class="iphone"><div class="screen">
+        <div class="notch"></div>
+        <div class="statusbar"><span>9:41</span><span>● ●●●● 5G</span></div>
+        <div class="home">
+          <div class="calen-logo">Calen</div>
+          <div class="week-strip">
+            <div class="day"><div class="num">30</div><div class="lbl">MON</div></div>
+            <div class="day"><div class="num">31</div><div class="lbl">TUE</div></div>
+            <div class="day today"><div class="num">1</div><div class="lbl">WED</div></div>
+            <div class="day"><div class="num">2</div><div class="lbl">THU</div></div>
+            <div class="day"><div class="num">3</div><div class="lbl">FRI</div></div>
+            <div class="day"><div class="num">4</div><div class="lbl">SAT</div></div>
+            <div class="day"><div class="num">5</div><div class="lbl">SUN</div></div>
+          </div>
+          <div class="today-pill">오늘의 일정</div>
+          <div class="timeline">
+            <div class="row-inline" style="padding-left:0">
+              <span class="t-time" style="top:6px">8:00</span>
+              <svg class="ic"><use href="#i-sun"/></svg> 기상
+            </div>
+            <div class="drive">
+              <div class="dotline"></div>
+              <div class="car"><svg class="ic"><use href="#i-car"/></svg></div>
+              <span class="min">20분 이동</span>
+            </div>
+            <div style="position: relative; padding-top:6px">
+              <span class="t-time" style="top:18px">9:00</span>
+              <div class="card work">
+                <div class="ava"><svg class="ic"><use href="#i-bldg"/></svg></div>
+                <div class="card-title">직장</div>
+                <div class="card-bullets">
+                  <ul>
+                    <li>자간 맞추기</li>
+                    <li>랜더링 돌리기</li>
+                    <li>리깅 수정하기</li>
+                    <li>레퍼런스 찾기</li>
+                  </ul>
+                </div>
+                <div class="chips">
+                  <div class="chip">업무 진행도 보기</div>
+                  <div class="chip">할 일 추가하기</div>
+                </div>
+              </div>
+            </div>
+            <div style="position: relative; padding-top:6px">
+              <span class="t-time" style="top:18px">15:00</span>
+              <div class="card meeting">
+                <div class="ava"><svg class="ic"><use href="#i-bust"/></svg></div>
+                <div class="card-title">거래처 회의</div>
+                <div class="summary">지난 9일 미팅에서 얘기한 디자인 컨펌</div>
+                <div class="chips">
+                  <div class="chip">지난 회의 요약</div>
+                  <div class="chip">회의 내용 저장</div>
+                </div>
+              </div>
+            </div>
+            <div class="drive">
+              <div class="dotline"></div>
+              <div class="car"><svg class="ic"><use href="#i-car"/></svg></div>
+              <span class="min">1시간 이동</span>
+            </div>
+            <div style="position: relative; padding-top:4px">
+              <span class="t-time" style="top:14px">18:00</span>
+              <div class="card dinner">
+                <div class="ava"><svg class="ic"><use href="#i-fnk"/></svg></div>
+                <div class="card-title">저녁식사</div>
+                <div class="summary">제인과 서클러키에서의 약속</div>
+              </div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div class="ti on"><svg class="ic"><use href="#i-house"/></svg></div>
+            <div class="ti"><svg class="ic"><use href="#i-cal"/></svg></div>
+            <div class="ti"><svg class="ic"><use href="#i-mic"/></svg></div>
+            <div class="ti"><svg class="ic"><use href="#i-person"/></svg></div>
+            <div class="ti"><svg class="ic"><use href="#i-gear"/></svg></div>
+          </div>
+        </div>
+      </div></div>
+      <div class="device-label">Home — 오늘의 일정 타임라인</div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div>
+      <div class="iphone"><div class="screen">
+        <div class="notch"></div>
+        <div class="statusbar"><span>9:41</span><span>● ●●●● 5G</span></div>
+        <div class="cal">
+          <div class="calen-logo">Calen</div>
+          <div class="head">
+            <div class="month">April 2026 <svg class="ic" style="width:14px;color:var(--brand)"><use href="#i-arr-r"/></svg></div>
+            <div class="nav"><svg class="ic"><use href="#i-arr-l"/></svg><svg class="ic"><use href="#i-arr-r"/></svg></div>
+          </div>
+          <div class="weekdays">
+            <span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span>
+          </div>
+          <div class="grid">
+            <div class="cell today"><div class="num">1</div>
+              <div class="lbl"><span>거래처</span><span class="b">보고서</span></div></div>
+            <div class="cell"><div class="num">2</div></div>
+            <div class="cell"><div class="num">3</div></div>
+            <div class="cell"><div class="num">4</div></div>
+            <div class="cell"><div class="num">5</div></div>
+            <div class="cell"><div class="num">6</div></div>
+            <div class="cell"><div class="num">7</div>
+              <div class="lbl"><span class="b">친구</span></div></div>
+
+            <div class="cell"><div class="num">8</div>
+              <div class="lbl"><span>마감</span></div></div>
+            <div class="cell"><div class="num">9</div>
+              <div class="lbl"><span class="b">골프</span><span>회의</span></div></div>
+            <div class="cell"><div class="num">10</div>
+              <div class="lbl"><span>회식</span></div></div>
+            <div class="cell"><div class="num">11</div>
+              <div class="lbl"><span class="b">공항</span></div></div>
+            <div class="cell"><div class="num">12</div></div>
+            <div class="cell"><div class="num">13</div>
+              <div class="lbl"><span>결혼식</span></div></div>
+            <div class="cell"><div class="num">14</div></div>
+
+            <div class="cell"><div class="num">15</div>
+              <div class="lbl"><span>프로젝트</span><span class="b">회식</span></div></div>
+            <div class="cell"><div class="num">16</div></div>
+            <div class="cell"><div class="num">17</div></div>
+            <div class="cell"><div class="num">18</div>
+              <div class="lbl"><span>보고서</span><span>회의</span><span class="b">약속</span></div></div>
+            <div class="cell"><div class="num">19</div></div>
+            <div class="cell"><div class="num">20</div></div>
+            <div class="cell"><div class="num">21</div></div>
+
+            <div class="cell"><div class="num">22</div></div>
+            <div class="cell"><div class="num">23</div></div>
+            <div class="cell"><div class="num">24</div></div>
+            <div class="cell"><div class="num">25</div></div>
+            <div class="cell"><div class="num">26</div></div>
+          </div>
+          <div class="multi-row"><div></div><div></div><div></div><div></div><div class="multi-bar">호주 출장</div></div>
+          <div class="grid">
+            <div class="cell"><div class="num">27</div></div>
+            <div class="cell"><div class="num">28</div></div>
+            <div class="cell"><div class="num">29</div></div>
+            <div class="cell"><div class="num">30</div></div>
+          </div>
+          <div class="multi-row"><div class="multi-bar" style="grid-column: 1 / span 4">호주 출장</div></div>
+
+          <div class="today-list">
+            <h4>오늘의 일정</h4>
+            <div class="date">2026.04.01</div>
+            <div class="item">
+              <div class="bar"></div>
+              <div>
+                <div class="ttl">거래처와의 미팅</div>
+                <div class="tm">10:00 – 13:00</div>
+              </div>
+              <div class="more">⋯</div>
+            </div>
+            <div class="item">
+              <div class="bar" style="background: var(--card-meeting)"></div>
+              <div>
+                <div class="ttl">보고서 작성</div>
+                <div class="tm">18:00 – 20:00</div>
+              </div>
+              <div class="more">⋯</div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div class="ti"><svg class="ic"><use href="#i-house"/></svg></div>
+            <div class="ti on"><svg class="ic"><use href="#i-cal"/></svg></div>
+            <div class="ti"><svg class="ic"><use href="#i-mic"/></svg></div>
+            <div class="ti"><svg class="ic"><use href="#i-person"/></svg></div>
+            <div class="ti"><svg class="ic"><use href="#i-gear"/></svg></div>
+          </div>
+        </div>
+      </div></div>
+      <div class="device-label">Calendar — 월간 + 오늘의 일정</div>
+    </div>
+
+    <!-- AI CALL -->
+    <div>
+      <div class="iphone"><div class="screen">
+        <div class="notch"></div>
+        <div class="statusbar"><span>9:41</span><span>● ●●●● 5G</span></div>
+        <div class="ai">
+          <div class="calen-logo">Calen</div>
+          <div class="mic-orb"><svg class="ic"><use href="#i-mic"/></svg></div>
+          <p class="speak">"말씀하세요"</p>
+          <div class="panel-wrap">
+            <div class="panel">
+              <h5>최근 추가된 일정</h5>
+              <div class="line">날짜: <b>2026.07.28</b>  일정명: <b>가족 휴가</b>  장소: <b>괌</b></div>
+              <div class="line">날짜: <b>2026.04.04</b>  일정명: <b>회식</b>  장소: <b>동작구 상도동</b></div>
+              <div class="actions">
+                <div class="b">더보기</div>
+                <div class="b">수정하기</div>
+              </div>
+            </div>
+            <div class="panel">
+              <h5>추천 일정</h5>
+              <div class="line">요즘 걸음 수가 근 1년 중 가장 적습니다.</div>
+              <div class="line"><b>산책 일정</b>을 추가하는 것은 어떨까요?</div>
+              <div class="actions">
+                <div class="b">추가하기</div>
+              </div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div class="ti"><svg class="ic"><use href="#i-house"/></svg></div>
+            <div class="ti"><svg class="ic"><use href="#i-cal"/></svg></div>
+            <div class="ti on"><svg class="ic"><use href="#i-mic"/></svg></div>
+            <div class="ti"><svg class="ic"><use href="#i-person"/></svg></div>
+            <div class="ti"><svg class="ic"><use href="#i-gear"/></svg></div>
+          </div>
+        </div>
+      </div></div>
+      <div class="device-label">Ai Call — 음성 비서</div>
+    </div>
+
+    <!-- SETTING -->
+    <div>
+      <div class="iphone"><div class="screen">
+        <div class="notch"></div>
+        <div class="statusbar"><span>9:41</span><span>● ●●●● 5G</span></div>
+        <div class="set">
+          <div class="calen-logo">Calen</div>
+          <div class="profile-wrap">
+            <div class="photo"><div class="pen"><svg class="ic"><use href="#i-pen"/></svg></div></div>
+            <div class="name">최정우<span>님</span></div>
+          </div>
+          <div class="section">
+            <h4>사용자 정보 <svg class="ic"><use href="#i-arr-r"/></svg></h4>
+            <div class="row"><div class="key">이메일</div><div class="val">calen@ssu.ac.kr</div></div>
+            <div class="row"><div class="key">생년월일</div><div class="val">2026.01.02</div></div>
+            <div class="row"><div class="key">성별</div><div class="val">여</div></div>
+            <div class="row"><div class="key">거주지</div><div class="val">동해</div></div>
+            <div class="row"><div class="key">직업</div><div class="val">사업가</div></div>
+          </div>
+          <div class="section">
+            <h4>설정 <svg class="ic"><use href="#i-arr-r"/></svg></h4>
+            <div class="row"><div class="key">결제</div><div class="val">Pro Plan</div></div>
+            <div class="row"><div class="key">캘린더 연동</div><div class="val">Google Calendar</div></div>
+            <div class="row"><div class="key">알림 설정</div><div class="val"></div></div>
+            <div class="row"><div class="key">음성 설정</div><div class="val"></div></div>
+          </div>
+          <div class="tabbar">
+            <div class="ti"><svg class="ic"><use href="#i-house"/></svg></div>
+            <div class="ti"><svg class="ic"><use href="#i-cal"/></svg></div>
+            <div class="ti"><svg class="ic"><use href="#i-mic"/></svg></div>
+            <div class="ti"><svg class="ic"><use href="#i-person"/></svg></div>
+            <div class="ti on"><svg class="ic"><use href="#i-gear"/></svg></div>
+          </div>
+        </div>
+      </div></div>
+      <div class="device-label">Setting — 프로필 + 설정</div>
+    </div>
+
+    <!-- LOGIN -->
+    <div>
+      <div class="iphone"><div class="screen">
+        <div class="notch"></div>
+        <div class="statusbar"><span>9:41</span><span>● ●●●● 5G</span></div>
+        <div class="login">
+          <div class="top">
+            <div class="greet">나만의 AI 비서,</div>
+            <div class="logo">Calen</div>
+          </div>
+          <div class="label">로그인</div>
+          <div class="field">이메일을 입력하세요</div>
+          <div class="field">비밀번호를 입력하세요</div>
+          <div class="meta">
+            <div class="keep"><div class="box"></div>로그인 유지</div>
+            <a>비밀번호 찾기</a>
+          </div>
+          <div class="cta">로그인</div>
+          <div class="signup">회원가입</div>
+          <div class="or">또는</div>
+          <div class="sso">
+            <div class="b g">G</div>
+            <div class="b" style="font-size:22px"></div>
+          </div>
+        </div>
+      </div></div>
+      <div class="device-label">Login — 라이트 블루 그라디언트</div>
+    </div>
+
+    <!-- ADD EVENT SHEET -->
+    <div>
+      <div class="iphone"><div class="screen">
+        <div class="notch"></div>
+        <div class="statusbar"><span>9:41</span><span>● ●●●● 5G</span></div>
+        <div class="sheet">
+          <div class="head">
+            <div></div>
+            <h3>새 일정</h3>
+            <div class="plus"><svg class="ic"><use href="#i-plus"/></svg></div>
+          </div>
+          <div class="input">제목*</div>
+          <div class="row" style="justify-content: flex-end"><span style="margin-right:8px">종일</span><div class="toggle"></div></div>
+          <div class="row">
+            <div>시작</div>
+            <div class="pills"><div class="pill">2026.04.24</div><div class="pill">20:00</div></div>
+          </div>
+          <div class="divide"></div>
+          <div class="mini-cal-head">
+            <div class="m">April 2026 <svg class="ic" style="width:13px"><use href="#i-arr-r"/></svg></div>
+            <div class="nav"><svg class="ic"><use href="#i-arr-l"/></svg><svg class="ic"><use href="#i-arr-r"/></svg></div>
+          </div>
+          <div class="mini-w"><span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span></div>
+          <div class="mini-grid">
+            <div></div><div></div><div class="first">1</div><div>2</div><div>3</div><div>4</div><div>5</div>
+            <div>6</div><div>7</div><div>8</div><div>9</div><div>10</div><div>11</div><div>12</div>
+            <div>13</div><div>14</div><div>15</div><div>16</div><div>17</div><div>18</div><div>19</div>
+            <div>20</div><div>21</div><div>22</div><div>23</div><div class="sel"><span>24</span></div><div>25</div><div>26</div>
+            <div>27</div><div>28</div><div>29</div><div>30</div>
+          </div>
+          <div class="wheel">
+            <div class="col"><div>5</div><div>6</div><div>7</div><div class="on">8</div><div>9</div><div>10</div></div>
+            <div class="col"><div>57</div><div>58</div><div>59</div><div class="on">00</div><div>01</div><div>02</div></div>
+            <div class="col"><div></div><div></div><div>AM</div><div class="on">PM</div><div></div><div></div></div>
+          </div>
+          <div class="voice-bar">
+            <svg class="ic"><use href="#i-mic"/></svg>
+            <div class="ph">"3시에 강남에서 제인과의 미팅"</div>
+            <div class="send"><svg class="ic" style="width:14px"><use href="#i-msg"/></svg></div>
+          </div>
+          <div class="tabbar">
+            <div class="ti"><svg class="ic"><use href="#i-house"/></svg></div>
+            <div class="ti on"><svg class="ic"><use href="#i-cal"/></svg></div>
+            <div class="ti"><svg class="ic"><use href="#i-mic"/></svg></div>
+            <div class="ti"><svg class="ic"><use href="#i-person"/></svg></div>
+            <div class="ti"><svg class="ic"><use href="#i-gear"/></svg></div>
+          </div>
+        </div>
+      </div></div>
+      <div class="device-label">새 일정 추가 (Bottom Sheet)</div>
+    </div>
+
+  </div>
+
+  <h2>4 · v0.5 → v0.6 핵심 변경</h2>
+  <details open>
+    <summary>실제 시안 33장 기준 정확 반영</summary>
+    <div style="padding-top:12px; line-height:1.8; color:var(--fg2)">
+      ❌ 카드 4종 다른 색 → ✅ <b>모두 라이트 블루 톤</b> + 저녁식사만 살짝 핑크 (시안 정확)<br>
+      ❌ 마이크 floating → ✅ <b>inline 5탭</b> (Home/Cal/Mic/Person/<b>Gear</b>)<br>
+      ❌ 영어 카피 → ✅ <b>한국어</b> (기상 / 직장 / 거래처 회의 / 저녁식사 / 오늘의 일정)<br>
+      ❌ "Today's Schedule" 큰 헤더 → ✅ <b>"오늘의 일정"</b> outline 둥근 라벨<br>
+      ❌ 카드 내용 체크박스+칩 → ✅ <b>일정 요약 1줄 + 라이트 블루 액션 칩</b><br>
+      ❌ Calendar는 빈 화면 → ✅ <b>월간 + multi-day "호주 출장" 막대 + 하단 시간순 리스트</b><br>
+      ✅ <b>Ai Call</b>: 큰 마이크 orb + 글로우 + "최근 추가" / "추천 일정" 회색 카드<br>
+      ✅ <b>Setting</b>: 큰 프로필 사진 + 펜 아이콘 + 사용자 정보 / 설정 key-value 리스트<br>
+      ✅ <b>Login</b>: "나만의 AI 비서," + 큰 Calen 로고 + 라이트 블루 그라디언트 + 캡슐 CTA<br>
+      ✅ <b>새 일정 sheet</b>: 둥근 시트 + 미니 달력 + 시간 wheel + 하단 음성 바
+    </div>
+  </details>
+
+  <details>
+    <summary>다음 단계</summary>
+    <div style="padding-top:12px; line-height:1.7; color:var(--fg2)">
+      Sprint A 빌드 ✅ 완료 (CalenTheme / Theme tokens / CalendarEventV1 / CloudKitSyncCoordinator).<br>
+      Sprint B (iPad SplitView) 또는 시안에 맞춘 <b>HomeView 리뉴얼</b>로 넘어갈 예정.<br>
+      이 시안 톤을 SwiftUI로 옮길 컴포넌트:
+      <code>TodayPill</code>, <code>ScheduleTimelineView</code>, <code>DriveSegmentView</code>,
+      <code>ScheduleCard(work/meeting/dinner)</code>, <code>InlineWakeRow</code>, <code>BottomTabBar5</code>.
+    </div>
+  </details>
+
+</main>
+
+<script>
+  const themes = [
+    ["1","classic","Classic","#3F5EFB","#6D7A99","#7C3AED","#3366CC","#EAF0FF"],
+    ["2","ocean","Ocean","#006D77","#4B7F86","#00818A","#0077B6","#DDF5F7"],
+    ["3","sunset","Sunset","#B54708","#8A5A44","#C2410C","#D97706","#FFF1E6"],
+    ["4","forest","Forest","#207A4D","#52665A","#2F855A","#3A7D44","#E7F5EC"],
+    ["5","mono","Mono","#404040","#737373","#525252","#595959","#F0F0F0"],
+    ["6","sakura","Sakura","#A7355E","#8A6473","#BE185D","#DB2777","#FCE7F3"],
+    ["7","pantone-classic-blue","Pantone Classic Blue","#0F4C81","#496982","#1D5F95","#0D5C9B","#E3EEF7"],
+    ["8","pantone-illuminating","Pantone Illuminating","#F5DF4D","#8A7A28","#7A5F00","#9A6B00","#FFF7C2"],
+    ["9","pantone-ultimate-gray","Pantone Ultimate Gray","#939597","#62666A","#555A60","#6A6D70","#EFEFEF"],
+    ["10","pantone-very-peri","Pantone Very Peri","#6667AB","#4D4C7D","#5454A6","#5A5BC4","#ECECFA"],
+    ["11","pantone-viva-magenta","Pantone Viva Magenta","#BB2649","#7B3044","#A2143A","#C32148","#FBE7ED"],
+    ["12","pantone-peach-fuzz","Pantone Peach Fuzz","#FFBE98","#A65F3B","#B85C38","#C65D2E","#FFF0E8"],
+    ["13","pantone-mocha-mousse","Pantone Mocha Mousse","#A47864","#6E5248","#7B4B3B","#8A5B4A","#F3E8E1"],
+    ["14","pantone-cloud-dancer","Pantone Cloud Dancer","#F0EEE9","#8B8378","#5F5A52","#7D756B","#F8F6F0"],
+  ];
+  const palette = document.getElementById("palette");
+  themes.forEach(([n, id, name, p, s, a, e, b]) => {
+    const card = document.createElement("div");
+    card.className = "theme-card";
+    card.innerHTML = `
+      <div class="theme-name"><span>${name}</span><span class="theme-num">${id}</span></div>
+      <div class="theme-swatches">
+        <div class="sw" style="background:${p}" data-hex="${p}"></div>
+        <div class="sw" style="background:${s}" data-hex="${s}"></div>
+        <div class="sw" style="background:${a}" data-hex="${a}"></div>
+        <div class="sw" style="background:${e}" data-hex="${e}"></div>
+        <div class="sw" style="background:${b}; border:1px solid #2A2D33" data-hex="${b}"></div>
+      </div>`;
+    card.title = "클릭해서 라이브 적용";
+    card.addEventListener("click", () => {
+      document.documentElement.style.setProperty("--brand", p);
+      document.documentElement.style.setProperty("--brand-deep", a);
+      document.documentElement.style.setProperty("--brand-bg", b);
+    });
+    palette.appendChild(card);
+  });
+</script>
+</body>
+</html>
