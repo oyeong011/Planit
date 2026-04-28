@@ -89,6 +89,10 @@ if ! otool -l "$APP_BUNDLE/Contents/MacOS/Calen" | grep -q "@executable_path/../
 fi
 
 echo "→ .app bundle created at: $APP_BUNDLE"
+# Entitlement plists are signing inputs only. They must not be bundled as
+# resources because stale privacy keys can trigger confusing macOS TCC prompts.
+rm -f "$APP_BUNDLE/Contents/Resources/Planit.entitlements" \
+      "$APP_BUNDLE/Contents/Resources/Planit-dev.entitlements"
 
 # 3. 코드 서명 (Sparkle은 inside-out 순서 필수)
 if [ -n "$SIGN" ]; then
@@ -120,8 +124,11 @@ else
     # DEVELOPER_ID 없을 때: 메인 앱만 ad-hoc 서명 (--deep 없이 Sparkle XPC 건들지 않음)
     # Sparkle은 자체 Developer ID로 사전 서명됨 → TCC 권한 프롬프트 없음
     # ad-hoc→ad-hoc Sparkle 자동 업데이트 정상 작동
-    echo "→ Ad-hoc signing main bundle (Sparkle components untouched)..."
-    codesign --force --sign - "$APP_BUNDLE"
+    echo "→ Ad-hoc signing main bundle with production entitlements (Sparkle components untouched)..."
+    codesign --force --options runtime \
+        --entitlements "$PROJECT_DIR/Planit/Planit.entitlements" \
+        --sign - \
+        "$APP_BUNDLE"
 fi
 
 "$PROJECT_DIR/scripts/sparkle-static-check.sh" "$APP_BUNDLE"

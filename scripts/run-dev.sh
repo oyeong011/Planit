@@ -31,7 +31,9 @@ done
 # 기타 리소스
 cp "$BUILD_DIR/Calen_Calen.bundle/AppIcon.icns" "$APP/Contents/Resources/" 2>/dev/null || true
 cp "$BUILD_DIR/Calen_Calen.bundle/PrivacyInfo.xcprivacy" "$APP/Contents/Resources/" 2>/dev/null || true
-cp "$PROJECT_DIR/Planit/Planit.entitlements" "$APP/Contents/Resources/" 2>/dev/null || true
+# Entitlement files are signing inputs, not runtime resources. Keeping them out of
+# the app bundle prevents stale privacy entitlements from being shipped or scanned.
+rm -f "$APP/Contents/Resources/Planit.entitlements" "$APP/Contents/Resources/Planit-dev.entitlements"
 
 # Sparkle.framework 임베드 (없으면 @rpath 로드 실패로 런타임 크래시)
 SPARKLE_SRC="$PROJECT_DIR/.build/artifacts/sparkle/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework"
@@ -74,7 +76,11 @@ if [ -n "$DEV_SIGN" ]; then
         --sign "$DEV_SIGN" \
         "$APP" 2>/dev/null && echo "   Signed OK" || echo "   Sign failed (continuing unsigned)"
 else
-    echo "⚠️  No Developer ID found — running unsigned (키체인 프롬프트 발생)"
+    echo "✍️  Ad-hoc signing with dev entitlements"
+    codesign --force --options runtime \
+        --entitlements "$PROJECT_DIR/Planit/Planit-dev.entitlements" \
+        --sign - \
+        "$APP" 2>/dev/null && echo "   Signed OK" || echo "   Ad-hoc sign failed (continuing unsigned)"
 fi
 
 echo "🔄 Restarting Calen..."
