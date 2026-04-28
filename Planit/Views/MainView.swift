@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 import UserNotifications
 
 struct MainView: View {
@@ -141,12 +142,16 @@ struct MainCalendarView: View {
                 didTriggerUpdateCheckThisSession = true
                 updater.checkForUpdatesInBackground()
             }
+            publishMenuBarProgress()
         }
         .onChange(of: viewModel.calendarEvents) {
             updateEventReminders()
             // refreshUserContextAnalysis는 debounce — 이벤트 배열이 fetch/merge로
             // 초단위 변화할 때마다 매번 돌면 CPU 폭주 원인이 된다.
             scheduleDebouncedContextRefresh()
+        }
+        .onReceive(menuBarProgressChanges) { _ in
+            publishMenuBarProgress()
         }
         .onChange(of: viewModel.todos.count) {
             scheduleDebouncedContextRefresh()
@@ -166,6 +171,28 @@ struct MainCalendarView: View {
         .onReceive(NotificationCenter.default.publisher(for: .calenPopoverDidClose)) { _ in
             closeSettings()
         }
+    }
+
+    private var menuBarProgressChanges: AnyPublisher<Void, Never> {
+        Publishers.MergeMany(
+            viewModel.$todos.map { _ in () }.eraseToAnyPublisher(),
+            viewModel.$appleReminders.map { _ in () }.eraseToAnyPublisher(),
+            viewModel.$calendarEvents.map { _ in () }.eraseToAnyPublisher(),
+            viewModel.$completedEventIDs.map { _ in () }.eraseToAnyPublisher(),
+            viewModel.$currentMonth.map { _ in () }.eraseToAnyPublisher()
+        )
+        .eraseToAnyPublisher()
+    }
+
+    private func publishMenuBarProgress(now: Date = Date()) {
+        let snapshot = MenuBarProgressSnapshot.make(
+            todos: viewModel.todos,
+            reminders: viewModel.appleReminders,
+            events: viewModel.calendarEvents,
+            completedEventIDs: viewModel.completedEventIDs,
+            now: now
+        )
+        NotificationCenter.default.post(name: .calenMenuBarProgressDidChange, object: snapshot)
     }
 
     private func openSettings() {
