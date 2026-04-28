@@ -1287,9 +1287,7 @@ struct SettingsView: View {
                             wallpaperService.select(preset)
                         } label: {
                             ZStack(alignment: .topTrailing) {
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(preset.gradient)
-                                    .frame(height: 56)
+                                wallpaperPreview(for: preset)
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 8)
                                             .stroke(
@@ -1322,6 +1320,20 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+
+    @ViewBuilder
+    private func wallpaperPreview(for preset: WallpaperPreset) -> some View {
+        ZStack {
+            preset.gradient
+            if let thumbnailAssetName = preset.thumbnailAssetName {
+                WallpaperResourceImage(resourceName: thumbnailAssetName)
+                    .scaledToFill()
+                    .overlay(preset.gradient.opacity(preset.readabilityOverlayOpacity))
+            }
+        }
+        .frame(height: 56)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
     private var languageCard: some View {

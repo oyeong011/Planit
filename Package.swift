@@ -39,6 +39,8 @@ let package = Package(
                 .copy("Resources/PrivacyInfo.xcprivacy"),
                 .copy("Resources/AppIcon.icns"),
                 .copy("Resources/Animals"),
+                .copy("Resources/CatSprites"),
+                .copy("Resources/Wallpapers"),
                 .process("Resources/ko.lproj"),
                 .process("Resources/en.lproj"),
                 .process("Resources/ja.lproj"),

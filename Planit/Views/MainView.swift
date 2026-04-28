@@ -116,14 +116,7 @@ struct MainCalendarView: View {
             }
         }
         .background(
-            ZStack {
-                if let preset = wallpaperService.activePreset {
-                    preset.gradient.ignoresSafeArea()
-                } else {
-                    Color.platformControlBackground
-                    themeService.current.paneTint
-                }
-            }
+            calendarBackground
         )
         .animation(.easeInOut(duration: 0.28), value: themeService.current.id)
         .animation(.easeInOut(duration: 0.35), value: wallpaperService.activePreset?.id)
@@ -171,6 +164,25 @@ struct MainCalendarView: View {
         // popover가 바깥 클릭으로 닫히면 설정 시트도 함께 닫기
         .onReceive(NotificationCenter.default.publisher(for: .calenPopoverDidClose)) { _ in
             showSettings = false
+        }
+    }
+
+    @ViewBuilder
+    private var calendarBackground: some View {
+        ZStack {
+            if let preset = wallpaperService.activePreset {
+                preset.gradient.ignoresSafeArea()
+                if let imageAssetName = preset.imageAssetName {
+                    WallpaperResourceImage(resourceName: imageAssetName)
+                        .scaledToFill()
+                        .overlay(preset.gradient.opacity(preset.readabilityOverlayOpacity))
+                        .clipped()
+                        .ignoresSafeArea()
+                }
+            } else {
+                Color.platformControlBackground
+                themeService.current.paneTint
+            }
         }
     }
 

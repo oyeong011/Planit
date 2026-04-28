@@ -2,6 +2,8 @@ import Combine
 import Foundation
 
 enum WalkingAnimalStyle: String, CaseIterable, Identifiable {
+    case cat
+    case dog
     case fox
     case penguin
     case hamster
@@ -11,6 +13,8 @@ enum WalkingAnimalStyle: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
+        case .cat:     return "고양이"
+        case .dog:     return "강아지"
         case .fox:     return "여우"
         case .penguin: return "펭귄"
         case .hamster: return "햄스터"
@@ -21,12 +25,28 @@ enum WalkingAnimalStyle: String, CaseIterable, Identifiable {
     var frameCount: Int {
         switch self {
         case .hamster, .penguin: return 9
-        case .fox, .rabbit:      return 8
+        case .cat, .dog, .fox, .rabbit:
+            return 8
+        }
+    }
+
+    var spriteSubdirectory: String {
+        switch self {
+        case .cat, .dog: return "CatSprites"
+        case .fox, .penguin, .hamster, .rabbit: return "Animals"
         }
     }
 
     func frameResourceName(for index: Int) -> String {
         let safeIndex = max(0, min(index, frameCount - 1))
+        switch self {
+        case .cat:
+            return "cat_pixel_R\(safeIndex + 1)"
+        case .dog:
+            return "character_dog_R\(safeIndex + 1)"
+        case .fox, .penguin, .hamster, .rabbit:
+            break
+        }
         return "animal_\(rawValue)_frame_\(String(format: "%02d", safeIndex))"
     }
 }
@@ -46,7 +66,7 @@ final class AnimalSettings: ObservableObject {
         self.userDefaults = userDefaults
         self.isEnabled = userDefaults.object(forKey: Self.enabledKey) as? Bool ?? true
         let savedStyle = userDefaults.string(forKey: Self.styleKey).flatMap(WalkingAnimalStyle.init(rawValue:))
-        self.selectedStyle = savedStyle ?? .fox
+        self.selectedStyle = savedStyle ?? .cat
     }
 
     func setEnabled(_ enabled: Bool) {

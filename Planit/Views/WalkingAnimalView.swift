@@ -122,16 +122,17 @@ final class AnimalSpriteImageCache {
     private var cache: [String: NSImage] = [:]
 
     func image(style: WalkingAnimalStyle, frameIndex: Int) -> NSImage? {
-        image(named: style.frameResourceName(for: frameIndex))
+        image(named: style.frameResourceName(for: frameIndex), subdirectory: style.spriteSubdirectory)
     }
 
-    func image(named name: String) -> NSImage? {
-        if let cached = cache[name] { return cached }
-        guard let url = Bundle.module.url(forResource: name, withExtension: "png", subdirectory: "Animals"),
+    func image(named name: String, subdirectory: String = "Animals") -> NSImage? {
+        let cacheKey = "\(subdirectory)/\(name)"
+        if let cached = cache[cacheKey] { return cached }
+        guard let url = Bundle.module.url(forResource: name, withExtension: "png", subdirectory: subdirectory),
               let image = NSImage(contentsOf: url) else {
             return nil
         }
-        cache[name] = image
+        cache[cacheKey] = image
         return image
     }
 }

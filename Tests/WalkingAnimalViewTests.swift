@@ -8,12 +8,16 @@ struct WalkingAnimalViewTests {
     @Test("animal styles are the requested selectable set")
     func animalStylesAreStable() {
         #expect(WalkingAnimalStyle.allCases.map(\.id) == [
+            "cat",
+            "dog",
             "fox",
             "penguin",
             "hamster",
             "rabbit"
         ])
         #expect(WalkingAnimalStyle.allCases.map(\.title) == [
+            "고양이",
+            "강아지",
             "여우",
             "펭귄",
             "햄스터",
@@ -60,12 +64,12 @@ struct WalkingAnimalViewTests {
 }
 
 @MainActor
-@Test func animalSettings_defaultsToEnabledFox() {
+@Test func animalSettings_defaultsToEnabledCat() {
     let defaults = makeAnimalDefaults()
     let settings = AnimalSettings(userDefaults: defaults)
 
     #expect(settings.isEnabled == true)
-    #expect(settings.selectedStyle == .fox)
+    #expect(settings.selectedStyle == .cat)
 }
 
 @MainActor
