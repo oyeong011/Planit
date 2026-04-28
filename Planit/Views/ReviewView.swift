@@ -9,12 +9,13 @@ private enum ReviewSectionID: String, CaseIterable, Codable, Identifiable {
     case todoGrass    = "todo_grass"
     case myHabits     = "my_habits"
     case progress     = "progress"
+    case category     = "category"
     case longTermGoals = "long_term_goals"
 
     var id: String { rawValue }
 
     static let defaultOrder: [ReviewSectionID] = [
-        .habitGraph, .weeklyChart, .todoGrass, .myHabits, .progress, .longTermGoals
+        .habitGraph, .weeklyChart, .todoGrass, .myHabits, .progress, .category, .longTermGoals
     ]
 
     static func loadFromDefaults() -> [ReviewSectionID] {
@@ -180,6 +181,7 @@ struct ReviewView: View {
         case .todoGrass:     return 172
         case .myHabits:      return 70 + CGFloat(habitService.habits.count) * 66
         case .progress:      return 130
+        case .category:      return 92 + CGFloat(categoryStats.count) * 24
         case .longTermGoals: return 80 + CGFloat(max(1, goalMemoryService.goals.count)) * 64
         }
     }
@@ -226,6 +228,8 @@ struct ReviewView: View {
             myHabitsSection
         case .progress:
             progressSection
+        case .category:
+            if !categoryStats.isEmpty { categorySection }
         case .longTermGoals:
             longTermGoalsSection
         }

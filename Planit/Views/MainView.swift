@@ -24,6 +24,7 @@ struct MainView: View {
 enum LeftPanelMode: String {
     case chat
     case review
+    case statistics
     case onboarding
 }
 
@@ -231,6 +232,7 @@ struct MainCalendarView: View {
                 HStack(spacing: 0) {
                     panelTab(String(localized: "panel.review"), mode: .review, icon: "sparkles")
                     panelTab(String(localized: "panel.chat"), mode: .chat, icon: "bubble.left")
+                    panelTab(String(localized: "panel.statistics"), mode: .statistics, icon: "chart.bar.xaxis")
                 }
                 .padding(.horizontal, 8)
                 .padding(.top, 6)
@@ -277,6 +279,13 @@ struct MainCalendarView: View {
                         // 사용자가 채팅에서 "오늘 재계획" 버튼을 의식적으로 눌러 실행하게 함.
                         leftPanelMode = .chat
                     }
+                )
+
+            case .statistics:
+                StatisticsView(
+                    goalMemoryService: goalMemoryService,
+                    habitService: habitService,
+                    viewModel: viewModel
                 )
 
             case .chat:

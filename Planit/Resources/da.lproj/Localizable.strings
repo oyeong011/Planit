@@ -599,3 +599,7 @@
 "wallpaper.pixelPetBeige" = "Pixel Pet Beige";
 "wallpaper.pixelPetPattern" = "Pixel Pet Pattern";
 "wallpaper.cozyPetRoom" = "Cozy Pet Room";
+
+"panel.statistics" = "Stats";
+"statistics.title" = "Statistics";
+"statistics.subtitle" = "Track habits and completion at a glance";

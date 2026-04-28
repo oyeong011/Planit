@@ -588,3 +588,7 @@
 "wallpaper.pixelPetBeige" = "픽셀 펫 베이지";
 "wallpaper.pixelPetPattern" = "픽셀 펫 패턴";
 "wallpaper.cozyPetRoom" = "아늑한 펫 룸";
+
+"panel.statistics" = "통계";
+"statistics.title" = "통계";
+"statistics.subtitle" = "습관과 달성률을 한눈에 봅니다";
