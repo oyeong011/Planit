@@ -1,5 +1,6 @@
 import CoreGraphics
 import Foundation
+import AppKit
 import Testing
 @testable import Calen
 
@@ -39,9 +40,6 @@ struct WalkingAnimalViewTests {
         #expect(state.frameIndex == 0)
 
         state = WalkingAnimalView.advancedState(from: state, totalWidth: 200, frameCount: 8)
-        #expect(state.frameIndex == 0)
-
-        state = WalkingAnimalView.advancedState(from: state, totalWidth: 200, frameCount: 8)
         #expect(state.frameIndex == 1)
     }
 
@@ -61,6 +59,65 @@ struct WalkingAnimalViewTests {
         #expect(edge.xPos == maxX)
         #expect(edge.isMovingRight == false)
     }
+
+    @Test("walking animal uses optimized AppKit layer animation")
+    func walkingAnimalUsesOptimizedLayerAnimation() throws {
+        let source = try projectFile("Planit/Views/WalkingAnimalView.swift")
+
+        #expect(!source.contains("Timer.publish"),
+                "WalkingAnimalView must not use a SwiftUI Timer publisher because it invalidates the larger popover layout every tick.")
+        #expect(!source.contains("@State private var xPos"),
+                "Per-frame position must stay inside the AppKit animation view, not SwiftUI state.")
+        #expect(source.contains("NSViewRepresentable"),
+                "WalkingAnimalView should render through an AppKit view so animation does not re-render SwiftUI.")
+        #expect(source.contains(".calenPopoverDidClose"),
+                "The animal animation timer must stop when the popover closes.")
+        #expect(source.contains(".calenPopoverWillShow"),
+                "The animal animation timer must restart when the popover opens.")
+        #expect(source.contains("magnificationFilter = .nearest"))
+        #expect(source.contains("minificationFilter = .nearest"))
+        #expect(source.components(separatedBy: "Timer(timeInterval:").count - 1 == 1,
+                "Parade mode must share one timer for all animals.")
+    }
+
+    @Test("walking animal speed uses the restored faster default")
+    func walkingAnimalUsesFasterDefaultSpeed() {
+        #expect(WalkingAnimalView.speed == 90)
+    }
+
+    @Test("pet parade returns capped visible styles")
+    func petParadeReturnsCappedVisibleStyles() {
+        #expect(WalkingAnimalView.visibleStyles(
+            selectedStyle: .dog,
+            displayMode: .parade,
+            paradeCount: 99
+        ).count == 3)
+
+        #expect(WalkingAnimalView.visibleStyles(
+            selectedStyle: .dog,
+            displayMode: .parade,
+            paradeCount: -2
+        ).count == 1)
+    }
+
+    @Test("all exposed animals use eight normalized CatSprites frames")
+    func allExposedAnimalsUseNormalizedCatSpriteFrames() throws {
+        for style in WalkingAnimalStyle.allCases {
+            #expect(style.frameCount == 8)
+            #expect(style.spriteSubdirectory == "CatSprites")
+
+            for frameIndex in 0..<style.frameCount {
+                let frameName = style.frameResourceName(for: frameIndex)
+                let image = try #require(AnimalSpriteImageCache.shared.image(named: frameName, subdirectory: style.spriteSubdirectory))
+                #expect(image.size == NSSize(width: 56, height: 56), "\(style.id) frame \(frameIndex) must be 56x56")
+
+                let retina = try #require(AnimalSpriteImageCache.shared.image(named: "\(frameName)@2x", subdirectory: style.spriteSubdirectory))
+                let cgImage = try #require(retina.cgImage(forProposedRect: nil, context: nil, hints: nil))
+                #expect(cgImage.width == 112, "\(style.id) frame \(frameIndex) @2x must be 112px wide")
+                #expect(cgImage.height == 112, "\(style.id) frame \(frameIndex) @2x must be 112px tall")
+            }
+        }
+    }
 }
 
 @MainActor
@@ -70,6 +127,8 @@ struct WalkingAnimalViewTests {
 
     #expect(settings.isEnabled == true)
     #expect(settings.selectedStyle == .cat)
+    #expect(settings.displayMode == .selected)
+    #expect(settings.paradeCount == 3)
 }
 
 @MainActor
@@ -83,9 +142,47 @@ struct WalkingAnimalViewTests {
     #expect(defaults.string(forKey: AnimalSettings.styleKey) == "rabbit")
 }
 
+@MainActor
+@Test func animalSettings_mapsLegacyCatStylesToCat() {
+    for legacyValue in ["original", "pixel"] {
+        let defaults = makeAnimalDefaults()
+        defaults.set(legacyValue, forKey: AnimalSettings.styleKey)
+
+        let settings = AnimalSettings(userDefaults: defaults)
+
+        #expect(settings.selectedStyle == .cat)
+    }
+}
+
+@MainActor
+@Test func animalSettings_persistsDisplayModeAndParadeCount() {
+    let defaults = makeAnimalDefaults()
+    let settings = AnimalSettings(userDefaults: defaults)
+
+    settings.setDisplayMode(.parade)
+    settings.setParadeCount(99)
+
+    #expect(settings.displayMode == .parade)
+    #expect(defaults.string(forKey: AnimalSettings.displayModeKey) == "parade")
+    #expect(settings.paradeCount == 3)
+    #expect(defaults.integer(forKey: AnimalSettings.paradeCountKey) == 3)
+
+    settings.setParadeCount(-2)
+    #expect(settings.paradeCount == 1)
+    #expect(defaults.integer(forKey: AnimalSettings.paradeCountKey) == 1)
+}
+
 private func makeAnimalDefaults() -> UserDefaults {
     let suiteName = "AnimalSettingsTests-\(UUID().uuidString)"
     let defaults = UserDefaults(suiteName: suiteName)!
     defaults.removePersistentDomain(forName: suiteName)
     return defaults
+}
+
+private func projectFile(_ path: String) throws -> String {
+    try String(
+        contentsOf: URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            .appendingPathComponent(path),
+        encoding: .utf8
+    )
 }

@@ -1168,6 +1168,30 @@ struct SettingsView: View {
                 .toggleStyle(.switch)
 
                 VStack(alignment: .leading, spacing: 8) {
+                    Text("표시 방식")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.secondary)
+
+                    HStack(spacing: 8) {
+                        ForEach(WalkingPetDisplayMode.allCases) { mode in
+                            animalDisplayModeButton(mode)
+                        }
+                    }
+
+                    if animalSettings.displayMode == .parade {
+                        Stepper(
+                            "함께 걷는 동물 \(animalSettings.paradeCount)마리",
+                            value: Binding(
+                                get: { animalSettings.paradeCount },
+                                set: { animalSettings.setParadeCount($0) }
+                            ),
+                            in: AnimalSettings.paradeCountRange
+                        )
+                        .font(.system(size: 12, weight: .medium))
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
                     Text("모양")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.secondary)
@@ -1217,6 +1241,29 @@ struct SettingsView: View {
                     .stroke(isSelected ? calendarThemeService.current.accent.opacity(0.5) : Color.secondary.opacity(0.12), lineWidth: 1.5)
             )
             .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func animalDisplayModeButton(_ mode: WalkingPetDisplayMode) -> some View {
+        let isSelected = animalSettings.displayMode == mode
+
+        return Button {
+            animalSettings.setDisplayMode(mode)
+        } label: {
+            Text(mode.title)
+                .font(.system(size: 12, weight: isSelected ? .semibold : .medium))
+                .foregroundStyle(isSelected ? .white : .primary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 7)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(isSelected ? calendarThemeService.current.accent : Color.platformControl.opacity(0.55))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(isSelected ? Color.clear : Color.secondary.opacity(0.12), lineWidth: 1)
+                )
         }
         .buttonStyle(.plain)
     }
@@ -1523,7 +1570,7 @@ private struct AnimalSpritePreview: View {
 
     var body: some View {
         Group {
-            if let image = AnimalSpriteImageCache.shared.image(style: style, frameIndex: 0) {
+            if let image = Self.previewImage(for: style) {
                 Image(nsImage: image)
                     .resizable()
                     .interpolation(.none)
@@ -1536,5 +1583,18 @@ private struct AnimalSpritePreview: View {
             }
         }
         .frame(width: 30, height: 30)
+    }
+
+    private static let previewImageCache: [WalkingAnimalStyle: NSImage] = {
+        Dictionary(uniqueKeysWithValues: WalkingAnimalStyle.allCases.compactMap { style in
+            guard let image = AnimalSpriteImageCache.shared.image(style: style, frameIndex: 0) else {
+                return nil
+            }
+            return (style, image)
+        })
+    }()
+
+    private static func previewImage(for style: WalkingAnimalStyle) -> NSImage? {
+        previewImageCache[style]
     }
 }
