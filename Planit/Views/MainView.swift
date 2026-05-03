@@ -1,5 +1,4 @@
 import SwiftUI
-import Combine
 import UserNotifications
 
 struct MainView: View {
@@ -109,7 +108,31 @@ struct MainCalendarView: View {
                 )
             }
         }
-        .frame(width: showLeftPanel ? 1320 : 1040, height: 860)
+        .frame(width: (showLeftPanel || showSettings) ? 1320 : 1040, height: 860)
+        .overlay {
+            if showSettings {
+                ZStack {
+                    Color.black.opacity(0.18)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            closeSettings()
+                        }
+
+                    SettingsView(
+                        goalService: goalService,
+                        authManager: authManager,
+                        aiService: aiService,
+                        viewModel: viewModel,
+                        userContextService: userContextService,
+                        hermesMemoryService: hermesMemoryService,
+                        onDismiss: closeSettings
+                    )
+                    .shadow(color: .black.opacity(0.22), radius: 22, y: 12)
+                    .transition(.scale(scale: 0.98).combined(with: .opacity))
+                }
+            }
+        }
+        .animation(.easeInOut(duration: 0.16), value: showSettings)
         .task {
             // Hermes CloudKit upstream sync 시작 (UserDefaults 플래그 기반).
             // 활성화 안 돼 있으면 startIfEnabled가 nil 반환 → no-op.
@@ -142,7 +165,6 @@ struct MainCalendarView: View {
                 didTriggerUpdateCheckThisSession = true
                 updater.checkForUpdatesInBackground()
             }
-            publishMenuBarProgress()
         }
         .onChange(of: viewModel.calendarEvents) {
             updateEventReminders()
@@ -150,49 +172,13 @@ struct MainCalendarView: View {
             // 초단위 변화할 때마다 매번 돌면 CPU 폭주 원인이 된다.
             scheduleDebouncedContextRefresh()
         }
-        .onReceive(menuBarProgressChanges) { _ in
-            publishMenuBarProgress()
-        }
         .onChange(of: viewModel.todos.count) {
             scheduleDebouncedContextRefresh()
         }
-        .sheet(isPresented: $showSettings) {
-            SettingsView(
-                goalService: goalService,
-                authManager: authManager,
-                aiService: aiService,
-                viewModel: viewModel,
-                userContextService: userContextService,
-                hermesMemoryService: hermesMemoryService,
-                onDismiss: closeSettings
-            )
-        }
-        // popover가 바깥 클릭으로 닫히면 설정 시트도 함께 닫기
+        // popover가 바깥 클릭으로 닫히면 설정 오버레이도 함께 닫기
         .onReceive(NotificationCenter.default.publisher(for: .calenPopoverDidClose)) { _ in
             closeSettings()
         }
-    }
-
-    private var menuBarProgressChanges: AnyPublisher<Void, Never> {
-        Publishers.MergeMany(
-            viewModel.$todos.map { _ in () }.eraseToAnyPublisher(),
-            viewModel.$appleReminders.map { _ in () }.eraseToAnyPublisher(),
-            viewModel.$calendarEvents.map { _ in () }.eraseToAnyPublisher(),
-            viewModel.$completedEventIDs.map { _ in () }.eraseToAnyPublisher(),
-            viewModel.$currentMonth.map { _ in () }.eraseToAnyPublisher()
-        )
-        .eraseToAnyPublisher()
-    }
-
-    private func publishMenuBarProgress(now: Date = Date()) {
-        let snapshot = MenuBarProgressSnapshot.make(
-            todos: viewModel.todos,
-            reminders: viewModel.appleReminders,
-            events: viewModel.calendarEvents,
-            completedEventIDs: viewModel.completedEventIDs,
-            now: now
-        )
-        NotificationCenter.default.post(name: .calenMenuBarProgressDidChange, object: snapshot)
     }
 
     private func openSettings() {

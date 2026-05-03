@@ -603,9 +603,7 @@
 "settings.animal.style.cheetah" = "Gepard";
 "settings.animal.style.duck" = "Ente";
 "settings.animal.style.rabbit" = "Kaninchen";
-"settings.animal.style.panda" = "Panda";
-"settings.animal.style.turtle" = "Schildkröte";
-"settings.animal.style.squirrel" = "Eichhörnchen";
+"settings.animal.style.monkey" = "Affe";
 "settings.animal.display.selected" = "Ausgewähltes Tier";
 "settings.animal.display.random" = "Zufälliges Tier";
 "settings.animal.display.parade" = "Tierparade";

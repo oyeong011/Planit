@@ -604,9 +604,7 @@
 "settings.animal.style.cheetah" = "Gepardi";
 "settings.animal.style.duck" = "Ankka";
 "settings.animal.style.rabbit" = "Kani";
-"settings.animal.style.panda" = "Panda";
-"settings.animal.style.turtle" = "Kilpikonna";
-"settings.animal.style.squirrel" = "Orava";
+"settings.animal.style.monkey" = "Apina";
 "settings.animal.display.selected" = "Valittu eläin";
 "settings.animal.display.random" = "Satunnainen eläin";
 "settings.animal.display.parade" = "Eläinparaati";

@@ -104,9 +104,7 @@ struct LocalizationQualityTests {
             "settings.animal.style.cheetah",
             "settings.animal.style.duck",
             "settings.animal.style.rabbit",
-            "settings.animal.style.panda",
-            "settings.animal.style.turtle",
-            "settings.animal.style.squirrel"
+            "settings.animal.style.monkey"
         ]
 
         for locale in try availableLocales() {

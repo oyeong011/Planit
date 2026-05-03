@@ -603,9 +603,7 @@
 "settings.animal.style.cheetah" = "猎豹";
 "settings.animal.style.duck" = "鸭子";
 "settings.animal.style.rabbit" = "兔子";
-"settings.animal.style.panda" = "熊猫";
-"settings.animal.style.turtle" = "乌龟";
-"settings.animal.style.squirrel" = "松鼠";
+"settings.animal.style.monkey" = "猴子";
 "settings.animal.display.selected" = "选定动物";
 "settings.animal.display.random" = "随机动物";
 "settings.animal.display.parade" = "动物巡游";

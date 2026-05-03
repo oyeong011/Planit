@@ -604,9 +604,7 @@
 "settings.animal.style.cheetah" = "เสือชีตาห์";
 "settings.animal.style.duck" = "เป็ด";
 "settings.animal.style.rabbit" = "กระต่าย";
-"settings.animal.style.panda" = "แพนด้า";
-"settings.animal.style.turtle" = "เต่า";
-"settings.animal.style.squirrel" = "กระรอก";
+"settings.animal.style.monkey" = "ลิง";
 "settings.animal.display.selected" = "สัตว์ที่เลือก";
 "settings.animal.display.random" = "สัตว์สุ่ม";
 "settings.animal.display.parade" = "ขบวนพาเหรดสัตว์";

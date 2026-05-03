@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 // MARK: - Settings Section
@@ -78,6 +79,9 @@ struct SettingsView: View {
             .buttonStyle(.plain)
             .keyboardShortcut(.cancelAction)
             .padding(12)
+        }
+        .onDisappear {
+            autosave()
         }
     }
 
@@ -1253,15 +1257,12 @@ struct SettingsView: View {
                     }
 
                     if animalSettings.displayMode == .parade {
-                        Stepper(
-                            String(format: String(localized: "settings.animal.parade.count"), animalSettings.paradeCount),
-                            value: Binding(
-                                get: { animalSettings.paradeCount },
-                                set: { animalSettings.setParadeCount($0) }
-                            ),
-                            in: AnimalSettings.paradeCountRange
-                        )
+                        Text(String(
+                            format: String(localized: "settings.animal.parade.count"),
+                            animalSettings.selectedParadeStyles.count
+                        ))
                         .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.secondary)
                     }
                 }
 
@@ -1282,10 +1283,17 @@ struct SettingsView: View {
     }
 
     private func animalStyleButton(_ style: WalkingAnimalStyle) -> some View {
-        let isSelected = animalSettings.selectedStyle == style
+        let isParadeMode = animalSettings.displayMode == .parade
+        let isSelected = isParadeMode
+            ? animalSettings.selectedParadeStyles.contains(style)
+            : animalSettings.selectedStyle == style
 
         return Button {
-            animalSettings.selectStyle(style)
+            if isParadeMode {
+                animalSettings.toggleParadeStyle(style)
+            } else {
+                animalSettings.selectStyle(style)
+            }
         } label: {
             HStack(spacing: 8) {
                 AnimalSpritePreview(style: style)
@@ -1659,16 +1667,27 @@ private struct AnimalSpritePreview: View {
         .frame(width: 30, height: 30)
     }
 
-    private static let previewImageCache: [WalkingAnimalStyle: NSImage] = {
-        Dictionary(uniqueKeysWithValues: WalkingAnimalStyle.allCases.compactMap { style in
-            guard let image = AnimalSpriteImageCache.shared.image(style: style, frameIndex: 0) else {
-                return nil
-            }
-            return (style, image)
-        })
-    }()
+    private static let previewImageCacheLock = NSLock()
+    private static var previewImageCache: [WalkingAnimalStyle: NSImage] = [:]
 
     private static func previewImage(for style: WalkingAnimalStyle) -> NSImage? {
-        previewImageCache[style]
+        if let cached = cachedPreviewImage(for: style) {
+            return cached
+        }
+
+        guard let image = AnimalSpriteImageCache.shared.image(style: style, frameIndex: 0) else {
+            return nil
+        }
+
+        previewImageCacheLock.lock()
+        previewImageCache[style] = image
+        previewImageCacheLock.unlock()
+        return image
+    }
+
+    private static func cachedPreviewImage(for style: WalkingAnimalStyle) -> NSImage? {
+        previewImageCacheLock.lock()
+        defer { previewImageCacheLock.unlock() }
+        return previewImageCache[style]
     }
 }

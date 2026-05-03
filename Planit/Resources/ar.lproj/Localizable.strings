@@ -604,9 +604,7 @@
 "settings.animal.style.cheetah" = "فهد";
 "settings.animal.style.duck" = "بطة";
 "settings.animal.style.rabbit" = "أرنب";
-"settings.animal.style.panda" = "باندا";
-"settings.animal.style.turtle" = "سلحفاة";
-"settings.animal.style.squirrel" = "سنجاب";
+"settings.animal.style.monkey" = "قرد";
 "settings.animal.display.selected" = "الحيوان المحدد";
 "settings.animal.display.random" = "حيوان عشوائي";
 "settings.animal.display.parade" = "استعراض الحيوانات";

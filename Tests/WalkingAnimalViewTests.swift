@@ -14,9 +14,7 @@ struct WalkingAnimalViewTests {
             "cheetah",
             "duck",
             "rabbit",
-            "panda",
-            "turtle",
-            "squirrel"
+            "monkey"
         ])
 
         for style in WalkingAnimalStyle.allCases {
@@ -83,24 +81,33 @@ struct WalkingAnimalViewTests {
                 "Parade mode must share one timer for all animals.")
     }
 
+    @Test("settings animal previews load thumbnails lazily")
+    func settingsAnimalPreviewsLoadThumbnailsLazily() throws {
+        let source = try projectFile("Planit/Views/SettingsView.swift")
+
+        #expect(!source.contains("WalkingAnimalStyle.allCases.compactMap"),
+                "Settings must not decode every animal thumbnail before the grid is visible.")
+        #expect(source.contains("previewImageCache[style] = image"))
+    }
+
     @Test("walking animal speed uses the restored faster default")
     func walkingAnimalUsesFasterDefaultSpeed() {
         #expect(WalkingAnimalView.speed == 90)
     }
 
-    @Test("pet parade returns capped visible styles")
-    func petParadeReturnsCappedVisibleStyles() {
+    @Test("pet parade returns selected visible styles")
+    func petParadeReturnsSelectedVisibleStyles() {
         #expect(WalkingAnimalView.visibleStyles(
             selectedStyle: .dog,
             displayMode: .parade,
-            paradeCount: 99
-        ).count == 3)
+            paradeStyles: [.cat, .rabbit, .duck, .monkey]
+        ).map(\.id) == ["cat", "rabbit", "duck", "monkey"])
 
         #expect(WalkingAnimalView.visibleStyles(
             selectedStyle: .dog,
             displayMode: .parade,
-            paradeCount: -2
-        ).count == 1)
+            paradeStyles: []
+        ).map(\.id) == ["dog"])
     }
 
     @Test("all exposed animals use eight normalized CatSprites frames")
@@ -146,7 +153,8 @@ struct WalkingAnimalViewTests {
     #expect(settings.isEnabled == true)
     #expect(settings.selectedStyle == .cat)
     #expect(settings.displayMode == .selected)
-    #expect(settings.paradeCount == 3)
+    #expect(settings.paradeCount == 1)
+    #expect(settings.selectedParadeStyles.map(\.id) == ["cat"])
 }
 
 @MainActor
@@ -174,7 +182,7 @@ struct WalkingAnimalViewTests {
 
 @MainActor
 @Test func animalSettings_mapsRemovedFoxStyleToCat() {
-    for removedStyle in ["fox", "hamster", "penguin"] {
+    for removedStyle in ["fox", "hamster", "penguin", "panda", "turtle", "squirrel"] {
         let defaults = makeAnimalDefaults()
         defaults.set(removedStyle, forKey: AnimalSettings.styleKey)
 
@@ -195,12 +203,53 @@ struct WalkingAnimalViewTests {
 
     #expect(settings.displayMode == .parade)
     #expect(defaults.string(forKey: AnimalSettings.displayModeKey) == "parade")
-    #expect(settings.paradeCount == 3)
-    #expect(defaults.integer(forKey: AnimalSettings.paradeCountKey) == 3)
+    #expect(settings.paradeCount == WalkingAnimalStyle.allCases.count)
+    #expect(defaults.integer(forKey: AnimalSettings.paradeCountKey) == WalkingAnimalStyle.allCases.count)
+    #expect(defaults.stringArray(forKey: AnimalSettings.paradeStylesKey) == WalkingAnimalStyle.allCases.map(\.id))
 
     settings.setParadeCount(-2)
     #expect(settings.paradeCount == 1)
     #expect(defaults.integer(forKey: AnimalSettings.paradeCountKey) == 1)
+    #expect(defaults.stringArray(forKey: AnimalSettings.paradeStylesKey) == ["cat"])
+}
+
+@MainActor
+@Test func animalSettings_persistsMultipleParadeStyles() {
+    let defaults = makeAnimalDefaults()
+    let settings = AnimalSettings(userDefaults: defaults)
+
+    settings.toggleParadeStyle(.dog)
+    settings.toggleParadeStyle(.rabbit)
+
+    #expect(settings.selectedParadeStyles.map(\.id) == ["cat", "dog", "rabbit"])
+    #expect(defaults.stringArray(forKey: AnimalSettings.paradeStylesKey) == ["cat", "dog", "rabbit"])
+    #expect(settings.paradeCount == 3)
+
+    settings.toggleParadeStyle(.dog)
+    #expect(settings.selectedParadeStyles.map(\.id) == ["cat", "rabbit"])
+    #expect(defaults.stringArray(forKey: AnimalSettings.paradeStylesKey) == ["cat", "rabbit"])
+}
+
+@MainActor
+@Test func animalSettings_migratesLegacyParadeCountToSelectedStyles() {
+    let defaults = makeAnimalDefaults()
+    defaults.set(3, forKey: AnimalSettings.paradeCountKey)
+
+    let settings = AnimalSettings(userDefaults: defaults)
+
+        #expect(settings.selectedParadeStyles.map(\.id) == ["cat", "dog", "cheetah"])
+    #expect(settings.paradeCount == 3)
+}
+
+@MainActor
+@Test func animalSettings_keepsOneParadeStyleSelected() {
+    let defaults = makeAnimalDefaults()
+    let settings = AnimalSettings(userDefaults: defaults)
+
+    settings.toggleParadeStyle(.cat)
+
+    #expect(settings.selectedParadeStyles.map(\.id) == ["cat"])
+    #expect(defaults.stringArray(forKey: AnimalSettings.paradeStylesKey) == nil)
 }
 
 @MainActor
@@ -208,9 +257,9 @@ struct WalkingAnimalViewTests {
     let defaults = makeAnimalDefaults()
     let settings = AnimalSettings(userDefaults: defaults)
 
-    settings.setParadeCount(3)
+    settings.setParadeCount(1)
 
-    #expect(settings.paradeCount == 3)
+    #expect(settings.paradeCount == 1)
     #expect(defaults.object(forKey: AnimalSettings.paradeCountKey) == nil)
 }
 

@@ -6,12 +6,18 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 SWIFT=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift
+CONFIGURATION="${CONFIGURATION:-debug}"
 
-echo "🔨 Building..."
+if [[ "$CONFIGURATION" != "debug" && "$CONFIGURATION" != "release" ]]; then
+    echo "CONFIGURATION must be 'debug' or 'release' (got: $CONFIGURATION)" >&2
+    exit 1
+fi
+
+echo "🔨 Building ($CONFIGURATION)..."
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
-    $SWIFT build --package-path "$PROJECT_DIR" -c release 2>&1 | grep -E "error:|warning:|Build complete"
+    $SWIFT build --package-path "$PROJECT_DIR" -c "$CONFIGURATION" 2>&1 | grep -E "error:|warning:|Build complete"
 
-BUILD_DIR="$PROJECT_DIR/.build/release"
+BUILD_DIR="$PROJECT_DIR/.build/$CONFIGURATION"
 APP=/tmp/Calen.app
 
 echo "📦 Creating app bundle..."
@@ -29,6 +35,11 @@ for lproj in "$PROJECT_DIR/Planit/Resources"/*.lproj; do
 done
 
 # 기타 리소스
+RBUNDLE="$BUILD_DIR/Calen_Calen.bundle"
+if [ -d "$RBUNDLE" ]; then
+    rm -rf "$APP/Contents/Resources/Calen_Calen.bundle"
+    cp -R "$RBUNDLE" "$APP/Contents/Resources/"
+fi
 cp "$BUILD_DIR/Calen_Calen.bundle/AppIcon.icns" "$APP/Contents/Resources/" 2>/dev/null || true
 cp "$BUILD_DIR/Calen_Calen.bundle/PrivacyInfo.xcprivacy" "$APP/Contents/Resources/" 2>/dev/null || true
 # Entitlement files are signing inputs, not runtime resources. Keeping them out of

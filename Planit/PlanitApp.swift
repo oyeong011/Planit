@@ -27,7 +27,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var popover: NSPopover!
     var globalClickMonitor: Any?
     private let updater = UpdaterService.shared
-    private var menuBarProgressSnapshot = MenuBarProgressSnapshot.make(todayTotal: 0, todayCompleted: 0)
     private var cancellables = Set<AnyCancellable>()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -45,7 +44,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         if let button = statusItem.button {
-            button.image = Self.makeStatusBarImage(update: false, snapshot: menuBarProgressSnapshot)
+            button.image = Self.makeStatusBarImage(update: false)
             button.target = self
             button.action = #selector(handleStatusItemClick)
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
@@ -66,16 +65,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         updater.$updateAvailable
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.refreshStatusIcon() }
-            .store(in: &cancellables)
-
-        NotificationCenter.default.publisher(for: .calenMenuBarProgressDidChange)
-            .compactMap { $0.object as? MenuBarProgressSnapshot }
-            .removeDuplicates()
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] snapshot in
-                self?.menuBarProgressSnapshot = snapshot
-                self?.refreshStatusIcon()
-            }
             .store(in: &cancellables)
 
         // appearance 변경 시 NSApp + popover 양쪽 모두 즉시 반영
@@ -197,14 +186,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func refreshStatusIcon() {
-        statusItem.button?.image = Self.makeStatusBarImage(
-            update: updater.updateAvailable,
-            snapshot: menuBarProgressSnapshot
-        )
+        statusItem.button?.image = Self.makeStatusBarImage(update: updater.updateAvailable)
     }
 
-    private static func makeStatusBarImage(update: Bool, snapshot: MenuBarProgressSnapshot) -> NSImage {
-        MenuBarProgressIcon.makeImage(snapshot: snapshot, updateAvailable: update)
+    private static func makeStatusBarImage(update: Bool) -> NSImage {
+        MenuBarIcon.makeImage(updateAvailable: update)
     }
 }
 
@@ -224,7 +210,6 @@ extension AppDelegate: NSPopoverDelegate {
 extension Notification.Name {
     static let calenPopoverDidClose  = Notification.Name("calenPopoverDidClose")
     static let calenPopoverWillShow  = Notification.Name("calenPopoverWillShow")
-    static let calenMenuBarProgressDidChange = Notification.Name("calenMenuBarProgressDidChange")
 }
 
 #elseif os(iOS)

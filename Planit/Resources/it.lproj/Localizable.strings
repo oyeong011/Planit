@@ -604,9 +604,7 @@
 "settings.animal.style.cheetah" = "Ghepardo";
 "settings.animal.style.duck" = "Anatra";
 "settings.animal.style.rabbit" = "Coniglio";
-"settings.animal.style.panda" = "Panda";
-"settings.animal.style.turtle" = "Tartaruga";
-"settings.animal.style.squirrel" = "Scoiattolo";
+"settings.animal.style.monkey" = "Scimmia";
 "settings.animal.display.selected" = "Animale selezionato";
 "settings.animal.display.random" = "Animale casuale";
 "settings.animal.display.parade" = "Parata di animali";

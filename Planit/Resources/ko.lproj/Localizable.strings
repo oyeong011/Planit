@@ -608,9 +608,7 @@
 "settings.animal.style.cheetah" = "치타";
 "settings.animal.style.duck" = "오리";
 "settings.animal.style.rabbit" = "토끼";
-"settings.animal.style.panda" = "판다";
-"settings.animal.style.turtle" = "거북이";
-"settings.animal.style.squirrel" = "다람쥐";
+"settings.animal.style.monkey" = "원숭이";
 "settings.animal.display.selected" = "선택한 동물";
 "settings.animal.display.random" = "랜덤 동물";
 "settings.animal.display.parade" = "동물 퍼레이드";

@@ -25,7 +25,7 @@ struct WalkingAnimalView: View {
             WalkingAnimalLayerView(
                 selectedStyle: settings.selectedStyle,
                 displayMode: settings.displayMode,
-                paradeCount: settings.paradeCount
+                paradeStyles: settings.selectedParadeStyles
             )
             .frame(height: Self.laneHeight)
         } else {
@@ -43,7 +43,7 @@ struct WalkingAnimalView: View {
     static func visibleStyles(
         selectedStyle: WalkingAnimalStyle,
         displayMode: WalkingPetDisplayMode,
-        paradeCount: Int
+        paradeStyles: [WalkingAnimalStyle]
     ) -> [WalkingAnimalStyle] {
         switch displayMode {
         case .selected:
@@ -51,9 +51,7 @@ struct WalkingAnimalView: View {
         case .random:
             return [randomSessionStyle]
         case .parade:
-            let count = AnimalSettings.clampedParadeCount(paradeCount)
-            let remaining = WalkingAnimalStyle.randomPool.filter { $0 != selectedStyle }
-            return Array(([selectedStyle] + remaining).prefix(count))
+            return AnimalSettings.normalizedParadeStyles(paradeStyles.isEmpty ? [selectedStyle] : paradeStyles)
         }
     }
 
@@ -101,16 +99,16 @@ struct WalkingAnimalView: View {
 private struct WalkingAnimalLayerView: NSViewRepresentable {
     let selectedStyle: WalkingAnimalStyle
     let displayMode: WalkingPetDisplayMode
-    let paradeCount: Int
+    let paradeStyles: [WalkingAnimalStyle]
 
     func makeNSView(context: Context) -> WalkingAnimalAnimationView {
         let view = WalkingAnimalAnimationView()
-        view.configure(selectedStyle: selectedStyle, displayMode: displayMode, paradeCount: paradeCount)
+        view.configure(selectedStyle: selectedStyle, displayMode: displayMode, paradeStyles: paradeStyles)
         return view
     }
 
     func updateNSView(_ nsView: WalkingAnimalAnimationView, context: Context) {
-        nsView.configure(selectedStyle: selectedStyle, displayMode: displayMode, paradeCount: paradeCount)
+        nsView.configure(selectedStyle: selectedStyle, displayMode: displayMode, paradeStyles: paradeStyles)
     }
 }
 
@@ -172,12 +170,12 @@ private final class WalkingAnimalAnimationView: NSView {
     func configure(
         selectedStyle: WalkingAnimalStyle,
         displayMode: WalkingPetDisplayMode,
-        paradeCount: Int
+        paradeStyles: [WalkingAnimalStyle]
     ) {
         let styles = WalkingAnimalView.visibleStyles(
             selectedStyle: selectedStyle,
             displayMode: displayMode,
-            paradeCount: paradeCount
+            paradeStyles: paradeStyles
         )
         guard currentStyles != styles else { return }
         currentStyles = styles

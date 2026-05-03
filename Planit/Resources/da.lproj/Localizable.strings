@@ -604,9 +604,7 @@
 "settings.animal.style.cheetah" = "Gepard";
 "settings.animal.style.duck" = "And";
 "settings.animal.style.rabbit" = "Kanin";
-"settings.animal.style.panda" = "Panda";
-"settings.animal.style.turtle" = "Skildpadde";
-"settings.animal.style.squirrel" = "Egern";
+"settings.animal.style.monkey" = "Abe";
 "settings.animal.display.selected" = "Valgt dyr";
 "settings.animal.display.random" = "Tilfældigt dyr";
 "settings.animal.display.parade" = "Dyreparade";
