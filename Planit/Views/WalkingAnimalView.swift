@@ -115,8 +115,9 @@ private struct WalkingAnimalLayerView: NSViewRepresentable {
 private final class WalkingAnimalAnimationView: NSView {
     private struct AnimatedPet {
         let layer: CALayer
-        let renderedFrames: [CGImage]
+        let style: WalkingAnimalStyle
         var state: WalkingAnimalView.MotionState
+        var prefersRetina: Bool
         var appliedFrameIndex: Int?
         var appliedIsMovingRight: Bool?
     }
@@ -200,10 +201,7 @@ private final class WalkingAnimalAnimationView: NSView {
             imageLayer.minificationFilter = .nearest
             layer?.addSublayer(imageLayer)
 
-            let renderedFrames = AnimalSpriteImageCache.shared.renderedFrames(
-                style: style,
-                prefersRetina: currentBackingScale >= 2.0
-            )
+            let prefersRetina = currentBackingScale >= 2.0
             let initialX = WalkingAnimalView.boundaryInset + CGFloat(index) * (WalkingAnimalView.animalSize + 22)
             let state = WalkingAnimalView.MotionState(
                 xPos: initialX,
@@ -213,8 +211,9 @@ private final class WalkingAnimalAnimationView: NSView {
             )
             return AnimatedPet(
                 layer: imageLayer,
-                renderedFrames: renderedFrames,
+                style: style,
                 state: state,
+                prefersRetina: prefersRetina,
                 appliedFrameIndex: nil,
                 appliedIsMovingRight: nil
             )
@@ -227,9 +226,14 @@ private final class WalkingAnimalAnimationView: NSView {
 
     private func updateLayerBackingScale() {
         let backingScale = currentBackingScale
+        let prefersRetina = backingScale >= 2.0
         layer?.contentsScale = backingScale
-        for pet in pets {
-            pet.layer.contentsScale = backingScale
+        for index in pets.indices {
+            pets[index].layer.contentsScale = backingScale
+            if pets[index].prefersRetina != prefersRetina {
+                pets[index].prefersRetina = prefersRetina
+                pets[index].appliedFrameIndex = nil
+            }
         }
     }
 
@@ -304,13 +308,13 @@ private final class WalkingAnimalAnimationView: NSView {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         for index in pets.indices {
-            guard !pets[index].renderedFrames.isEmpty else { continue }
             let y = WalkingAnimalView.spriteOriginY
             let x = min(
                 max(pets[index].state.xPos, WalkingAnimalView.boundaryInset),
                 max(WalkingAnimalView.boundaryInset, bounds.width - WalkingAnimalView.animalSize - WalkingAnimalView.boundaryInset)
             )
-            let frameIndex = pets[index].state.frameIndex % pets[index].renderedFrames.count
+            let frameCount = max(1, pets[index].style.frameCount)
+            let frameIndex = pets[index].state.frameIndex % frameCount
             let isMovingRight = pets[index].state.isMovingRight
 
             pets[index].layer.position = CGPoint(
@@ -326,8 +330,14 @@ private final class WalkingAnimalAnimationView: NSView {
             }
 
             if pets[index].appliedFrameIndex != frameIndex {
-                pets[index].layer.contents = pets[index].renderedFrames[frameIndex]
-                pets[index].appliedFrameIndex = frameIndex
+                if let frame = AnimalSpriteImageCache.shared.renderedFrame(
+                    style: pets[index].style,
+                    frameIndex: frameIndex,
+                    prefersRetina: pets[index].prefersRetina
+                ) {
+                    pets[index].layer.contents = frame
+                    pets[index].appliedFrameIndex = frameIndex
+                }
             }
         }
         CATransaction.commit()
@@ -341,6 +351,7 @@ final class AnimalSpriteImageCache {
     private var imageCache: [String: NSImage] = [:]
     private var framesCache: [String: [NSImage]] = [:]
     private var renderedFramesCache: [String: [CGImage]] = [:]
+    private var renderedFrameCache: [String: CGImage] = [:]
 
     func image(style: WalkingAnimalStyle, frameIndex: Int) -> NSImage? {
         image(named: style.frameResourceName(for: frameIndex), subdirectory: style.spriteSubdirectory)
@@ -373,20 +384,46 @@ final class AnimalSpriteImageCache {
     }
 
     func renderedFrames(style: WalkingAnimalStyle, prefersRetina: Bool) -> [CGImage] {
-        withCacheLock {
-            let cacheKey = framesCacheKey(style: style, prefersRetina: prefersRetina)
-            if let cached = renderedFramesCache[cacheKey] { return cached }
+        let cacheKey = framesCacheKey(style: style, prefersRetina: prefersRetina)
+        if let cached = withCacheLock({ renderedFramesCache[cacheKey] }) {
+            return cached
+        }
 
-            let renderedFrames = frames(style: style, prefersRetina: prefersRetina).compactMap { image in
-                image.cgImage(forProposedRect: nil, context: nil, hints: nil)
-            }
+        let renderedFrames = (0..<style.frameCount).compactMap { frameIndex in
+            renderedFrame(style: style, frameIndex: frameIndex, prefersRetina: prefersRetina)
+        }
+
+        return withCacheLock {
             renderedFramesCache[cacheKey] = renderedFrames
             return renderedFrames
         }
     }
 
+    func renderedFrame(style: WalkingAnimalStyle, frameIndex: Int, prefersRetina: Bool) -> CGImage? {
+        let safeFrameIndex = max(0, min(frameIndex, max(0, style.frameCount - 1)))
+        let cacheKey = renderedFrameCacheKey(style: style, frameIndex: safeFrameIndex, prefersRetina: prefersRetina)
+        return withCacheLock {
+            if let cached = renderedFrameCache[cacheKey] { return cached }
+
+            let image = loadFrame(style: style, frameIndex: safeFrameIndex, prefersRetina: prefersRetina)
+            guard let renderedFrame = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+                return nil
+            }
+            renderedFrameCache[cacheKey] = renderedFrame
+            return renderedFrame
+        }
+    }
+
     private func framesCacheKey(style: WalkingAnimalStyle, prefersRetina: Bool) -> String {
         "\(style.id)/\(prefersRetina ? "2x" : "1x")"
+    }
+
+    private func renderedFrameCacheKey(
+        style: WalkingAnimalStyle,
+        frameIndex: Int,
+        prefersRetina: Bool
+    ) -> String {
+        "\(framesCacheKey(style: style, prefersRetina: prefersRetina))/frame-\(frameIndex)"
     }
 
     private func loadFrame(style: WalkingAnimalStyle, frameIndex: Int, prefersRetina: Bool) -> NSImage {

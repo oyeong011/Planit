@@ -8,6 +8,18 @@ enum WalkingAnimalStyle: String, CaseIterable, Identifiable {
     case duck
     case rabbit
     case monkey
+    case sheep
+    case pig
+    case cow
+    case deer
+    case bear
+    case koala
+    case hedgehog
+    case owl
+    case frog
+    case elephant
+    case horse
+    case fox
 
     var id: String { rawValue }
 
@@ -30,7 +42,7 @@ enum WalkingAnimalStyle: String, CaseIterable, Identifiable {
             return "cat_pixel_R\(safeIndex + 1)"
         case .dog:
             return "character_dog_R\(safeIndex + 1)"
-        case .cheetah, .duck, .rabbit, .monkey:
+        default:
             return "character_\(rawValue)_R\(safeIndex + 1)"
         }
     }
@@ -48,6 +60,32 @@ enum WalkingAnimalStyle: String, CaseIterable, Identifiable {
             return .cat
         }
         return WalkingAnimalStyle(rawValue: rawValue)
+    }
+}
+
+enum WalkingAnimalCategory: String, CaseIterable, Identifiable {
+    case all
+    case basic
+    case farm
+    case forest
+
+    var id: String { rawValue }
+
+    var title: String {
+        NSLocalizedString("settings.animal.category.\(rawValue)", bundle: .module, comment: "")
+    }
+
+    var styles: [WalkingAnimalStyle] {
+        switch self {
+        case .all:
+            return WalkingAnimalStyle.allCases
+        case .basic:
+            return [.cat, .dog, .cheetah, .duck, .rabbit, .monkey]
+        case .farm:
+            return [.sheep, .pig, .cow, .horse]
+        case .forest:
+            return [.deer, .bear, .koala, .hedgehog, .owl, .frog, .elephant, .fox]
+        }
     }
 }
 

@@ -17,6 +17,10 @@ struct LocalizationQualityTests {
             "settings.animal.display.mode",
             "settings.animal.parade.count",
             "settings.animal.shape",
+            "settings.animal.category.all",
+            "settings.animal.category.basic",
+            "settings.animal.category.farm",
+            "settings.animal.category.forest",
             "settings.animal.display.selected",
             "settings.animal.display.random",
             "settings.animal.display.parade",
@@ -104,7 +108,19 @@ struct LocalizationQualityTests {
             "settings.animal.style.cheetah",
             "settings.animal.style.duck",
             "settings.animal.style.rabbit",
-            "settings.animal.style.monkey"
+            "settings.animal.style.monkey",
+            "settings.animal.style.sheep",
+            "settings.animal.style.pig",
+            "settings.animal.style.cow",
+            "settings.animal.style.deer",
+            "settings.animal.style.bear",
+            "settings.animal.style.koala",
+            "settings.animal.style.hedgehog",
+            "settings.animal.style.owl",
+            "settings.animal.style.frog",
+            "settings.animal.style.elephant",
+            "settings.animal.style.horse",
+            "settings.animal.style.fox"
         ]
 
         for locale in try availableLocales() {

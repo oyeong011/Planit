@@ -14,7 +14,19 @@ struct WalkingAnimalViewTests {
             "cheetah",
             "duck",
             "rabbit",
-            "monkey"
+            "monkey",
+            "sheep",
+            "pig",
+            "cow",
+            "deer",
+            "bear",
+            "koala",
+            "hedgehog",
+            "owl",
+            "frog",
+            "elephant",
+            "horse",
+            "fox"
         ])
 
         for style in WalkingAnimalStyle.allCases {
@@ -25,6 +37,27 @@ struct WalkingAnimalViewTests {
             #expect(!mode.title.isEmpty)
             #expect(!mode.title.contains("settings.animal"))
         }
+        for category in WalkingAnimalCategory.allCases {
+            #expect(!category.title.isEmpty)
+            #expect(!category.title.contains("settings.animal"))
+        }
+    }
+
+    @Test("animal categories group existing and expanded styles")
+    func animalCategoriesGroupStyles() {
+        #expect(WalkingAnimalCategory.basic.styles.map(\.id) == ["cat", "dog", "cheetah", "duck", "rabbit", "monkey"])
+        #expect(WalkingAnimalCategory.farm.styles.map(\.id) == ["sheep", "pig", "cow", "horse"])
+        #expect(WalkingAnimalCategory.forest.styles.map(\.id) == [
+            "deer",
+            "bear",
+            "koala",
+            "hedgehog",
+            "owl",
+            "frog",
+            "elephant",
+            "fox"
+        ])
+        #expect(WalkingAnimalCategory.all.styles == WalkingAnimalStyle.allCases)
     }
 
     @Test("movement and sprite cadence are decoupled")
@@ -79,6 +112,10 @@ struct WalkingAnimalViewTests {
         #expect(source.contains("minificationFilter = .nearest"))
         #expect(source.components(separatedBy: "Timer(timeInterval:").count - 1 == 1,
                 "Parade mode must share one timer for all animals.")
+        #expect(!source.contains("let renderedFrames = AnimalSpriteImageCache.shared.renderedFrames"),
+                "Pet rebuilds must not decode and render all frames for every animal synchronously.")
+        #expect(source.contains("AnimalSpriteImageCache.shared.renderedFrame"),
+                "Animation should render only the frame it is about to display.")
     }
 
     @Test("settings animal previews load thumbnails lazily")
@@ -143,6 +180,17 @@ struct WalkingAnimalViewTests {
             #expect(first[index] === second[index])
         }
     }
+
+    @Test("single rendered animal frames are cached lazily")
+    func singleRenderedAnimalFramesAreCachedLazily() throws {
+        let cache = AnimalSpriteImageCache.shared
+        let first = try #require(cache.renderedFrame(style: .rabbit, frameIndex: 0, prefersRetina: true))
+        let second = try #require(cache.renderedFrame(style: .rabbit, frameIndex: 0, prefersRetina: true))
+        let standard = try #require(cache.renderedFrame(style: .rabbit, frameIndex: 0, prefersRetina: false))
+
+        #expect(first === second)
+        #expect(first !== standard)
+    }
 }
 
 @MainActor
@@ -181,8 +229,8 @@ struct WalkingAnimalViewTests {
 }
 
 @MainActor
-@Test func animalSettings_mapsRemovedFoxStyleToCat() {
-    for removedStyle in ["fox", "hamster", "penguin", "panda", "turtle", "squirrel"] {
+@Test func animalSettings_mapsRemovedAnimalStylesToCat() {
+    for removedStyle in ["hamster", "penguin", "panda", "turtle", "squirrel"] {
         let defaults = makeAnimalDefaults()
         defaults.set(removedStyle, forKey: AnimalSettings.styleKey)
 

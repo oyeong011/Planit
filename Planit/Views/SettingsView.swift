@@ -41,6 +41,7 @@ struct SettingsView: View {
 
     @State private var selectedSection: SettingsSection = .profile
     @State private var profile: UserProfile
+    @State private var animalCategory: WalkingAnimalCategory = .all
     @ObservedObject private var appearance = AppearanceService.shared
     @ObservedObject private var animalSettings = AnimalSettings.shared
     @ObservedObject private var calendarThemeService = CalendarThemeService.shared
@@ -1271,9 +1272,15 @@ struct SettingsView: View {
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.secondary)
 
+                    HStack(spacing: 8) {
+                        ForEach(WalkingAnimalCategory.allCases) { category in
+                            animalCategoryButton(category)
+                        }
+                    }
+
                     let columns = [GridItem(.adaptive(minimum: 118), spacing: 8)]
                     LazyVGrid(columns: columns, spacing: 8) {
-                        ForEach(WalkingAnimalStyle.allCases) { style in
+                        ForEach(animalCategory.styles) { style in
                             animalStyleButton(style)
                         }
                     }
@@ -1323,6 +1330,29 @@ struct SettingsView: View {
                     .stroke(isSelected ? calendarThemeService.current.accent.opacity(0.5) : Color.secondary.opacity(0.12), lineWidth: 1.5)
             )
             .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func animalCategoryButton(_ category: WalkingAnimalCategory) -> some View {
+        let isSelected = animalCategory == category
+
+        return Button {
+            animalCategory = category
+        } label: {
+            Text(category.title)
+                .font(.system(size: 11, weight: isSelected ? .semibold : .medium))
+                .foregroundStyle(isSelected ? .white : .primary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6)
+                .background(
+                    Capsule()
+                        .fill(isSelected ? calendarThemeService.current.accent : Color.platformControl.opacity(0.55))
+                )
+                .overlay(
+                    Capsule()
+                        .stroke(isSelected ? Color.clear : Color.secondary.opacity(0.12), lineWidth: 1)
+                )
         }
         .buttonStyle(.plain)
     }
