@@ -2,9 +2,13 @@ import AppKit
 
 enum MenuBarIcon {
     static func makeImage(updateAvailable: Bool) -> NSImage {
+        if !updateAvailable, let statusIcon {
+            return statusIcon
+        }
+
         let size = NSSize(width: 18, height: 18)
         let image = NSImage(size: size, flipped: false) { bounds in
-            drawStatusIcon(in: bounds)
+            drawTintedStatusIcon(in: bounds)
 
             if updateAvailable {
                 NSColor.systemPink.setFill()
@@ -18,26 +22,35 @@ enum MenuBarIcon {
         return image
     }
 
-    private static func drawStatusIcon(in bounds: NSRect) {
+    private static func drawTintedStatusIcon(in bounds: NSRect) {
         guard let icon = statusIcon else {
-            fallbackIcon?.draw(
-                in: bounds.insetBy(dx: 1, dy: 1),
-                from: .zero,
-                operation: .sourceOver,
-                fraction: 1.0,
-                respectFlipped: true,
-                hints: [.interpolation: NSImageInterpolation.high]
-            )
+            drawFallbackIcon(in: bounds)
             return
         }
 
+        NSColor.labelColor.setFill()
+        NSBezierPath(rect: bounds).fill()
         icon.draw(
             in: bounds,
+            from: .zero,
+            operation: .destinationIn,
+            fraction: 1.0,
+            respectFlipped: true,
+            hints: [.interpolation: NSImageInterpolation.none]
+        )
+    }
+
+    private static func drawFallbackIcon(in bounds: NSRect) {
+        guard let fallbackIcon else { return }
+
+        NSColor.labelColor.setFill()
+        fallbackIcon.draw(
+            in: bounds.insetBy(dx: 1, dy: 1),
             from: .zero,
             operation: .sourceOver,
             fraction: 1.0,
             respectFlipped: true,
-            hints: [.interpolation: NSImageInterpolation.none]
+            hints: [.interpolation: NSImageInterpolation.high]
         )
     }
 
