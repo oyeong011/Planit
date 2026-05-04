@@ -2071,13 +2071,6 @@ final class CalendarViewModel: ObservableObject {
         rescheduledTodoIDs.insert(id)
     }
 
-    /// 지금 즉시 재배치 실행 (자정 안 기다리고 수동 트리거)
-    func rescheduleNow() {
-        // rolloverKey 리셋 → performIfNeeded가 다시 실행되도록
-        UserDefaults.standard.removeObject(forKey: "planit.lastRolloverDate")
-        MidnightRolloverService.shared.performIfNeeded(viewModel: self)
-    }
-
     /// 같은 날 시간대 이동 (예: 10:00 → 14:00). Planning apply 경로에서 사용.
     /// 기존 duration을 유지하며 startDate를 toStartDate로 이동.
     func moveCalendarEvent(id: String, toStartDate: Date) {

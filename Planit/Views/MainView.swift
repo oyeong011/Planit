@@ -89,8 +89,12 @@ struct MainCalendarView: View {
                     Divider()
                 }
 
-                CalendarGridView(viewModel: viewModel, showChat: $showLeftPanel,
-                                 habitService: habitService)
+                CalendarGridView(
+                    viewModel: viewModel,
+                    showChat: $showLeftPanel,
+                    habitService: habitService,
+                    onOpenRescheduleReview: openEveningRescheduleReview
+                )
                     .frame(maxWidth: .infinity)
 
                 Divider()
@@ -356,6 +360,16 @@ struct MainCalendarView: View {
         }
     }
 
+    private func openEveningRescheduleReview() {
+        reviewService.currentMode = .evening
+        reviewService.refreshEveningReschedulePlan(
+            todos: viewModel.todos,
+            events: viewModel.calendarEvents
+        )
+        showLeftPanel = true
+        leftPanelMode = .review
+    }
+
     // MARK: - Notifications
 
     private func scheduleNotifications() {
@@ -413,6 +427,7 @@ struct CalendarGridView: View {
     @ObservedObject var viewModel: CalendarViewModel
     @Binding var showChat: Bool
     @ObservedObject var habitService: HabitService
+    let onOpenRescheduleReview: () -> Void
     @ObservedObject private var themeService = CalendarThemeService.shared
 
     // 바 레이아웃 상수
@@ -504,7 +519,7 @@ struct CalendarGridView: View {
                     let overdueCount = viewModel.overdueLocalTodoCount()
                     if overdueCount > 0 {
                         Button {
-                            viewModel.rescheduleNow()
+                            onOpenRescheduleReview()
                         } label: {
                             HStack(spacing: 3) {
                                 Image(systemName: "arrow.uturn.right.circle.fill")
@@ -515,7 +530,7 @@ struct CalendarGridView: View {
                             .foregroundStyle(themeService.current.accent)
                         }
                         .buttonStyle(.plain)
-                        .help("밀린 할 일 \(overdueCount)개를 지금 재배치")
+                        .help("밀린 할 일 \(overdueCount)개의 이동 추천 확인")
                     }
 
                     Button(action: viewModel.previousMonth) {

@@ -1,14 +1,13 @@
 import Foundation
 import UserNotifications
 
-/// 자정(00:00) 재배치 서비스.
+/// 자정(00:00) 재검토 알림 서비스.
 ///
 /// 흐름:
 /// 1. 하루가 끝나는 자정(00:00)에 실행
 /// 2. 오늘 못 끝낸 할 일 탐색
-/// 3. SmartSchedulerService로 향후 7일 일정 밀도 분석
-/// 4. 여유로운 날에 분산 배치 (하루 최대 3개)
-/// 5. 결과 알림 — 어디에 얼마나 옮겼는지 구체적으로 표시
+/// 3. 자동 이동 대신 리뷰 알림만 표시
+/// 4. 실제 이동은 저녁 리뷰 UI에서 사용자가 추천안을 확인한 뒤 적용
 @MainActor
 final class MidnightRolloverService {
 
@@ -24,14 +23,22 @@ final class MidnightRolloverService {
     /// 오늘 자정 재배치가 아직 실행되지 않았으면 실행.
     func performIfNeeded(viewModel: CalendarViewModel) {
         let today = Calendar.current.startOfDay(for: Date())
+        let last = UserDefaults.standard.object(forKey: rolloverKey) as? Date
 
-        guard let last = UserDefaults.standard.object(forKey: rolloverKey) as? Date,
-              !Calendar.current.isDate(last, inSameDayAs: today) else {
-            // 오늘 이미 실행됨
+        guard Self.shouldPerformRollover(lastRun: last, today: today) else {
             return
         }
 
         performMidnightRollover(viewModel: viewModel, today: today)
+    }
+
+    nonisolated static func shouldPerformRollover(
+        lastRun: Date?,
+        today: Date,
+        calendar: Calendar = .current
+    ) -> Bool {
+        guard let lastRun else { return true }
+        return !calendar.isDate(lastRun, inSameDayAs: today)
     }
 
     /// 자정(00:01) 반복 알림 트리거 예약
@@ -41,8 +48,8 @@ final class MidnightRolloverService {
         comps.minute = 1
 
         let content = UNMutableNotificationContent()
-        content.title = "Calen 일정 조정 중"
-        content.body  = "오늘 못 끝낸 할 일을 다음 일정에 맞게 재배치합니다."
+        content.title = "Calen 저녁 리뷰"
+        content.body  = "못 끝낸 할 일이 있으면 이동 추천을 확인해보세요."
         content.sound = .default
         content.userInfo = ["action": "midnight_rollover"]
 
@@ -68,7 +75,6 @@ final class MidnightRolloverService {
     private func performMidnightRollover(viewModel: CalendarViewModel, today: Date) {
         let cal = Calendar.current
         let yesterday = cal.date(byAdding: .day, value: -1, to: today)!
-        let tomorrow  = cal.date(byAdding: .day, value:  1, to: today)!
 
         // 어제 달성 통계
         let stats = collectDayStats(todos: viewModel.todos, events: viewModel.calendarEvents, date: yesterday)
@@ -78,25 +84,11 @@ final class MidnightRolloverService {
             !$0.isCompleted && $0.source == .local && $0.date < today
         }
 
-        // 스마트 배치: 내일부터 7일 내 여유 있는 날에 분산
-        let scheduler = SmartSchedulerService()
-        let plan = scheduler.distributeBacklog(
-            todos: overdueTodos,
-            events: viewModel.calendarEvents,
-            startDate: tomorrow
-        )
-
-        // 적용 — 시스템 재배치로 기록 (UI 인디케이터용)
-        for (id, newDate) in plan {
-            viewModel.moveTodoBySystem(id: id, toDate: newDate)
-        }
-
         // 완료 기록
         UserDefaults.standard.set(today, forKey: rolloverKey)
 
-        // 결과 알림
-        let summary = scheduler.backlogSummary(plan: plan, todos: overdueTodos)
-        sendRolloverNotification(stats: stats, movedCount: plan.count, summary: summary)
+        // 알림만 표시 — 이동은 리뷰 UI에서 확인 후 적용
+        sendRolloverNotification(stats: stats, pendingCount: overdueTodos.count)
     }
 
     // MARK: - Stats
@@ -123,12 +115,12 @@ final class MidnightRolloverService {
 
     // MARK: - Notification
 
-    private func sendRolloverNotification(stats: DayStats, movedCount: Int, summary: String) {
+    private func sendRolloverNotification(stats: DayStats, pendingCount: Int) {
         let content = UNMutableNotificationContent()
         content.sound = .default
         content.userInfo = ["action": "midnight_rollover"]
 
-        if movedCount == 0 {
+        if pendingCount == 0 {
             // 모두 완료
             if stats.totalTodos > 0 {
                 content.title = "어제 할 일 \(stats.achievementPercent)% 달성!"
@@ -138,12 +130,10 @@ final class MidnightRolloverService {
                 content.body  = "오늘 할 일을 계획해보세요."
             }
         } else {
-            // 재배치 발생
+            // 확인 필요
             let pct = stats.totalTodos > 0 ? " (달성률 \(stats.achievementPercent)%)" : ""
-            content.title = "Calen이 \(movedCount)개 할 일을 재배치했습니다\(pct)"
-            content.body  = summary.isEmpty
-                ? "일정 여유에 맞게 자동으로 배분했어요."
-                : summary
+            content.title = "이동 추천이 필요한 할 일 \(pendingCount)개\(pct)"
+            content.body  = "앱을 열어 앞으로의 일정과 목표에 맞춘 이동 추천을 확인하세요."
         }
 
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)

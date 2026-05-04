@@ -26,10 +26,10 @@ func isAllowedCLI(_ command: String) -> Bool {
 
 // MARK: - 리뷰 모드 결정 로직
 func determineReviewMode(dailyDoneToday: Bool, eveningDoneToday: Bool, hour: Int, eveningStart: Int) -> String {
-    if !dailyDoneToday {
-        return "daily"
-    } else if hour >= eveningStart && hour < eveningStart + 3 && !eveningDoneToday {
+    if hour >= eveningStart && hour < eveningStart + 3 && !eveningDoneToday {
         return "evening"
+    } else if !dailyDoneToday {
+        return "daily"
     }
     return "none"
 }
@@ -1656,6 +1656,118 @@ struct TestCachedEventFull: Codable, Identifiable {
     #expect(scheduler.workdayEndHour == 17)
 }
 
+@Test func eveningReschedule_filtersPendingLocalTodosThroughToday() throws {
+    let calendar = Calendar(identifier: .gregorian)
+    let today = try #require(calendar.date(from: DateComponents(year: 2026, month: 5, day: 4, hour: 21)))
+    let yesterday = try #require(calendar.date(byAdding: .day, value: -1, to: today))
+    let tomorrow = try #require(calendar.date(byAdding: .day, value: 1, to: today))
+    let categoryID = UUID()
+
+    let pastTodo = TodoItem(title: "밀린 기획 정리", categoryID: categoryID, date: yesterday)
+    let todayTodo = TodoItem(title: "오늘 회고 작성", categoryID: categoryID, date: today)
+    let doneTodo = TodoItem(title: "완료된 일", categoryID: categoryID, isCompleted: true, date: today)
+    let futureTodo = TodoItem(title: "미래 할 일", categoryID: categoryID, date: tomorrow)
+    let reminder = TodoItem(title: "외부 리마인더", categoryID: categoryID, date: today, source: .appleReminder)
+
+    let plan = SmartSchedulerService().makeEveningReschedulePlan(
+        todos: [pastTodo, todayTodo, doneTodo, futureTodo, reminder],
+        events: [],
+        activeGoals: [],
+        profile: UserProfile(),
+        now: today
+    )
+
+    #expect(plan.items.map(\.todoId).contains(pastTodo.id))
+    #expect(plan.items.map(\.todoId).contains(todayTodo.id))
+    #expect(!plan.items.map(\.todoId).contains(doneTodo.id))
+    #expect(!plan.items.map(\.todoId).contains(futureTodo.id))
+    #expect(!plan.items.map(\.todoId).contains(reminder.id))
+}
+
+@Test func eveningReschedule_prefersLowerLoadFutureDay() throws {
+    let calendar = Calendar(identifier: .gregorian)
+    let now = try #require(calendar.date(from: DateComponents(year: 2026, month: 5, day: 4, hour: 21)))
+    let yesterday = try #require(calendar.date(byAdding: .day, value: -1, to: now))
+    let tomorrow = try #require(calendar.date(byAdding: .day, value: 1, to: now))
+    let dayAfterTomorrow = try #require(calendar.date(byAdding: .day, value: 2, to: now))
+    let categoryID = UUID()
+
+    let busyStart = try #require(calendar.date(from: DateComponents(year: 2026, month: 5, day: 5, hour: 9)))
+    let busyEnd = try #require(calendar.date(from: DateComponents(year: 2026, month: 5, day: 5, hour: 18)))
+    let busyEvent = CalendarEvent(
+        id: "busy-day",
+        title: "회의 많은 날",
+        startDate: busyStart,
+        endDate: busyEnd,
+        color: .blue,
+        isAllDay: false
+    )
+
+    let todo = TodoItem(title: "밀린 보고서", categoryID: categoryID, date: yesterday)
+    let plan = SmartSchedulerService().makeEveningReschedulePlan(
+        todos: [todo],
+        events: [busyEvent],
+        activeGoals: [],
+        profile: UserProfile(),
+        now: now
+    )
+
+    let item = try #require(plan.items.first)
+    #expect(calendar.isDate(item.targetDate, inSameDayAs: dayAfterTomorrow))
+    #expect(!calendar.isDate(item.targetDate, inSameDayAs: tomorrow))
+}
+
+@Test func eveningReschedule_goalRelatedTodoGetsEarlierSlot() throws {
+    let calendar = Calendar(identifier: .gregorian)
+    let now = try #require(calendar.date(from: DateComponents(year: 2026, month: 5, day: 4, hour: 21)))
+    let yesterday = try #require(calendar.date(byAdding: .day, value: -1, to: now))
+    let tomorrow = try #require(calendar.date(byAdding: .day, value: 1, to: now))
+    let dayAfterTomorrow = try #require(calendar.date(byAdding: .day, value: 2, to: now))
+    let dueDate = try #require(calendar.date(byAdding: .day, value: 3, to: now))
+    let categoryID = UUID()
+
+    let goal = Goal(
+        level: .month,
+        title: "정보처리기사 합격",
+        dueDate: dueDate,
+        weight: 5
+    )
+    let goalTodo = TodoItem(title: "정보처리기사 기출 풀기", categoryID: categoryID, date: yesterday)
+    let normalTodo = TodoItem(title: "책상 정리", categoryID: categoryID, date: yesterday)
+
+    let plan = SmartSchedulerService().makeEveningReschedulePlan(
+        todos: [normalTodo, goalTodo],
+        events: [],
+        activeGoals: [goal],
+        profile: UserProfile(),
+        now: now,
+        maxPerDay: 1
+    )
+
+    let targetById = Dictionary(uniqueKeysWithValues: plan.items.map { ($0.todoId, $0.targetDate) })
+    let goalDate = try #require(targetById[goalTodo.id])
+    let normalDate = try #require(targetById[normalTodo.id])
+
+    #expect(calendar.isDate(goalDate, inSameDayAs: tomorrow))
+    #expect(calendar.isDate(normalDate, inSameDayAs: dayAfterTomorrow))
+}
+
+@Test func midnightRollover_runsWhenNoPriorRunExists() throws {
+    let calendar = Calendar(identifier: .gregorian)
+    let today = try #require(calendar.date(from: DateComponents(year: 2026, month: 5, day: 4)))
+
+    #expect(MidnightRolloverService.shouldPerformRollover(lastRun: nil, today: today, calendar: calendar))
+}
+
+@Test func midnightRollover_skipsOnlySameDayRun() throws {
+    let calendar = Calendar(identifier: .gregorian)
+    let today = try #require(calendar.date(from: DateComponents(year: 2026, month: 5, day: 4)))
+    let yesterday = try #require(calendar.date(byAdding: .day, value: -1, to: today))
+
+    #expect(!MidnightRolloverService.shouldPerformRollover(lastRun: today, today: today, calendar: calendar))
+    #expect(MidnightRolloverService.shouldPerformRollover(lastRun: yesterday, today: today, calendar: calendar))
+}
+
 // ============================================================================
 // MARK: - TC-25: Codex 출력 정리 (cleanCodexOutput)
 // ============================================================================
@@ -2133,10 +2245,10 @@ func cleanCodexOutput(_ raw: String) -> String {
     #expect(mode == "none")
 }
 
-// TC-54: 리뷰 모드 — daily 미완료면 시간대 무관하게 daily 우선
-@Test func reviewMode_dailyNotDone_eveningHour_stillReturnsDaily() {
+// TC-54: 리뷰 모드 — 저녁 시간대에는 daily 미완료여도 저녁 리뷰 우선
+@Test func reviewMode_dailyNotDone_eveningHour_showsEvening() {
     let mode = determineReviewMode(dailyDoneToday: false, eveningDoneToday: false, hour: 22, eveningStart: 21)
-    #expect(mode == "daily")
+    #expect(mode == "evening")
 }
 
 // TC-55: 로컬라이제이션 번들 — 영어 키가 Bundle.main 또는 Bundle.module에 존재하는지 확인

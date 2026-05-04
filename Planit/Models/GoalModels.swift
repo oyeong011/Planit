@@ -232,6 +232,42 @@ enum SuggestionStatus: String {
     case pending, accepted, declined, edited
 }
 
+// MARK: - Evening Reschedule
+
+struct EveningReschedulePlan: Equatable {
+    var items: [EveningRescheduleItem]
+    var generatedAt: Date
+
+    var isEmpty: Bool { items.isEmpty }
+
+    func itemsByTargetDate(calendar: Calendar = .current) -> [(date: Date, items: [EveningRescheduleItem])] {
+        let grouped = Dictionary(grouping: items) { item in
+            calendar.startOfDay(for: item.targetDate)
+        }
+        return grouped.keys.sorted().map { day in
+            let dayItems = grouped[day, default: []].sorted {
+                if $0.priorityScore != $1.priorityScore {
+                    return $0.priorityScore > $1.priorityScore
+                }
+                return $0.title < $1.title
+            }
+            return (date: day, items: dayItems)
+        }
+    }
+}
+
+struct EveningRescheduleItem: Identifiable, Equatable {
+    var id: UUID { todoId }
+    let todoId: UUID
+    let title: String
+    let originalDate: Date
+    let targetDate: Date
+    let reason: String
+    let goalTitle: String?
+    let loadLabel: String
+    let priorityScore: Int
+}
+
 // MARK: - Daily Metrics
 
 struct DailyMetrics: Codable {

@@ -17,6 +17,7 @@ final class ReviewService: ObservableObject {
     @Published var dailyDoneToday: Bool = false
     @Published var eveningDoneToday: Bool = false
     @Published var tomorrowPlanResult: TomorrowPlanResult?
+    @Published var eveningReschedulePlan = EveningReschedulePlan(items: [], generatedAt: Date())
 
     private let goalService: GoalService
     private let calendarService: GoogleCalendarService?
@@ -80,20 +81,20 @@ final class ReviewService: ObservableObject {
         let hour = cal.component(.hour, from: Date())
         let eStart = goalService.profile.eveningReviewHour
 
-        // 1. Daily adjustment — runs once per day, any time
-        if !dailyDoneToday {
-            if currentMode != .daily {
-                currentMode = .daily
-                Task { [weak self] in await self?.generateDailySuggestions() }
-            }
-            return
-        }
-
-        // 2. Evening review — only if daily is already done
+        // 1. Evening review — night flow should not be blocked by an unfinished daily review.
         if hour >= eStart && hour < eStart + 3 && !eveningDoneToday {
             if currentMode != .evening {
                 currentMode = .evening
                 Task { await generateEveningSuggestions() }
+            }
+            return
+        }
+
+        // 2. Daily adjustment — runs once per day outside the evening review window.
+        if !dailyDoneToday {
+            if currentMode != .daily {
+                currentMode = .daily
+                Task { [weak self] in await self?.generateDailySuggestions() }
             }
         }
     }
@@ -128,6 +129,28 @@ final class ReviewService: ObservableObject {
         }
         currentMode = .none
         suggestions = []
+        eveningReschedulePlan = EveningReschedulePlan(items: [], generatedAt: Date())
+    }
+
+    // MARK: - Evening Reschedule
+
+    func refreshEveningReschedulePlan(
+        todos: [TodoItem],
+        events: [CalendarEvent],
+        now: Date = Date()
+    ) {
+        let scheduler = SmartSchedulerService()
+        eveningReschedulePlan = scheduler.makeEveningReschedulePlan(
+            todos: todos,
+            events: events,
+            activeGoals: goalService.activeGoals(),
+            profile: goalService.profile,
+            now: now
+        )
+    }
+
+    func clearEveningReschedulePlan() {
+        eveningReschedulePlan = EveningReschedulePlan(items: [], generatedAt: Date())
     }
 
     // MARK: - AI Tomorrow Planning

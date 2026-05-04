@@ -629,6 +629,13 @@
 "settings.animal.display.random" = "Random animal";
 "settings.animal.display.parade" = "Animal parade";
 
+/* ===== Evening Review Reschedule ===== */
+"review.reschedule.title" = "Reschedule missed todos";
+"review.reschedule.empty" = "No unfinished todos need moving today.";
+"review.reschedule.summary" = "Recommended new days for %d unfinished todos based on upcoming schedule and goals.";
+"review.reschedule.apply" = "Move as recommended";
+"review.reschedule.skip" = "Skip for now";
+
 /* ===== Pet Wallpapers ===== */
 "wallpaper.softStudioLight" = "Soft Studio";
 "wallpaper.quietMidnightDark" = "Quiet Midnight";

@@ -124,6 +124,12 @@ struct ReviewView: View {
             case .editHabit(let h):   habitEditSheet(editing: h)
             }
         }
+        .onAppear {
+            refreshEveningRescheduleIfNeeded()
+        }
+        .onChange(of: eveningRescheduleSignature) { _, _ in
+            refreshEveningRescheduleIfNeeded()
+        }
     }
 
     // MARK: - Header
@@ -270,6 +276,8 @@ struct ReviewView: View {
 
                     // 시간 의존 섹션 (드래그 불가, 항상 하단)
                     if reviewService.currentMode == .evening {
+                        eveningRescheduleSection
+                            .padding(.horizontal, 10)
                         tomorrowPreviewSection
                             .padding(.horizontal, 10)
                     } else {
@@ -901,6 +909,38 @@ struct ReviewView: View {
         todayItems.compactMap { if case .todo(let t) = $0 { return t } else { return nil } }
     }
 
+    private var eveningRescheduleSignature: String {
+        guard reviewService.currentMode == .evening else { return "inactive" }
+        let today = Calendar.current.startOfDay(for: Date())
+        let todoPart = viewModel.todos
+            .filter { todo in
+                !todo.isCompleted
+                    && todo.source == .local
+                    && Calendar.current.startOfDay(for: todo.date) <= today
+            }
+            .map { "\($0.id.uuidString):\(Int($0.date.timeIntervalSince1970))" }
+            .sorted()
+            .joined(separator: "|")
+        let eventPart = viewModel.calendarEvents
+            .map { "\($0.id):\(Int($0.startDate.timeIntervalSince1970)):\(Int($0.endDate.timeIntervalSince1970))" }
+            .sorted()
+            .joined(separator: "|")
+        let goalPart = goalService.goals
+            .filter { $0.status == .active }
+            .map { "\($0.id):\($0.title):\($0.weight):\(Int($0.dueDate.timeIntervalSince1970))" }
+            .sorted()
+            .joined(separator: "|")
+        return "\(todoPart)#\(eventPart)#\(goalPart)"
+    }
+
+    private func refreshEveningRescheduleIfNeeded() {
+        guard reviewService.currentMode == .evening else { return }
+        reviewService.refreshEveningReschedulePlan(
+            todos: viewModel.todos,
+            events: viewModel.calendarEvents
+        )
+    }
+
     /// 편집 시트에 보여줄 "N일간 · Apr 6 - Apr 12" 스타일 요약.
     /// start > end 인 stale 입력도 방어적으로 swap 후 계산.
     private func rangeSummary(start: Date, end: Date) -> String {
@@ -922,6 +962,92 @@ struct ReviewView: View {
     }
 
     // MARK: - Tomorrow Preview Section (저녁 전용)
+
+    @ViewBuilder
+    private var eveningRescheduleSection: some View {
+        let plan = reviewService.eveningReschedulePlan
+        let groups = plan.itemsByTargetDate(calendar: Calendar.current)
+
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: plan.isEmpty ? "checkmark.circle.fill" : "arrow.triangle.2.circlepath.circle.fill")
+                    .font(.system(size: 16))
+                    .foregroundStyle(plan.isEmpty ? .green : .orange)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(String(localized: "review.reschedule.title", defaultValue: "밀린 할 일 재조정"))
+                        .font(.system(size: 12, weight: .bold))
+                    Text(rescheduleSummaryText(for: plan))
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+            }
+
+            if !plan.isEmpty {
+                VStack(spacing: 7) {
+                    ForEach(groups, id: \.date) { group in
+                        VStack(alignment: .leading, spacing: 5) {
+                            HStack(spacing: 5) {
+                                Text(shortDayFormatter.string(from: group.date))
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundStyle(.orange)
+                                Text(group.items.first?.loadLabel ?? "")
+                                    .font(.system(size: 9, weight: .medium))
+                                    .foregroundStyle(.secondary)
+                                Spacer()
+                            }
+
+                            ForEach(group.items) { item in
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(item.title)
+                                        .font(.system(size: 11, weight: .medium))
+                                        .lineLimit(1)
+                                    Text(item.reason)
+                                        .font(.system(size: 9))
+                                        .foregroundStyle(.secondary)
+                                        .lineLimit(2)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                        }
+
+                        if group.date != groups.last?.date {
+                            Divider()
+                        }
+                    }
+                }
+
+                HStack(spacing: 8) {
+                    Button {
+                        applyEveningReschedulePlan()
+                    } label: {
+                        Label(String(localized: "review.reschedule.apply", defaultValue: "추천대로 이동"),
+                              systemImage: "checkmark.circle.fill")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 7)
+                            .background(RoundedRectangle(cornerRadius: 7).fill(.orange))
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        reviewService.clearEveningReschedulePlan()
+                    } label: {
+                        Text(String(localized: "review.reschedule.skip", defaultValue: "이번엔 넘기기"))
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 7)
+                            .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.08)))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color.orange.opacity(plan.isEmpty ? 0.05 : 0.08)))
+    }
 
     private var tomorrowEvents: [CalendarEvent] {
         let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date())!
@@ -1678,6 +1804,13 @@ struct ReviewView: View {
     private let timeFormatter: DateFormatter = {
         let f = DateFormatter(); f.dateFormat = "HH:mm"; f.timeZone = .current; return f
     }()
+    private let shortDayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "M/d(E)"
+        f.locale = Locale(identifier: Locale.current.identifier)
+        f.timeZone = .current
+        return f
+    }()
 
     private var todayDateString: String { mediumDateFormatter.string(from: Date()) }
 
@@ -1687,6 +1820,24 @@ struct ReviewView: View {
     }
 
     private func formatTime(_ date: Date) -> String { timeFormatter.string(from: date) }
+
+    private func rescheduleSummaryText(for plan: EveningReschedulePlan) -> String {
+        if plan.isEmpty {
+            return String(localized: "review.reschedule.empty", defaultValue: "오늘 옮길 미완료 할 일이 없어요.")
+        }
+        return String.localizedStringWithFormat(
+            String(localized: "review.reschedule.summary", defaultValue: "%d개의 미완료 할 일을 앞으로의 일정과 목표에 맞춰 나눠 추천했어요."),
+            plan.items.count
+        )
+    }
+
+    private func applyEveningReschedulePlan() {
+        let items = reviewService.eveningReschedulePlan.items
+        for item in items {
+            viewModel.moveTodoBySystem(id: item.todoId, toDate: item.targetDate)
+        }
+        reviewService.clearEveningReschedulePlan()
+    }
 
     // MARK: - Type Styling
 

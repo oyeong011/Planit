@@ -265,6 +265,231 @@ final class SmartSchedulerService {
         return lines.joined(separator: " · ")
     }
 
+    // MARK: - Evening Review Reschedule
+
+    /// 저녁 리뷰에서 사용자가 확인할 수 있는 미완료 할 일 재배치 추천안을 만든다.
+    /// 오늘까지의 미완료 로컬 todo만 대상으로 하며, 실제 이동은 호출자가 사용자의 확인 후 수행한다.
+    func makeEveningReschedulePlan(
+        todos: [TodoItem],
+        events: [CalendarEvent],
+        activeGoals: [Goal],
+        profile: UserProfile,
+        now: Date = Date(),
+        maxDays: Int = 7,
+        maxPerDay: Int = 3
+    ) -> EveningReschedulePlan {
+        let originalStart = workdayStartHour
+        let originalEnd = workdayEndHour
+        apply(profile: profile)
+        defer {
+            workdayStartHour = originalStart
+            workdayEndHour = originalEnd
+        }
+
+        let today = calendar.startOfDay(for: now)
+        let pendingTodos = todos.filter { todo in
+            !todo.isCompleted
+                && todo.source == .local
+                && calendar.startOfDay(for: todo.date) <= today
+        }
+        guard !pendingTodos.isEmpty,
+              let startDate = calendar.date(byAdding: .day, value: 1, to: today) else {
+            return EveningReschedulePlan(items: [], generatedAt: now)
+        }
+
+        let searchDays = max(1, maxDays)
+        let perDayLimit = max(1, maxPerDay)
+        let dates = (0..<searchDays).compactMap {
+            calendar.date(byAdding: .day, value: $0, to: startDate)
+        }
+        let analyses = analyzeDays(events: events, for: dates)
+        let orderedCandidates = pendingTodos
+            .map { candidate(for: $0, activeGoals: activeGoals, now: now) }
+            .sorted { left, right in
+                if left.priorityScore != right.priorityScore {
+                    return left.priorityScore > right.priorityScore
+                }
+                return left.todo.date < right.todo.date
+        }
+
+        var dailyCount: [Date: Int] = [:]
+        var items: [EveningRescheduleItem] = []
+
+        for candidate in orderedCandidates {
+            guard let choice = chooseTargetDay(
+                analyses: analyses,
+                dailyCount: dailyCount,
+                goal: candidate.goal,
+                profile: profile,
+                maxPerDay: perDayLimit,
+                now: now
+            ) else { continue }
+
+            let dayKey = calendar.startOfDay(for: choice.analysis.date)
+            dailyCount[dayKey, default: 0] += 1
+
+            items.append(EveningRescheduleItem(
+                todoId: candidate.todo.id,
+                title: candidate.todo.title,
+                originalDate: candidate.todo.date,
+                targetDate: dayKey,
+                reason: reason(
+                    for: candidate.todo,
+                    target: choice.analysis,
+                    goal: candidate.goal,
+                    now: now
+                ),
+                goalTitle: candidate.goal?.title,
+                loadLabel: choice.analysis.loadLabel,
+                priorityScore: candidate.priorityScore
+            ))
+        }
+
+        return EveningReschedulePlan(
+            items: items.sorted {
+                if $0.targetDate != $1.targetDate { return $0.targetDate < $1.targetDate }
+                if $0.priorityScore != $1.priorityScore { return $0.priorityScore > $1.priorityScore }
+                return $0.title < $1.title
+            },
+            generatedAt: now
+        )
+    }
+
+    private struct EveningBacklogCandidate {
+        let todo: TodoItem
+        let goal: Goal?
+        let priorityScore: Int
+    }
+
+    private func candidate(for todo: TodoItem, activeGoals: [Goal], now: Date) -> EveningBacklogCandidate {
+        let goal = bestGoalMatch(for: todo, activeGoals: activeGoals)
+        return EveningBacklogCandidate(
+            todo: todo,
+            goal: goal,
+            priorityScore: priorityScore(for: todo, goal: goal, now: now)
+        )
+    }
+
+    private func chooseTargetDay(
+        analyses: [DayScheduleAnalysis],
+        dailyCount: [Date: Int],
+        goal: Goal?,
+        profile: UserProfile,
+        maxPerDay: Int,
+        now: Date
+    ) -> (analysis: DayScheduleAnalysis, score: Int)? {
+        let scored = analyses.compactMap { analysis -> (DayScheduleAnalysis, Int)? in
+            let dayKey = calendar.startOfDay(for: analysis.date)
+            let count = dailyCount[dayKey] ?? 0
+            guard count < dailyLimit(for: dayKey, profile: profile, maxPerDay: maxPerDay) else {
+                return nil
+            }
+
+            let dayOffset = calendar.dateComponents(
+                [.day],
+                from: calendar.startOfDay(for: now),
+                to: dayKey
+            ).day ?? 0
+            var score = analysis.loadPercent + count * 25 + dayOffset * 3
+
+            if let dueDate = goal?.dueDate {
+                let dueDay = calendar.startOfDay(for: dueDate)
+                if dayKey > dueDay {
+                    score += 120
+                } else {
+                    let daysUntilDue = calendar.dateComponents([.day], from: dayKey, to: dueDay).day ?? 0
+                    score += min(18, max(0, daysUntilDue)) / 2
+                }
+            }
+
+            return (analysis, score)
+        }
+
+        return scored.sorted {
+            if $0.1 != $1.1 { return $0.1 < $1.1 }
+            return $0.0.date < $1.0.date
+        }.first
+    }
+
+    private func dailyLimit(for date: Date, profile: UserProfile, maxPerDay: Int) -> Int {
+        let weekday = calendar.component(.weekday, from: date)
+        let isWeekend = weekday == 1 || weekday == 7
+        let capacity = isWeekend ? profile.weekendCapacityMinutes : profile.weekdayCapacityMinutes
+        let capacityLimit = max(1, capacity / 45)
+        return max(1, min(maxPerDay, capacityLimit))
+    }
+
+    private func priorityScore(for todo: TodoItem, goal: Goal?, now: Date) -> Int {
+        let today = calendar.startOfDay(for: now)
+        let todoDay = calendar.startOfDay(for: todo.date)
+        let overdueDays = max(0, calendar.dateComponents([.day], from: todoDay, to: today).day ?? 0)
+        var score = overdueDays * 10
+
+        if let goal {
+            score += goal.weight * 25
+            let daysToDue = calendar.dateComponents([.day], from: today, to: calendar.startOfDay(for: goal.dueDate)).day ?? 30
+            score += max(0, 20 - min(20, daysToDue))
+        }
+
+        let urgentWords = ["마감", "제출", "시험", "면접", "기한", "발표"]
+        if urgentWords.contains(where: { todo.title.localizedCaseInsensitiveContains($0) }) {
+            score += 20
+        }
+
+        return score
+    }
+
+    private func bestGoalMatch(for todo: TodoItem, activeGoals: [Goal]) -> Goal? {
+        let title = normalized(todo.title)
+        let scoredGoals = activeGoals.compactMap { goal -> (Goal, Int)? in
+            let tokens = goalTokens(for: goal)
+            let matchCount = tokens.filter { title.contains($0) }.count
+            guard matchCount > 0 else { return nil }
+            return (goal, matchCount * 10 + goal.weight)
+        }
+
+        return scoredGoals.sorted {
+            if $0.1 != $1.1 { return $0.1 > $1.1 }
+            return $0.0.dueDate < $1.0.dueDate
+        }.first?.0
+    }
+
+    private func goalTokens(for goal: Goal) -> [String] {
+        var candidates = [goal.title, goal.description]
+        candidates.append(contentsOf: goal.title.components(separatedBy: CharacterSet.alphanumerics.inverted))
+        candidates.append(contentsOf: goal.description.components(separatedBy: CharacterSet.alphanumerics.inverted))
+        return Array(Set(candidates.map(normalized).filter { $0.count >= 2 }))
+    }
+
+    private func normalized(_ value: String) -> String {
+        value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+
+    private func reason(
+        for todo: TodoItem,
+        target: DayScheduleAnalysis,
+        goal: Goal?,
+        now: Date
+    ) -> String {
+        if let goal {
+            return "\"\(goal.title)\" 목표와 관련되어 \(target.loadLabel) 날로 우선 추천했어요."
+        }
+
+        let overdueDays = max(
+            0,
+            calendar.dateComponents(
+                [.day],
+                from: calendar.startOfDay(for: todo.date),
+                to: calendar.startOfDay(for: now)
+            ).day ?? 0
+        )
+        if overdueDays >= 2 {
+            return "\(overdueDays)일 밀린 할 일이라 앞으로의 \(target.loadLabel) 날에 배치했어요."
+        }
+
+        return "앞으로의 일정 중 \(target.loadLabel) 날이라 부담이 적어요."
+    }
+
     // MARK: - AI Context String
 
     /// AI 시스템 프롬프트에 삽입할 일정 밀도 + 여유 슬롯 텍스트 생성

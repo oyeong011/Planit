@@ -629,6 +629,13 @@
 "settings.animal.display.random" = "랜덤 동물";
 "settings.animal.display.parade" = "동물 퍼레이드";
 
+/* ===== Evening Review Reschedule ===== */
+"review.reschedule.title" = "밀린 할 일 재조정";
+"review.reschedule.empty" = "오늘 옮길 미완료 할 일이 없어요.";
+"review.reschedule.summary" = "%d개의 미완료 할 일을 앞으로의 일정과 목표에 맞춰 나눠 추천했어요.";
+"review.reschedule.apply" = "추천대로 이동";
+"review.reschedule.skip" = "이번엔 넘기기";
+
 /* ===== Pet Wallpapers ===== */
 "wallpaper.softStudioLight" = "소프트 스튜디오";
 "wallpaper.quietMidnightDark" = "조용한 미드나이트";
