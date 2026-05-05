@@ -1868,6 +1868,59 @@ func cleanCodexOutput(_ raw: String) -> String {
     #expect(result == "실제 응답 내용입니다")
 }
 
+@Test func aiPathOverride_rejectsStaleTemporaryExecutable() throws {
+    let tempDir = FileManager.default.temporaryDirectory
+        .appendingPathComponent("planit-stale-codex-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: tempDir) }
+
+    let fakeCodex = tempDir.appendingPathComponent("codex")
+    try "#!/bin/sh\necho fake\n".data(using: .utf8)!.write(to: fakeCodex)
+    try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: fakeCodex.path)
+    let staleDate = Date().addingTimeInterval(-2 * 24 * 60 * 60)
+    try FileManager.default.setAttributes([.modificationDate: staleDate], ofItemAtPath: fakeCodex.path)
+
+    #expect(!AIService.isUsablePathOverride(fakeCodex.path, cmd: "codex", now: Date(), allowTemporaryPaths: true))
+}
+
+@Test func aiPathOverride_allowsFreshTemporaryExecutableForTests() throws {
+    let tempDir = FileManager.default.temporaryDirectory
+        .appendingPathComponent("planit-fresh-codex-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: tempDir) }
+
+    let fakeCodex = tempDir.appendingPathComponent("codex")
+    try "#!/bin/sh\necho fake\n".data(using: .utf8)!.write(to: fakeCodex)
+    try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: fakeCodex.path)
+
+    #expect(AIService.isUsablePathOverride(fakeCodex.path, cmd: "codex", now: Date(), allowTemporaryPaths: true))
+}
+
+@Test func aiPathOverride_rejectsFreshTemporaryExecutableForProduction() throws {
+    let tempDir = FileManager.default.temporaryDirectory
+        .appendingPathComponent("planit-production-codex-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: tempDir) }
+
+    let fakeCodex = tempDir.appendingPathComponent("codex")
+    try "#!/bin/sh\necho fake\n".data(using: .utf8)!.write(to: fakeCodex)
+    try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: fakeCodex.path)
+
+    #expect(!AIService.isUsablePathOverride(fakeCodex.path, cmd: "codex", now: Date(), allowTemporaryPaths: false))
+}
+
+@Test func aiPathResolution_findsInstalledClaudeAndCodexWhenPresent() {
+    let fileManager = FileManager.default
+    if let claudePath = AIService.findClaudePath() {
+        #expect(URL(fileURLWithPath: claudePath).lastPathComponent == "claude")
+        #expect(fileManager.isExecutableFile(atPath: claudePath))
+    }
+    if let codexPath = AIService.findCodexPath() {
+        #expect(URL(fileURLWithPath: codexPath).lastPathComponent == "codex")
+        #expect(fileManager.isExecutableFile(atPath: codexPath))
+    }
+}
+
 @MainActor
 @Test func codexTranscript_ignoresEchoedUserPromptJSON() async throws {
     let tempDir = FileManager.default.temporaryDirectory
@@ -1876,6 +1929,7 @@ func cleanCodexOutput(_ raw: String) -> String {
     let fakeCodex = tempDir.appendingPathComponent("codex")
     let script = #"""
     #!/bin/sh
+    cat >/dev/null
     case " $* " in
       *gpt-4.1-mini*)
         echo "unsupported model gpt-4.1-mini" >&2
@@ -1907,16 +1961,25 @@ func cleanCodexOutput(_ raw: String) -> String {
     try script.data(using: .utf8)!.write(to: fakeCodex)
     try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: fakeCodex.path)
 
-    let oldOverride = {
-        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-        let url = support?.appendingPathComponent("Planit/ai/codexPath")
-        return url.flatMap { try? String(contentsOf: $0, encoding: .utf8) }
-    }()
+    let settingsDir = tempDir.appendingPathComponent("settings", isDirectory: true)
+    let oldSettingsDir = getenv("PLANIT_AI_SETTINGS_DIR").map { String(cString: $0) }
+    let oldAllowTemp = getenv("PLANIT_ALLOW_TEMP_AI_PATH_OVERRIDES").map { String(cString: $0) }
+    setenv("PLANIT_AI_SETTINGS_DIR", settingsDir.path, 1)
+    setenv("PLANIT_ALLOW_TEMP_AI_PATH_OVERRIDES", "1", 1)
     AIService.savePathOverride(cmd: "codex", path: fakeCodex.path)
     let consentKey = "planit.aiExternalContextConsentGranted.v1"
     let oldConsent = UserDefaults.standard.object(forKey: consentKey)
     defer {
-        AIService.savePathOverride(cmd: "codex", path: oldOverride)
+        if let oldSettingsDir {
+            setenv("PLANIT_AI_SETTINGS_DIR", oldSettingsDir, 1)
+        } else {
+            unsetenv("PLANIT_AI_SETTINGS_DIR")
+        }
+        if let oldAllowTemp {
+            setenv("PLANIT_ALLOW_TEMP_AI_PATH_OVERRIDES", oldAllowTemp, 1)
+        } else {
+            unsetenv("PLANIT_ALLOW_TEMP_AI_PATH_OVERRIDES")
+        }
         if let oldConsent {
             UserDefaults.standard.set(oldConsent, forKey: consentKey)
         } else {

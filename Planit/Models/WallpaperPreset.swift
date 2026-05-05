@@ -79,6 +79,24 @@ struct WallpaperPreset: Identifiable, Equatable, Hashable {
             startPoint: .top, endPoint: .bottom
         ),
         WallpaperPreset(
+            id: "deep-navy",
+            nameKey: "wallpaper.deepNavy",
+            colorHexes: ["#050B14", "#0D1B2A", "#15324A"],
+            startPoint: .topLeading, endPoint: .bottomTrailing
+        ),
+        WallpaperPreset(
+            id: "night-forest",
+            nameKey: "wallpaper.nightForest",
+            colorHexes: ["#06130F", "#123326", "#1F4C39"],
+            startPoint: .topLeading, endPoint: .bottomTrailing
+        ),
+        WallpaperPreset(
+            id: "ink-violet",
+            nameKey: "wallpaper.inkViolet",
+            colorHexes: ["#0D0A14", "#21172E", "#3A2F4F"],
+            startPoint: .topLeading, endPoint: .bottomTrailing
+        ),
+        WallpaperPreset(
             id: "peach",
             nameKey: "wallpaper.peach",
             colorHexes: ["#ED4264", "#FFEDBC"],

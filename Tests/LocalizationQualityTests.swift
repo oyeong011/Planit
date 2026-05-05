@@ -133,6 +133,41 @@ struct LocalizationQualityTests {
         }
     }
 
+    @Test("wallpaper preset names exist in every locale")
+    func wallpaperPresetNamesExistInEveryLocale() throws {
+        let keys = [
+            "wallpaper.aurora",
+            "wallpaper.sunset",
+            "wallpaper.ocean",
+            "wallpaper.lavender",
+            "wallpaper.forest",
+            "wallpaper.midnight",
+            "wallpaper.deepNavy",
+            "wallpaper.nightForest",
+            "wallpaper.inkViolet",
+            "wallpaper.peach",
+            "wallpaper.mint",
+            "wallpaper.spring",
+            "wallpaper.summer",
+            "wallpaper.autumn",
+            "wallpaper.winter",
+            "wallpaper.softStudioLight",
+            "wallpaper.quietMidnightDark",
+            "wallpaper.pixelPetBeige",
+            "wallpaper.pixelPetPattern",
+            "wallpaper.cozyPetRoom"
+        ]
+
+        for locale in try availableLocales() {
+            let table = try localizedStrings(for: locale)
+            for key in keys {
+                let value = try requiredValue(table, key: key, locale: locale)
+                #expect(!value.isEmpty, "\(locale) \(key) is empty")
+                #expect(!value.contains("wallpaper."), "\(locale) \(key) is showing a raw key")
+            }
+        }
+    }
+
     @Test("localization files do not contain duplicate keys")
     func localizationFilesDoNotContainDuplicateKeys() throws {
         for locale in try availableLocales() {

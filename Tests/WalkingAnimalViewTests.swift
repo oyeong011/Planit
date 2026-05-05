@@ -147,6 +147,74 @@ struct WalkingAnimalViewTests {
         ).map(\.id) == ["dog"])
     }
 
+    @Test("pet parade spaces excess animals offscreen instead of stacking them at the edge")
+    func petParadeSpacesExcessAnimalsOffscreen() {
+        let totalWidth: CGFloat = 240
+        let positions = (0..<8).map { index in
+            WalkingAnimalView.paradeInitialXPosition(for: index)
+        }
+
+        #expect(positions[4] > totalWidth)
+
+        let visiblePositions = positions.filter { position in
+            position >= 0 && position <= totalWidth
+        }
+        for index in visiblePositions.indices.dropFirst() {
+            #expect(visiblePositions[index] - visiblePositions[index - 1] >= WalkingAnimalView.animalSize)
+        }
+
+        #expect(WalkingAnimalView.displayXPosition(
+            positions[4],
+            totalWidth: totalWidth,
+            displayMode: .parade
+        ) == positions[4])
+        #expect(WalkingAnimalView.displayXPosition(
+            positions[4],
+            totalWidth: totalWidth,
+            displayMode: .selected
+        ) == totalWidth - WalkingAnimalView.animalSize - 6)
+        #expect(!WalkingAnimalView.shouldRenderFrame(
+            at: positions[4],
+            totalWidth: totalWidth,
+            displayMode: .parade
+        ))
+        #expect(WalkingAnimalView.shouldRenderFrame(
+            at: positions[4],
+            totalWidth: totalWidth,
+            displayMode: .selected
+        ))
+    }
+
+    @Test("pet parade wraps around a longer track without reversing")
+    func petParadeWrapsAroundLongerTrackWithoutReversing() throws {
+        let track = try #require(WalkingAnimalView.paradeTrack(totalWidth: 240, petCount: 8))
+        let state = WalkingAnimalView.MotionState(
+            xPos: 629.5,
+            isMovingRight: true,
+            frameIndex: 0,
+            frameElapsed: 0
+        )
+
+        let next = WalkingAnimalView.advancedParadeState(
+            from: state,
+            totalWidth: 240,
+            petCount: 8,
+            frameCount: 8,
+            tickDuration: 1.0 / WalkingAnimalView.speed
+        )
+        let reusableTrackNext = WalkingAnimalView.advancedParadeState(
+            from: state,
+            track: track,
+            frameCount: 8,
+            tickDuration: 1.0 / WalkingAnimalView.speed
+        )
+
+        #expect(next.xPos < 0)
+        #expect(next.isMovingRight)
+        #expect(reusableTrackNext.xPos == next.xPos)
+        #expect(reusableTrackNext.isMovingRight == next.isMovingRight)
+    }
+
     @Test("all exposed animals use eight normalized CatSprites frames")
     func allExposedAnimalsUseNormalizedCatSpriteFrames() throws {
         for style in WalkingAnimalStyle.allCases {

@@ -247,6 +247,7 @@ final class AIService: ObservableObject {
 
     nonisolated private static let cliTimeout: TimeInterval = 35
     nonisolated private static let maxOutputBytes = 1_048_576  // 1 MB
+    nonisolated private static let temporaryOverrideMaxAge: TimeInterval = 60 * 60
     private static let externalContextConsentKey = "planit.aiExternalContextConsentGranted.v1"
     nonisolated static let maxActionDurationMinutes = 24 * 60
 
@@ -288,6 +289,9 @@ final class AIService: ObservableObject {
     /// Review planner 등 외부 서비스에서 Claude 경로 탐색용
     nonisolated static func findClaudePath() -> String? { resolvePath("claude") }
 
+    /// 테스트/진단에서 Codex 경로 탐색용
+    nonisolated static func findCodexPath() -> String? { resolvePath("codex") }
+
     /// Review planner 등 외부 서비스에서 Claude 단발 호출용
     nonisolated static func runClaudeOneShot(prompt: String, claudePath: String) -> String {
         let args = ["-p", "--output-format", "text", "--no-session-persistence"]
@@ -302,7 +306,7 @@ final class AIService: ObservableObject {
         guard cmd == "claude" || cmd == "codex" else { return nil }
 
         if let override = loadPathOverride(cmd: cmd),
-           FileManager.default.isExecutableFile(atPath: override) {
+           isUsablePathOverride(override, cmd: cmd) {
             return override
         }
 
@@ -340,10 +344,68 @@ final class AIService: ObservableObject {
         return loginShellWhich(cmd: cmd)
     }
 
+    nonisolated static func isUsablePathOverride(
+        _ path: String,
+        cmd: String,
+        now: Date = Date(),
+        allowTemporaryPaths: Bool = allowsTemporaryPathOverrides
+    ) -> Bool {
+        guard cmd == "claude" || cmd == "codex" else { return false }
+
+        let trimmed = path.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+        let url = URL(fileURLWithPath: trimmed)
+        guard url.lastPathComponent == cmd else { return false }
+        guard FileManager.default.isExecutableFile(atPath: trimmed) else { return false }
+
+        guard isTemporaryPath(trimmed) else { return true }
+        guard allowTemporaryPaths else { return false }
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: trimmed),
+              let modifiedAt = attributes[.modificationDate] as? Date else {
+            return false
+        }
+        return now.timeIntervalSince(modifiedAt) <= temporaryOverrideMaxAge
+    }
+
+    nonisolated private static var isRunningTests: Bool {
+        let env = ProcessInfo.processInfo.environment
+        if env["XCTestConfigurationFilePath"] != nil || env["XCTestSessionIdentifier"] != nil {
+            return true
+        }
+        return ProcessInfo.processInfo.arguments.contains { $0.hasSuffix(".xctest") }
+    }
+
+    nonisolated private static var allowsTemporaryPathOverrides: Bool {
+        if let raw = getenv("PLANIT_ALLOW_TEMP_AI_PATH_OVERRIDES") {
+            return String(cString: raw) == "1"
+        }
+        return isRunningTests
+    }
+
+    nonisolated private static func isTemporaryPath(_ path: String) -> Bool {
+        let url = URL(fileURLWithPath: path)
+        let candidates = [
+            url.standardizedFileURL.path,
+            url.resolvingSymlinksInPath().standardizedFileURL.path,
+        ]
+        let temporaryRoots = [
+            FileManager.default.temporaryDirectory.standardizedFileURL.path,
+            FileManager.default.temporaryDirectory.resolvingSymlinksInPath().standardizedFileURL.path,
+            "/tmp",
+            "/private/tmp",
+            "/var/folders",
+        ]
+
+        return candidates.contains { candidate in
+            temporaryRoots.contains { root in
+                candidate == root || candidate.hasPrefix(root.hasSuffix("/") ? root : root + "/")
+            }
+        }
+    }
+
     /// 설정 화면에서 사용자가 직접 지정한 경로를 읽음.
     nonisolated private static func loadPathOverride(cmd: String) -> String? {
-        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-        guard let url = support?.appendingPathComponent("Planit/ai/\(cmd)Path") else { return nil }
+        let url = aiSettingsDirectory.appendingPathComponent("\(cmd)Path")
         guard let data = try? Data(contentsOf: url),
               let raw = String(data: data, encoding: .utf8) else { return nil }
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -353,8 +415,7 @@ final class AIService: ObservableObject {
     /// 사용자가 Planit.app/ai 설정에서 경로를 저장/삭제할 때 사용.
     nonisolated static func savePathOverride(cmd: String, path: String?) {
         guard cmd == "claude" || cmd == "codex" else { return }
-        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-        guard let dir = support?.appendingPathComponent("Planit/ai", isDirectory: true) else { return }
+        let dir = aiSettingsDirectory
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true,
                                                   attributes: [.posixPermissions: 0o700])
         let file = dir.appendingPathComponent("\(cmd)Path")
@@ -363,6 +424,17 @@ final class AIService: ObservableObject {
         } else {
             try? FileManager.default.removeItem(at: file)
         }
+    }
+
+    nonisolated private static var aiSettingsDirectory: URL {
+        if let raw = getenv("PLANIT_AI_SETTINGS_DIR") {
+            let trimmed = String(cString: raw).trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty {
+                return URL(fileURLWithPath: trimmed, isDirectory: true)
+            }
+        }
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        return support.appendingPathComponent("Planit/ai", isDirectory: true)
     }
 
     /// Login shell을 1회 실행해 `command -v <cmd>` 결과를 가져온다.
@@ -421,8 +493,7 @@ final class AIService: ObservableObject {
     // MARK: - Settings
 
     private var settingsDir: URL {
-        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        return support.appendingPathComponent("Planit/ai", isDirectory: true)
+        Self.aiSettingsDirectory
     }
 
     private func loadSettings() {
@@ -1286,6 +1357,7 @@ final class AIService: ObservableObject {
             // ChatGPT 계정의 Codex CLI에서 지원되는 기본 모델을 사용하되,
             // config.toml의 xhigh reasoning은 앱 내에서 low로 오버라이드.
             var codexArgs = ["exec",
+                             "--disable", "plugins",
                              "--sandbox", "read-only",
                              "--skip-git-repo-check",
                              "--ephemeral",

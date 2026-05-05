@@ -11,9 +11,9 @@
 
 ## Step 1. 전환 전 준비 (완료됨 ✅)
 
-- [x] Privacy Policy: https://oyeong011.github.io/Planit/privacy.html
-- [x] Terms of Service: https://oyeong011.github.io/Planit/terms.html
-- [x] Homepage: https://github.com/oyeong011/Planit
+- [x] Privacy Policy: https://calen.ai.kr/privacy.html
+- [x] Terms of Service: https://calen.ai.kr/terms.html
+- [x] Homepage: https://calen.ai.kr/
 - [x] Support email: beetleboy_@naver.com
 - [x] Scope justification 문서 (`docs/oauth-verification/scope-justification.md`)
 - [ ] 도메인 소유 증명 (Google Search Console)
@@ -42,22 +42,21 @@ https://console.cloud.google.com/apis/credentials/consent 접속 후:
 - **User support email**: beetleboy_@naver.com
 - **App logo**: 120x120 PNG 업로드 (준비 필요)
 - **App domain** 섹션:
-  - **Application home page**: https://github.com/oyeong011/Planit
-  - **Application privacy policy link**: https://oyeong011.github.io/Planit/privacy.html
-  - **Application terms of service link**: https://oyeong011.github.io/Planit/terms.html
+  - **Application home page**: https://calen.ai.kr/
+  - **Application privacy policy link**: https://calen.ai.kr/privacy.html
+  - **Application terms of service link**: https://calen.ai.kr/terms.html
 - **Authorized domains**:
-  - `oyeong011.github.io`
-  - `github.com`
+  - `calen.ai.kr`
 - **Developer contact**: beetleboy_@naver.com
 - **Scopes**: 3개 모두 추가 (justification 아래 참조)
 
 ### 3-2. 도메인 소유 증명
 
-`oyeong011.github.io` 를 Google Search Console에 등록:
+`calen.ai.kr` 를 Google Search Console에 등록:
 1. https://search.google.com/search-console 접속
-2. "URL prefix" 속성 추가 → `https://oyeong011.github.io/Planit/`
-3. 소유권 확인 파일(`googleXXXXXXXX.html`)을 `docs/` 디렉터리에 업로드
-4. 이미 `docs/googled122f53a03ac8dbf.html` 존재 — 해당 코드로 인증됨
+2. "URL prefix" 속성 추가 → `https://calen.ai.kr/`
+3. 소유권 확인 파일(`googleXXXXXXXX.html`)을 `docs/` 디렉터리에 업로드하거나 DNS TXT로 인증
+4. 현재 `docs/googled122f53a03ac8dbf.html` 파일이 존재하므로, Search Console에서 같은 파일 토큰을 발급받은 경우 `https://calen.ai.kr/googled122f53a03ac8dbf.html` 로 인증 가능
 
 ### 3-3. Scope justification 제출
 

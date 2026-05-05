@@ -6,9 +6,9 @@ Submitted for Google OAuth app verification.
 
 - **App name**: Calen
 - **App type**: Desktop client (macOS native)
-- **Homepage**: https://github.com/oyeong011/Planit
-- **Privacy Policy**: https://oyeong011.github.io/Planit/privacy.html
-- **Terms of Service**: https://oyeong011.github.io/Planit/terms.html
+- **Homepage**: https://calen.ai.kr/
+- **Privacy Policy**: https://calen.ai.kr/privacy.html
+- **Terms of Service**: https://calen.ai.kr/terms.html
 - **Support contact**: beetleboy_@naver.com
 - **OAuth client type**: Desktop
 - **Distribution**: Open source (MIT). Signed + notarized by Apple Developer ID
