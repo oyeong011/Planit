@@ -330,6 +330,8 @@
 "settings.evening.card" = "Evening Review";
 "settings.evening.time.title" = "Evening Review Time";
 "settings.evening.time.desc" = "Reviews completed schedules and plans for tomorrow";
+"settings.evening.autoapply.title" = "Auto-reschedule unfinished items";
+"settings.evening.autoapply.desc" = "When on, unfinished items are moved automatically at evening review time. When off, you are notified and approve each change manually.";
 "settings.notifications.permission.card" = "Notification Permission";
 "settings.notifications.permission.title" = "System notification permission required";
 "settings.notifications.permission.desc" = "macOS System Settings → Notifications → Allow Calen";
@@ -413,6 +415,11 @@
 "review.done.all" = "Mark Done";
 "review.accept.all" = "Accept All";
 "review.todo.label" = "Todo";
+"review.open.today" = "Open today's review";
+"review.today.summary.title" = "Today's completion";
+"review.today.summary.subtitle" = "Review tonight to close out finished events and todos.";
+"review.today.summary.events" = "Events";
+"review.today.summary.todos" = "Todos";
 "settings.section.context" = "AI Context";
 
 /* ===== AI Context Section ===== */

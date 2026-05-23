@@ -43,6 +43,7 @@ struct MainCalendarView: View {
     @StateObject private var updater = UpdaterService.shared
     @ObservedObject private var themeService = CalendarThemeService.shared
     @ObservedObject private var wallpaperService = WallpaperService.shared
+    @AppStorage("calen.review.lastAutoRescheduleKey") private var lastAutoRescheduleKey = ""
     @State private var showLeftPanel: Bool = true
     @State private var leftPanelMode: LeftPanelMode = .chat
     @State private var showSettings: Bool = false
@@ -93,6 +94,7 @@ struct MainCalendarView: View {
                     viewModel: viewModel,
                     showChat: $showLeftPanel,
                     habitService: habitService,
+                    onOpenReview: openTodayReview,
                     onOpenRescheduleReview: openEveningRescheduleReview
                 )
                     .frame(maxWidth: .infinity)
@@ -144,6 +146,9 @@ struct MainCalendarView: View {
                 hermesSync = HermesMemorySync.startIfEnabled(service: hermesMemoryService)
             }
         }
+        .task(id: goalService.profile.eveningReviewHour) {
+            await runEveningReviewMonitor()
+        }
         .background(
             calendarBackground
         )
@@ -182,6 +187,10 @@ struct MainCalendarView: View {
         // popover가 바깥 클릭으로 닫히면 설정 오버레이도 함께 닫기
         .onReceive(NotificationCenter.default.publisher(for: .calenPopoverDidClose)) { _ in
             closeSettings()
+        }
+        // 저녁 리뷰 / 자정 롤오버 알림 탭 → review 패널로 전환
+        .onReceive(NotificationCenter.default.publisher(for: .calenOpenEveningReview)) { _ in
+            handleOpenEveningReviewNotification()
         }
     }
 
@@ -370,6 +379,73 @@ struct MainCalendarView: View {
         leftPanelMode = .review
     }
 
+    private func openTodayReview() {
+        reviewService.currentMode = .evening
+        reviewService.refreshEveningReschedulePlan(
+            todos: viewModel.todos,
+            events: viewModel.calendarEvents
+        )
+        showLeftPanel = true
+        leftPanelMode = .review
+    }
+
+    private func runEveningReviewMonitor() async {
+        while !Task.isCancelled {
+            runAutomaticEveningReviewIfNeeded()
+            try? await Task.sleep(nanoseconds: 60_000_000_000)
+        }
+    }
+
+    private func runAutomaticEveningReviewIfNeeded(now: Date = Date()) {
+        let calendar = Calendar.current
+        guard ReviewService.shouldRunAutomaticEveningReschedule(
+            lastRunKey: lastAutoRescheduleKey,
+            now: now,
+            profile: goalService.profile,
+            calendar: calendar
+        ) else { return }
+
+        let todayKey = ReviewService.automaticEveningRescheduleKey(
+            for: now,
+            reviewHour: goalService.profile.eveningReviewHour,
+            calendar: calendar
+        )
+        lastAutoRescheduleKey = todayKey
+        reviewService.currentMode = .evening
+        reviewService.refreshEveningReschedulePlan(
+            todos: viewModel.todos,
+            events: viewModel.calendarEvents,
+            now: now
+        )
+
+        let items = reviewService.eveningReschedulePlan.items
+        if goalService.profile.eveningReviewAutoApply && !items.isEmpty {
+            // 사용자가 자동 적용 모드 명시 선택 — 즉시 이동 + Google sync (viewModel 경로)
+            for item in items {
+                viewModel.moveTodoBySystem(id: item.todoId, toDate: item.targetDate)
+            }
+            reviewService.clearEveningReschedulePlan()
+            viewModel.refreshEvents()
+        }
+
+        // 모드와 무관하게 리뷰 패널을 열어 결과/추천을 확인할 수 있도록.
+        if !items.isEmpty || reviewService.currentMode != .none {
+            showLeftPanel = true
+            leftPanelMode = .review
+        }
+    }
+
+    /// 알림(저녁 리뷰 / 자정 롤오버) 탭 시 호출 — 패널을 review로 전환하고 최신 추천을 갱신.
+    private func handleOpenEveningReviewNotification() {
+        reviewService.currentMode = .evening
+        reviewService.refreshEveningReschedulePlan(
+            todos: viewModel.todos,
+            events: viewModel.calendarEvents
+        )
+        showLeftPanel = true
+        leftPanelMode = .review
+    }
+
     // MARK: - Notifications
 
     private func scheduleNotifications() {
@@ -427,6 +503,7 @@ struct CalendarGridView: View {
     @ObservedObject var viewModel: CalendarViewModel
     @Binding var showChat: Bool
     @ObservedObject var habitService: HabitService
+    let onOpenReview: () -> Void
     let onOpenRescheduleReview: () -> Void
     @ObservedObject private var themeService = CalendarThemeService.shared
 
@@ -515,6 +592,20 @@ struct CalendarGridView: View {
 
                 Spacer()
                 HStack(spacing: 12) {
+                    Button {
+                        onOpenReview()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "moon.stars.fill")
+                                .font(.system(size: 12))
+                            Text("\(String(localized: "panel.review")) \(todayReviewBadgeText)")
+                                .font(.system(size: 11, weight: .semibold))
+                        }
+                        .foregroundStyle(themeService.current.accent)
+                    }
+                    .buttonStyle(.plain)
+                    .help(String(localized: "review.open.today", defaultValue: "Open today's review"))
+
                     // 미완료 할 일 즉시 재배치 버튼
                     let overdueCount = viewModel.overdueLocalTodoCount()
                     if overdueCount > 0 {
@@ -641,6 +732,24 @@ struct CalendarGridView: View {
                 .padding(.horizontal, 8)
                 .padding(.bottom, 4)
         }
+    }
+
+    private var todayReviewBadgeText: String {
+        let today = Calendar.current.startOfDay(for: Date())
+        let items = viewModel.itemsForDate(today)
+        let total = items.count
+        guard total > 0 else {
+            return "0%"
+        }
+        let done = items.filter { item in
+            switch item {
+            case .event(let event):
+                return viewModel.completedEventIDs.contains(event.id)
+            case .todo(let todo):
+                return todo.isCompleted
+            }
+        }.count
+        return "\(Int((Double(done) / Double(total) * 100).rounded()))%"
     }
 }
 

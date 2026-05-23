@@ -267,8 +267,8 @@ final class SmartSchedulerService {
 
     // MARK: - Evening Review Reschedule
 
-    /// 저녁 리뷰에서 사용자가 확인할 수 있는 미완료 할 일 재배치 추천안을 만든다.
-    /// 오늘까지의 미완료 로컬 todo만 대상으로 하며, 실제 이동은 호출자가 사용자의 확인 후 수행한다.
+    /// 저녁 리뷰/자동 리뷰에서 사용할 미완료 할 일 재배치안을 만든다.
+    /// 오늘까지의 미완료 로컬 todo만 대상으로 하며, 실제 이동 여부는 호출자가 결정한다.
     func makeEveningReschedulePlan(
         todos: [TodoItem],
         events: [CalendarEvent],

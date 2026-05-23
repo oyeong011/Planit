@@ -70,6 +70,52 @@ final class ReviewService: ObservableObject {
         dateKeyFormatter.string(from: date)
     }
 
+    nonisolated static func automaticEveningRescheduleKey(
+        for date: Date,
+        reviewHour: Int,
+        calendar: Calendar = .current
+    ) -> String {
+        var effectiveDate = date
+        let normalizedHour = ((reviewHour % 24) + 24) % 24
+        let currentHour = calendar.component(.hour, from: date)
+        if normalizedHour >= 22 && currentHour < (normalizedHour + 3) % 24 {
+            effectiveDate = calendar.date(byAdding: .day, value: -1, to: date) ?? date
+        }
+
+        let components = calendar.dateComponents([.year, .month, .day], from: effectiveDate)
+        return String(
+            format: "%04d-%02d-%02d",
+            components.year ?? 0,
+            components.month ?? 0,
+            components.day ?? 0
+        )
+    }
+
+    nonisolated static func shouldRunAutomaticEveningReschedule(
+        lastRunKey: String,
+        now: Date,
+        profile: UserProfile,
+        calendar: Calendar = .current
+    ) -> Bool {
+        guard profile.onboardingDone else { return false }
+
+        let startHour = ((profile.eveningReviewHour % 24) + 24) % 24
+        let hour = calendar.component(.hour, from: now)
+        let endHour = (startHour + 3) % 24
+        let isInWindow = startHour + 3 < 24
+            ? hour >= startHour && hour < startHour + 3
+            : hour >= startHour || hour < endHour
+
+        guard isInWindow else { return false }
+
+        let key = automaticEveningRescheduleKey(
+            for: now,
+            reviewHour: startHour,
+            calendar: calendar
+        )
+        return lastRunKey != key
+    }
+
     // MARK: - Always-On Daily Adjustment
 
     /// Called on every app launch / popover open.

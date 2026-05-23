@@ -109,6 +109,8 @@ struct UserProfile: Codable {
     var weekendCapacityMinutes: Int
     var morningBriefHour: Int    // e.g., 8
     var eveningReviewHour: Int   // e.g., 21
+    /// 저녁 리뷰 시각 도달 시 동작 — true: 미완료 todo를 즉시 자동 재배치, false: 알림만 띄우고 사용자 승인 대기.
+    var eveningReviewAutoApply: Bool
     var aggressiveness: Aggressiveness
     var usesFocusWindowsForAI: Bool
     var onboardingDone: Bool
@@ -124,6 +126,7 @@ struct UserProfile: Codable {
         weekendCapacityMinutes = 180
         morningBriefHour = 8
         eveningReviewHour = 21
+        eveningReviewAutoApply = false
         aggressiveness = .manual
         usesFocusWindowsForAI = true
         onboardingDone = false
@@ -140,6 +143,7 @@ struct UserProfile: Codable {
         case weekendCapacityMinutes
         case morningBriefHour
         case eveningReviewHour
+        case eveningReviewAutoApply
         case aggressiveness
         case usesFocusWindowsForAI
         case onboardingDone
@@ -158,6 +162,7 @@ struct UserProfile: Codable {
         weekendCapacityMinutes = try values.decodeIfPresent(Int.self, forKey: .weekendCapacityMinutes) ?? defaults.weekendCapacityMinutes
         morningBriefHour = try values.decodeIfPresent(Int.self, forKey: .morningBriefHour) ?? defaults.morningBriefHour
         eveningReviewHour = try values.decodeIfPresent(Int.self, forKey: .eveningReviewHour) ?? defaults.eveningReviewHour
+        eveningReviewAutoApply = try values.decodeIfPresent(Bool.self, forKey: .eveningReviewAutoApply) ?? defaults.eveningReviewAutoApply
         aggressiveness = try values.decodeIfPresent(Aggressiveness.self, forKey: .aggressiveness) ?? defaults.aggressiveness
         usesFocusWindowsForAI = try values.decodeIfPresent(Bool.self, forKey: .usesFocusWindowsForAI) ?? defaults.usesFocusWindowsForAI
         onboardingDone = try values.decodeIfPresent(Bool.self, forKey: .onboardingDone) ?? defaults.onboardingDone

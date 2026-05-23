@@ -268,6 +268,9 @@ struct ReviewView: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(spacing: 10) {
+                    todayCompletionSummarySection
+                        .padding(.horizontal, 10)
+
                     // 드래그로 순서 조절 가능한 섹션들
                     ForEach(sectionOrder) { sid in
                         draggableCard(sid: sid)
@@ -907,6 +910,108 @@ struct ReviewView: View {
 
     private var todayTodos: [TodoItem] {
         todayItems.compactMap { if case .todo(let t) = $0 { return t } else { return nil } }
+    }
+
+    private var todayCompletedEvents: Int {
+        todayEvents.filter { viewModel.completedEventIDs.contains($0.id) }.count
+    }
+
+    private var todayCompletedTodos: Int {
+        todayTodos.filter(\.isCompleted).count
+    }
+
+    private var todayCompletedCount: Int {
+        todayCompletedEvents + todayCompletedTodos
+    }
+
+    private var todayReviewTotalCount: Int {
+        todayEvents.count + todayTodos.count
+    }
+
+    private var todayCompletionRate: Double {
+        guard todayReviewTotalCount > 0 else { return 0 }
+        return Double(todayCompletedCount) / Double(todayReviewTotalCount)
+    }
+
+    private var todayCompletionPercent: Int {
+        Int((todayCompletionRate * 100).rounded())
+    }
+
+    private var todayCompletionColor: Color {
+        progressColor(for: todayCompletionRate)
+    }
+
+    private var todayCompletionSummarySection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .center, spacing: 10) {
+                ZStack {
+                    Circle()
+                        .stroke(Color.secondary.opacity(0.16), lineWidth: 6)
+                    Circle()
+                        .trim(from: 0, to: todayCompletionRate)
+                        .stroke(
+                            todayCompletionColor,
+                            style: StrokeStyle(lineWidth: 6, lineCap: .round)
+                        )
+                        .rotationEffect(.degrees(-90))
+                    Text("\(todayCompletionPercent)%")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(todayCompletionColor)
+                }
+                .frame(width: 54, height: 54)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Label(String(localized: "review.today.summary.title", defaultValue: "Today's completion"), systemImage: "moon.stars.fill")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(themeService.current.primary)
+                    Text(String(format: String(localized: "review.completion.count.format"), todayCompletedCount, todayReviewTotalCount))
+                        .font(.system(size: 11, weight: .semibold))
+                    Text(String(localized: "review.today.summary.subtitle", defaultValue: "Review tonight to close out finished events and todos."))
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+
+                Spacer(minLength: 0)
+            }
+
+            HStack(spacing: 8) {
+                todaySummaryPill(
+                    title: String(localized: "review.today.summary.events", defaultValue: "Events"),
+                    done: todayCompletedEvents,
+                    total: todayEvents.count,
+                    icon: "calendar"
+                )
+                todaySummaryPill(
+                    title: String(localized: "review.today.summary.todos", defaultValue: "Todos"),
+                    done: todayCompletedTodos,
+                    total: todayTodos.count,
+                    icon: "checklist"
+                )
+            }
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.platformControlBackground)
+                .overlay(RoundedRectangle(cornerRadius: 10).fill(themeService.current.cardTint))
+        )
+    }
+
+    private func todaySummaryPill(title: String, done: Int, total: Int, icon: String) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: icon)
+                .font(.system(size: 9, weight: .semibold))
+            Text(title)
+                .font(.system(size: 9, weight: .medium))
+            Spacer(minLength: 4)
+            Text("\(done)/\(total)")
+                .font(.system(size: 10, weight: .bold))
+        }
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 9)
+        .padding(.vertical, 6)
+        .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.08)))
     }
 
     private var eveningRescheduleSignature: String {

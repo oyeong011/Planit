@@ -83,6 +83,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // 앱이 메뉴바에 조용히 떠 있어도 새 버전을 자동 감지해 알림으로 알리도록 주기 폴링 시작.
         // (Sparkle의 accessory 앱 UI가 안 뜨는 환경에서도 배너 + 시스템 알림 동작)
         updater.startPeriodicAppcastPolling()
+
+        // 저녁 리뷰/자정 롤오버 알림 탭 → popover 자동 표시
+        NotificationCenter.default.addObserver(
+            forName: .calenOpenEveningReview,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.showPopoverForReview() }
+        }
+    }
+
+    /// 알림 액션으로 호출 — popover가 닫혀 있으면 열고, 이미 열려있으면 그대로 둠.
+    /// MainView는 같은 notification을 receive 해서 review 패널로 전환한다.
+    private func showPopoverForReview() {
+        guard let button = statusItem.button, !popover.isShown else { return }
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -210,6 +227,8 @@ extension AppDelegate: NSPopoverDelegate {
 extension Notification.Name {
     static let calenPopoverDidClose  = Notification.Name("calenPopoverDidClose")
     static let calenPopoverWillShow  = Notification.Name("calenPopoverWillShow")
+    /// 알림 탭(저녁 리뷰 / 자정 롤오버) → AppDelegate가 popover를 열고 MainView가 review 패널로 전환.
+    static let calenOpenEveningReview = Notification.Name("calenOpenEveningReview")
 }
 
 #elseif os(iOS)

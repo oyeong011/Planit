@@ -640,7 +640,7 @@ struct SettingsView: View {
             }
 
             settingsCard(String(localized: "settings.evening.card")) {
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 14) {
                     HStack {
                         VStack(alignment: .leading, spacing: 3) {
                             Text(String(localized: "settings.evening.time.title"))
@@ -652,6 +652,17 @@ struct SettingsView: View {
                         Spacer()
                         hourPicker($profile.eveningReviewHour, range: 17...23)
                     }
+                    Divider().opacity(0.3)
+                    Toggle(isOn: $profile.eveningReviewAutoApply) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(String(localized: "settings.evening.autoapply.title"))
+                                .font(.system(size: 13, weight: .medium))
+                            Text(String(localized: "settings.evening.autoapply.desc"))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .toggleStyle(.switch)
                 }
             }
 

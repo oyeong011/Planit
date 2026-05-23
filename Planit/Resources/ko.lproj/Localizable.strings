@@ -330,6 +330,8 @@
 "settings.evening.card" = "저녁 리뷰";
 "settings.evening.time.title" = "저녁 리뷰 시간";
 "settings.evening.time.desc" = "오늘 완료된 일정을 리뷰하고 내일 계획을 세웁니다";
+"settings.evening.autoapply.title" = "미완료 일정 자동 재배치";
+"settings.evening.autoapply.desc" = "켜면 저녁 리뷰 시간에 미완료 일정을 즉시 다음 날로 옮깁니다. 끄면 알림만 띄우고 사용자가 직접 승인합니다.";
 "settings.notifications.permission.card" = "알림 권한";
 "settings.notifications.permission.title" = "시스템 알림 권한이 필요합니다";
 "settings.notifications.permission.desc" = "macOS 시스템 설정 → 알림 → Calen 에서 허용하세요";
@@ -413,6 +415,11 @@
 "review.done.all" = "전체 완료";
 "review.accept.all" = "전부 추가";
 "review.todo.label" = "할 일";
+"review.open.today" = "오늘 리뷰 열기";
+"review.today.summary.title" = "오늘 완료율";
+"review.today.summary.subtitle" = "밤에 끝낸 일정과 할 일을 확인하고 하루를 닫으세요.";
+"review.today.summary.events" = "일정";
+"review.today.summary.todos" = "할 일";
 "settings.section.context" = "AI 컨텍스트";
 
 /* ===== AI Context Section ===== */
