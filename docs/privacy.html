@@ -14,18 +14,18 @@
 </head>
 <body>
   <h1>Privacy Policy</h1>
-  <p class="meta">Calen · Last updated: May 5, 2026 · <a href="https://calen.ai.kr/">Homepage</a></p>
+  <p class="meta">Calen · Last updated: May 23, 2026 · <a href="https://calen.ai.kr/">Homepage</a></p>
 
-  <p>Calen ("the App") is a macOS menu bar application that integrates with Google Calendar, Apple Calendar, and Apple Reminders to help you manage your schedule. This policy explains what data we collect, how we use it, and your rights.</p>
+  <p>Calen ("the App") is available as a <strong>macOS menu bar application and an iOS app (iPhone / iPad)</strong> that integrates with Google Calendar, Apple Calendar, and Apple Reminders to help you manage your schedule. This policy applies to both the macOS and iOS versions of Calen and explains what data we collect, how we use it, and your rights.</p>
 
   <h2>1. Data We Collect</h2>
-  <p>Calen accesses the following data <strong>solely on your device</strong>:</p>
+  <p>Calen (both macOS and iOS) accesses the following data <strong>solely on your device</strong>:</p>
   <ul>
     <li><strong>Google Calendar data</strong> — event titles, times, descriptions, and calendar lists, retrieved via the Google Calendar API.</li>
-    <li><strong>Apple Calendar / Reminders data</strong> — accessed via macOS EventKit with your explicit permission. Never transmitted off-device.</li>
+    <li><strong>Apple Calendar / Reminders data</strong> — accessed via the Apple EventKit framework (macOS and iOS) with your explicit permission. Never transmitted off-device.</li>
     <li><strong>Google account email</strong> — used only to display your logged-in account name inside the App.</li>
-    <li><strong>OAuth tokens</strong> — stored in your macOS Keychain (WhenUnlockedThisDeviceOnly, no iCloud sync).</li>
-    <li><strong>Local todos, goals, and user context</strong> — stored as local JSON/Markdown files under <code>~/Library/Application Support/Planit/</code>. Integrity-signed with HMAC.</li>
+    <li><strong>OAuth tokens</strong> — stored in the device Keychain (macOS Keychain on Mac, iOS Keychain on iPhone/iPad), <code>kSecAttrAccessibleWhenUnlockedThisDeviceOnly</code>, no iCloud sync.</li>
+    <li><strong>Local todos, goals, and user context</strong> — stored as local files in the App's sandboxed container: <code>~/Library/Application Support/Planit/</code> on macOS, or the App's private Documents/Application Support directory on iOS. Integrity-signed with HMAC.</li>
   </ul>
 
   <h2>2. How We Use Your Data</h2>
@@ -49,10 +49,10 @@
   </ul>
 
   <h2>5. Data Retention &amp; Deletion</h2>
-  <p>Calendar data is fetched on demand and not stored persistently beyond the current session cache. OAuth tokens are stored in your macOS Keychain and can be removed at any time by logging out of the App or deleting Calen from your Mac. To remove Keychain entries manually, open Keychain Access and search for "com.oy.planit".</p>
+  <p>Calendar data is fetched on demand and not stored persistently beyond the current session cache. OAuth tokens are stored in the device Keychain and can be removed at any time by logging out of the App or deleting Calen from your device. On macOS, manual Keychain entries can be removed via Keychain Access by searching for "com.oy.planit"; on iOS, uninstalling the App removes all Keychain entries scoped to its bundle identifier.</p>
 
   <h2>6. Security</h2>
-  <p>OAuth credentials are stored in the macOS Keychain. All network communication uses HTTPS. The App is notarized by Apple, ensuring it has not been tampered with.</p>
+  <p>OAuth credentials are stored in the device Keychain (macOS Keychain or iOS Keychain). All network communication uses HTTPS. The macOS build is notarized by Apple; the iOS build is distributed through Apple's App Store review process. Both ensure the App has not been tampered with.</p>
 
   <h2>7. Children's Privacy</h2>
   <p>Calen is not directed at children under 13. We do not knowingly collect data from children.</p>
