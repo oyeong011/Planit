@@ -274,16 +274,44 @@ final class AIService: ObservableObject {
 
     private func checkCLIAvailability() {
         Task.detached { [weak self] in
-            let claudeResolved = Self.resolvePath("claude")
-            let codexResolved = Self.resolvePath("codex")
+            let resolved = Self.resolveCLIPaths()
             guard let self else { return }
-            await MainActor.run { [self] in
-                self.claudePath = claudeResolved
-                self.claudeAvailable = claudeResolved != nil
-                self.codexPath = codexResolved
-                self.codexAvailable = codexResolved != nil
-            }
+            await self.applyResolvedCLIPaths(resolved)
         }
+    }
+
+    private func ensureSelectedCLIAvailability() async {
+        let selectedProvider = provider
+        let currentPath: String?
+        switch selectedProvider {
+        case .claude: currentPath = claudePath
+        case .codex: currentPath = codexPath
+        }
+        guard currentPath == nil else { return }
+
+        let resolved = await Task.detached(priority: .utility) {
+            Self.resolvePath(selectedProvider == .claude ? "claude" : "codex")
+        }.value
+
+        switch selectedProvider {
+        case .claude:
+            claudePath = resolved
+            claudeAvailable = resolved != nil
+        case .codex:
+            codexPath = resolved
+            codexAvailable = resolved != nil
+        }
+    }
+
+    nonisolated private static func resolveCLIPaths() -> (claude: String?, codex: String?) {
+        (resolvePath("claude"), resolvePath("codex"))
+    }
+
+    private func applyResolvedCLIPaths(_ resolved: (claude: String?, codex: String?)) {
+        claudePath = resolved.claude
+        claudeAvailable = resolved.claude != nil
+        codexPath = resolved.codex
+        codexAvailable = resolved.codex != nil
     }
 
     /// Review planner 등 외부 서비스에서 Claude 경로 탐색용
@@ -310,6 +338,10 @@ final class AIService: ObservableObject {
             return override
         }
 
+        if let envPath = resolveInSearchDirs(cmd: cmd, dirs: currentPATHSearchDirs()) {
+            return envPath
+        }
+
         let home = NSHomeDirectory()
         // 시스템 경로 우선, 이어서 개별 사용자가 흔히 설치하는 툴체인별 bin 경로.
         // 사용자 홈 기반 경로는 동일 사용자 권한이라 추가 공격 표면이 아님 —
@@ -334,14 +366,47 @@ final class AIService: ObservableObject {
             }
         }
 
-        for dir in searchDirs {
-            let full = "\(dir)/\(cmd)"
-            if FileManager.default.isExecutableFile(atPath: full) {
-                return full
-            }
+        if let path = resolveInSearchDirs(cmd: cmd, dirs: searchDirs) {
+            return path
         }
 
         return loginShellWhich(cmd: cmd)
+    }
+
+    nonisolated static func resolveInSearchDirs(cmd: String, dirs: [String]) -> String? {
+        guard cmd == "claude" || cmd == "codex" else { return nil }
+
+        for dir in dirs where !dir.isEmpty {
+            guard dir.hasPrefix("/") else { continue }
+            let full = URL(fileURLWithPath: dir).appendingPathComponent(cmd).path
+            if isAllowedResolvedPath(full, cmd: cmd) {
+                return full
+            }
+        }
+        return nil
+    }
+
+    nonisolated private static func currentPATHSearchDirs() -> [String] {
+        guard let raw = getenv("PATH") else { return [] }
+        return String(cString: raw)
+            .split(separator: ":", omittingEmptySubsequences: true)
+            .map(String.init)
+    }
+
+    nonisolated private static func isAllowedResolvedPath(_ path: String, cmd: String) -> Bool {
+        guard URL(fileURLWithPath: path).lastPathComponent == cmd else { return false }
+        guard FileManager.default.isExecutableFile(atPath: path) else { return false }
+
+        if isTemporaryPath(path) {
+            return allowsTemporaryPathOverrides
+        }
+
+        let home = NSHomeDirectory()
+        let allowedPrefixes = [
+            "/opt/homebrew/", "/usr/local/", "/usr/bin/", "/bin/",
+            "\(home)/",
+        ]
+        return allowedPrefixes.contains { path.hasPrefix($0) }
     }
 
     nonisolated static func isUsablePathOverride(
@@ -1296,22 +1361,7 @@ final class AIService: ObservableObject {
         let systemPrompt = buildSystemPrompt(calendarContext: calContext)
 
         // CLI 경로가 없으면 한 번 재감지 시도
-        if (provider == .claude && claudePath == nil) || (provider == .codex && codexPath == nil) {
-            await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
-                Task.detached { [weak self] in
-                    let claudeResolved = Self.resolvePath("claude")
-                    let codexResolved = Self.resolvePath("codex")
-                    guard let self else { cont.resume(); return }
-                    await MainActor.run { [self] in
-                        self.claudePath = claudeResolved
-                        self.claudeAvailable = claudeResolved != nil
-                        self.codexPath = codexResolved
-                        self.codexAvailable = codexResolved != nil
-                        cont.resume()
-                    }
-                }
-            }
-        }
+        await ensureSelectedCLIAvailability()
 
         let userContext = userContextService?.contextForAI() ?? ""
         if !externalContextConsentGranted {
@@ -1500,18 +1550,40 @@ final class AIService: ObservableObject {
         }
     }
 
-    /// Run CLI tool directly without shell — stdin pipe for input, timeout enforced, streamed output cap
-    nonisolated fileprivate static func runCLIDirect(executablePath: String, args: [String],
-                                                  input: String, isCodex: Bool) -> String {
-        let proc = Process()
-        proc.executableURL = URL(fileURLWithPath: executablePath)
-        proc.arguments = args
-
-        // Minimal environment — CLAUDECODE 제외하여 중첩 세션 감지 방지
+    nonisolated static func cliExecutionEnvironment(executablePath: String) -> [String: String] {
         let homeDir = NSHomeDirectory()
         let tmpDir = FileManager.default.temporaryDirectory.path
-        proc.environment = [
-            "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+        let executableDir = URL(fileURLWithPath: executablePath).deletingLastPathComponent().path
+        var pathDirs: [String] = [
+            executableDir,
+            "/opt/homebrew/bin",
+            "/opt/homebrew/sbin",
+            "/usr/local/bin",
+            "/usr/bin",
+            "/bin",
+            "\(homeDir)/.local/bin",
+            "\(homeDir)/bin",
+            "\(homeDir)/.npm-global/bin",
+            "\(homeDir)/.volta/bin",
+            "\(homeDir)/.bun/bin",
+            "\(homeDir)/.cargo/bin",
+            "\(homeDir)/.asdf/shims",
+        ]
+        let nvmRoot = "\(homeDir)/.nvm/versions/node"
+        if let entries = try? FileManager.default.contentsOfDirectory(atPath: nvmRoot) {
+            for version in entries.sorted().reversed() {
+                pathDirs.append("\(nvmRoot)/\(version)/bin")
+            }
+        }
+
+        var seen = Set<String>()
+        let path = pathDirs
+            .filter { !$0.isEmpty && $0.hasPrefix("/") }
+            .filter { seen.insert($0).inserted }
+            .joined(separator: ":")
+
+        return [
+            "PATH": path,
             "HOME": homeDir,
             "TMPDIR": tmpDir,
             "NO_COLOR": "1",
@@ -1519,6 +1591,21 @@ final class AIService: ObservableObject {
             "LANG": "en_US.UTF-8",
             // CLAUDECODE는 의도적으로 제외 — claude가 중첩 세션으로 인식하지 않도록
         ]
+    }
+
+    /// Run CLI tool directly without shell — stdin pipe for input, timeout enforced, streamed output cap
+    nonisolated fileprivate static func runCLIDirect(executablePath: String, args: [String],
+                                                  input: String, isCodex: Bool) -> String {
+        let proc = Process()
+        proc.executableURL = URL(fileURLWithPath: executablePath)
+        proc.arguments = args
+
+        // Minimal environment — CLAUDECODE 제외하여 중첩 세션 감지 방지.
+        // PATH에는 실행 파일의 디렉터리와 일반 사용자 툴체인 경로를 포함한다.
+        // Finder/LaunchServices로 실행된 앱은 shell PATH를 상속하지 않기 때문에,
+        // npm/bun/native wrapper가 `/usr/bin/env node` 또는 보조 바이너리를 찾지 못하는
+        // 경우가 있었다.
+        proc.environment = cliExecutionEnvironment(executablePath: executablePath)
 
         if isCodex {
             proc.currentDirectoryURL = URL(fileURLWithPath: "/tmp")
@@ -1750,7 +1837,15 @@ final class AIService: ObservableObject {
             isCodex = true
             execPath = codexPath
         }
-        guard let path = execPath else {
+        if execPath == nil {
+            await ensureSelectedCLIAvailability()
+        }
+        let resolvedPath: String?
+        switch provider {
+        case .claude: resolvedPath = claudePath
+        case .codex: resolvedPath = codexPath
+        }
+        guard let path = resolvedPath else {
             throw PlanningError.cliUnavailable
         }
 
