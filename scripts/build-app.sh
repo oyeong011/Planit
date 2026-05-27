@@ -123,8 +123,22 @@ if [ -n "$SIGN" ]; then
 else
     # DEVELOPER_ID 없을 때: 메인 앱만 ad-hoc 서명 (--deep 없이 Sparkle XPC 건들지 않음)
     # Sparkle은 자체 Developer ID로 사전 서명됨 → TCC 권한 프롬프트 없음
-    # ad-hoc→ad-hoc Sparkle 자동 업데이트 정상 작동
-    echo "→ Ad-hoc signing main bundle with production entitlements (Sparkle components untouched)..."
+    # Hardened Runtime는 로드되는 프레임워크의 Team ID가 메인 바이너리와 일치하도록 강제한다.
+    # Sparkle 아티팩트(ad-hoc) + 메인 앱(ad-hoc + --options runtime) 조합에서는
+    # macOS가 "different Team IDs" 로 dyld 로드를 거부하므로(v0.4.5 류 SIGKILL),
+    # ad-hoc 빌드에서도 Sparkle을 메인 앱과 동일한 옵션으로 재서명해 매칭시킨다.
+    # (자동 업데이트는 안 됨 — 로컬 테스트/내부 배포 전용 빌드라는 전제)
+    SPARKLE_FW="$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
+    if [ -d "$SPARKLE_FW" ]; then
+        echo "→ Ad-hoc re-signing Sparkle (inside-out) with hardened runtime to match main bundle..."
+        for xpc in "$SPARKLE_FW/Versions/B/XPCServices"/*.xpc; do
+            [ -d "$xpc" ] && codesign --force --options runtime --sign - "$xpc"
+        done
+        codesign --force --options runtime --sign - "$SPARKLE_FW/Versions/B/Autoupdate"
+        codesign --force --options runtime --sign - "$SPARKLE_FW/Versions/B/Updater.app"
+        codesign --force --options runtime --sign - "$SPARKLE_FW"
+    fi
+    echo "→ Ad-hoc signing main bundle with production entitlements..."
     codesign --force --options runtime \
         --entitlements "$PROJECT_DIR/Planit/Planit.entitlements" \
         --sign - \
