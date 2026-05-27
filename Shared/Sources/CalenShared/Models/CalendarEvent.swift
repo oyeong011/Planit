@@ -43,6 +43,27 @@ public struct CalendarEvent: Sendable, Identifiable, Hashable, Codable {
     /// `true`면 iOS 시간 그리드에서 드래그/리사이즈 불가.
     public var isReadOnly: Bool
 
+    /// Calen completion state. Google Calendar writes mirror this to
+    /// `extendedProperties.private.calenCompleted=true` and a description marker.
+    public var isCompleted: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case calendarId
+        case title
+        case startDate
+        case endDate
+        case isAllDay
+        case description
+        case location
+        case colorHex
+        case source
+        case etag
+        case updated
+        case isReadOnly
+        case isCompleted
+    }
+
     public init(
         id: String,
         calendarId: String = "",
@@ -56,7 +77,8 @@ public struct CalendarEvent: Sendable, Identifiable, Hashable, Codable {
         source: CalendarEventSource = .google,
         etag: String? = nil,
         updated: Date? = nil,
-        isReadOnly: Bool = false
+        isReadOnly: Bool = false,
+        isCompleted: Bool? = nil
     ) {
         self.id = id
         self.calendarId = calendarId
@@ -71,6 +93,7 @@ public struct CalendarEvent: Sendable, Identifiable, Hashable, Codable {
         self.etag = etag
         self.updated = updated
         self.isReadOnly = isReadOnly
+        self.isCompleted = isCompleted ?? Self.completionValue(fromDescription: description)
     }
 
     // Hashable/Equatable — `calendarId + id` 복합 identity.
@@ -81,5 +104,54 @@ public struct CalendarEvent: Sendable, Identifiable, Hashable, Codable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
         hasher.combine(calendarId)
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let description = try container.decodeIfPresent(String.self, forKey: .description)
+        self.init(
+            id: try container.decode(String.self, forKey: .id),
+            calendarId: try container.decodeIfPresent(String.self, forKey: .calendarId) ?? "",
+            title: try container.decode(String.self, forKey: .title),
+            startDate: try container.decode(Date.self, forKey: .startDate),
+            endDate: try container.decode(Date.self, forKey: .endDate),
+            isAllDay: try container.decodeIfPresent(Bool.self, forKey: .isAllDay) ?? false,
+            description: description,
+            location: try container.decodeIfPresent(String.self, forKey: .location),
+            colorHex: try container.decodeIfPresent(String.self, forKey: .colorHex) ?? "#3366CC",
+            source: try container.decodeIfPresent(CalendarEventSource.self, forKey: .source) ?? .google,
+            etag: try container.decodeIfPresent(String.self, forKey: .etag),
+            updated: try container.decodeIfPresent(Date.self, forKey: .updated),
+            isReadOnly: try container.decodeIfPresent(Bool.self, forKey: .isReadOnly) ?? false,
+            isCompleted: try container.decodeIfPresent(Bool.self, forKey: .isCompleted)
+                ?? Self.completionValue(fromDescription: description)
+        )
+    }
+}
+
+public extension CalendarEvent {
+    static let completionDescriptionMarker = "calenCompleted=true"
+
+    static func completionValue(fromDescription description: String?) -> Bool {
+        description?.contains(completionDescriptionMarker) == true
+    }
+
+    func settingCompleted(_ completed: Bool) -> CalendarEvent {
+        var copy = self
+        copy.isCompleted = completed
+        copy.description = Self.description(copy.description, settingCompleted: completed)
+        return copy
+    }
+
+    private static func description(_ description: String?, settingCompleted completed: Bool) -> String? {
+        let lines = (description ?? "")
+            .components(separatedBy: .newlines)
+            .filter { !$0.contains(completionDescriptionMarker) }
+        var cleaned = lines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+        if completed {
+            if !cleaned.isEmpty { cleaned += "\n" }
+            cleaned += completionDescriptionMarker
+        }
+        return cleaned.isEmpty ? nil : cleaned
     }
 }

@@ -25,6 +25,8 @@ struct WeekExpansionView: View {
     /// 이벤트 카드 탭 콜백.
     let onTapEvent: (ScheduleDisplayItem) -> Void
 
+    let onToggleCompletion: (ScheduleDisplayItem) -> Void
+
     private let cal = Calendar.current
 
     var body: some View {
@@ -35,7 +37,8 @@ struct WeekExpansionView: View {
                         day: group.day,
                         items: group.items,
                         isSelectedDay: cal.isDate(group.day, inSameDayAs: selectedDate),
-                        onTapEvent: onTapEvent
+                        onTapEvent: onTapEvent,
+                        onToggleCompletion: onToggleCompletion
                     )
                 }
             }
@@ -52,6 +55,7 @@ private struct WeekDayGroup: View {
     let items: [ScheduleDisplayItem]
     let isSelectedDay: Bool
     let onTapEvent: (ScheduleDisplayItem) -> Void
+    let onToggleCompletion: (ScheduleDisplayItem) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -61,7 +65,10 @@ private struct WeekDayGroup: View {
             } else {
                 VStack(spacing: 6) {
                     ForEach(items) { item in
-                        EventCard(item: item)
+                        EventCard(
+                            item: item,
+                            onToggleCompletion: { onToggleCompletion(item) }
+                        )
                             .onTapGesture { onTapEvent(item) }
                     }
                 }
@@ -70,14 +77,13 @@ private struct WeekDayGroup: View {
     }
 
     private var headerRow: some View {
-        HStack(spacing: 8) {
-            Text(dayNumberString)
-                .font(.system(size: 15, weight: isSelectedDay ? .bold : .semibold))
-                .foregroundStyle(isSelectedDay ? Color.calenBlue : Color.primary)
-                .frame(minWidth: 22, alignment: .leading)
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(naturalHeader)
+                .font(.system(size: 17, weight: .bold))
+                .foregroundStyle(isToday ? Color.calenBlue : Color.primary)
 
-            Text(dayNameString)
-                .font(.system(size: 13, weight: .medium))
+            Text(secondaryDateString)
+                .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(.secondary)
 
             Spacer()
@@ -103,14 +109,31 @@ private struct WeekDayGroup: View {
             .padding(.leading, 2)
     }
 
-    private var dayNumberString: String {
-        "\(Calendar.current.component(.day, from: day))"
+    private var isToday: Bool { Calendar.current.isDateInToday(day) }
+    private var isTomorrow: Bool {
+        let cal = Calendar.current
+        guard let tomorrow = cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: Date())) else { return false }
+        return cal.isDate(day, inSameDayAs: tomorrow)
     }
 
-    private var dayNameString: String {
+    /// "오늘"/"내일"/"이번 주말"/요일 — 자연어 우선.
+    private var naturalHeader: String {
+        if isToday { return "오늘" }
+        if isTomorrow { return "내일" }
         let fmt = DateFormatter()
         fmt.locale = Locale(identifier: "ko_KR")
-        fmt.dateFormat = "M월 d일 EEEE"
+        fmt.dateFormat = "EEEE"
+        return fmt.string(from: day)
+    }
+
+    private var secondaryDateString: String {
+        let fmt = DateFormatter()
+        fmt.locale = Locale(identifier: "ko_KR")
+        if isToday || isTomorrow {
+            fmt.dateFormat = "M월 d일 (E)"
+        } else {
+            fmt.dateFormat = "M월 d일"
+        }
         return fmt.string(from: day)
     }
 }
@@ -119,60 +142,81 @@ private struct WeekDayGroup: View {
 
 private struct EventCard: View {
     let item: ScheduleDisplayItem
+    let onToggleCompletion: () -> Void
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            // 좌측 색상 바 4pt
-            RoundedRectangle(cornerRadius: 2, style: .continuous)
-                .fill(item.category.swiftUIColor)
-                .frame(width: 4)
-                .frame(minHeight: 44)
+        // Planit 패턴: 카드 전체 ZStack — 좌측 카테고리 fill rect가 카드 좌측 절반을 채우고,
+        // 그 위에 제목 + 카테고리 라벨 + 우측 체크박스. fill은 둥근 모서리로 카드와 통합.
+        HStack(spacing: 0) {
+            // 카테고리 색 fill 영역 (카드 전체 좌측 — Planit Today list 패턴)
+            ZStack(alignment: .leading) {
+                Rectangle()
+                    .fill(item.category.fillColor)
 
-            VStack(alignment: .leading, spacing: 3) {
-                // 제목 라인
-                HStack(alignment: .center, spacing: 6) {
-                    Image(systemName: item.category.icon)
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(item.category.swiftUIColor)
-
+                VStack(alignment: .leading, spacing: 2) {
                     Text(item.title)
                         .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(item.isCompleted ? Color.secondary : item.category.textColor)
+                        .strikethrough(item.isCompleted)
                         .lineLimit(1)
 
-                    Spacer()
+                    Text(categorySubLabel)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(item.category.textColor.opacity(0.75))
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+            }
 
+            // 우측 흰 영역 — 시간 + 체크박스
+            HStack(spacing: 10) {
+                VStack(alignment: .trailing, spacing: 2) {
                     Text(timeRangeString)
-                        .font(.system(size: 12))
+                        .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
-                }
-
-                if let location = item.location, !location.isEmpty {
-                    HStack(spacing: 4) {
-                        Image(systemName: "mappin.and.ellipse")
-                            .font(.system(size: 10))
+                    if let location = item.location, !location.isEmpty {
                         Text(location)
-                            .font(.system(size: 12))
+                            .font(.system(size: 11))
+                            .foregroundStyle(Color(.tertiaryLabel))
                             .lineLimit(1)
                     }
-                    .foregroundStyle(Color(.tertiaryLabel))
                 }
+
+                Button(action: onToggleCompletion) {
+                    Image(systemName: item.isCompleted ? "checkmark.square.fill" : "square")
+                        .font(.system(size: 19, weight: .regular))
+                        .foregroundStyle(item.isCompleted ? item.category.textColor : item.category.textColor.opacity(0.4))
+                        .frame(width: 28, height: 28)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(item.isCompleted ? "완료 취소" : "완료")
             }
-            .dynamicTypeSize(.xSmall ... .accessibility1)
+            .padding(.horizontal, 12)
+            .frame(maxHeight: .infinity)
+            .background(Color.calenCardSurface)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color.calenCardSurface)
-        )
+        .frame(minHeight: 56)
+        .opacity(item.isCompleted ? 0.6 : 1.0)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(Color.primary.opacity(0.05), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(Color.primary.opacity(0.04), lineWidth: 1)
         )
         .calenCardShadow()
+        .dynamicTypeSize(.xSmall ... .accessibility1)
+    }
+
+    private var categorySubLabel: String {
+        switch item.category {
+        case .work:     return "업무"
+        case .meeting:  return "미팅"
+        case .meal:     return "식사"
+        case .exercise: return "운동"
+        case .personal: return "개인"
+        case .general:  return "일반"
+        }
     }
 
     private var timeRangeString: String {
@@ -196,7 +240,8 @@ private struct EventCard: View {
         weekStart: start,
         groups: groups,
         selectedDate: vm.selectedDate,
-        onTapEvent: { _ in }
+        onTapEvent: { _ in },
+        onToggleCompletion: { _ in }
     )
     .background(Color.calenCream)
 }

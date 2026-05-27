@@ -46,15 +46,30 @@ extension Color {
     /// Soft gray — `.general` 막대용
     static let cardGeneralSoft  = Color(red: 0.74, green: 0.74, blue: 0.76)
 
-    // MARK: - Backgrounds (v4 크림 화이트)
+    // MARK: - Planit-style category fills (v9 — 옅은 파스텔 background)
 
-    /// Off-white 크림톤 배경. 순백 대비 눈 피로도 낮춤. 다크모드에선 시스템 배경 사용.
+    /// Planit 톤 핑크 fill — `.work` (Dinner/Important 패턴)
+    static let categoryFillWork     = Color(red: 1.00, green: 0.87, blue: 0.90)
+    /// Planit 톤 옅은 파랑 fill — `.meeting` (Family/Meeting 패턴)
+    static let categoryFillMeeting  = Color(red: 0.86, green: 0.90, blue: 1.00)
+    /// Planit 톤 옅은 노랑 fill — `.meal` (Bank/Daily 패턴)
+    static let categoryFillMeal     = Color(red: 1.00, green: 0.93, blue: 0.78)
+    /// Planit 톤 옅은 녹색 fill — `.exercise`
+    static let categoryFillExercise = Color(red: 0.84, green: 0.94, blue: 0.88)
+    /// Planit 톤 옅은 보라 fill — `.personal` (Work/Friends 패턴)
+    static let categoryFillPersonal = Color(red: 0.88, green: 0.85, blue: 0.97)
+    /// Planit 톤 옅은 베이지/회색 fill — `.general` (Cafe 패턴)
+    static let categoryFillGeneral  = Color(red: 0.92, green: 0.91, blue: 0.92)
+
+    // MARK: - Backgrounds (v9 라벤더 톤)
+
+    /// Planit 톤 옅은 라벤더-블루 배경 (#EFF1FB). 다크모드에선 시스템 배경 유지.
     static let calenCream = Color(
-        light: Color(red: 0.99, green: 0.99, blue: 1.00),
+        light: Color(red: 0.94, green: 0.95, blue: 0.98),
         dark:  Color(red: 0.07, green: 0.07, blue: 0.08)
     )
 
-    /// 셀/카드 표면 배경 (month grid 셀 기본).
+    /// 셀/카드 표면 배경 (month grid 셀 기본). 순백.
     static let calenCardSurface = Color(
         light: Color.white,
         dark:  Color(red: 0.12, green: 0.12, blue: 0.14)

@@ -32,6 +32,9 @@ struct ScheduleDisplayItem: Identifiable, Equatable {
     let summary: String?
     let travelTimeMinutes: Int?
     let bulletPoints: [String]
+    let isCompleted: Bool
+    let calendarEventID: String?
+    let calendarID: String?
 
     init(from schedule: Schedule) {
         self.id = schedule.id
@@ -42,6 +45,9 @@ struct ScheduleDisplayItem: Identifiable, Equatable {
         self.location = schedule.location
         self.summary = schedule.summary
         self.travelTimeMinutes = schedule.travelTimeMinutes
+        self.isCompleted = schedule.isCompleted
+        self.calendarEventID = nil
+        self.calendarID = nil
 
         if let notes = schedule.notes, !notes.isEmpty {
             self.bulletPoints = notes
@@ -62,7 +68,10 @@ struct ScheduleDisplayItem: Identifiable, Equatable {
         location: String? = nil,
         summary: String? = nil,
         travelTimeMinutes: Int? = nil,
-        bulletPoints: [String] = []
+        bulletPoints: [String] = [],
+        isCompleted: Bool = false,
+        calendarEventID: String? = nil,
+        calendarID: String? = nil
     ) {
         self.id = id
         self.title = title
@@ -73,6 +82,9 @@ struct ScheduleDisplayItem: Identifiable, Equatable {
         self.summary = summary
         self.travelTimeMinutes = travelTimeMinutes
         self.bulletPoints = bulletPoints
+        self.isCompleted = isCompleted
+        self.calendarEventID = calendarEventID
+        self.calendarID = calendarID
     }
 
     static func == (lhs: ScheduleDisplayItem, rhs: ScheduleDisplayItem) -> Bool {
@@ -341,6 +353,114 @@ final class HomeViewModel: ObservableObject {
         }
     }
 
+    func moveDisplayItem(_ item: ScheduleDisplayItem, toStartDay newStartDay: Date) {
+        let end = item.endTime ?? item.startTime.addingTimeInterval(3600)
+        let shifted = CalendarInteractionMath.shiftedRange(
+            start: item.startTime,
+            end: end,
+            toStartDay: newStartDay,
+            calendar: cal
+        )
+
+        if let repo = googleRepository,
+           let event = calendarEvent(for: item, in: repo.events) {
+            let oldSchedules = schedulesInMonth
+            var updated = event
+            updated.startDate = shifted.start
+            updated.endDate = shifted.end
+            repo.replaceInMemory(updated)
+            replaceDisplayItem(updated)
+
+            Task { @MainActor [weak self, weak repo] in
+                guard let self, let repo else { return }
+                do {
+                    let saved = try await repo.update(updated)
+                    self.replaceDisplayItem(saved)
+                } catch {
+                    repo.replaceInMemory(event)
+                    self.schedulesInMonth = oldSchedules
+                    print("[HomeViewModel] move event error: \(error)")
+                }
+            }
+            return
+        }
+
+        guard let context = modelContext else { return }
+        let id = item.id
+        let descriptor = FetchDescriptor<Schedule>(
+            predicate: #Predicate { $0.id == id }
+        )
+        do {
+            guard let schedule = try context.fetch(descriptor).first else { return }
+            schedule.date = cal.startOfDay(for: shifted.start)
+            schedule.startTime = shifted.start
+            schedule.endTime = shifted.end
+            try context.save()
+            fetchSchedulesInMonth()
+        } catch {
+            print("[HomeViewModel] move local schedule error: \(error)")
+        }
+    }
+
+    func toggleCompletion(for item: ScheduleDisplayItem) {
+        if let repo = googleRepository,
+           let event = calendarEvent(for: item, in: repo.events) {
+            let oldSchedules = schedulesInMonth
+            let updated = event.settingCompleted(!event.isCompleted)
+            repo.replaceInMemory(updated)
+            replaceDisplayItem(updated)
+
+            Task { @MainActor [weak self, weak repo] in
+                guard let self, let repo else { return }
+                do {
+                    let saved = try await repo.update(updated)
+                    self.replaceDisplayItem(saved)
+                } catch {
+                    repo.replaceInMemory(event)
+                    self.schedulesInMonth = oldSchedules
+                    print("[HomeViewModel] toggle completion error: \(error)")
+                }
+            }
+            return
+        }
+
+        guard let context = modelContext else { return }
+        let id = item.id
+        let descriptor = FetchDescriptor<Schedule>(
+            predicate: #Predicate { $0.id == id }
+        )
+        do {
+            guard let schedule = try context.fetch(descriptor).first else { return }
+            schedule.isCompleted.toggle()
+            try context.save()
+            fetchSchedulesInMonth()
+        } catch {
+            print("[HomeViewModel] toggle local completion error: \(error)")
+        }
+    }
+
+    func eventForEditing(_ item: ScheduleDisplayItem) -> CalendarEvent {
+        if let repo = googleRepository,
+           let event = calendarEvent(for: item, in: repo.events) {
+            return event
+        }
+        if let event = calendarEvent(for: item, in: eventRepository.events) {
+            return event
+        }
+        return CalendarEvent(
+            id: item.id.uuidString,
+            calendarId: "local",
+            title: item.title,
+            startDate: item.startTime,
+            endDate: item.endTime ?? item.startTime.addingTimeInterval(3600),
+            description: item.bulletPoints.joined(separator: "\n"),
+            location: item.location,
+            colorHex: Self.colorHex(for: item.category),
+            source: .local,
+            isCompleted: item.isCompleted
+        )
+    }
+
     // MARK: - Phase B M4-4: Google Calendar create
 
     /// CalendarAddView가 만든 `Schedule`을 `CalendarEventDraft`로 변환 후 repo.create 호출.
@@ -538,10 +658,39 @@ final class HomeViewModel: ObservableObject {
             bulletPoints: event.description.map { notes in
                 notes
                     .components(separatedBy: "\n")
+                    .filter { !$0.contains(CalendarEvent.completionDescriptionMarker) }
                     .map { $0.trimmingCharacters(in: .whitespaces) }
                     .filter { !$0.isEmpty }
-            } ?? []
+            } ?? [],
+            isCompleted: event.isCompleted,
+            calendarEventID: event.id,
+            calendarID: event.calendarId
         )
+    }
+
+    private func calendarEvent(for item: ScheduleDisplayItem, in events: [CalendarEvent]) -> CalendarEvent? {
+        if let calendarEventID = item.calendarEventID,
+           let calendarID = item.calendarID,
+           let event = events.first(where: { $0.id == calendarEventID && $0.calendarId == calendarID }) {
+            return event
+        }
+        return events.first {
+            $0.title == item.title
+                && $0.startDate == item.startTime
+                && $0.endDate == (item.endTime ?? item.startTime.addingTimeInterval(3600))
+        }
+    }
+
+    private func replaceDisplayItem(_ event: CalendarEvent) {
+        guard let display = Self.displayItem(from: event) else { return }
+        if let idx = schedulesInMonth.firstIndex(where: {
+            $0.calendarEventID == event.id && $0.calendarID == event.calendarId
+        }) {
+            schedulesInMonth[idx] = display
+        } else {
+            schedulesInMonth.append(display)
+        }
+        schedulesInMonth.sort { $0.startTime < $1.startTime }
     }
 
     /// Hex → Calen 6색 카테고리. Google colorId 기준 매핑과 대응.
@@ -553,6 +702,17 @@ final class HomeViewModel: ObservableObject {
         case "#40C786": return .exercise
         case "#9A5CE8": return .personal
         default: return .general
+        }
+    }
+
+    static func colorHex(for category: ScheduleCategory) -> String {
+        switch category {
+        case .work: return "#F56691"
+        case .meeting: return "#3B82F6"
+        case .meal: return "#FAC430"
+        case .exercise: return "#40C786"
+        case .personal: return "#9A5CE8"
+        case .general: return "#909094"
         }
     }
 

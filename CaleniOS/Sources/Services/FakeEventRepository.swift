@@ -44,11 +44,23 @@ public final class FakeEventRepository: EventRepository, ObservableObject {
 
     // MARK: - Init
 
-    public init(seed: Bool = true) {
+    /// 기본 seed=false. 과거에 true가 기본이었는데, 사용자가 빈 셀을 눌러도 오늘 기준
+     /// +1/+2일 등의 가짜 시드 이벤트("오프사이트 워크숍" 등)가 시트에 표시되는 혼란이 있었음.
+     /// Preview/QA에서 데모 데이터가 필요하면 명시적으로 `FakeEventRepository(seed: true)`로 호출.
+    public init(seed: Bool = false) {
         if seed {
             self.events = Self.makeSeedEvents()
         }
     }
+
+    #if DEBUG
+    /// QA 자동화용 — 비어있을 때만 데모 시드 주입. dev flag(`planit.devOpenWeekSheet`)와 짝.
+    public func _devSeedIfEmpty() {
+        if events.isEmpty {
+            events = Self.makeSeedEvents()
+        }
+    }
+    #endif
 
     // MARK: - Optimistic in-memory mutation
     //

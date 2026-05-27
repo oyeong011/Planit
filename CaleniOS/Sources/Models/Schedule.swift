@@ -65,6 +65,30 @@ enum ScheduleCategory: String, Codable, CaseIterable {
         case .general:  return Color(red: 0.56, green: 0.56, blue: 0.58)  // gray
         }
     }
+
+    /// Planit 톤 옅은 fill 색 (월 그리드 막대, 카드 좌측 막대 등 배경용).
+    var fillColor: Color {
+        switch self {
+        case .work:     return .categoryFillWork
+        case .meeting:  return .categoryFillMeeting
+        case .meal:     return .categoryFillMeal
+        case .exercise: return .categoryFillExercise
+        case .personal: return .categoryFillPersonal
+        case .general:  return .categoryFillGeneral
+        }
+    }
+
+    /// fill 위에 얹는 짙은 텍스트 색 (가독성 위해 채도 더 깊게).
+    var textColor: Color {
+        switch self {
+        case .work:     return Color(red: 0.82, green: 0.20, blue: 0.40)
+        case .meeting:  return Color(red: 0.18, green: 0.38, blue: 0.85)
+        case .meal:     return Color(red: 0.72, green: 0.50, blue: 0.05)
+        case .exercise: return Color(red: 0.15, green: 0.55, blue: 0.35)
+        case .personal: return Color(red: 0.45, green: 0.25, blue: 0.75)
+        case .general:  return Color(red: 0.40, green: 0.40, blue: 0.45)
+        }
+    }
 }
 
 // MARK: - Schedule
@@ -82,6 +106,7 @@ final class Schedule {
     var travelTimeMinutes: Int?
     var summary: String?
     var createdAt: Date
+    var isCompleted: Bool = false
 
     init(
         title: String,
@@ -92,7 +117,8 @@ final class Schedule {
         notes: String? = nil,
         category: ScheduleCategory = .general,
         travelTimeMinutes: Int? = nil,
-        summary: String? = nil
+        summary: String? = nil,
+        isCompleted: Bool = false
     ) {
         self.id = UUID()
         self.title = title
@@ -105,6 +131,7 @@ final class Schedule {
         self.travelTimeMinutes = travelTimeMinutes
         self.summary = summary
         self.createdAt = Date()
+        self.isCompleted = isCompleted
     }
 }
 
