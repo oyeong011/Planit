@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calen - Time, remembered.</title>
-  <meta name="description" content="Calen is a macOS menu bar calendar app that shows Google Calendar and Apple Calendar events, helps users plan their day, and explains exactly why calendar data is requested.">
-  <meta property="og:title" content="Calen - Time, remembered.">
-  <meta property="og:description" content="A quiet Mac calendar companion for days that keep changing.">
+  <title>Calen - Plan your day from your calendar.</title>
+  <meta name="description" content="Calen is a macOS menu bar calendar planner for Google Calendar, Apple Calendar, reminders, and AI-assisted daily planning.">
+  <meta property="og:title" content="Calen - Plan your day from your calendar.">
+  <meta property="og:description" content="A quiet macOS menu bar calendar planner with Google Calendar, Apple Calendar, reminders, and AI planning.">
   <meta property="og:image" content="https://calen.ai.kr/calen-cat.png">
   <meta property="og:type" content="website">
   <meta name="theme-color" content="#101412">
@@ -27,12 +27,13 @@
       --line-dark: rgba(16, 20, 18, 0.13);
       --teal: #21b8ad;
       --teal-dark: #007d78;
-      --amber: #e7b85c;
+      --amber: #f0c54b;
+      --amber-soft: #caa93d;
       --coral: #ec817a;
       --green: #73c889;
-      --shadow: 0 30px 100px rgba(0, 0, 0, 0.32);
+      --shadow: 0 40px 130px rgba(0, 0, 0, 0.48);
       --radius: 8px;
-      --max: 1160px;
+      --max: 1240px;
     }
 
     html {
@@ -74,7 +75,7 @@
       inset: 0 0 auto 0;
       z-index: 20;
       border-bottom: 1px solid rgba(247, 241, 230, 0.09);
-      background: rgba(16, 20, 18, 0.76);
+      background: rgba(7, 11, 10, 0.78);
       backdrop-filter: blur(20px) saturate(1.3);
     }
 
@@ -120,28 +121,52 @@
       min-height: 38px;
       display: inline-flex;
       align-items: center;
-      border: 1px solid rgba(33, 184, 173, 0.44);
+      border: 1px solid rgba(240, 197, 75, 0.5);
       border-radius: 8px;
       padding: 0 15px;
-      color: #06110f;
-      background: var(--teal);
-      box-shadow: 0 14px 34px rgba(33, 184, 173, 0.22);
+      color: #151008;
+      background: var(--amber);
+      box-shadow: 0 14px 34px rgba(240, 197, 75, 0.2);
     }
 
     .hero {
-      padding: 86px 0 30px;
+      min-height: 100vh;
+      padding: 66px 0 0;
+      position: relative;
       overflow: hidden;
       border-bottom: 1px solid rgba(247, 241, 230, 0.1);
       background:
-        linear-gradient(180deg, rgba(16, 20, 18, 0.94) 0%, rgba(16, 20, 18, 0.84) 48%, rgba(16, 20, 18, 1) 100%),
-        linear-gradient(90deg, rgba(33, 184, 173, 0.14), rgba(231, 184, 92, 0.08), rgba(236, 129, 122, 0.09)),
+        radial-gradient(circle at 68% 26%, rgba(240, 197, 75, 0.18), transparent 31%),
+        radial-gradient(circle at 22% 52%, rgba(33, 184, 173, 0.16), transparent 36%),
+        linear-gradient(180deg, rgba(7, 11, 10, 0.96) 0%, rgba(7, 11, 10, 0.9) 54%, rgba(7, 11, 10, 1) 100%),
+        linear-gradient(90deg, rgba(33, 184, 173, 0.1), rgba(240, 197, 75, 0.09), rgba(36, 76, 119, 0.14)),
         var(--ink);
     }
 
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0;
+      height: 210px;
+      pointer-events: none;
+      background: linear-gradient(180deg, transparent, #07100f 74%);
+      z-index: 1;
+    }
+
+    .hero .shell {
+      position: relative;
+      min-height: calc(100vh - 66px);
+      padding-top: 54px;
+      padding-bottom: 58px;
+    }
+
     .hero-copy {
-      width: min(820px, 100%);
-      margin: 0 auto;
-      text-align: center;
+      position: relative;
+      z-index: 3;
+      width: min(560px, 100%);
+      margin: 0;
+      text-align: left;
+      text-shadow: 0 2px 22px rgba(0, 0, 0, 0.72);
     }
 
     .mark-lockup {
@@ -172,23 +197,23 @@
 
     h1 {
       margin: 0;
-      font-size: 86px;
-      line-height: 0.9;
+      font-size: 106px;
+      line-height: 0.82;
       font-weight: 880;
       letter-spacing: 0;
     }
 
     .tagline {
-      margin: 14px 0 0;
+      margin: 18px 0 0;
       color: var(--amber);
-      font-size: 28px;
-      line-height: 1.15;
+      font-size: 36px;
+      line-height: 1.02;
       font-weight: 780;
     }
 
     .hero-line {
-      margin: 18px auto 0;
-      width: min(560px, 100%);
+      margin: 18px 0 0;
+      width: min(460px, 100%);
       color: rgba(247, 241, 230, 0.82);
       font-size: 20px;
       line-height: 1.45;
@@ -197,7 +222,7 @@
 
     .hero-actions {
       display: flex;
-      justify-content: center;
+      justify-content: flex-start;
       flex-wrap: wrap;
       gap: 12px;
       margin-top: 24px;
@@ -222,10 +247,10 @@
     }
 
     .button-primary {
-      border-color: rgba(33, 184, 173, 0.6);
-      background: var(--teal);
-      color: #06110f;
-      box-shadow: 0 18px 44px rgba(33, 184, 173, 0.24);
+      border-color: rgba(240, 197, 75, 0.64);
+      background: var(--amber);
+      color: #151008;
+      box-shadow: 0 18px 44px rgba(240, 197, 75, 0.22);
     }
 
     .button-secondary {
@@ -235,7 +260,7 @@
 
     .hero-meta {
       display: flex;
-      justify-content: center;
+      justify-content: flex-start;
       flex-wrap: wrap;
       gap: 8px;
       margin: 16px 0 0;
@@ -253,10 +278,40 @@
       background: rgba(247, 241, 230, 0.04);
     }
 
+    .trust-strip {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+      gap: 10px;
+      width: min(520px, 100%);
+      margin: 16px 0 0;
+      border: 1px solid rgba(240, 197, 75, 0.22);
+      border-radius: 8px;
+      padding: 11px 12px;
+      color: rgba(247, 241, 230, 0.7);
+      background: rgba(240, 197, 75, 0.07);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .trust-strip strong {
+      color: var(--paper);
+      font-weight: 780;
+    }
+
+    .trust-strip a {
+      color: var(--amber);
+      font-weight: 780;
+    }
+
     .product-shot {
-      width: min(980px, 100%);
-      margin: 30px auto 0;
-      border: 1px solid rgba(247, 241, 230, 0.16);
+      position: absolute;
+      z-index: 2;
+      right: max(-80px, -5vw);
+      bottom: 32px;
+      width: min(960px, 70vw);
+      border: 1px solid rgba(247, 241, 230, 0.18);
       border-radius: 8px;
       overflow: hidden;
       background: #111816;
@@ -296,269 +351,25 @@
       background: var(--green);
     }
 
-    .product-preview {
-      min-height: 340px;
-      display: grid;
-      grid-template-columns: 260px minmax(0, 1fr) 250px;
-      color: #14201c;
-      background:
-        linear-gradient(90deg, rgba(247, 241, 230, 0.97) 0 27%, rgba(118, 209, 222, 0.9) 27% 73%, rgba(180, 239, 224, 0.9) 73% 100%);
-    }
-
-    .preview-panel,
-    .preview-day {
-      padding: 18px;
-      background: rgba(255, 250, 240, 0.58);
-      backdrop-filter: blur(18px);
-    }
-
-    .preview-panel {
-      border-right: 1px solid rgba(16, 20, 18, 0.1);
-    }
-
-    .preview-day {
-      border-left: 1px solid rgba(16, 20, 18, 0.1);
-    }
-
-    .preview-tabs {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 16px;
-      color: rgba(16, 20, 18, 0.48);
-      font-size: 13px;
-      font-weight: 760;
-    }
-
-    .preview-tabs span {
-      min-height: 34px;
-      display: grid;
-      place-items: center;
-      border-radius: 8px;
-      background: rgba(16, 20, 18, 0.05);
-    }
-
-    .preview-tabs .active {
-      color: #0f2c27;
-      background: rgba(231, 184, 92, 0.22);
-    }
-
-    .metric,
-    .habit,
-    .day-task {
-      border: 1px solid rgba(16, 20, 18, 0.08);
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.66);
-      box-shadow: 0 14px 32px rgba(16, 20, 18, 0.07);
-    }
-
-    .metric {
-      padding: 16px;
-      margin-bottom: 12px;
-    }
-
-    .metric small,
-    .habit small,
-    .day-task small {
+    .product-image {
       display: block;
-      color: rgba(16, 20, 18, 0.5);
-      font-size: 11px;
-      font-weight: 780;
-    }
-
-    .metric strong {
-      display: block;
-      margin-top: 8px;
-      font-size: 22px;
-      line-height: 1.1;
-    }
-
-    .progress {
-      height: 8px;
-      margin-top: 14px;
-      border-radius: 999px;
-      background: rgba(16, 20, 18, 0.08);
-      overflow: hidden;
-    }
-
-    .progress i {
-      display: block;
-      width: 68%;
-      height: 100%;
-      background: var(--amber);
-    }
-
-    .habit {
-      padding: 14px;
-      margin-top: 12px;
-    }
-
-    .habit strong {
-      display: block;
-      margin-top: 8px;
-      color: #2a6546;
-      font-size: 15px;
-    }
-
-    .habit-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 5px;
-      margin-top: 12px;
-    }
-
-    .habit-grid span {
-      aspect-ratio: 1;
-      border-radius: 4px;
-      background: rgba(115, 200, 137, 0.28);
-    }
-
-    .habit-grid span:nth-child(2n),
-    .habit-grid span:nth-child(5) {
-      background: rgba(115, 200, 137, 0.72);
-    }
-
-    .preview-calendar {
-      padding: 22px 24px;
-    }
-
-    .month-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 18px;
-      margin-bottom: 24px;
-    }
-
-    .month-top h3 {
-      margin: 0;
-      font-size: 44px;
-      line-height: 1;
-    }
-
-    .month-top span {
-      color: #2b8277;
-      font-size: 13px;
-      font-weight: 820;
-    }
-
-    .weekday-grid,
-    .calendar-grid {
-      display: grid;
-      grid-template-columns: repeat(7, minmax(0, 1fr));
-      gap: 10px;
-    }
-
-    .weekday-grid {
-      color: rgba(16, 20, 18, 0.52);
-      font-size: 12px;
-      font-weight: 820;
-      text-align: center;
-    }
-
-    .calendar-grid {
-      margin-top: 14px;
-      grid-auto-rows: 54px;
-    }
-
-    .date {
-      position: relative;
-      border-radius: 8px;
-      padding: 8px;
-      font-size: 16px;
-      font-weight: 760;
-    }
-
-    .date.today {
-      background: rgba(16, 20, 18, 0.08);
-    }
-
-    .date.today::after {
-      content: "";
-      position: absolute;
-      left: 8px;
-      right: 8px;
-      bottom: 8px;
-      height: 7px;
-      border-radius: 999px;
-      background: var(--teal);
-    }
-
-    .date .event {
-      display: block;
-      margin-top: 8px;
-      border-radius: 5px;
-      padding: 4px 6px;
-      color: #20443f;
-      background: rgba(255, 250, 240, 0.58);
-      font-size: 10px;
-      font-weight: 780;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .day-title {
-      margin-bottom: 18px;
-    }
-
-    .day-title strong {
-      display: block;
-      font-size: 25px;
-      line-height: 1.1;
-    }
-
-    .day-title span {
-      display: block;
-      margin-top: 8px;
-      color: rgba(16, 20, 18, 0.55);
-      font-weight: 740;
-    }
-
-    .day-task {
-      display: grid;
-      grid-template-columns: 4px minmax(0, 1fr) 20px;
-      gap: 12px;
-      align-items: center;
-      padding: 13px;
-      margin-top: 10px;
-    }
-
-    .day-task::before {
-      content: "";
-      width: 4px;
-      height: 48px;
-      border-radius: 999px;
-      background: var(--teal);
-    }
-
-    .day-task.done::before {
-      background: var(--coral);
-    }
-
-    .day-task strong {
-      display: block;
-      overflow: hidden;
-      color: #18231f;
-      font-size: 14px;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-
-    .check {
-      width: 20px;
-      height: 20px;
-      border: 2px solid rgba(16, 20, 18, 0.18);
-      border-radius: 50%;
+      width: 100%;
+      aspect-ratio: 2048 / 1302;
+      object-fit: cover;
+      object-position: center top;
+      background: #071412;
     }
 
     section {
-      padding: 86px 0;
+      padding: 82px 0;
     }
 
     .light {
-      color: var(--ink);
-      background: var(--paper);
+      color: var(--paper);
+      background:
+        linear-gradient(180deg, rgba(240, 197, 75, 0.08), rgba(240, 197, 75, 0)),
+        #081110;
+      border-bottom: 1px solid rgba(247, 241, 230, 0.09);
     }
 
     .section-head {
@@ -568,7 +379,7 @@
 
     .label {
       margin: 0 0 12px;
-      color: var(--teal-dark);
+      color: var(--amber-soft);
       font-size: 13px;
       font-weight: 820;
     }
@@ -581,45 +392,150 @@
       letter-spacing: 0;
     }
 
-    .feature-grid {
+    .workflow-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
+      gap: 1px;
+      border: 1px solid rgba(247, 241, 230, 0.11);
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(247, 241, 230, 0.11);
     }
 
-    .feature {
-      min-height: 220px;
+    .workflow-card {
+      min-height: 250px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      border: 1px solid var(--line-dark);
-      border-radius: 8px;
+      border: 0;
+      border-radius: 0;
       padding: 22px;
-      background: var(--paper-2);
+      background:
+        linear-gradient(180deg, rgba(255, 250, 240, 0.065), rgba(255, 250, 240, 0.035)),
+        #101716;
     }
 
-    .feature small {
-      color: var(--teal-dark);
+    .workflow-card small {
+      color: var(--amber);
       font-size: 13px;
       font-weight: 820;
     }
 
-    .feature h3 {
+    .workflow-card h3 {
       margin: 18px 0 10px;
       font-size: 24px;
       line-height: 1.16;
     }
 
-    .feature p {
+    .workflow-card p {
       margin: 0;
-      color: var(--muted-dark);
+      color: rgba(247, 241, 230, 0.68);
       font-size: 15px;
       line-height: 1.65;
     }
 
+    .mini-ui {
+      display: grid;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .mini-line,
+    .mini-chat,
+    .mini-result {
+      min-height: 32px;
+      border: 1px solid rgba(247, 241, 230, 0.1);
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: rgba(247, 241, 230, 0.78);
+      background: rgba(8, 13, 13, 0.36);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .mini-line span,
+    .mini-result span {
+      color: var(--amber);
+    }
+
+    .mini-chat {
+      border-color: rgba(240, 197, 75, 0.24);
+      color: var(--amber);
+    }
+
+    .prompt-section {
+      color: var(--paper);
+      background:
+        linear-gradient(180deg, rgba(33, 184, 173, 0.08), rgba(33, 184, 173, 0)),
+        #0b1111;
+      border-bottom: 1px solid rgba(247, 241, 230, 0.09);
+    }
+
+    .prompt-demo {
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .prompt-list,
+    .result-panel {
+      border: 1px solid rgba(247, 241, 230, 0.11);
+      border-radius: 8px;
+      padding: 22px;
+      background:
+        linear-gradient(180deg, rgba(255, 250, 240, 0.06), rgba(255, 250, 240, 0.035)),
+        #111716;
+    }
+
+    .prompt-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .prompt-pill {
+      border: 1px solid rgba(240, 197, 75, 0.2);
+      border-radius: 8px;
+      padding: 13px 14px;
+      color: rgba(247, 241, 230, 0.82);
+      background: rgba(240, 197, 75, 0.055);
+      font-size: 15px;
+      font-weight: 760;
+    }
+
+    .result-panel h3 {
+      margin: 0 0 16px;
+      color: var(--amber);
+      font-size: 22px;
+    }
+
+    .result-row {
+      display: grid;
+      grid-template-columns: 94px minmax(0, 1fr);
+      gap: 14px;
+      border-top: 1px solid rgba(247, 241, 230, 0.1);
+      padding: 14px 0;
+      color: rgba(247, 241, 230, 0.78);
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    .result-row strong {
+      color: var(--paper);
+    }
+
+    .result-note {
+      margin: 4px 0 0;
+      color: var(--amber);
+      font-size: 14px;
+      font-weight: 820;
+    }
+
     .data-use {
       color: var(--paper);
-      background: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(240, 197, 75, 0.12), transparent 46%),
+        var(--ink);
       border-top: 1px solid rgba(247, 241, 230, 0.1);
       border-bottom: 1px solid rgba(247, 241, 230, 0.1);
     }
@@ -647,11 +563,11 @@
       align-items: center;
       min-height: 42px;
       margin-top: 22px;
-      border: 1px solid rgba(33, 184, 173, 0.46);
+      border: 1px solid rgba(240, 197, 75, 0.5);
       border-radius: 8px;
       padding: 0 15px;
-      color: #06110f;
-      background: var(--teal);
+      color: #151008;
+      background: var(--amber);
       font-size: 14px;
       font-weight: 800;
     }
@@ -682,10 +598,26 @@
       line-height: 1.62;
     }
 
+    .local-list {
+      display: grid;
+      gap: 10px;
+      margin: 22px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .local-list li {
+      border-left: 3px solid var(--amber);
+      padding-left: 14px;
+      color: rgba(247, 241, 230, 0.72);
+      font-size: 16px;
+      line-height: 1.55;
+    }
+
     .cat-note {
       color: var(--paper);
       background:
-        linear-gradient(90deg, rgba(33, 184, 173, 0.12), rgba(231, 184, 92, 0.11)),
+        linear-gradient(90deg, rgba(240, 197, 75, 0.1), rgba(33, 184, 173, 0.1)),
         var(--ink-2);
       border-top: 1px solid rgba(247, 241, 230, 0.1);
       border-bottom: 1px solid rgba(247, 241, 230, 0.1);
@@ -715,9 +647,15 @@
       line-height: 1.7;
     }
 
+    .cat-row .button {
+      margin-top: 24px;
+    }
+
     .download {
-      background: var(--paper-2);
-      color: var(--ink);
+      color: var(--paper);
+      background:
+        radial-gradient(circle at 76% 30%, rgba(240, 197, 75, 0.18), transparent 32%),
+        #0b1111;
     }
 
     .download-inner {
@@ -729,26 +667,26 @@
 
     .download p {
       margin: 12px 0 0;
-      color: var(--muted-dark);
+      color: rgba(247, 241, 230, 0.66);
       font-size: 16px;
     }
 
     .version {
-      color: var(--teal-dark);
+      color: var(--amber);
       font-weight: 820;
     }
 
     .download .button-secondary {
-      color: var(--ink);
-      background: #ffffff;
-      border-color: var(--line-dark);
+      color: var(--paper);
+      background: rgba(247, 241, 230, 0.06);
+      border-color: rgba(247, 241, 230, 0.14);
     }
 
     footer {
-      border-top: 1px solid var(--line-dark);
+      border-top: 1px solid rgba(247, 241, 230, 0.1);
       padding: 30px 0;
-      color: var(--muted-dark);
-      background: var(--paper-2);
+      color: rgba(247, 241, 230, 0.62);
+      background: #080d0d;
       font-size: 14px;
     }
 
@@ -766,6 +704,29 @@
       font-weight: 700;
     }
 
+    @media (max-width: 1100px) {
+      .hero {
+        min-height: auto;
+      }
+
+      .hero .shell {
+        min-height: auto;
+        padding-top: 44px;
+      }
+
+      .hero-copy {
+        width: min(720px, 100%);
+      }
+
+      .product-shot {
+        position: relative;
+        right: auto;
+        bottom: auto;
+        width: 100%;
+        margin-top: 34px;
+      }
+    }
+
     @media (max-width: 900px) {
       h1 {
         font-size: 58px;
@@ -779,7 +740,8 @@
         font-size: 36px;
       }
 
-      .feature-grid,
+      .workflow-grid,
+      .prompt-demo,
       .download-inner,
       .data-layout,
       .cat-row {
@@ -791,32 +753,6 @@
         height: 112px;
       }
 
-      .product-preview {
-        grid-template-columns: 1fr;
-        min-height: 0;
-        max-height: 270px;
-        overflow: hidden;
-      }
-
-      .preview-panel {
-        order: 3;
-        border-right: 0;
-        border-bottom: 1px solid rgba(16, 20, 18, 0.1);
-      }
-
-      .preview-calendar {
-        order: 1;
-      }
-
-      .preview-day {
-        order: 2;
-        border-left: 0;
-        border-top: 1px solid rgba(16, 20, 18, 0.1);
-      }
-
-      .calendar-grid {
-        grid-auto-rows: 42px;
-      }
     }
 
     @media (max-width: 620px) {
@@ -834,6 +770,21 @@
 
       .hero {
         padding-top: 80px;
+      }
+
+      .hero .shell {
+        padding-top: 0;
+        padding-bottom: 44px;
+      }
+
+      .hero-copy {
+        text-align: center;
+      }
+
+      .hero-actions,
+      .hero-meta,
+      .trust-strip {
+        justify-content: center;
       }
 
       .mark-lockup {
@@ -866,38 +817,6 @@
         margin-top: 34px;
       }
 
-      .product-preview {
-        max-height: 250px;
-      }
-
-      .preview-panel,
-      .preview-calendar,
-      .preview-day {
-        padding: 16px;
-      }
-
-      .month-top h3 {
-        font-size: 34px;
-      }
-
-      .weekday-grid,
-      .calendar-grid {
-        gap: 6px;
-      }
-
-      .calendar-grid {
-        grid-auto-rows: 44px;
-      }
-
-      .date {
-        padding: 6px;
-        font-size: 13px;
-      }
-
-      .date .event {
-        display: none;
-      }
-
       section {
         padding: 64px 0;
       }
@@ -912,10 +831,9 @@
         <span>Calen</span>
       </a>
       <div class="nav-links">
-        <a href="#features">Features</a>
+        <a href="#features">How it works</a>
         <a href="#data-use">Data use</a>
-        <a href="#memory">Memory</a>
-        <a href="https://calen.ai.kr/privacy.html">Privacy</a>
+        <a href="https://calen.ai.kr/privacy.html">Privacy Policy</a>
         <a href="https://github.com/oyeong011/Planit">GitHub</a>
         <a class="nav-cta" href="https://github.com/oyeong011/Planit/releases/latest" data-download-dmg>Download</a>
       </div>
@@ -928,22 +846,27 @@
         <div class="hero-copy">
           <div class="mark-lockup">
             <img src="calen-cat.png" alt="Calen cat mark">
-            <span>Menu bar calendar with memory</span>
+            <span>macOS menu bar calendar planner</span>
           </div>
           <h1>Calen</h1>
-          <p class="tagline">Time, remembered.</p>
-          <p class="hero-line">A macOS menu bar calendar for Google Calendar, Apple Calendar, reminders, daily review, and AI-assisted planning.</p>
+          <p class="tagline">Plan your day from your calendar.</p>
+          <p class="hero-line">Calen reads the calendar you already keep, finds open time, and helps create the plan you request.</p>
           <div class="hero-actions">
-            <a class="button button-primary" href="https://github.com/oyeong011/Planit/releases/latest" data-download-dmg>Download for Mac</a>
-            <a class="button button-secondary" href="https://github.com/oyeong011/Planit">View on GitHub</a>
+            <a class="button button-primary" href="https://github.com/oyeong011/Planit/releases/latest" data-download-dmg>Download for macOS</a>
+            <a class="button button-secondary" href="#data-use">See data use</a>
           </div>
           <ul class="hero-meta" aria-label="Platform details">
             <li>macOS 14+</li>
             <li>Google + Apple Calendar</li>
-            <li>Claude + Codex CLI</li>
+            <li>Local AI tools</li>
             <li>No Calen cloud server</li>
             <li>Free · MIT</li>
           </ul>
+          <div class="trust-strip">
+            <strong>Google Calendar access</strong>
+            <span>is used only to show, plan, and create calendar items you request.</span>
+            <a href="https://calen.ai.kr/privacy.html">Privacy Policy</a>
+          </div>
         </div>
 
         <div class="product-shot" aria-label="Calen app preview">
@@ -951,69 +874,7 @@
             <div class="traffic" aria-hidden="true"><span></span><span></span><span></span></div>
             <span>Calen.app</span>
           </div>
-          <div class="product-preview" role="img" aria-label="Calen menu bar calendar with review, month, and daily task panels">
-            <aside class="preview-panel">
-              <div class="preview-tabs">
-                <span class="active">Review</span>
-                <span>Chat</span>
-              </div>
-              <div class="metric">
-                <small>Today's adjustment</small>
-                <strong>2 / 3 planned</strong>
-                <div class="progress" aria-hidden="true"><i></i></div>
-              </div>
-              <div class="habit">
-                <small>Weekly rhythm</small>
-                <strong>Focus blocks saved</strong>
-                <div class="habit-grid" aria-hidden="true">
-                  <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-                </div>
-              </div>
-            </aside>
-            <section class="preview-calendar" aria-label="Monthly calendar preview">
-              <div class="month-top">
-                <h3>April</h3>
-                <span>Synced</span>
-              </div>
-              <div class="weekday-grid" aria-hidden="true">
-                <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
-              </div>
-              <div class="calendar-grid" aria-hidden="true">
-                <span class="date"></span><span class="date">1</span><span class="date">2</span><span class="date">3</span><span class="date">4</span><span class="date">5</span><span class="date">6</span>
-                <span class="date">7</span><span class="date">8</span><span class="date">9</span><span class="date">10</span><span class="date">11</span><span class="date">12</span><span class="date">13</span>
-                <span class="date">14</span><span class="date">15<span class="event">Standup</span></span><span class="date">16</span><span class="date">17<span class="event">Review</span></span><span class="date">18</span><span class="date">19</span><span class="date">20</span>
-                <span class="date today">21</span><span class="date">22<span class="event">Plan</span></span><span class="date">23<span class="event">Focus</span></span><span class="date">24</span><span class="date">25</span><span class="date">26</span><span class="date">27</span>
-                <span class="date">28</span><span class="date">29<span class="event">Launch</span></span><span class="date">30</span><span class="date"></span><span class="date"></span><span class="date"></span><span class="date"></span>
-              </div>
-            </section>
-            <aside class="preview-day">
-              <div class="day-title">
-                <strong>Thursday, Apr 23</strong>
-                <span>D - 2</span>
-              </div>
-              <div class="day-task">
-                <div>
-                  <strong>Deep work session</strong>
-                  <small>09:00 - 11:00</small>
-                </div>
-                <span class="check"></span>
-              </div>
-              <div class="day-task done">
-                <div>
-                  <strong>Lunch break</strong>
-                  <small>12:00 - 13:00</small>
-                </div>
-                <span class="check"></span>
-              </div>
-              <div class="day-task">
-                <div>
-                  <strong>Weekly review</strong>
-                  <small>16:00 - 16:30</small>
-                </div>
-                <span class="check"></span>
-              </div>
-            </aside>
-          </div>
+          <img class="product-image" src="calen-product-mock.png" alt="Calen app showing the AI planner chat panel, dark month calendar, today panel, and pixel companions">
         </div>
       </div>
     </header>
@@ -1021,31 +882,76 @@
     <section class="light" id="features">
       <div class="shell">
         <div class="section-head">
-          <p class="label">App functionality</p>
-          <h2>One small place for calendars, tasks, and planning.</h2>
+          <p class="label">How it works</p>
+          <h2>Review. Ask. Commit.</h2>
         </div>
-        <div class="feature-grid">
-          <article class="feature">
+        <div class="workflow-grid">
+          <article class="workflow-card">
             <small>01</small>
             <div>
-              <h3>Unified calendar view.</h3>
-              <p>Calen shows Google Calendar and Apple Calendar events together in a native macOS menu bar workspace.</p>
+              <h3>Review today.</h3>
+              <p>Open the menu bar and see Google Calendar, Apple Calendar, reminders, and today's details in one place.</p>
+              <div class="mini-ui" aria-hidden="true">
+                <div class="mini-line"><span>09:30</span> Design review</div>
+                <div class="mini-line"><span>13:00</span> Focus block</div>
+              </div>
             </div>
           </article>
-          <article class="feature">
+          <article class="workflow-card">
             <small>02</small>
             <div>
-              <h3>Event planning actions.</h3>
-              <p>Users can create, edit, reschedule, and delete calendar events after reviewing the action in the app.</p>
+              <h3>Ask Calen.</h3>
+              <p>Use natural language to find free time, plan tomorrow, or turn unfinished work into a schedule.</p>
+              <div class="mini-ui" aria-hidden="true">
+                <div class="mini-chat">Find free time this week</div>
+                <div class="mini-chat">Plan tomorrow around meetings</div>
+              </div>
             </div>
           </article>
-          <article class="feature">
+          <article class="workflow-card">
             <small>03</small>
             <div>
-              <h3>AI-assisted review.</h3>
-              <p>Calen can pass selected calendar context to the user's local Claude or Codex CLI to suggest plans.</p>
+              <h3>Commit the plan.</h3>
+              <p>Calen can create calendar items you request, while edits and deletes require confirmation.</p>
+              <div class="mini-ui" aria-hidden="true">
+                <div class="mini-result"><span>Create</span> Tue 3 PM meeting</div>
+                <div class="mini-result"><span>Move</span> 2 low-priority tasks</div>
+              </div>
             </div>
           </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="prompt-section" id="ai-planning">
+      <div class="shell">
+        <div class="section-head">
+          <p class="label">AI planning demo</p>
+          <h2>Ask in plain language. Keep control of the calendar.</h2>
+        </div>
+        <div class="prompt-demo">
+          <div class="prompt-list" aria-label="Example Calen prompts">
+            <div class="prompt-pill">Find free time this week</div>
+            <div class="prompt-pill">Plan tomorrow around my meetings</div>
+            <div class="prompt-pill">Add a 3 PM meeting with Minji</div>
+            <div class="prompt-pill">Move low-priority tasks out of today</div>
+          </div>
+          <div class="result-panel" aria-label="Example Calen planning result">
+            <h3>Suggested plan</h3>
+            <div class="result-row">
+              <strong>Tue 3:00</strong>
+              <span>Hold the meeting slot and create a Google Calendar event.</span>
+            </div>
+            <div class="result-row">
+              <strong>Wed 10:30</strong>
+              <span>Move two unfinished tasks into open morning time.</span>
+            </div>
+            <div class="result-row">
+              <strong>Today</strong>
+              <span>Keep edits and deletes pending until you confirm.</span>
+            </div>
+            <p class="result-note">Creates follow your request; edits and deletes wait for confirmation.</p>
+          </div>
         </div>
       </div>
     </section>
@@ -1054,8 +960,8 @@
       <div class="shell data-layout">
         <div class="section-head">
           <p class="label">Google data use</p>
-          <h2>Calendar access is used only to run Calen's calendar features.</h2>
-          <p>Calen is a desktop client. It syncs directly with Google APIs from the user's Mac and does not operate a Calen cloud service that receives calendar data.</p>
+          <h2>Calen asks for calendar access because it is a calendar planner.</h2>
+          <p>Google Calendar data is used to show your events, find open time, and create, edit, move, or delete calendar items you request. Calen does not use Google user data for ads or sell it to third parties.</p>
           <a class="inline-link" href="https://calen.ai.kr/privacy.html">Read the Privacy Policy</a>
         </div>
         <div class="scope-grid" aria-label="Google OAuth scopes used by Calen">
@@ -1075,13 +981,19 @@
       </div>
     </section>
 
-    <section class="cat-note" id="memory">
+    <section class="cat-note" id="privacy">
       <div class="shell cat-row">
         <img src="calen-cat.png" alt="Calen cat mark">
         <div>
-          <p class="label">The mark</p>
-          <h2>A small observer beside the plan.</h2>
-          <p>The Calen cat is not decoration. It is the product's posture: quiet, close, and attentive to the small patterns that make a day easier to hold.</p>
+          <p class="label">Privacy boundary</p>
+          <h2>A Mac app first, a cloud account never.</h2>
+          <p>This homepage is public and explains Calen before sign-in. OAuth tokens are stored in macOS Keychain, and destructive calendar actions stay user-confirmed.</p>
+          <ul class="local-list">
+            <li>No Calen cloud server receives your calendar data.</li>
+            <li>Local AI integrations are optional and user-controlled.</li>
+            <li>The Privacy Policy is available without login.</li>
+          </ul>
+          <a class="button button-secondary" href="https://calen.ai.kr/privacy.html">Privacy Policy</a>
         </div>
       </div>
     </section>
@@ -1090,12 +1002,12 @@
       <div class="shell download-inner">
         <div>
           <p class="label">Latest release</p>
-          <h2>Keep the day close.</h2>
-          <p><span class="version" data-version>latest</span> · Universal binary · Signed and notarized</p>
+          <h2>Get Calen for macOS.</h2>
+          <p><span class="version" data-version>latest</span> · menu bar app · Google + Apple Calendar · Universal binary</p>
         </div>
         <div class="hero-actions">
-          <a class="button button-primary" href="https://github.com/oyeong011/Planit/releases/latest" data-download-dmg>Download for Mac</a>
-          <a class="button button-secondary" href="https://github.com/oyeong011/Planit/releases/latest" data-download-zip>Download .zip</a>
+          <a class="button button-primary" href="https://github.com/oyeong011/Planit/releases/latest" data-download-dmg>Download latest release</a>
+          <a class="button button-secondary" href="https://calen.ai.kr/privacy.html">Privacy Policy</a>
         </div>
       </div>
     </section>
