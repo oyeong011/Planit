@@ -128,18 +128,12 @@ else
     # macOS가 "different Team IDs" 로 dyld 로드를 거부하므로(v0.4.5 류 SIGKILL),
     # ad-hoc 빌드에서도 Sparkle을 메인 앱과 동일한 옵션으로 재서명해 매칭시킨다.
     # (자동 업데이트는 안 됨 — 로컬 테스트/내부 배포 전용 빌드라는 전제)
-    SPARKLE_FW="$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
-    if [ -d "$SPARKLE_FW" ]; then
-        echo "→ Ad-hoc re-signing Sparkle (inside-out) with hardened runtime to match main bundle..."
-        for xpc in "$SPARKLE_FW/Versions/B/XPCServices"/*.xpc; do
-            [ -d "$xpc" ] && codesign --force --options runtime --sign - "$xpc"
-        done
-        codesign --force --options runtime --sign - "$SPARKLE_FW/Versions/B/Autoupdate"
-        codesign --force --options runtime --sign - "$SPARKLE_FW/Versions/B/Updater.app"
-        codesign --force --options runtime --sign - "$SPARKLE_FW"
-    fi
-    echo "→ Ad-hoc signing main bundle with production entitlements..."
-    codesign --force --options runtime \
+    # --options runtime (Hardened Runtime) + ad-hoc Sparkle 조합은 library validation 이
+    # team ID 매칭을 요구해서 dyld가 Sparkle 로드를 거부한다.
+    # 로컬 테스트/내부 배포용 ad-hoc 빌드에서는 Hardened Runtime을 빼고 단순 ad-hoc 으로
+    # --deep 서명한다 (production은 위 if 분기에서 Developer ID + runtime 정상 처리).
+    echo "→ Ad-hoc signing main bundle (--deep, no runtime) for local-test only..."
+    codesign --force --deep \
         --entitlements "$PROJECT_DIR/Planit/Planit.entitlements" \
         --sign - \
         "$APP_BUNDLE"
