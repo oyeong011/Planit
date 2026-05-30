@@ -1098,9 +1098,10 @@ struct ChatView: View {
         let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty || !attachments.isEmpty else { return }
 
-        // ViewModel의 캐시 이벤트 + 카테고리를 AIService에 주입
+        // ViewModel의 캐시 이벤트 + 카테고리 + 할일을 AIService에 주입
         aiService.cachedCalendarEvents = viewModel.calendarEvents
         aiService.cachedCategories = viewModel.categories
+        aiService.cachedTodos = viewModel.todos
 
         // 할일 생성 콜백 연결 (AIService → ViewModel)
         aiService.onTodoCreate = { title, categoryID, date in

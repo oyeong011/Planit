@@ -213,6 +213,10 @@ final class AIService: ObservableObject {
     /// ViewModel이 이미 로드한 캐시 이벤트 (API 재호출 없이 사용)
     var cachedCalendarEvents: [CalendarEvent] = []
 
+    /// ViewModel의 todos (오늘/근일 할일). "오늘 일정 알려줘" 류 질문에 캘린더 이벤트와
+    /// 함께 묶어 답할 수 있도록 주입한다. (ChatView.sendMessage에서 viewModel.todos 주입)
+    var cachedTodos: [TodoItem] = []
+
     /// 캘린더 컨텍스트 캐시 (60초간 재사용 — 매 메시지마다 재빌드 방지)
     private var cachedContext: String = ""
     private var cachedContextDate: Date = .distantPast
@@ -666,6 +670,31 @@ final class AIService: ObservableObject {
             }
         }
         context += "\n오늘: \(dayFmt.string(from: Date()))\n"
+
+        // 오늘~14일 todos (할일) — 캘린더 이벤트와 별도로 사용자가 우측 패널/Today 화면에서
+        // 관리하는 항목들. "오늘 일정" 같은 일반 질문은 둘 다 묶어 답해야 한다.
+        if !cachedTodos.isEmpty {
+            guard let todoDeadline = cal.date(byAdding: .day, value: 14, to: today) else {
+                return (String(context.prefix(10_000)), ids)
+            }
+            let upcomingTodos = cachedTodos
+                .filter { $0.date >= today && $0.date < todoDeadline }
+                .sorted { $0.date < $1.date }
+            if !upcomingTodos.isEmpty {
+                context += "\n=== 향후 2주 할일 (Todo, 캘린더 이벤트와 별도) ===\n"
+                var currentDay = ""
+                for todo in upcomingTodos {
+                    let dayStr = dayFmt.string(from: todo.date)
+                    if dayStr != currentDay {
+                        currentDay = dayStr
+                        context += "\n### \(dayStr)\n"
+                    }
+                    let mark = todo.isCompleted ? "[x]" : "[ ]"
+                    let title = ExternalContextPolicy.sanitizeUntrustedText(todo.title, maxLength: 80)
+                    context += "- \(mark) \(title)\n"
+                }
+            }
+        }
 
         // 향후 7일 일정 밀도 + 여유 슬롯 분석
         let analysisSource = sourceEvents.isEmpty ? [] : sourceEvents
