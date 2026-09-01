@@ -225,6 +225,28 @@ public final class ReviewViewModel: ObservableObject {
         )
     }
 
+    public func eveningReviewSuggestions(now: Date = Date()) -> [EveningReviewSuggestion] {
+        EveningReviewRescheduler.suggestions(
+            for: events,
+            now: now,
+            calendar: calendar
+        )
+    }
+
+    public func applyEveningReviewSuggestion(_ suggestion: EveningReviewSuggestion) async {
+        var updated = suggestion.event
+        updated.startDate = suggestion.targetStart
+        updated.endDate = suggestion.targetEnd
+
+        let repo = repositoryProvider()
+        do {
+            _ = try await repo.update(updated)
+            await refresh()
+        } catch {
+            print("[ReviewViewModel] apply evening suggestion error: \(error)")
+        }
+    }
+
     // MARK: - Prompt
 
     private func buildSummaryPrompt() -> String {

@@ -12,28 +12,24 @@ struct MainTabView: View {
     @EnvironmentObject private var theme: iOSThemeService
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            // MARK: Content Area
-            Group {
-                switch appState.selectedTab {
-                case .today:
-                    HomeView()
-                case .chat:
-                    ChatTabView()
-                case .review:
-                    ReviewTabView()
-                case .profile:
-                    SettingsView()
-                }
+        Group {
+            switch appState.selectedTab {
+            case .today:
+                HomeView()
+            case .chat:
+                ChatTabView()
+            case .review:
+                ReviewTabView()
+            case .profile:
+                SettingsView()
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(.bottom, 90)
-
-            // MARK: Custom Tab Bar
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
             CustomTabBar(selectedTab: $appState.selectedTab)
+                .background(Color.calenCream.ignoresSafeArea(edges: .bottom))
         }
         .ignoresSafeArea(.keyboard)
-        .edgesIgnoringSafeArea(.bottom)
     }
 }
 

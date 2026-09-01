@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 // MARK: - Settings Section
@@ -40,6 +41,7 @@ struct SettingsView: View {
 
     @State private var selectedSection: SettingsSection = .profile
     @State private var profile: UserProfile
+    @State private var animalCategory: WalkingAnimalCategory = .all
     @ObservedObject private var appearance = AppearanceService.shared
     @ObservedObject private var animalSettings = AnimalSettings.shared
     @ObservedObject private var calendarThemeService = CalendarThemeService.shared
@@ -78,6 +80,9 @@ struct SettingsView: View {
             .buttonStyle(.plain)
             .keyboardShortcut(.cancelAction)
             .padding(12)
+        }
+        .onDisappear {
+            autosave()
         }
     }
 
@@ -635,7 +640,7 @@ struct SettingsView: View {
             }
 
             settingsCard(String(localized: "settings.evening.card")) {
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 14) {
                     HStack {
                         VStack(alignment: .leading, spacing: 3) {
                             Text(String(localized: "settings.evening.time.title"))
@@ -647,6 +652,17 @@ struct SettingsView: View {
                         Spacer()
                         hourPicker($profile.eveningReviewHour, range: 17...23)
                     }
+                    Divider().opacity(0.3)
+                    Toggle(isOn: $profile.eveningReviewAutoApply) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(String(localized: "settings.evening.autoapply.title"))
+                                .font(.system(size: 13, weight: .medium))
+                            Text(String(localized: "settings.evening.autoapply.desc"))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .toggleStyle(.switch)
                 }
             }
 
@@ -1253,15 +1269,12 @@ struct SettingsView: View {
                     }
 
                     if animalSettings.displayMode == .parade {
-                        Stepper(
-                            String(format: String(localized: "settings.animal.parade.count"), animalSettings.paradeCount),
-                            value: Binding(
-                                get: { animalSettings.paradeCount },
-                                set: { animalSettings.setParadeCount($0) }
-                            ),
-                            in: AnimalSettings.paradeCountRange
-                        )
+                        Text(String(
+                            format: String(localized: "settings.animal.parade.count"),
+                            animalSettings.selectedParadeStyles.count
+                        ))
                         .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.secondary)
                     }
                 }
 
@@ -1270,9 +1283,15 @@ struct SettingsView: View {
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.secondary)
 
+                    HStack(spacing: 8) {
+                        ForEach(WalkingAnimalCategory.allCases) { category in
+                            animalCategoryButton(category)
+                        }
+                    }
+
                     let columns = [GridItem(.adaptive(minimum: 118), spacing: 8)]
                     LazyVGrid(columns: columns, spacing: 8) {
-                        ForEach(WalkingAnimalStyle.allCases) { style in
+                        ForEach(animalCategory.styles) { style in
                             animalStyleButton(style)
                         }
                     }
@@ -1282,10 +1301,17 @@ struct SettingsView: View {
     }
 
     private func animalStyleButton(_ style: WalkingAnimalStyle) -> some View {
-        let isSelected = animalSettings.selectedStyle == style
+        let isParadeMode = animalSettings.displayMode == .parade
+        let isSelected = isParadeMode
+            ? animalSettings.selectedParadeStyles.contains(style)
+            : animalSettings.selectedStyle == style
 
         return Button {
-            animalSettings.selectStyle(style)
+            if isParadeMode {
+                animalSettings.toggleParadeStyle(style)
+            } else {
+                animalSettings.selectStyle(style)
+            }
         } label: {
             HStack(spacing: 8) {
                 AnimalSpritePreview(style: style)
@@ -1315,6 +1341,29 @@ struct SettingsView: View {
                     .stroke(isSelected ? calendarThemeService.current.accent.opacity(0.5) : Color.secondary.opacity(0.12), lineWidth: 1.5)
             )
             .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func animalCategoryButton(_ category: WalkingAnimalCategory) -> some View {
+        let isSelected = animalCategory == category
+
+        return Button {
+            animalCategory = category
+        } label: {
+            Text(category.title)
+                .font(.system(size: 11, weight: isSelected ? .semibold : .medium))
+                .foregroundStyle(isSelected ? .white : .primary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6)
+                .background(
+                    Capsule()
+                        .fill(isSelected ? calendarThemeService.current.accent : Color.platformControl.opacity(0.55))
+                )
+                .overlay(
+                    Capsule()
+                        .stroke(isSelected ? Color.clear : Color.secondary.opacity(0.12), lineWidth: 1)
+                )
         }
         .buttonStyle(.plain)
     }
@@ -1659,16 +1708,27 @@ private struct AnimalSpritePreview: View {
         .frame(width: 30, height: 30)
     }
 
-    private static let previewImageCache: [WalkingAnimalStyle: NSImage] = {
-        Dictionary(uniqueKeysWithValues: WalkingAnimalStyle.allCases.compactMap { style in
-            guard let image = AnimalSpriteImageCache.shared.image(style: style, frameIndex: 0) else {
-                return nil
-            }
-            return (style, image)
-        })
-    }()
+    private static let previewImageCacheLock = NSLock()
+    private static var previewImageCache: [WalkingAnimalStyle: NSImage] = [:]
 
     private static func previewImage(for style: WalkingAnimalStyle) -> NSImage? {
-        previewImageCache[style]
+        if let cached = cachedPreviewImage(for: style) {
+            return cached
+        }
+
+        guard let image = AnimalSpriteImageCache.shared.image(style: style, frameIndex: 0) else {
+            return nil
+        }
+
+        previewImageCacheLock.lock()
+        previewImageCache[style] = image
+        previewImageCacheLock.unlock()
+        return image
+    }
+
+    private static func cachedPreviewImage(for style: WalkingAnimalStyle) -> NSImage? {
+        previewImageCacheLock.lock()
+        defer { previewImageCacheLock.unlock() }
+        return previewImageCache[style]
     }
 }

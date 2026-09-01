@@ -664,25 +664,44 @@ final class GoogleCalendarService {
         return event
     }
 
+    // 364일 × 모든 캘린더 × 이벤트 = 수만 건의 date 파싱을 syncHistory에서 수행한다.
+    // 호출마다 새 ISO8601DateFormatter / DateFormatter 를 alloc 하면 ICU init 비용으로
+    // CPU 50%+ 가 수십 초 동안 메인 스레드를 점유하는 핫스팟이 된다 (v0.4.69 sample 확인).
+    // → 정적 인스턴스 + 락으로 재사용. 두 포매터는 stateless 사용이므로 lock 구간이 짧음.
+    nonisolated(unsafe) private static let allDayFmt: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.timeZone = TimeZone.current
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.isLenient = false
+        return f
+    }()
+    nonisolated(unsafe) private static let isoFractionalFmt: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+    nonisolated(unsafe) private static let isoBasicFmt: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime]
+        return f
+    }()
+    nonisolated(unsafe) private static let parseLock = NSLock()
+
     nonisolated static func parseGoogleAllDayDate(_ raw: String?) -> Date? {
         guard let raw else { return nil }
         guard raw.range(of: #"^\d{4}-\d{2}-\d{2}$"#, options: .regularExpression) != nil else {
             return nil
         }
-        let fmt = DateFormatter()
-        fmt.dateFormat = "yyyy-MM-dd"
-        fmt.timeZone = TimeZone.current
-        fmt.locale = Locale(identifier: "en_US_POSIX")
-        fmt.isLenient = false
-        return fmt.date(from: raw)
+        parseLock.lock()
+        defer { parseLock.unlock() }
+        return allDayFmt.date(from: raw)
     }
 
     nonisolated static func parseGoogleDateTime(_ raw: String?) -> Date? {
         guard let raw else { return nil }
-        let fractional = ISO8601DateFormatter()
-        fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        let basic = ISO8601DateFormatter()
-        basic.formatOptions = [.withInternetDateTime]
-        return fractional.date(from: raw) ?? basic.date(from: raw)
+        parseLock.lock()
+        defer { parseLock.unlock() }
+        return isoFractionalFmt.date(from: raw) ?? isoBasicFmt.date(from: raw)
     }
 }

@@ -330,6 +330,8 @@
 "settings.evening.card" = "저녁 리뷰";
 "settings.evening.time.title" = "저녁 리뷰 시간";
 "settings.evening.time.desc" = "오늘 완료된 일정을 리뷰하고 내일 계획을 세웁니다";
+"settings.evening.autoapply.title" = "미완료 일정 자동 재배치";
+"settings.evening.autoapply.desc" = "켜면 저녁 리뷰 시간에 미완료 일정을 즉시 다음 날로 옮깁니다. 끄면 알림만 띄우고 사용자가 직접 승인합니다.";
 "settings.notifications.permission.card" = "알림 권한";
 "settings.notifications.permission.title" = "시스템 알림 권한이 필요합니다";
 "settings.notifications.permission.desc" = "macOS 시스템 설정 → 알림 → Calen 에서 허용하세요";
@@ -413,6 +415,11 @@
 "review.done.all" = "전체 완료";
 "review.accept.all" = "전부 추가";
 "review.todo.label" = "할 일";
+"review.open.today" = "오늘 리뷰 열기";
+"review.today.summary.title" = "오늘 완료율";
+"review.today.summary.subtitle" = "밤에 끝낸 일정과 할 일을 확인하고 하루를 닫으세요.";
+"review.today.summary.events" = "일정";
+"review.today.summary.todos" = "할 일";
 "settings.section.context" = "AI 컨텍스트";
 
 /* ===== AI Context Section ===== */
@@ -454,6 +461,9 @@
 "auth.error.not.authenticated" = "Google에 로그인되지 않았습니다.";
 "auth.error.state.mismatch" = "인증 상태 불일치 (CSRF 보호).";
 "auth.error.timeout" = "인증이 시간 초과되었습니다. 다시 시도하세요.";
+"auth.refresh.permanent_revocation" = "Google 인증이 만료되었습니다. 캘린더를 다시 연결하려면 로그인하세요.";
+"auth.refresh.non_revocation_terminal" = "Google 인증은 유지되었지만 OAuth 설정 확인이 필요합니다.";
+"auth.refresh.retryable_transient" = "지금은 Google 캘린더 동기화 토큰을 갱신하지 못했습니다. 잠시 후 다시 시도하세요.";
 "review.tab.title" = "리뷰";
 "review.category.title" = "캘린더별 달성률";
 "review.category.other" = "기타";
@@ -584,6 +594,9 @@
 "wallpaper.lavender" = "라벤더";
 "wallpaper.forest" = "포레스트";
 "wallpaper.midnight" = "미드나잇";
+"wallpaper.deepNavy" = "딥 네이비";
+"wallpaper.nightForest" = "나이트 포레스트";
+"wallpaper.inkViolet" = "잉크 바이올렛";
 "wallpaper.peach" = "피치";
 "wallpaper.mint" = "민트";
 "wallpaper.spring" = "봄";
@@ -603,17 +616,38 @@
 "settings.animal.display.mode" = "표시 방식";
 "settings.animal.parade.count" = "함께 걷는 동물 %d마리";
 "settings.animal.shape" = "모양";
+"settings.animal.category.all" = "전체";
+"settings.animal.category.basic" = "기본";
+"settings.animal.category.farm" = "농장";
+"settings.animal.category.forest" = "숲/야생";
 "settings.animal.style.cat" = "고양이";
 "settings.animal.style.dog" = "강아지";
 "settings.animal.style.cheetah" = "치타";
 "settings.animal.style.duck" = "오리";
 "settings.animal.style.rabbit" = "토끼";
-"settings.animal.style.panda" = "판다";
-"settings.animal.style.turtle" = "거북이";
-"settings.animal.style.squirrel" = "다람쥐";
+"settings.animal.style.monkey" = "원숭이";
+"settings.animal.style.sheep" = "양";
+"settings.animal.style.pig" = "돼지";
+"settings.animal.style.cow" = "소";
+"settings.animal.style.deer" = "사슴";
+"settings.animal.style.bear" = "곰";
+"settings.animal.style.koala" = "코알라";
+"settings.animal.style.hedgehog" = "고슴도치";
+"settings.animal.style.owl" = "올빼미";
+"settings.animal.style.frog" = "개구리";
+"settings.animal.style.elephant" = "코끼리";
+"settings.animal.style.horse" = "말";
+"settings.animal.style.fox" = "여우";
 "settings.animal.display.selected" = "선택한 동물";
 "settings.animal.display.random" = "랜덤 동물";
 "settings.animal.display.parade" = "동물 퍼레이드";
+
+/* ===== Evening Review Reschedule ===== */
+"review.reschedule.title" = "밀린 할 일 재조정";
+"review.reschedule.empty" = "오늘 옮길 미완료 할 일이 없어요.";
+"review.reschedule.summary" = "%d개의 미완료 할 일을 앞으로의 일정과 목표에 맞춰 나눠 추천했어요.";
+"review.reschedule.apply" = "추천대로 이동";
+"review.reschedule.skip" = "이번엔 넘기기";
 
 /* ===== Pet Wallpapers ===== */
 "wallpaper.softStudioLight" = "소프트 스튜디오";

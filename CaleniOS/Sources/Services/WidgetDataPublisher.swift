@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 import CalenShared
 
 // MARK: - WidgetDataPublisher
@@ -132,6 +133,22 @@ public enum WidgetDataPublisher {
         let dec = JSONDecoder()
         dec.dateDecodingStrategy = .iso8601
         return dec
+    }
+}
+
+@MainActor
+final class WidgetEventStreamObserver {
+    private var eventsCancellable: AnyCancellable?
+    private let publish: ([CalendarEvent]) -> Void
+
+    init(publish: @escaping ([CalendarEvent]) -> Void = WidgetDataPublisher.publishFromRepo) {
+        self.publish = publish
+    }
+
+    func observe(_ eventsPublisher: AnyPublisher<[CalendarEvent], Never>) {
+        eventsCancellable = eventsPublisher.sink { [publish] events in
+            publish(events)
+        }
     }
 }
 

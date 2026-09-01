@@ -2,39 +2,23 @@
 import SwiftUI
 import CalenShared
 
-// MARK: - MonthGridView (UI v7)
+// MARK: - MonthGridView (UI v10 — clarity-first hybrid)
 //
-// TimeBlocks 스타일 월 그리드.
-// v6까지: 각 날짜 셀 내부에 작은 pill로 이벤트 표시 → 제목 잘림.
-// v7: **주(week) 단위 레이어드 렌더링**으로 전환.
-//   1) 각 주는 ZStack — Layer 1은 7칸 DayCellShell(배경+날짜숫자만), Layer 2는 이벤트 가로 막대를
-//      GeometryReader 기반 absolute 좌표로 배치.
-//   2) 다일간(multi-day) 이벤트는 여러 칼럼에 걸친 하나의 긴 bar로 렌더 (TimeBlocks 원본 패턴).
-//   3) 주 경계에서 clip + continuesFromPrev/Next 플래그로 ◀/▶ 아이콘 표시.
-//   4) 같은 주에서 lane 4개까지 표시, 초과는 해당 칼럼 하단 "+N" 뱃지.
-//
-// 배치 알고리즘은 `CalenShared.WeekEventLayout`이 담당(테스트 8개).
-// 본 뷰는 그 결과를 받아 SwiftUI로 그리기만 한다.
+// 디자인 결정:
+//   - 그리드는 "한 달 컨텍스트" 역할만. 세부 텍스트는 하단 카드/시트가 담당.
+//   - 다일간 이벤트(2일 이상)는 가로 막대 1줄 — 기간 시각화가 핵심 가치.
+//   - 단일일 이벤트는 점(dot)만 — 카테고리 색만, 텍스트 없음.
+//   - 셀 56pt 정사각형에 가깝게, 한눈에 빠른 스캔 가능.
 
 struct MonthGridView: View {
 
-    /// 해당 월을 대표하는 Date(보통 그 달 1일).
     let monthAnchor: Date
-
-    /// 그리드에 표시할 일정 목록 (parent가 필터/제공).
     let schedules: [ScheduleDisplayItem]
-
-    /// 선택된 날짜 (parent binding).
     let selectedDate: Date
-
-    /// 확장된 주의 월요일 (현재는 미사용 — 호환 유지).
     let expandedWeekStart: Date?
-
-    /// 날짜 탭 콜백.
     let onTapDate: (Date) -> Void
-
-    /// 이벤트 막대 탭 콜백 — 편집 sheet 오픈 신호.
     let onTapEvent: (ScheduleDisplayItem) -> Void
+    var onMoveEvent: (ScheduleDisplayItem, Date) -> Void = { _, _ in }
 
     private let cal: Calendar = {
         var c = Calendar(identifier: .gregorian)
@@ -46,34 +30,17 @@ struct MonthGridView: View {
     private let weekdayLabels = ["일", "월", "화", "수", "목", "금", "토"]
 
     // MARK: - Dimensions
-
-    // UX Critic 지적 해결:
-    // 현재 588pt 그리드 높이(HomeView.monthGridHeight = 92*6+36)에 6주 × 104pt = 624pt로
-    // 36pt overflow → 마지막 주 숫자 희미해짐. rowHeight를 92pt에 맞추도록 lane 수 축소.
-    //
-    // 계산: 22(date) + maxLanes*(barH+spacing) + overflow + 4(margin) ≤ 92
-    //      → 22 + 2*(20+2) + 12 + 4 = 82pt ≤ 92 ✓ (maxLanes=2)
-    //      → 22 + 3*(20+2) + 12 + 4 = 104pt > 92 ✗ (이전 값)
-    private let rowDateAreaHeight: CGFloat = 22    // 날짜 숫자 영역
-    private let barHeight: CGFloat = 18            // 20→18 (공간 절약 + 여전히 readable)
+    private let weekRowHeight: CGFloat = 56
+    private let dateAreaHeight: CGFloat = 24
+    private let barHeight: CGFloat = 12
     private let barSpacing: CGFloat = 2
-    private let maxLanes: Int = 2                  // 3→2 (overflow 방지). 초과는 "+N"
-    private let overflowBadgeHeight: CGFloat = 12
-    private let cellHorizontalPadding: CGFloat = 1
-
-    private var laneArea: CGFloat {
-        CGFloat(maxLanes) * (barHeight + barSpacing)
-    }
-
-    private var weekRowHeight: CGFloat {
-        rowDateAreaHeight + laneArea + overflowBadgeHeight + 4
-    }
+    private let maxVisibleLanes: Int = 2
+    private let cellHPadding: CGFloat = 2
 
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 6) {
-            // 요일 헤더
+        VStack(spacing: 4) {
             HStack(spacing: 0) {
                 ForEach(Array(weekdayLabels.enumerated()), id: \.offset) { index, label in
                     Text(label)
@@ -82,10 +49,9 @@ struct MonthGridView: View {
                         .frame(maxWidth: .infinity)
                 }
             }
-            .padding(.vertical, 6)
+            .padding(.vertical, 4)
 
-            // 주 단위 레이어드 렌더링
-            VStack(spacing: 4) {
+            VStack(spacing: 2) {
                 ForEach(weeksInGrid, id: \.self) { weekStart in
                     weekRow(weekStart: weekStart)
                         .frame(height: weekRowHeight)
@@ -100,22 +66,24 @@ struct MonthGridView: View {
     private func weekRow(weekStart: Date) -> some View {
         let days = (0..<7).compactMap { cal.date(byAdding: .day, value: $0, to: weekStart) }
 
-        let inputs = schedules.compactMap { item -> WeekEventLayout.Input? in
-            let end = item.endTime ?? cal.date(byAdding: .minute, value: 30, to: item.startTime) ?? item.startTime
+        // 다일간 이벤트만 막대로. 단일일은 점.
+        let multiDayInputs = schedules.compactMap { item -> WeekEventLayout.Input? in
+            guard isMultiDay(item) else { return nil }
+            let end = item.endTime ?? item.startTime.addingTimeInterval(1800)
             return WeekEventLayout.Input(id: item.id.uuidString, startDate: item.startTime, endDate: end)
         }
         let result = WeekEventLayout.layout(
-            events: inputs,
+            events: multiDayInputs,
             weekStart: weekStart,
-            maxVisibleLanes: maxLanes,
+            maxVisibleLanes: maxVisibleLanes,
             calendar: cal
         )
+        let visibleLaneCount = result.placements.map(\.lane).max().map { min($0 + 1, maxVisibleLanes) } ?? 0
 
         GeometryReader { geo in
             let columnWidth = geo.size.width / 7.0
 
             ZStack(alignment: .topLeading) {
-                // Layer 1: 7 day cells (배경 + 날짜 숫자 + overflow 뱃지)
                 HStack(spacing: 0) {
                     ForEach(Array(days.enumerated()), id: \.offset) { idx, date in
                         DayCellShell(
@@ -123,32 +91,34 @@ struct MonthGridView: View {
                             isInCurrentMonth: cal.isDate(date, equalTo: monthAnchor, toGranularity: .month),
                             isToday: cal.isDateInToday(date),
                             isSelected: cal.isDate(date, inSameDayAs: selectedDate),
-                            columnIndex: cal.component(.weekday, from: date) - 1,
-                            hiddenCount: result.hiddenByColumn[idx] ?? 0,
+                            columnIndex: idx,
+                            singleDayItems: singleDayItems(for: date),
+                            hiddenMultiDayCount: result.hiddenByColumn[idx] ?? 0,
                             rowHeight: weekRowHeight,
-                            onTapCell: { onTapDate(date) }
+                            dateAreaHeight: dateAreaHeight,
+                            barReservedHeight: CGFloat(visibleLaneCount) * (barHeight + barSpacing),
+                            onTap: { onTapDate(date) }
                         )
                         .frame(width: columnWidth)
                     }
                 }
 
-                // Layer 2: 이벤트 가로 막대들 (absolute 좌표)
+                // 다일간 막대
                 ForEach(result.placements, id: \.id) { placement in
                     if let item = scheduleById(placement.id) {
-                        EventBarRibbon(
+                        MultiDayBar(
                             item: item,
                             continuesFromPrev: placement.continuesFromPrev,
                             continuesToNext: placement.continuesToNext,
-                            dimmed: !currentMonthContainsBar(placement: placement, weekDays: days)
+                            dimmed: !currentMonthAnchors(placement: placement, weekDays: days)
                         )
                         .frame(
-                            width: columnWidth * CGFloat(placement.spanColumns)
-                                - 2 * cellHorizontalPadding,
+                            width: columnWidth * CGFloat(placement.spanColumns) - 2 * cellHPadding,
                             height: barHeight
                         )
                         .position(
                             x: columnWidth * (CGFloat(placement.startColumn) + CGFloat(placement.spanColumns) / 2),
-                            y: rowDateAreaHeight
+                            y: dateAreaHeight + 2
                                 + CGFloat(placement.lane) * (barHeight + barSpacing)
                                 + barHeight / 2
                         )
@@ -159,7 +129,27 @@ struct MonthGridView: View {
         }
     }
 
-    private func currentMonthContainsBar(placement: WeekEventLayout.Placement, weekDays: [Date]) -> Bool {
+    // MARK: - Data helpers
+
+    private func isMultiDay(_ item: ScheduleDisplayItem) -> Bool {
+        guard let end = item.endTime else { return false }
+        let startDay = cal.startOfDay(for: item.startTime)
+        let endDay = cal.startOfDay(for: end)
+        return endDay > startDay
+    }
+
+    private func singleDayItems(for date: Date) -> [ScheduleDisplayItem] {
+        let start = cal.startOfDay(for: date)
+        guard let end = cal.date(byAdding: .day, value: 1, to: start) else { return [] }
+        return schedules
+            .filter { item in
+                guard !isMultiDay(item) else { return false }
+                return item.startTime >= start && item.startTime < end
+            }
+            .sorted { $0.startTime < $1.startTime }
+    }
+
+    private func currentMonthAnchors(placement: WeekEventLayout.Placement, weekDays: [Date]) -> Bool {
         let startIdx = max(0, min(weekDays.count - 1, placement.startColumn))
         let anchor = weekDays[startIdx]
         return cal.isDate(anchor, equalTo: monthAnchor, toGranularity: .month)
@@ -189,7 +179,7 @@ struct MonthGridView: View {
     }
 }
 
-// MARK: - DayCellShell (배경 + 날짜 숫자 + overflow 뱃지)
+// MARK: - DayCellShell (날짜 + 단일일 점)
 
 private struct DayCellShell: View {
     let date: Date
@@ -197,127 +187,127 @@ private struct DayCellShell: View {
     let isToday: Bool
     let isSelected: Bool
     let columnIndex: Int
-    let hiddenCount: Int
+    let singleDayItems: [ScheduleDisplayItem]
+    let hiddenMultiDayCount: Int
     let rowHeight: CGFloat
-    let onTapCell: () -> Void
+    let dateAreaHeight: CGFloat
+    let barReservedHeight: CGFloat
+    let onTap: () -> Void
+
+    private let maxDots = 3
 
     private var dayNumber: String {
         "\(Calendar.current.component(.day, from: date))"
     }
 
     private var numberColor: Color {
-        if !isInCurrentMonth { return .secondary.opacity(0.45) }
-        if isToday && !isSelected { return .white }
+        if !isInCurrentMonth { return .secondary.opacity(0.4) }
+        if isToday { return .white }
         if columnIndex == 0 { return .red.opacity(0.9) }
         if columnIndex == 6 { return Color.calenBlue.opacity(0.9) }
         return .primary
     }
 
     private var backgroundColor: Color {
-        if isSelected && isInCurrentMonth { return Color.calenBlue.opacity(0.10) }
+        if isSelected && !isToday { return Color.calenBlue.opacity(0.08) }
         return .clear
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
-                Spacer()
-                ZStack {
-                    if isToday {
-                        Circle()
-                            .fill(Color.calenBlue)
-                            .frame(width: 22, height: 22)
-                    }
-                    Text(dayNumber)
-                        .font(isToday ? .system(size: 13, weight: .bold) : .system(size: 12, weight: .medium))
-                        .foregroundStyle(numberColor)
+            ZStack {
+                if isToday {
+                    Circle()
+                        .fill(Color.calenBlue)
+                        .frame(width: 26, height: 26)
+                } else if isSelected {
+                    Circle()
+                        .stroke(Color.calenBlue, lineWidth: 1.4)
+                        .frame(width: 26, height: 26)
                 }
+                Text(dayNumber)
+                    .font(.system(size: 13, weight: isToday ? .bold : .medium))
+                    .foregroundStyle(numberColor)
             }
+            .frame(height: dateAreaHeight)
             .padding(.top, 3)
-            .padding(.trailing, 6)
 
             Spacer(minLength: 0)
+                .frame(height: barReservedHeight)
 
-            if hiddenCount > 0 {
-                HStack {
-                    Spacer()
-                    Text("+\(hiddenCount)")
-                        .font(.system(size: 9, weight: .semibold))
-                        .foregroundStyle(Color.calenBlue.opacity(0.9))
-                    Spacer()
-                }
-                .padding(.bottom, 2)
-            }
+            dotsRow
+
+            Spacer(minLength: 0)
         }
         .frame(height: rowHeight)
         .frame(maxWidth: .infinity)
         .background(
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(backgroundColor)
         )
         .contentShape(Rectangle())
-        .onTapGesture { onTapCell() }
+        .onTapGesture { onTap() }
+        .accessibilityLabel(accessibilityText)
+    }
+
+    private var dotsRow: some View {
+        let visible = singleDayItems.prefix(maxDots)
+        let extra = max(0, singleDayItems.count - maxDots) + hiddenMultiDayCount
+        return HStack(spacing: 3) {
+            ForEach(Array(visible.enumerated()), id: \.offset) { _, item in
+                Circle()
+                    .fill(item.category.swiftUIColor)
+                    .frame(width: 5, height: 5)
+                    .opacity(isInCurrentMonth ? 1.0 : 0.45)
+            }
+            if extra > 0 {
+                Text("+\(extra)")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .opacity(isInCurrentMonth ? 1.0 : 0.45)
+            }
+        }
+        .frame(height: 6)
+    }
+
+    private var accessibilityText: String {
+        let count = singleDayItems.count + hiddenMultiDayCount
+        let fmt = DateFormatter()
+        fmt.locale = Locale(identifier: "ko_KR")
+        fmt.dateFormat = "M월 d일"
+        return "\(fmt.string(from: date)) — 일정 \(count)개"
     }
 }
 
-// MARK: - EventBarRibbon (가로 막대)
+// MARK: - MultiDayBar (다일간 막대 — Planit 톤 옅은 fill)
 
-private struct EventBarRibbon: View {
+private struct MultiDayBar: View {
     let item: ScheduleDisplayItem
     let continuesFromPrev: Bool
     let continuesToNext: Bool
     let dimmed: Bool
 
     var body: some View {
-        // 단일 bar: 카테고리 색상 fill + 흰색 굵은 텍스트.
-        // 가독성 우선 — 내부 HStack의 chevron/컬러바 중첩을 제거해 전체 폭을 텍스트에 할당.
-        ZStack(alignment: .leading) {
-            barShape
-                .fill(background)
-
-            HStack(spacing: 3) {
-                if continuesFromPrev {
-                    Image(systemName: "chevron.compact.left")
-                        .font(.system(size: 9, weight: .heavy))
-                        .foregroundStyle(textColor.opacity(0.85))
-                }
-                Text(item.title)
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(textColor)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                    .truncationMode(.tail)
-                    .fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: 0)
-                if continuesToNext {
-                    Image(systemName: "chevron.compact.right")
-                        .font(.system(size: 9, weight: .heavy))
-                        .foregroundStyle(textColor.opacity(0.85))
-                }
-            }
-            .padding(.horizontal, 4)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .opacity(dimmed ? 0.5 : 1.0)
-    }
-
-    /// 바 fill은 카테고리 색 **solid**(~0.9 opacity). 텍스트는 흰색.
-    /// 기존 0.2 opacity + stroke는 글자와 채도 대비가 부족해 가독성 낮았음.
-    private var background: Color {
-        category.swiftUIColor.opacity(0.88)
-    }
-
-    private var textColor: Color { .white }
-
-    private var category: ScheduleCategory { item.category }
-
-    private var barShape: some Shape {
-        BarShape(leftSharp: continuesFromPrev, rightSharp: continuesToNext, cornerRadius: 4)
+        Text(item.title)
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundStyle(item.category.textColor)
+            .lineLimit(1)
+            .truncationMode(.tail)
+            .padding(.horizontal, 6)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxHeight: .infinity)
+            .background(
+                BarShape(
+                    leftSharp: continuesFromPrev,
+                    rightSharp: continuesToNext,
+                    cornerRadius: 4
+                )
+                .fill(item.category.fillColor)
+            )
+            .opacity(dimmed ? 0.45 : 1.0)
     }
 }
 
-/// 좌/우 각각 cornerRadius를 개별 제어하는 shape.
-/// 주 경계에서 continuesFromPrev/Next가 true면 해당 side의 radius = 0.
 private struct BarShape: Shape {
     let leftSharp: Bool
     let rightSharp: Bool
@@ -357,9 +347,7 @@ private struct BarShape: Shape {
     }
 }
 
-// MARK: - Preview
-
-#Preview("Month Grid v7") {
+#Preview("Month Grid v10") {
     let vm = HomeViewModel()
     return MonthGridView(
         monthAnchor: vm.currentMonth,
@@ -367,7 +355,8 @@ private struct BarShape: Shape {
         selectedDate: vm.selectedDate,
         expandedWeekStart: vm.expandedWeekStart,
         onTapDate: { _ in },
-        onTapEvent: { _ in }
+        onTapEvent: { _ in },
+        onMoveEvent: { _, _ in }
     )
     .padding(.horizontal, 8)
     .background(Color.calenCream)

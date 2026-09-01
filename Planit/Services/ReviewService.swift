@@ -12,14 +12,28 @@ enum ReviewMode: String {
 
 @MainActor
 final class ReviewService: ObservableObject {
+    struct AutomaticEveningCorrectionRun: Equatable {
+        let reviewDateKey: String
+        let autoApply: Bool
+    }
+
+    struct AutomaticEveningCorrectionOutcome: Equatable {
+        let reviewDateKey: String
+        let result: EveningCorrectionRecord.Result
+        let itemCount: Int
+        let shouldBurnDayKey: Bool
+    }
+
     @Published var currentMode: ReviewMode = .none
     @Published var suggestions: [ReviewSuggestion] = []
     @Published var dailyDoneToday: Bool = false
     @Published var eveningDoneToday: Bool = false
     @Published var tomorrowPlanResult: TomorrowPlanResult?
+    @Published var eveningReschedulePlan = EveningReschedulePlan(items: [], generatedAt: Date())
 
     private let goalService: GoalService
     private let calendarService: GoogleCalendarService?
+    private let eveningCorrectionLedger: EveningCorrectionLedger
     private var tomorrowPlanner: TomorrowPlannerService?
     private var reviewAI: ReviewAIService?
     private static let lastDailyKeyName = "calen.review.lastDailyKey"
@@ -49,9 +63,14 @@ final class ReviewService: ObservableObject {
         set { UserDefaults.standard.set(newValue, forKey: Self.lastEveningKeyName) }
     }
 
-    init(goalService: GoalService, calendarService: GoogleCalendarService?) {
+    init(
+        goalService: GoalService,
+        calendarService: GoogleCalendarService?,
+        eveningCorrectionLedger: EveningCorrectionLedger = EveningCorrectionLedger()
+    ) {
         self.goalService = goalService
         self.calendarService = calendarService
+        self.eveningCorrectionLedger = eveningCorrectionLedger
         self.tomorrowPlanner = TomorrowPlannerService(goalService: goalService, calendarService: calendarService)
         self.reviewAI = ReviewAIService(goalService: goalService, calendarService: calendarService)
 
@@ -69,6 +88,52 @@ final class ReviewService: ObservableObject {
         dateKeyFormatter.string(from: date)
     }
 
+    nonisolated static func automaticEveningRescheduleKey(
+        for date: Date,
+        reviewHour: Int,
+        calendar: Calendar = .current
+    ) -> String {
+        var effectiveDate = date
+        let normalizedHour = ((reviewHour % 24) + 24) % 24
+        let currentHour = calendar.component(.hour, from: date)
+        if normalizedHour >= 22 && currentHour < (normalizedHour + 3) % 24 {
+            effectiveDate = calendar.date(byAdding: .day, value: -1, to: date) ?? date
+        }
+
+        let components = calendar.dateComponents([.year, .month, .day], from: effectiveDate)
+        return String(
+            format: "%04d-%02d-%02d",
+            components.year ?? 0,
+            components.month ?? 0,
+            components.day ?? 0
+        )
+    }
+
+    nonisolated static func shouldRunAutomaticEveningReschedule(
+        lastRunKey: String,
+        now: Date,
+        profile: UserProfile,
+        calendar: Calendar = .current
+    ) -> Bool {
+        guard profile.onboardingDone else { return false }
+
+        let startHour = ((profile.eveningReviewHour % 24) + 24) % 24
+        let hour = calendar.component(.hour, from: now)
+        let endHour = (startHour + 3) % 24
+        let isInWindow = startHour + 3 < 24
+            ? hour >= startHour && hour < startHour + 3
+            : hour >= startHour || hour < endHour
+
+        guard isInWindow else { return false }
+
+        let key = automaticEveningRescheduleKey(
+            for: now,
+            reviewHour: startHour,
+            calendar: calendar
+        )
+        return lastRunKey != key
+    }
+
     // MARK: - Always-On Daily Adjustment
 
     /// Called on every app launch / popover open.
@@ -80,20 +145,20 @@ final class ReviewService: ObservableObject {
         let hour = cal.component(.hour, from: Date())
         let eStart = goalService.profile.eveningReviewHour
 
-        // 1. Daily adjustment — runs once per day, any time
-        if !dailyDoneToday {
-            if currentMode != .daily {
-                currentMode = .daily
-                Task { [weak self] in await self?.generateDailySuggestions() }
-            }
-            return
-        }
-
-        // 2. Evening review — only if daily is already done
+        // 1. Evening review — night flow should not be blocked by an unfinished daily review.
         if hour >= eStart && hour < eStart + 3 && !eveningDoneToday {
             if currentMode != .evening {
                 currentMode = .evening
                 Task { await generateEveningSuggestions() }
+            }
+            return
+        }
+
+        // 2. Daily adjustment — runs once per day outside the evening review window.
+        if !dailyDoneToday {
+            if currentMode != .daily {
+                currentMode = .daily
+                Task { [weak self] in await self?.generateDailySuggestions() }
             }
         }
     }
@@ -128,6 +193,167 @@ final class ReviewService: ObservableObject {
         }
         currentMode = .none
         suggestions = []
+        eveningReschedulePlan = EveningReschedulePlan(items: [], generatedAt: Date())
+    }
+
+    // MARK: - Evening Reschedule
+
+    func refreshEveningReschedulePlan(
+        todos: [TodoItem],
+        events: [CalendarEvent],
+        now: Date = Date()
+    ) {
+        let scheduler = SmartSchedulerService()
+        let basePlan = scheduler.makeEveningReschedulePlan(
+            todos: todos,
+            events: events,
+            activeGoals: goalService.activeGoals(),
+            profile: goalService.profile,
+            now: now
+        )
+        eveningReschedulePlan = annotateEveningReschedulePlan(
+            basePlan,
+            todos: todos,
+            now: now
+        )
+    }
+
+    func clearEveningReschedulePlan() {
+        eveningReschedulePlan = EveningReschedulePlan(items: [], generatedAt: Date())
+    }
+
+    func beginAutomaticEveningCorrection(
+        lastRunKey: String,
+        now: Date,
+        calendar: Calendar = .current
+    ) -> AutomaticEveningCorrectionRun? {
+        guard Self.shouldRunAutomaticEveningReschedule(
+            lastRunKey: lastRunKey,
+            now: now,
+            profile: goalService.profile,
+            calendar: calendar
+        ) else {
+            return nil
+        }
+
+        let reviewDateKey = Self.automaticEveningRescheduleKey(
+            for: now,
+            reviewHour: goalService.profile.eveningReviewHour,
+            calendar: calendar
+        )
+        let autoApply = goalService.profile.eveningReviewAutoApply
+        recordEveningCorrectionStarted(
+            reviewDateKey: reviewDateKey,
+            startedAt: now,
+            autoApply: autoApply
+        )
+        currentMode = .evening
+
+        return AutomaticEveningCorrectionRun(
+            reviewDateKey: reviewDateKey,
+            autoApply: autoApply
+        )
+    }
+
+    func completeAutomaticEveningCorrection(
+        _ run: AutomaticEveningCorrectionRun,
+        itemCount: Int,
+        applyChanges: () throws -> Void = {}
+    ) -> AutomaticEveningCorrectionOutcome {
+        let normalizedItemCount = max(0, itemCount)
+
+        guard normalizedItemCount > 0 else {
+            recordEveningCorrectionResult(
+                reviewDateKey: run.reviewDateKey,
+                result: .skipped,
+                itemCount: 0,
+                autoApply: run.autoApply,
+                failureReason: "no eligible overdue items"
+            )
+            return AutomaticEveningCorrectionOutcome(
+                reviewDateKey: run.reviewDateKey,
+                result: .skipped,
+                itemCount: 0,
+                shouldBurnDayKey: true
+            )
+        }
+
+        guard run.autoApply else {
+            recordEveningCorrectionResult(
+                reviewDateKey: run.reviewDateKey,
+                result: .planned,
+                itemCount: normalizedItemCount,
+                autoApply: false
+            )
+            return AutomaticEveningCorrectionOutcome(
+                reviewDateKey: run.reviewDateKey,
+                result: .planned,
+                itemCount: normalizedItemCount,
+                shouldBurnDayKey: true
+            )
+        }
+
+        do {
+            try applyChanges()
+            recordEveningCorrectionResult(
+                reviewDateKey: run.reviewDateKey,
+                result: .applied,
+                itemCount: normalizedItemCount,
+                autoApply: true
+            )
+            return AutomaticEveningCorrectionOutcome(
+                reviewDateKey: run.reviewDateKey,
+                result: .applied,
+                itemCount: normalizedItemCount,
+                shouldBurnDayKey: true
+            )
+        } catch {
+            recordEveningCorrectionResult(
+                reviewDateKey: run.reviewDateKey,
+                result: .failed,
+                itemCount: normalizedItemCount,
+                autoApply: true,
+                failureReason: error.localizedDescription
+            )
+            return AutomaticEveningCorrectionOutcome(
+                reviewDateKey: run.reviewDateKey,
+                result: .failed,
+                itemCount: normalizedItemCount,
+                shouldBurnDayKey: false
+            )
+        }
+    }
+
+    func eveningCorrectionRecord(for reviewDateKey: String) -> EveningCorrectionRecord? {
+        eveningCorrectionLedger.record(for: reviewDateKey)
+    }
+
+    func recordEveningCorrectionStarted(
+        reviewDateKey: String,
+        startedAt: Date = Date(),
+        autoApply: Bool
+    ) {
+        eveningCorrectionLedger.recordStarted(
+            reviewDateKey: reviewDateKey,
+            startedAt: startedAt,
+            applyMode: autoApply ? .automatic : .manual
+        )
+    }
+
+    func recordEveningCorrectionResult(
+        reviewDateKey: String,
+        result: EveningCorrectionRecord.Result,
+        itemCount: Int,
+        autoApply: Bool,
+        failureReason: String? = nil
+    ) {
+        eveningCorrectionLedger.recordResult(
+            reviewDateKey: reviewDateKey,
+            result: result,
+            itemCount: itemCount,
+            applyMode: autoApply ? .automatic : .manual,
+            failureReason: failureReason
+        )
     }
 
     // MARK: - AI Tomorrow Planning
@@ -369,6 +595,96 @@ final class ReviewService: ObservableObject {
         let goal = goalService.goals.first { $0.id == goalId }
         guard let goalTitle = goal?.title else { return false }
         return events.contains { $0.title.contains(goalTitle) }
+    }
+
+    private func annotateEveningReschedulePlan(
+        _ plan: EveningReschedulePlan,
+        todos: [TodoItem],
+        now: Date
+    ) -> EveningReschedulePlan {
+        let todoByID = Dictionary(uniqueKeysWithValues: todos.map { ($0.id, $0) })
+        let items = plan.items.map { item -> EveningRescheduleItem in
+            guard let todo = todoByID[item.todoId] else { return item }
+            return EveningRescheduleItem(
+                todoId: item.todoId,
+                title: safeEveningRescheduleTitle(for: todo),
+                originalDate: item.originalDate,
+                targetDate: item.targetDate,
+                reason: eveningRecoveryReason(
+                    for: todo,
+                    existingReason: item.reason,
+                    loadLabel: item.loadLabel,
+                    now: now
+                ),
+                goalTitle: item.goalTitle,
+                loadLabel: item.loadLabel,
+                priorityScore: item.priorityScore
+            )
+        }
+
+        return EveningReschedulePlan(items: items, generatedAt: plan.generatedAt)
+    }
+
+    private func safeEveningRescheduleTitle(for todo: TodoItem) -> String {
+        let trimmed = todo.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "미완료 할 일" : trimmed
+    }
+
+    private func eveningRecoveryReason(
+        for todo: TodoItem,
+        existingReason: String,
+        loadLabel: String,
+        now: Date
+    ) -> String {
+        let safeLoadLabel = normalizedRecoveryLoadLabel(loadLabel)
+        if let record = incompleteCompletionRecord(for: todo, now: now) {
+            switch record.status {
+            case .skipped:
+                return "어제 건너뛴 기록이 있어 \(safeLoadLabel) 날로 다시 옮겼어요."
+            case .partial:
+                return "어제 일부만 진행한 기록이라 \(safeLoadLabel) 날로 이어서 옮겼어요."
+            case .moved:
+                return "어제 미뤄둔 기록이 남아 있어 \(safeLoadLabel) 날로 다시 정리했어요."
+            case .unknown:
+                return "어제 완료 기록이 없어 \(safeLoadLabel) 날로 복구했어요."
+            case .done:
+                break
+            }
+        }
+
+        let calendar = Calendar.current
+        if calendar.startOfDay(for: todo.date) < calendar.startOfDay(for: now) {
+            return "완료 기록이 없어 \(safeLoadLabel) 날로 다시 옮겼어요."
+        }
+
+        let trimmedReason = existingReason.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedReason.isEmpty {
+            return trimmedReason
+        }
+
+        return "앞으로의 일정 여유를 보고 다시 배치했어요."
+    }
+
+    private func incompleteCompletionRecord(
+        for todo: TodoItem,
+        now: Date
+    ) -> CompletionRecord? {
+        let completionKey = "todo:\(todo.id.uuidString)"
+        guard let record = goalService.completionFor(eventId: completionKey),
+              record.status != .done else {
+            return nil
+        }
+
+        let calendar = Calendar.current
+        guard calendar.startOfDay(for: record.date) < calendar.startOfDay(for: now) else {
+            return nil
+        }
+        return record
+    }
+
+    private func normalizedRecoveryLoadLabel(_ loadLabel: String) -> String {
+        let trimmed = loadLabel.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "여유 있는" : trimmed
     }
 
     private func findYesterdayIncomplete() -> [(String, String?)] {

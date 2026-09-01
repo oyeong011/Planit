@@ -12,3 +12,7 @@ Planit/Services/BundledCredentials.local.swift
 CaleniOS/CaleniOS.xcodeproj/
 # Claude Code worktree 임시 디렉터리 — submodule로 인식돼 Pages 빌드 깨뜨림
 .claude/worktrees/
+
+# 개발 보조 도구 캐시/세션 디렉터리
+.lazyweb/
+.playwright-mcp/

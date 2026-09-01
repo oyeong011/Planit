@@ -7,9 +7,19 @@ enum WalkingAnimalStyle: String, CaseIterable, Identifiable {
     case cheetah
     case duck
     case rabbit
-    case panda
-    case turtle
-    case squirrel
+    case monkey
+    case sheep
+    case pig
+    case cow
+    case deer
+    case bear
+    case koala
+    case hedgehog
+    case owl
+    case frog
+    case elephant
+    case horse
+    case fox
 
     var id: String { rawValue }
 
@@ -32,7 +42,7 @@ enum WalkingAnimalStyle: String, CaseIterable, Identifiable {
             return "cat_pixel_R\(safeIndex + 1)"
         case .dog:
             return "character_dog_R\(safeIndex + 1)"
-        case .cheetah, .duck, .rabbit, .panda, .turtle, .squirrel:
+        default:
             return "character_\(rawValue)_R\(safeIndex + 1)"
         }
     }
@@ -46,7 +56,36 @@ enum WalkingAnimalStyle: String, CaseIterable, Identifiable {
         if rawValue == "original" || rawValue == "pixel" {
             return .cat
         }
+        if ["panda", "turtle", "squirrel"].contains(rawValue) {
+            return .cat
+        }
         return WalkingAnimalStyle(rawValue: rawValue)
+    }
+}
+
+enum WalkingAnimalCategory: String, CaseIterable, Identifiable {
+    case all
+    case basic
+    case farm
+    case forest
+
+    var id: String { rawValue }
+
+    var title: String {
+        NSLocalizedString("settings.animal.category.\(rawValue)", bundle: .module, comment: "")
+    }
+
+    var styles: [WalkingAnimalStyle] {
+        switch self {
+        case .all:
+            return WalkingAnimalStyle.allCases
+        case .basic:
+            return [.cat, .dog, .cheetah, .duck, .rabbit, .monkey]
+        case .farm:
+            return [.sheep, .pig, .cow, .horse]
+        case .forest:
+            return [.deer, .bear, .koala, .hedgehog, .owl, .frog, .elephant, .fox]
+        }
     }
 }
 
@@ -69,12 +108,14 @@ final class AnimalSettings: ObservableObject {
     static let styleKey = "planit.catStyle"
     static let displayModeKey = "planit.petDisplayMode"
     static let paradeCountKey = "planit.petParadeCount"
-    static let paradeCountRange = 1...3
+    static let paradeStylesKey = "planit.petParadeStyles"
+    static var paradeCountRange: ClosedRange<Int> { 1...WalkingAnimalStyle.allCases.count }
 
     @Published private(set) var isEnabled: Bool
     @Published private(set) var selectedStyle: WalkingAnimalStyle
     @Published private(set) var displayMode: WalkingPetDisplayMode
     @Published private(set) var paradeCount: Int
+    @Published private(set) var selectedParadeStyles: [WalkingAnimalStyle]
 
     private let userDefaults: UserDefaults
 
@@ -85,8 +126,13 @@ final class AnimalSettings: ObservableObject {
         self.selectedStyle = savedStyle ?? .cat
         let savedMode = userDefaults.string(forKey: Self.displayModeKey).flatMap(WalkingPetDisplayMode.init(rawValue:))
         self.displayMode = savedMode ?? .selected
-        let savedParadeCount = userDefaults.object(forKey: Self.paradeCountKey) as? Int ?? 3
-        self.paradeCount = Self.clampedParadeCount(savedParadeCount)
+        let savedParadeStyles = Self.persistedParadeStyles(
+            from: userDefaults.stringArray(forKey: Self.paradeStylesKey),
+            legacyCount: userDefaults.object(forKey: Self.paradeCountKey) as? Int,
+            fallback: savedStyle ?? .cat
+        )
+        self.selectedParadeStyles = savedParadeStyles
+        self.paradeCount = savedParadeStyles.count
     }
 
     func setEnabled(_ enabled: Bool) {
@@ -109,12 +155,59 @@ final class AnimalSettings: ObservableObject {
 
     func setParadeCount(_ count: Int) {
         let clamped = Self.clampedParadeCount(count)
-        guard paradeCount != clamped else { return }
-        paradeCount = clamped
-        userDefaults.set(clamped, forKey: Self.paradeCountKey)
+        let availableStyles = Self.normalizedParadeStyles(selectedParadeStyles + WalkingAnimalStyle.allCases)
+        setParadeStyles(Array(availableStyles.prefix(clamped)))
+    }
+
+    func toggleParadeStyle(_ style: WalkingAnimalStyle) {
+        var next = selectedParadeStyles
+
+        if let index = next.firstIndex(of: style) {
+            guard next.count > 1 else { return }
+            next.remove(at: index)
+        } else {
+            next.append(style)
+        }
+
+        setParadeStyles(next)
+    }
+
+    private func setParadeStyles(_ styles: [WalkingAnimalStyle]) {
+        let normalized = Self.normalizedParadeStyles(styles)
+        guard selectedParadeStyles != normalized else { return }
+        selectedParadeStyles = normalized
+        paradeCount = normalized.count
+        userDefaults.set(normalized.map(\.rawValue), forKey: Self.paradeStylesKey)
+        userDefaults.set(normalized.count, forKey: Self.paradeCountKey)
     }
 
     static func clampedParadeCount(_ count: Int) -> Int {
         min(max(count, paradeCountRange.lowerBound), paradeCountRange.upperBound)
+    }
+
+    private static func persistedParadeStyles(
+        from rawValues: [String]?,
+        legacyCount: Int?,
+        fallback: WalkingAnimalStyle
+    ) -> [WalkingAnimalStyle] {
+        if let rawValues {
+            return normalizedParadeStyles(rawValues.compactMap(WalkingAnimalStyle.persistedStyle))
+        }
+
+        if let legacyCount {
+            return normalizedParadeStyles(Array(WalkingAnimalStyle.allCases.prefix(clampedParadeCount(legacyCount))))
+        }
+
+        return normalizedParadeStyles([fallback])
+    }
+
+    static func normalizedParadeStyles(_ styles: [WalkingAnimalStyle]) -> [WalkingAnimalStyle] {
+        var seen: Set<WalkingAnimalStyle> = []
+        let unique = styles.filter { style in
+            guard !seen.contains(style) else { return false }
+            seen.insert(style)
+            return true
+        }
+        return Array((unique.isEmpty ? [.cat] : unique).prefix(paradeCountRange.upperBound))
     }
 }

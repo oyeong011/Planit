@@ -2,6 +2,9 @@ import Foundation
 import PDFKit
 import ImageIO
 import CoreGraphics
+import enum CalenShared.ScheduleCreatePolicy
+import struct CalenShared.ScheduleCreateRequest
+import struct CalenShared.ScheduleCreateSource
 
 // MARK: - Provider
 
@@ -182,6 +185,14 @@ struct AIResponseWithActions: Codable {
 
 @MainActor
 final class AIService: ObservableObject {
+    struct EventCreateRequest: Sendable {
+        let title: String
+        let startDate: Date
+        let endDate: Date
+        let isAllDay: Bool
+        let recurrence: String?
+    }
+
     @Published var provider: AIProvider = .claude
     @Published var tone: AITone = .concise
     @Published var isLoading: Bool = false
@@ -200,7 +211,7 @@ final class AIService: ObservableObject {
     @Published var planningProgressText: String?
     @Published var planningLastError: String?
 
-    private let authManager: GoogleAuthManager
+    private let authManager: GoogleAuthManager?
     private let calendarService: GoogleCalendarService?
 
     /// Cached absolute paths for CLI tools (resolved once)
@@ -212,6 +223,10 @@ final class AIService: ObservableObject {
 
     /// ViewModel이 이미 로드한 캐시 이벤트 (API 재호출 없이 사용)
     var cachedCalendarEvents: [CalendarEvent] = []
+
+    /// ViewModel의 todos (오늘/근일 할일). "오늘 일정 알려줘" 류 질문에 캘린더 이벤트와
+    /// 함께 묶어 답할 수 있도록 주입한다. (ChatView.sendMessage에서 viewModel.todos 주입)
+    var cachedTodos: [TodoItem] = []
 
     /// 캘린더 컨텍스트 캐시 (60초간 재사용 — 매 메시지마다 재빌드 방지)
     private var cachedContext: String = ""
@@ -247,6 +262,7 @@ final class AIService: ObservableObject {
 
     nonisolated private static let cliTimeout: TimeInterval = 35
     nonisolated private static let maxOutputBytes = 1_048_576  // 1 MB
+    nonisolated private static let temporaryOverrideMaxAge: TimeInterval = 60 * 60
     private static let externalContextConsentKey = "planit.aiExternalContextConsentGranted.v1"
     nonisolated static let maxActionDurationMinutes = 24 * 60
 
@@ -257,11 +273,33 @@ final class AIService: ObservableObject {
         }
     }
 
-    init(authManager: GoogleAuthManager, calendarService: GoogleCalendarService?) {
+    private init(
+        authManager: GoogleAuthManager?,
+        calendarService: GoogleCalendarService?,
+        loadRuntimeState: Bool
+    ) {
         self.authManager = authManager
         self.calendarService = calendarService
-        loadSettings()
-        checkCLIAvailability()
+        if loadRuntimeState {
+            loadSettings()
+            checkCLIAvailability()
+        }
+    }
+
+    convenience init(authManager: GoogleAuthManager, calendarService: GoogleCalendarService?) {
+        self.init(
+            authManager: authManager,
+            calendarService: calendarService,
+            loadRuntimeState: true
+        )
+    }
+
+    convenience init(calendarServiceForTesting calendarService: GoogleCalendarService? = nil) {
+        self.init(
+            authManager: nil,
+            calendarService: calendarService,
+            loadRuntimeState: false
+        )
     }
 
     // MARK: - CLI Detection (resolve absolute paths, no login shell)
@@ -273,20 +311,51 @@ final class AIService: ObservableObject {
 
     private func checkCLIAvailability() {
         Task.detached { [weak self] in
-            let claudeResolved = Self.resolvePath("claude")
-            let codexResolved = Self.resolvePath("codex")
+            let resolved = Self.resolveCLIPaths()
             guard let self else { return }
-            await MainActor.run { [self] in
-                self.claudePath = claudeResolved
-                self.claudeAvailable = claudeResolved != nil
-                self.codexPath = codexResolved
-                self.codexAvailable = codexResolved != nil
-            }
+            await self.applyResolvedCLIPaths(resolved)
         }
+    }
+
+    private func ensureSelectedCLIAvailability() async {
+        let selectedProvider = provider
+        let currentPath: String?
+        switch selectedProvider {
+        case .claude: currentPath = claudePath
+        case .codex: currentPath = codexPath
+        }
+        guard currentPath == nil else { return }
+
+        let resolved = await Task.detached(priority: .utility) {
+            Self.resolvePath(selectedProvider == .claude ? "claude" : "codex")
+        }.value
+
+        switch selectedProvider {
+        case .claude:
+            claudePath = resolved
+            claudeAvailable = resolved != nil
+        case .codex:
+            codexPath = resolved
+            codexAvailable = resolved != nil
+        }
+    }
+
+    nonisolated private static func resolveCLIPaths() -> (claude: String?, codex: String?) {
+        (resolvePath("claude"), resolvePath("codex"))
+    }
+
+    private func applyResolvedCLIPaths(_ resolved: (claude: String?, codex: String?)) {
+        claudePath = resolved.claude
+        claudeAvailable = resolved.claude != nil
+        codexPath = resolved.codex
+        codexAvailable = resolved.codex != nil
     }
 
     /// Review planner 등 외부 서비스에서 Claude 경로 탐색용
     nonisolated static func findClaudePath() -> String? { resolvePath("claude") }
+
+    /// 테스트/진단에서 Codex 경로 탐색용
+    nonisolated static func findCodexPath() -> String? { resolvePath("codex") }
 
     /// Review planner 등 외부 서비스에서 Claude 단발 호출용
     nonisolated static func runClaudeOneShot(prompt: String, claudePath: String) -> String {
@@ -302,8 +371,12 @@ final class AIService: ObservableObject {
         guard cmd == "claude" || cmd == "codex" else { return nil }
 
         if let override = loadPathOverride(cmd: cmd),
-           FileManager.default.isExecutableFile(atPath: override) {
+           isUsablePathOverride(override, cmd: cmd) {
             return override
+        }
+
+        if let envPath = resolveInSearchDirs(cmd: cmd, dirs: currentPATHSearchDirs()) {
+            return envPath
         }
 
         let home = NSHomeDirectory()
@@ -330,20 +403,111 @@ final class AIService: ObservableObject {
             }
         }
 
-        for dir in searchDirs {
-            let full = "\(dir)/\(cmd)"
-            if FileManager.default.isExecutableFile(atPath: full) {
-                return full
-            }
+        if let path = resolveInSearchDirs(cmd: cmd, dirs: searchDirs) {
+            return path
         }
 
         return loginShellWhich(cmd: cmd)
     }
 
+    nonisolated static func resolveInSearchDirs(cmd: String, dirs: [String]) -> String? {
+        guard cmd == "claude" || cmd == "codex" else { return nil }
+
+        for dir in dirs where !dir.isEmpty {
+            guard dir.hasPrefix("/") else { continue }
+            let full = URL(fileURLWithPath: dir).appendingPathComponent(cmd).path
+            if isAllowedResolvedPath(full, cmd: cmd) {
+                return full
+            }
+        }
+        return nil
+    }
+
+    nonisolated private static func currentPATHSearchDirs() -> [String] {
+        guard let raw = getenv("PATH") else { return [] }
+        return String(cString: raw)
+            .split(separator: ":", omittingEmptySubsequences: true)
+            .map(String.init)
+    }
+
+    nonisolated private static func isAllowedResolvedPath(_ path: String, cmd: String) -> Bool {
+        guard URL(fileURLWithPath: path).lastPathComponent == cmd else { return false }
+        guard FileManager.default.isExecutableFile(atPath: path) else { return false }
+
+        if isTemporaryPath(path) {
+            return allowsTemporaryPathOverrides
+        }
+
+        let home = NSHomeDirectory()
+        let allowedPrefixes = [
+            "/opt/homebrew/", "/usr/local/", "/usr/bin/", "/bin/",
+            "\(home)/",
+        ]
+        return allowedPrefixes.contains { path.hasPrefix($0) }
+    }
+
+    nonisolated static func isUsablePathOverride(
+        _ path: String,
+        cmd: String,
+        now: Date = Date(),
+        allowTemporaryPaths: Bool = allowsTemporaryPathOverrides
+    ) -> Bool {
+        guard cmd == "claude" || cmd == "codex" else { return false }
+
+        let trimmed = path.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+        let url = URL(fileURLWithPath: trimmed)
+        guard url.lastPathComponent == cmd else { return false }
+        guard FileManager.default.isExecutableFile(atPath: trimmed) else { return false }
+
+        guard isTemporaryPath(trimmed) else { return true }
+        guard allowTemporaryPaths else { return false }
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: trimmed),
+              let modifiedAt = attributes[.modificationDate] as? Date else {
+            return false
+        }
+        return now.timeIntervalSince(modifiedAt) <= temporaryOverrideMaxAge
+    }
+
+    nonisolated private static var isRunningTests: Bool {
+        let env = ProcessInfo.processInfo.environment
+        if env["XCTestConfigurationFilePath"] != nil || env["XCTestSessionIdentifier"] != nil {
+            return true
+        }
+        return ProcessInfo.processInfo.arguments.contains { $0.hasSuffix(".xctest") }
+    }
+
+    nonisolated private static var allowsTemporaryPathOverrides: Bool {
+        if let raw = getenv("PLANIT_ALLOW_TEMP_AI_PATH_OVERRIDES") {
+            return String(cString: raw) == "1"
+        }
+        return isRunningTests
+    }
+
+    nonisolated private static func isTemporaryPath(_ path: String) -> Bool {
+        let url = URL(fileURLWithPath: path)
+        let candidates = [
+            url.standardizedFileURL.path,
+            url.resolvingSymlinksInPath().standardizedFileURL.path,
+        ]
+        let temporaryRoots = [
+            FileManager.default.temporaryDirectory.standardizedFileURL.path,
+            FileManager.default.temporaryDirectory.resolvingSymlinksInPath().standardizedFileURL.path,
+            "/tmp",
+            "/private/tmp",
+            "/var/folders",
+        ]
+
+        return candidates.contains { candidate in
+            temporaryRoots.contains { root in
+                candidate == root || candidate.hasPrefix(root.hasSuffix("/") ? root : root + "/")
+            }
+        }
+    }
+
     /// 설정 화면에서 사용자가 직접 지정한 경로를 읽음.
     nonisolated private static func loadPathOverride(cmd: String) -> String? {
-        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-        guard let url = support?.appendingPathComponent("Planit/ai/\(cmd)Path") else { return nil }
+        let url = aiSettingsDirectory.appendingPathComponent("\(cmd)Path")
         guard let data = try? Data(contentsOf: url),
               let raw = String(data: data, encoding: .utf8) else { return nil }
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -353,8 +517,7 @@ final class AIService: ObservableObject {
     /// 사용자가 Planit.app/ai 설정에서 경로를 저장/삭제할 때 사용.
     nonisolated static func savePathOverride(cmd: String, path: String?) {
         guard cmd == "claude" || cmd == "codex" else { return }
-        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-        guard let dir = support?.appendingPathComponent("Planit/ai", isDirectory: true) else { return }
+        let dir = aiSettingsDirectory
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true,
                                                   attributes: [.posixPermissions: 0o700])
         let file = dir.appendingPathComponent("\(cmd)Path")
@@ -363,6 +526,17 @@ final class AIService: ObservableObject {
         } else {
             try? FileManager.default.removeItem(at: file)
         }
+    }
+
+    nonisolated private static var aiSettingsDirectory: URL {
+        if let raw = getenv("PLANIT_AI_SETTINGS_DIR") {
+            let trimmed = String(cString: raw).trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty {
+                return URL(fileURLWithPath: trimmed, isDirectory: true)
+            }
+        }
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        return support.appendingPathComponent("Planit/ai", isDirectory: true)
     }
 
     /// Login shell을 1회 실행해 `command -v <cmd>` 결과를 가져온다.
@@ -421,8 +595,7 @@ final class AIService: ObservableObject {
     // MARK: - Settings
 
     private var settingsDir: URL {
-        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        return support.appendingPathComponent("Planit/ai", isDirectory: true)
+        Self.aiSettingsDirectory
     }
 
     private func loadSettings() {
@@ -530,6 +703,31 @@ final class AIService: ObservableObject {
             }
         }
         context += "\n오늘: \(dayFmt.string(from: Date()))\n"
+
+        // 오늘~14일 todos (할일) — 캘린더 이벤트와 별도로 사용자가 우측 패널/Today 화면에서
+        // 관리하는 항목들. "오늘 일정" 같은 일반 질문은 둘 다 묶어 답해야 한다.
+        if !cachedTodos.isEmpty {
+            guard let todoDeadline = cal.date(byAdding: .day, value: 14, to: today) else {
+                return (String(context.prefix(10_000)), ids)
+            }
+            let upcomingTodos = cachedTodos
+                .filter { $0.date >= today && $0.date < todoDeadline }
+                .sorted { $0.date < $1.date }
+            if !upcomingTodos.isEmpty {
+                context += "\n=== 향후 2주 할일 (Todo, 캘린더 이벤트와 별도) ===\n"
+                var currentDay = ""
+                for todo in upcomingTodos {
+                    let dayStr = dayFmt.string(from: todo.date)
+                    if dayStr != currentDay {
+                        currentDay = dayStr
+                        context += "\n### \(dayStr)\n"
+                    }
+                    let mark = todo.isCompleted ? "[x]" : "[ ]"
+                    let title = ExternalContextPolicy.sanitizeUntrustedText(todo.title, maxLength: 80)
+                    context += "- \(mark) \(title)\n"
+                }
+            }
+        }
 
         // 향후 7일 일정 밀도 + 여유 슬롯 분석
         let analysisSource = sourceEvents.isEmpty ? [] : sourceEvents
@@ -717,7 +915,7 @@ final class AIService: ObservableObject {
         // the time the user sees the confirmation prompt and actually confirms.
         let (_, freshIds) = await buildCalendarContext()
         knownEventIds = freshIds
-        return await executeActions(actions)
+        return await executeActions(actions, userConfirmed: true)
     }
 
     /// Call this when user declines pending actions
@@ -737,11 +935,16 @@ final class AIService: ObservableObject {
 
     // MARK: - Execute Actions (with eventId validation)
 
-    private func executeActions(_ actions: [CalendarAction]) async -> [ChatMessage] {
+    private func executeActions(
+        _ actions: [CalendarAction],
+        userConfirmed: Bool = false,
+        createEventOverride: ((EventCreateRequest) async throws -> CalendarEvent?)? = nil
+    ) async -> [ChatMessage] {
         // createTodo는 Google 서비스 불필요 — guard 밖에서 먼저 처리
         // Google 서비스가 필요한 action(create/update/delete/findFreeSlot/blockTime)만 아래서 체크
         var results: [ChatMessage] = []
         let service = calendarService  // optional — nil이면 Google 관련 action만 실패
+        var confirmationActions: [CalendarAction] = []
 
         // 일괄 작업 안전장치: UI 확정(실행 버튼) 이후 호출되는 경로이므로 AI 단독 폭주는 막힌다.
         // 한 번에 50건 이상은 실수/프롬프트 인젝션 가능성 → 거부.
@@ -830,16 +1033,37 @@ final class AIService: ObservableObject {
                     continue
                 }
 
-                guard let svc = service else {
+                switch scheduleCreateAuthorization(
+                    action: action,
+                    title: rawTitle,
+                    userConfirmed: userConfirmed
+                ) {
+                case .allow:
+                    break
+                case let .needsConfirmation(message):
+                    confirmationActions.append(action)
+                    results.append(ChatMessage(role: .toolCall, content: message))
+                    continue
+                case let .denied(message):
+                    results.append(ChatMessage(role: .toolCall, content: message))
+                    continue
+                }
+
+                guard service != nil || createEventOverride != nil else {
                     results.append(ChatMessage(role: .toolCall, content: "\(action.action) 실패: Google 캘린더 미연결"))
                     continue
                 }
                 do {
-                    let created = try await svc.createEvent(
-                        title: rawTitle,
-                        startDate: slot.start,
-                        endDate: slot.end,
-                        isAllDay: false
+                    let created = try await createCalendarEvent(
+                        service: service,
+                        request: EventCreateRequest(
+                            title: rawTitle,
+                            startDate: slot.start,
+                            endDate: slot.end,
+                            isAllDay: false,
+                            recurrence: nil
+                        ),
+                        createEventOverride: createEventOverride
                     )
                     // 카테고리 적용
                     var slotCatLabel = ""
@@ -906,12 +1130,39 @@ final class AIService: ObservableObject {
                     results.append(ChatMessage(role: .toolCall, content: "생성 실패: 종료 시간이 시작 시간보다 늦어야 합니다"))
                     continue
                 }
-                guard let svc = service else {
+
+                switch scheduleCreateAuthorization(
+                    action: action,
+                    title: rawTitle,
+                    userConfirmed: userConfirmed
+                ) {
+                case .allow:
+                    break
+                case let .needsConfirmation(message):
+                    confirmationActions.append(action)
+                    results.append(ChatMessage(role: .toolCall, content: message))
+                    continue
+                case let .denied(message):
+                    results.append(ChatMessage(role: .toolCall, content: message))
+                    continue
+                }
+
+                guard service != nil || createEventOverride != nil else {
                     results.append(ChatMessage(role: .toolCall, content: "생성 실패: Google 캘린더 미연결"))
                     continue
                 }
                 do {
-                    let created = try await svc.createEvent(title: rawTitle, startDate: start, endDate: end, isAllDay: action.isAllDay ?? false, recurrence: action.recurrence)
+                    let created = try await createCalendarEvent(
+                        service: service,
+                        request: EventCreateRequest(
+                            title: rawTitle,
+                            startDate: start,
+                            endDate: end,
+                            isAllDay: action.isAllDay ?? false,
+                            recurrence: action.recurrence
+                        ),
+                        createEventOverride: createEventOverride
+                    )
                     // 카테고리 이름 → UUID 매핑 후 콜백
                     var catLabel = ""
                     if let catName = action.categoryName {
@@ -1043,7 +1294,136 @@ final class AIService: ObservableObject {
                 break
             }
         }
+        if !confirmationActions.isEmpty {
+            pendingActions.append(contentsOf: confirmationActions)
+        }
         return results
+    }
+
+    func executeActionsForTesting(
+        _ actions: [CalendarAction],
+        userConfirmed: Bool = false,
+        createEvent: ((EventCreateRequest) async throws -> CalendarEvent?)? = nil
+    ) async -> [ChatMessage] {
+        await executeActions(
+            actions,
+            userConfirmed: userConfirmed,
+            createEventOverride: createEvent
+        )
+    }
+
+    enum ScheduleCreateAuthorization {
+        case allow
+        case needsConfirmation(String)
+        case denied(String)
+    }
+
+    nonisolated static func scheduleCreateAuthorization(
+        action: CalendarAction,
+        title: String,
+        userConfirmed: Bool,
+        cachedTodos: [TodoItem],
+        cachedCalendarEvents: [CalendarEvent]
+    ) -> ScheduleCreateAuthorization {
+        let needsExplicitConfirmation = action.action == "findFreeSlot"
+            || action.action == "blockTime"
+            || Self.looksLikeSyntheticBlockRequest(title)
+
+        var allowedCreateSources = cachedTodos.map {
+            ScheduleCreateSource(kind: .existingTodo, title: $0.title)
+        }
+        allowedCreateSources.append(contentsOf: cachedCalendarEvents.map {
+            ScheduleCreateSource(kind: .existingEvent, title: $0.title)
+        })
+
+        if needsExplicitConfirmation {
+            let kind: ScheduleCreateSource.Kind = userConfirmed
+                ? .explicitUserConfirmedBlock
+                : .explicitUserRequestedBlock
+            allowedCreateSources.append(.init(kind: kind, title: title))
+        } else if userConfirmed {
+            allowedCreateSources.append(.init(kind: .explicitUserConfirmedBlock, title: title))
+        }
+
+        let decision = ScheduleCreatePolicy.classify(
+            ScheduleCreateRequest(
+                title: title,
+                allowedCreateSources: allowedCreateSources,
+                isConfirmed: userConfirmed
+            )
+        )
+
+        switch decision {
+        case .allowed:
+            return .allow
+        case .needsConfirmation:
+            return .needsConfirmation(
+                "'\(title)' 일정은 자동으로 생성하지 않았습니다. 계속하려면 '확인'이라고 답해주세요."
+            )
+        case .denied:
+            return .denied(
+                "'\(title)' 일정은 안전 정책 때문에 바로 생성하지 않았습니다."
+            )
+        }
+    }
+
+    private func scheduleCreateAuthorization(
+        action: CalendarAction,
+        title: String,
+        userConfirmed: Bool
+    ) -> ScheduleCreateAuthorization {
+        Self.scheduleCreateAuthorization(
+            action: action,
+            title: title,
+            userConfirmed: userConfirmed,
+            cachedTodos: cachedTodos,
+            cachedCalendarEvents: cachedCalendarEvents
+        )
+    }
+
+    private func createCalendarEvent(
+        service: GoogleCalendarService?,
+        request: EventCreateRequest,
+        createEventOverride: ((EventCreateRequest) async throws -> CalendarEvent?)?
+    ) async throws -> CalendarEvent? {
+        if let createEventOverride {
+            return try await createEventOverride(request)
+        }
+        guard let service else { return nil }
+        return try await service.createEvent(
+            title: request.title,
+            startDate: request.startDate,
+            endDate: request.endDate,
+            isAllDay: request.isAllDay,
+            recurrence: request.recurrence
+        )
+    }
+
+    nonisolated private static func looksLikeSyntheticBlockRequest(_ title: String) -> Bool {
+        let normalized = title
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .replacingOccurrences(of: "\\s+", with: "", options: .regularExpression)
+            .replacingOccurrences(of: "-", with: "")
+            .replacingOccurrences(of: "_", with: "")
+
+        let riskyTokens = [
+            "focustime",
+            "focusblock",
+            "rest",
+            "resttime",
+            "break",
+            "breaktime",
+            "depresstime",
+            "deepwork",
+            "deepworkblock",
+            "휴식",
+            "휴식시간",
+            "딥워크",
+            "딥워크블록"
+        ]
+
+        return riskyTokens.contains { normalized.contains($0) }
     }
 
     nonisolated static func validatedActionDuration(_ minutes: Int?) -> Int? {
@@ -1225,22 +1605,7 @@ final class AIService: ObservableObject {
         let systemPrompt = buildSystemPrompt(calendarContext: calContext)
 
         // CLI 경로가 없으면 한 번 재감지 시도
-        if (provider == .claude && claudePath == nil) || (provider == .codex && codexPath == nil) {
-            await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
-                Task.detached { [weak self] in
-                    let claudeResolved = Self.resolvePath("claude")
-                    let codexResolved = Self.resolvePath("codex")
-                    guard let self else { cont.resume(); return }
-                    await MainActor.run { [self] in
-                        self.claudePath = claudeResolved
-                        self.claudeAvailable = claudeResolved != nil
-                        self.codexPath = codexResolved
-                        self.codexAvailable = codexResolved != nil
-                        cont.resume()
-                    }
-                }
-            }
-        }
+        await ensureSelectedCLIAvailability()
 
         let userContext = userContextService?.contextForAI() ?? ""
         if !externalContextConsentGranted {
@@ -1286,6 +1651,7 @@ final class AIService: ObservableObject {
             // ChatGPT 계정의 Codex CLI에서 지원되는 기본 모델을 사용하되,
             // config.toml의 xhigh reasoning은 앱 내에서 low로 오버라이드.
             var codexArgs = ["exec",
+                             "--disable", "plugins",
                              "--sandbox", "read-only",
                              "--skip-git-repo-check",
                              "--ephemeral",
@@ -1328,7 +1694,7 @@ final class AIService: ObservableObject {
 
             // delete/update는 승인 카드
             if !riskyActions.isEmpty {
-                pendingActions = riskyActions
+                pendingActions.append(contentsOf: riskyActions)
                 pendingMessage = nil
                 let summary = riskyActions.map { "\($0.action): \($0.title ?? "?")" }.joined(separator: "\n")
                 results.append(ChatMessage(role: .toolCall, content: "아래 작업을 실행할까요?\n\(summary)"))
@@ -1428,18 +1794,40 @@ final class AIService: ObservableObject {
         }
     }
 
-    /// Run CLI tool directly without shell — stdin pipe for input, timeout enforced, streamed output cap
-    nonisolated fileprivate static func runCLIDirect(executablePath: String, args: [String],
-                                                  input: String, isCodex: Bool) -> String {
-        let proc = Process()
-        proc.executableURL = URL(fileURLWithPath: executablePath)
-        proc.arguments = args
-
-        // Minimal environment — CLAUDECODE 제외하여 중첩 세션 감지 방지
+    nonisolated static func cliExecutionEnvironment(executablePath: String) -> [String: String] {
         let homeDir = NSHomeDirectory()
         let tmpDir = FileManager.default.temporaryDirectory.path
-        proc.environment = [
-            "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+        let executableDir = URL(fileURLWithPath: executablePath).deletingLastPathComponent().path
+        var pathDirs: [String] = [
+            executableDir,
+            "/opt/homebrew/bin",
+            "/opt/homebrew/sbin",
+            "/usr/local/bin",
+            "/usr/bin",
+            "/bin",
+            "\(homeDir)/.local/bin",
+            "\(homeDir)/bin",
+            "\(homeDir)/.npm-global/bin",
+            "\(homeDir)/.volta/bin",
+            "\(homeDir)/.bun/bin",
+            "\(homeDir)/.cargo/bin",
+            "\(homeDir)/.asdf/shims",
+        ]
+        let nvmRoot = "\(homeDir)/.nvm/versions/node"
+        if let entries = try? FileManager.default.contentsOfDirectory(atPath: nvmRoot) {
+            for version in entries.sorted().reversed() {
+                pathDirs.append("\(nvmRoot)/\(version)/bin")
+            }
+        }
+
+        var seen = Set<String>()
+        let path = pathDirs
+            .filter { !$0.isEmpty && $0.hasPrefix("/") }
+            .filter { seen.insert($0).inserted }
+            .joined(separator: ":")
+
+        return [
+            "PATH": path,
             "HOME": homeDir,
             "TMPDIR": tmpDir,
             "NO_COLOR": "1",
@@ -1447,6 +1835,21 @@ final class AIService: ObservableObject {
             "LANG": "en_US.UTF-8",
             // CLAUDECODE는 의도적으로 제외 — claude가 중첩 세션으로 인식하지 않도록
         ]
+    }
+
+    /// Run CLI tool directly without shell — stdin pipe for input, timeout enforced, streamed output cap
+    nonisolated fileprivate static func runCLIDirect(executablePath: String, args: [String],
+                                                  input: String, isCodex: Bool) -> String {
+        let proc = Process()
+        proc.executableURL = URL(fileURLWithPath: executablePath)
+        proc.arguments = args
+
+        // Minimal environment — CLAUDECODE 제외하여 중첩 세션 감지 방지.
+        // PATH에는 실행 파일의 디렉터리와 일반 사용자 툴체인 경로를 포함한다.
+        // Finder/LaunchServices로 실행된 앱은 shell PATH를 상속하지 않기 때문에,
+        // npm/bun/native wrapper가 `/usr/bin/env node` 또는 보조 바이너리를 찾지 못하는
+        // 경우가 있었다.
+        proc.environment = cliExecutionEnvironment(executablePath: executablePath)
 
         if isCodex {
             proc.currentDirectoryURL = URL(fileURLWithPath: "/tmp")
@@ -1678,7 +2081,15 @@ final class AIService: ObservableObject {
             isCodex = true
             execPath = codexPath
         }
-        guard let path = execPath else {
+        if execPath == nil {
+            await ensureSelectedCLIAvailability()
+        }
+        let resolvedPath: String?
+        switch provider {
+        case .claude: resolvedPath = claudePath
+        case .codex: resolvedPath = codexPath
+        }
+        guard let path = resolvedPath else {
             throw PlanningError.cliUnavailable
         }
 

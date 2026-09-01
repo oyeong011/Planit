@@ -6,12 +6,18 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 SWIFT=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift
+CONFIGURATION="${CONFIGURATION:-debug}"
 
-echo "🔨 Building..."
+if [[ "$CONFIGURATION" != "debug" && "$CONFIGURATION" != "release" ]]; then
+    echo "CONFIGURATION must be 'debug' or 'release' (got: $CONFIGURATION)" >&2
+    exit 1
+fi
+
+echo "🔨 Building ($CONFIGURATION)..."
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
-    $SWIFT build --package-path "$PROJECT_DIR" -c release 2>&1 | grep -E "error:|warning:|Build complete"
+    $SWIFT build --package-path "$PROJECT_DIR" -c "$CONFIGURATION" 2>&1 | grep -E "error:|warning:|Build complete"
 
-BUILD_DIR="$PROJECT_DIR/.build/release"
+BUILD_DIR="$PROJECT_DIR/.build/$CONFIGURATION"
 APP=/tmp/Calen.app
 
 echo "📦 Creating app bundle..."
@@ -29,6 +35,11 @@ for lproj in "$PROJECT_DIR/Planit/Resources"/*.lproj; do
 done
 
 # 기타 리소스
+RBUNDLE="$BUILD_DIR/Calen_Calen.bundle"
+if [ -d "$RBUNDLE" ]; then
+    rm -rf "$APP/Contents/Resources/Calen_Calen.bundle"
+    cp -R "$RBUNDLE" "$APP/Contents/Resources/"
+fi
 cp "$BUILD_DIR/Calen_Calen.bundle/AppIcon.icns" "$APP/Contents/Resources/" 2>/dev/null || true
 cp "$BUILD_DIR/Calen_Calen.bundle/PrivacyInfo.xcprivacy" "$APP/Contents/Resources/" 2>/dev/null || true
 # Entitlement files are signing inputs, not runtime resources. Keeping them out of
@@ -53,8 +64,14 @@ DEV_VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$A
 echo "   Info.plist version: $DEV_VERSION"
 
 # 개발 빌드 서명 (키체인 프롬프트 방지)
-# DEVELOPER_ID 환경변수 없으면 로컬 키체인에서 자동 감지
-DEV_SIGN="${DEVELOPER_ID:-$(security find-identity -v -p codesigning 2>/dev/null | grep 'Developer ID Application' | head -1 | sed 's/.*"\(.*\)"/\1/')}"
+find_dev_sign_identity() {
+    security find-identity -v -p codesigning 2>/dev/null |
+        grep -E 'Developer ID Application|Apple Development' |
+        head -1 |
+        sed 's/.*"\(.*\)"/\1/'
+}
+
+DEV_SIGN="${DEVELOPER_ID:-$(find_dev_sign_identity)}"
 if [ -n "$DEV_SIGN" ]; then
     echo "✍️  Signing with: $DEV_SIGN"
     SPARKLE_FW="$APP/Contents/Frameworks/Sparkle.framework"

@@ -76,7 +76,20 @@ struct DayDetailSheet<Repo: iOSEventRepository>: View {
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVStack(spacing: 10) {
                     ForEach(events, id: \.id) { event in
-                        EventCard(event: event, onTap: { onRequestEdit(event) })
+                        EventCard(
+                            event: event,
+                            onTap: { onRequestEdit(event) },
+                            onToggleCompletion: {
+                                let updated = event.settingCompleted(!event.isCompleted)
+                                persistChange(from: event, to: updated)
+                            },
+                            onMove: { updated in
+                                persistChange(from: event, to: updated)
+                            },
+                            onResize: { updated in
+                                persistChange(from: event, to: updated)
+                            }
+                        )
                             .contextMenu {
                                 Button(role: .destructive) {
                                     showingDeleteConfirm = event
@@ -209,6 +222,21 @@ struct DayDetailSheet<Repo: iOSEventRepository>: View {
             }
     }
 
+    private func persistChange(from original: CalendarEvent, to updated: CalendarEvent) {
+        guard !original.isReadOnly else { return }
+        repo.replaceInMemory(updated)
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        Task { @MainActor in
+            do {
+                let saved = try await repo.update(updated)
+                repo.replaceInMemory(saved)
+            } catch {
+                repo.replaceInMemory(original)
+                print("[DayDetailSheet] update event error: \(error)")
+            }
+        }
+    }
+
     private var dayTitle: String {
         let fmt = DateFormatter()
         fmt.locale = Locale(identifier: "ko_KR")
@@ -229,97 +257,206 @@ struct DayDetailSheet<Repo: iOSEventRepository>: View {
 private struct EventCard: View {
     let event: CalendarEvent
     var onTap: () -> Void
+    var onToggleCompletion: () -> Void
+    var onMove: (CalendarEvent) -> Void
+    var onResize: (CalendarEvent) -> Void
+
+    @GestureState private var dragOffset: CGFloat = 0
+    @GestureState private var resizeOffset: CGFloat = 0
+
+    private let pointsPerHour: CGFloat = 72
 
     var body: some View {
-        HStack(alignment: .top, spacing: 0) {
-            // 왼쪽 시간 rail (56pt 고정, monospacedDigit) — macOS DailyDetailView 패턴 이식
-            timeRail
-                .frame(width: 56, alignment: .leading)
-                .padding(.top, 14)
-
-            // 얇은 색상 바 (3pt) — 시간 rail과 카드 사이 시각 연결
-            RoundedRectangle(cornerRadius: 1.5, style: .continuous)
-                .fill(categoryColor)
-                .frame(width: 3)
-                .frame(minHeight: 52)
-                .padding(.trailing, 10)
-
-            // 카드 본문
-            VStack(alignment: .leading, spacing: 5) {
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text(event.title)
-                        .font(.system(size: 15, weight: .semibold))
+        // Planit 톤: 좌측은 시간 rail(흰), 우측은 카테고리 fill 큰 영역.
+        // 다일/일반 모두 한 줄 카드. 카테고리 fill이 카드의 시각적 무게를 담당.
+        HStack(spacing: 0) {
+            // 좌측 시간 rail (흰색 배경)
+            VStack(alignment: .leading, spacing: 3) {
+                if event.isAllDay {
+                    Text("종일")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(fillTextColor)
+                } else {
+                    Text(startTimeText)
+                        .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(.primary)
-                        .lineLimit(2)
-                    Spacer(minLength: 6)
-                    categoryPill
-                }
-
-                if !event.isAllDay {
-                    Text(durationText)
-                        .font(.system(size: 12, weight: .regular))
+                        .monospacedDigit()
+                    Text(endTimeText)
+                        .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
                 }
-
-                if let loc = event.location, !loc.isEmpty {
-                    HStack(spacing: 4) {
-                        Image(systemName: "mappin.and.ellipse")
-                            .font(.system(size: 10))
-                        Text(loc)
-                            .font(.system(size: 12))
-                            .lineLimit(1)
-                    }
-                    .foregroundStyle(Color(.tertiaryLabel))
-                }
             }
-            .padding(.vertical, 12)
-            .padding(.trailing, 14)
+            .frame(width: 64, alignment: .leading)
+            .padding(.leading, 14)
+            .padding(.vertical, 14)
+            .background(Color.calenCardSurface)
 
-            Spacer(minLength: 0)
+            // 우측 카테고리 fill 영역 (제목 + 카테고리 + 위치 + 체크 + 핸들)
+            ZStack(alignment: .leading) {
+                Rectangle().fill(fillColor)
+
+                HStack(alignment: .center, spacing: 8) {
+                    if canAdjustTime {
+                        moveHandle
+                    }
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(event.title)
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(event.isCompleted ? Color.secondary : fillTextColor)
+                            .strikethrough(event.isCompleted)
+                            .lineLimit(2)
+
+                        HStack(spacing: 6) {
+                            Text(categoryLabel)
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(fillTextColor.opacity(0.85))
+                            if let loc = event.location, !loc.isEmpty {
+                                Text("·")
+                                    .foregroundStyle(fillTextColor.opacity(0.5))
+                                Text(loc)
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(fillTextColor.opacity(0.75))
+                                    .lineLimit(1)
+                            }
+                        }
+                    }
+
+                    Spacer(minLength: 0)
+
+                    Button(action: {
+                        onToggleCompletion()
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    }) {
+                        Image(systemName: event.isCompleted ? "checkmark.square.fill" : "square")
+                            .font(.system(size: 20, weight: .regular))
+                            .foregroundStyle(event.isCompleted ? fillTextColor : fillTextColor.opacity(0.5))
+                            .frame(width: 32, height: 32)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(event.isReadOnly)
+                    .opacity(event.isReadOnly ? 0.35 : 1.0)
+                    .accessibilityLabel(event.isCompleted ? "완료 취소" : "완료 표시")
+
+                    if canAdjustTime {
+                        resizeHandle
+                    }
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+            }
         }
-        .background(
+        .frame(minHeight: 64)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color.calenCardSurface)
+                .stroke(Color.primary.opacity(0.04), lineWidth: 1)
         )
-        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 2)
+        .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
+        .opacity(event.isCompleted ? 0.6 : 1.0)
+        .offset(y: dragOffset)
         .contentShape(Rectangle())
         .onTapGesture { onTap() }
     }
 
-    @ViewBuilder
-    private var timeRail: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            if event.isAllDay {
-                Text("종일")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(categoryColor)
-                    .padding(.leading, 12)
-            } else {
-                Text(startTimeText)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.primary)
-                    .monospacedDigit()
-                    .padding(.leading, 12)
-                Text(endTimeText)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
-                    .padding(.leading, 12)
-            }
-        }
+    private var canAdjustTime: Bool {
+        !event.isAllDay && !event.isReadOnly
     }
 
-    private var categoryPill: some View {
-        Text(categoryLabel)
-            .font(.system(size: 9, weight: .semibold))
+    private var moveGesture: some Gesture {
+        DragGesture(minimumDistance: 12)
+            .updating($dragOffset) { value, state, _ in
+                guard canAdjustTime, abs(value.translation.height) > abs(value.translation.width) else { return }
+                state = value.translation.height
+            }
+            .onEnded { value in
+                guard canAdjustTime, abs(value.translation.height) > abs(value.translation.width) else { return }
+                let moved = CalendarInteractionMath.movedTimeRange(
+                    start: event.startDate,
+                    end: event.endDate,
+                    verticalTranslation: Double(value.translation.height),
+                    pointsPerHour: Double(pointsPerHour),
+                    calendar: Calendar.current
+                )
+                var updated = event
+                updated.startDate = moved.start
+                updated.endDate = moved.end
+                onMove(updated)
+            }
+    }
+
+    private var moveHandle: some View {
+        HStack(spacing: 3) {
+            Capsule()
+                .frame(width: 2, height: 18)
+            Capsule()
+                .frame(width: 2, height: 18)
+            Capsule()
+                .frame(width: 2, height: 18)
+        }
+        .foregroundStyle(fillTextColor.opacity(0.45))
+        .frame(width: 26, height: 36)
+        .contentShape(Rectangle())
+        .gesture(moveGesture)
+        .accessibilityLabel("시간 이동")
+    }
+
+    private var resizeHandle: some View {
+        Image(systemName: "arrow.up.and.down")
+            .font(.system(size: 11, weight: .bold))
             .foregroundStyle(categoryColor)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(categoryColor.opacity(0.12), in: Capsule())
+            .frame(width: 34, height: 34)
+            .background(categoryColor.opacity(0.12), in: Circle())
+            .offset(y: resizeOffset)
+            .gesture(
+                DragGesture(minimumDistance: 6)
+                    .updating($resizeOffset) { value, state, _ in
+                        state = value.translation.height
+                    }
+                    .onEnded { value in
+                        guard canAdjustTime else { return }
+                        var updated = event
+                        updated.endDate = CalendarInteractionMath.resizedEnd(
+                            start: event.startDate,
+                            end: event.endDate,
+                            verticalTranslation: Double(value.translation.height),
+                            pointsPerHour: Double(pointsPerHour),
+                            minimumMinutes: 15,
+                            calendar: Calendar.current
+                        )
+                        onResize(updated)
+                    }
+            )
+            .accessibilityLabel("시간 길이 조절")
     }
 
     private var categoryColor: Color { Color(hex: event.colorHex) ?? .calenBlue }
+
+    /// Planit 톤 옅은 fill (카드 우측 영역 배경).
+    private var fillColor: Color {
+        switch event.colorHex.uppercased() {
+        case "#F56691": return .categoryFillWork
+        case "#3B82F6", "#3A82F6": return .categoryFillMeeting
+        case "#FAC430": return .categoryFillMeal
+        case "#40C786": return .categoryFillExercise
+        case "#9A5CE8": return .categoryFillPersonal
+        default: return .categoryFillGeneral
+        }
+    }
+
+    /// fill 위에 올리는 짙은 텍스트 색.
+    private var fillTextColor: Color {
+        switch event.colorHex.uppercased() {
+        case "#F56691": return Color(red: 0.82, green: 0.20, blue: 0.40)
+        case "#3B82F6", "#3A82F6": return Color(red: 0.18, green: 0.38, blue: 0.85)
+        case "#FAC430": return Color(red: 0.72, green: 0.50, blue: 0.05)
+        case "#40C786": return Color(red: 0.15, green: 0.55, blue: 0.35)
+        case "#9A5CE8": return Color(red: 0.45, green: 0.25, blue: 0.75)
+        default: return Color(red: 0.40, green: 0.40, blue: 0.45)
+        }
+    }
 
     /// 카테고리 라벨 — colorHex 기반 macOS 매핑 재활용.
     private var categoryLabel: String {

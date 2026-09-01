@@ -15,9 +15,32 @@ ZIP_NAME="Calen-${VERSION}-universal.zip"
 # export NOTARIZE_APPLE_ID="you@example.com"
 # export NOTARIZE_PASSWORD="xxxx-xxxx-xxxx-xxxx"  # App-specific password
 SIGN="${DEVELOPER_ID:-}"
+SIGN_KIND="production"
 TEAM_ID="${NOTARIZE_TEAM_ID:-}"
 APPLE_ID="${NOTARIZE_APPLE_ID:-}"
 APP_PWD="${NOTARIZE_PASSWORD:-}"
+
+find_local_sign_identity() {
+    security find-identity -v -p codesigning 2>/dev/null |
+        grep 'Apple Development' |
+        head -1 |
+        sed 's/.*"\(.*\)"/\1/'
+}
+
+if [ -z "$SIGN" ]; then
+    SIGN="$(find_local_sign_identity)"
+    if [ -n "$SIGN" ]; then
+        SIGN_KIND="local-development"
+    fi
+fi
+
+codesign_runtime() {
+    if [ "$SIGN_KIND" = "production" ]; then
+        codesign --force --options runtime --timestamp "$@"
+    else
+        codesign --force --options runtime "$@"
+    fi
+}
 
 if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     echo "✗ VERSION must be X.Y.Z (got: $VERSION)" >&2
@@ -96,26 +119,25 @@ rm -f "$APP_BUNDLE/Contents/Resources/Planit.entitlements" \
 
 # 3. 코드 서명 (Sparkle은 inside-out 순서 필수)
 if [ -n "$SIGN" ]; then
-    echo "→ Code signing with: $SIGN"
+    echo "→ Code signing with ($SIGN_KIND): $SIGN"
     SPARKLE_FW="$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
     if [ -d "$SPARKLE_FW" ]; then
         # XPC services → Autoupdate → Updater.app → framework 순서
         for xpc in "$SPARKLE_FW/Versions/B/XPCServices"/*.xpc; do
-            [ -d "$xpc" ] && codesign --force --options runtime --timestamp \
+            [ -d "$xpc" ] && codesign_runtime \
                 --preserve-metadata=identifier,entitlements,flags \
                 --sign "$SIGN" "$xpc"
         done
-        codesign --force --options runtime --timestamp --sign "$SIGN" \
+        codesign_runtime --sign "$SIGN" \
             "$SPARKLE_FW/Versions/B/Autoupdate"
-        codesign --force --options runtime --timestamp --sign "$SIGN" \
+        codesign_runtime --sign "$SIGN" \
             "$SPARKLE_FW/Versions/B/Updater.app"
-        codesign --force --options runtime --timestamp --sign "$SIGN" "$SPARKLE_FW"
+        codesign_runtime --sign "$SIGN" "$SPARKLE_FW"
     fi
     # 메인 앱 마지막
-    codesign --force --options runtime \
+    codesign_runtime \
         --entitlements "$PROJECT_DIR/Planit/Planit.entitlements" \
         --sign "$SIGN" \
-        --timestamp \
         "$APP_BUNDLE"
     echo "→ Verifying signature..."
     codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE"
@@ -123,9 +145,17 @@ if [ -n "$SIGN" ]; then
 else
     # DEVELOPER_ID 없을 때: 메인 앱만 ad-hoc 서명 (--deep 없이 Sparkle XPC 건들지 않음)
     # Sparkle은 자체 Developer ID로 사전 서명됨 → TCC 권한 프롬프트 없음
-    # ad-hoc→ad-hoc Sparkle 자동 업데이트 정상 작동
-    echo "→ Ad-hoc signing main bundle with production entitlements (Sparkle components untouched)..."
-    codesign --force --options runtime \
+    # Hardened Runtime는 로드되는 프레임워크의 Team ID가 메인 바이너리와 일치하도록 강제한다.
+    # Sparkle 아티팩트(ad-hoc) + 메인 앱(ad-hoc + --options runtime) 조합에서는
+    # macOS가 "different Team IDs" 로 dyld 로드를 거부하므로(v0.4.5 류 SIGKILL),
+    # ad-hoc 빌드에서도 Sparkle을 메인 앱과 동일한 옵션으로 재서명해 매칭시킨다.
+    # (자동 업데이트는 안 됨 — 로컬 테스트/내부 배포 전용 빌드라는 전제)
+    # --options runtime (Hardened Runtime) + ad-hoc Sparkle 조합은 library validation 이
+    # team ID 매칭을 요구해서 dyld가 Sparkle 로드를 거부한다.
+    # 로컬 테스트/내부 배포용 ad-hoc 빌드에서는 Hardened Runtime을 빼고 단순 ad-hoc 으로
+    # --deep 서명한다 (production은 위 if 분기에서 Developer ID + runtime 정상 처리).
+    echo "→ Ad-hoc signing main bundle (--deep, no runtime) for local-test only..."
+    codesign --force --deep \
         --entitlements "$PROJECT_DIR/Planit/Planit.entitlements" \
         --sign - \
         "$APP_BUNDLE"
@@ -141,7 +171,7 @@ ditto -c -k --keepParent "$APP_NAME.app" "$ZIP_NAME"
 echo "→ Zip: $BUILD_DIR/$ZIP_NAME"
 
 # 5. 공증(Notarization)
-if [ -n "$SIGN" ] && [ -n "$TEAM_ID" ] && [ -n "$APPLE_ID" ] && [ -n "$APP_PWD" ]; then
+if [ "$SIGN_KIND" = "production" ] && [ -n "$SIGN" ] && [ -n "$TEAM_ID" ] && [ -n "$APPLE_ID" ] && [ -n "$APP_PWD" ]; then
     echo "→ Submitting for notarization..."
     xcrun notarytool submit "$BUILD_DIR/$ZIP_NAME" \
         --apple-id "$APPLE_ID" \

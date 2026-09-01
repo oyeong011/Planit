@@ -9,6 +9,7 @@ import SwiftUI
 struct EventDetailSheet: View {
 
     let item: ScheduleDisplayItem
+    var onEdit: (() -> Void)?
 
     @Environment(\.dismiss) private var dismiss
 
@@ -83,12 +84,6 @@ struct EventDetailSheet: View {
                         .padding(.top, 4)
                     }
 
-                    // ── Edit hint ─────────────────────────────────────────
-                    Text("편집 기능은 곧 제공될 예정입니다.")
-                        .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
-                        .padding(.top, 8)
-
                     Spacer(minLength: 20)
                 }
                 .padding(.horizontal, 24)
@@ -99,6 +94,17 @@ struct EventDetailSheet: View {
             .navigationTitle("일정")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    if let onEdit {
+                        Button("편집") {
+                            dismiss()
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                onEdit()
+                            }
+                        }
+                        .foregroundStyle(Color.calenBlue)
+                    }
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("닫기") { dismiss() }
                         .foregroundStyle(Color.calenBlue)

@@ -53,7 +53,9 @@ struct HomeView: View {
                 .padding(.bottom, 24)
         }
         .sheet(item: $detailItem) { item in
-            EventDetailSheet(item: item)
+            EventDetailSheet(item: item) {
+                viewModel.selectedEventForEdit = viewModel.eventForEditing(item)
+            }
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
         }
@@ -160,6 +162,9 @@ struct HomeView: View {
             // QA: UserDefaults planit.devOpenWeekSheet=1 일 때 주 시트 자동 오픈.
             // 프로덕션 빌드에서는 이 블록이 컴파일되지 않음.
             if UserDefaults.standard.bool(forKey: "planit.devOpenWeekSheet") {
+                if viewModel.googleRepository == nil {
+                    viewModel.eventRepository._devSeedIfEmpty()
+                }
                 try? await Task.sleep(nanoseconds: 400_000_000)
                 viewModel.sheetAnchorDate = viewModel.selectedDate
                 viewModel.showWeekSheet = true
@@ -171,38 +176,68 @@ struct HomeView: View {
     // MARK: - Month Header
 
     private var monthHeader: some View {
-        HStack(spacing: 12) {
-            Text(monthTitleString)
-                .font(.calenMonthTitle)
-                .foregroundStyle(.primary)
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            // 제목 자체가 "오늘로" 버튼 — Planit 패턴. 사용자가 현재 월에 있지 않으면 ⌖ 힌트 표시.
+            Button {
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    viewModel.goToToday()
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Text(monthTitleString)
+                        .font(.calenMonthTitle)
+                        .foregroundStyle(.primary)
+                    if !isViewingCurrentMonth {
+                        Image(systemName: "scope")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(theme.current.primary)
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(isViewingCurrentMonth ? "이번 달" : "오늘로 돌아가기")
 
             Spacer()
 
-            HStack(spacing: 6) {
-                navButton(icon: "chevron.left") {
-                    withAnimation(.easeInOut(duration: 0.25)) {
-                        viewModel.goToPreviousMonth()
-                    }
+            // 이전/다음 월 토글
+            navButton(icon: "chevron.left") {
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    viewModel.goToPreviousMonth()
                 }
-                navButton(icon: "chevron.right") {
-                    withAnimation(.easeInOut(duration: 0.25)) {
-                        viewModel.goToNextMonth()
-                    }
+            }
+            navButton(icon: "chevron.right") {
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    viewModel.goToNextMonth()
                 }
-                // UX Critic fix: 기존 ⋯ placeholder(dead button) 제거 → "오늘로" 복귀 버튼.
-                // 월 이동 후 이번 달로 되돌리기 어렵던 문제 해결.
-                navButton(icon: "dot.scope") {
+            }
+
+            // 부가 액션은 ⋯ 메뉴로 통합
+            Menu {
+                Button {
+                    showReplanSheet = true
+                } label: {
+                    Label("오늘 다시 짜기 (AI)", systemImage: "wand.and.stars")
+                }
+                Button {
                     withAnimation(.easeInOut(duration: 0.25)) {
                         viewModel.goToToday()
                     }
+                } label: {
+                    Label("오늘로", systemImage: "scope")
                 }
-                // v0.1.1 AI-2: "오늘 다시 짜기" — AI가 오늘 일정을 재구성 제안.
-                navButton(icon: "wand.and.stars") {
-                    showReplanSheet = true
-                }
-                .accessibilityLabel(Text("home.replan.today"))
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(theme.current.primary)
+                    .frame(width: 34, height: 34)
+                    .background(theme.current.primary.opacity(0.10), in: Circle())
             }
         }
+    }
+
+    private var isViewingCurrentMonth: Bool {
+        let cal = Calendar.current
+        return cal.isDate(viewModel.currentMonth, equalTo: Date(), toGranularity: .month)
     }
 
     private func navButton(icon: String, action: @escaping () -> Void) -> some View {
@@ -244,6 +279,9 @@ struct HomeView: View {
                     },
                     onTapEvent: { item in
                         detailItem = item
+                    },
+                    onMoveEvent: { item, newStartDay in
+                        viewModel.moveDisplayItem(item, toStartDay: newStartDay)
                     }
                 )
                 .tag(offset)
@@ -253,8 +291,8 @@ struct HomeView: View {
         .frame(height: monthGridHeight)
     }
 
-    /// 월 그리드 높이. DayCell minHeight(92pt) × 6행 + 요일 헤더 + 간격 여유.
-    private var monthGridHeight: CGFloat { 92 * 6 + 36 }
+    /// 월 그리드 높이. v10 clarity hybrid: weekRow 56pt × 6행 + 헤더(26) + spacing 2×5(=10) + 여유.
+    private var monthGridHeight: CGFloat { 56 * 6 + 26 + 10 + 8 }
 
     /// TabView selection 바인딩. 사용자 스와이프(offset != 0)를 감지해 월 이동 후 0으로 리셋.
     private var swipeBinding: Binding<Int> {
@@ -281,23 +319,57 @@ struct HomeView: View {
     // MARK: - Week Expansion
 
     private var weekExpansion: some View {
-        Group {
-            if let weekStart = viewModel.expandedWeekStart {
-                WeekExpansionView(
-                    weekStart: weekStart,
-                    groups: viewModel.weekGroups(starting: weekStart),
-                    selectedDate: viewModel.selectedDate,
-                    onTapEvent: { item in
-                        detailItem = item
-                    }
-                )
-                .transition(.move(edge: .top).combined(with: .opacity))
-                .animation(.spring(response: 0.35, dampingFraction: 0.85), value: viewModel.expandedWeekStart)
-            } else {
-                Spacer()
+        // v10: selected day가 항상 맨 위 → ScrollViewReader로 자동 스크롤.
+        // selected부터 +6일까지 표시(7일치). 헤더는 자연어("오늘"/"내일"/요일).
+        let groups = forwardGroups(from: viewModel.selectedDate, days: 7)
+        return WeekExpansionView(
+            weekStart: viewModel.selectedDate,
+            groups: groups,
+            selectedDate: viewModel.selectedDate,
+            onTapEvent: { item in
+                detailItem = item
+            },
+            onToggleCompletion: { item in
+                viewModel.toggleCompletion(for: item)
             }
-        }
+        )
+        .transition(.opacity)
+        .animation(.easeInOut(duration: 0.18), value: viewModel.selectedDate)
         .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - Week helpers (sunday-based, 그리드와 일치)
+
+    private var sundayCalendar: Calendar {
+        var c = Calendar(identifier: .gregorian)
+        c.firstWeekday = 1
+        c.timeZone = .current
+        return c
+    }
+
+    private func sundayWeekStart(for date: Date) -> Date {
+        let c = sundayCalendar
+        let weekday = c.component(.weekday, from: date) - 1
+        return c.date(byAdding: .day, value: -weekday, to: c.startOfDay(for: date))
+            ?? c.startOfDay(for: date)
+    }
+
+    private func weekGroupsSundayBased(starting weekStart: Date) -> [(day: Date, items: [ScheduleDisplayItem])] {
+        let c = sundayCalendar
+        return (0..<7).compactMap { offset in
+            guard let day = c.date(byAdding: .day, value: offset, to: weekStart) else { return nil }
+            return (day: day, items: viewModel.schedules(for: day))
+        }
+    }
+
+    /// 시작일부터 N일 전방 카드 그룹 — selected day가 항상 첫 번째.
+    private func forwardGroups(from start: Date, days: Int) -> [(day: Date, items: [ScheduleDisplayItem])] {
+        let c = sundayCalendar
+        let base = c.startOfDay(for: start)
+        return (0..<days).compactMap { offset in
+            guard let day = c.date(byAdding: .day, value: offset, to: base) else { return nil }
+            return (day: day, items: viewModel.schedules(for: day))
+        }
     }
 
     // MARK: - FAB

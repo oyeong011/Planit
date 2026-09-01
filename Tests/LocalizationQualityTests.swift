@@ -17,6 +17,10 @@ struct LocalizationQualityTests {
             "settings.animal.display.mode",
             "settings.animal.parade.count",
             "settings.animal.shape",
+            "settings.animal.category.all",
+            "settings.animal.category.basic",
+            "settings.animal.category.farm",
+            "settings.animal.category.forest",
             "settings.animal.display.selected",
             "settings.animal.display.random",
             "settings.animal.display.parade",
@@ -104,9 +108,19 @@ struct LocalizationQualityTests {
             "settings.animal.style.cheetah",
             "settings.animal.style.duck",
             "settings.animal.style.rabbit",
-            "settings.animal.style.panda",
-            "settings.animal.style.turtle",
-            "settings.animal.style.squirrel"
+            "settings.animal.style.monkey",
+            "settings.animal.style.sheep",
+            "settings.animal.style.pig",
+            "settings.animal.style.cow",
+            "settings.animal.style.deer",
+            "settings.animal.style.bear",
+            "settings.animal.style.koala",
+            "settings.animal.style.hedgehog",
+            "settings.animal.style.owl",
+            "settings.animal.style.frog",
+            "settings.animal.style.elephant",
+            "settings.animal.style.horse",
+            "settings.animal.style.fox"
         ]
 
         for locale in try availableLocales() {
@@ -115,6 +129,41 @@ struct LocalizationQualityTests {
                 let value = try requiredValue(table, key: key, locale: locale)
                 #expect(!value.isEmpty, "\(locale) \(key) is empty")
                 #expect(!value.contains("settings.animal"), "\(locale) \(key) is showing a raw key")
+            }
+        }
+    }
+
+    @Test("wallpaper preset names exist in every locale")
+    func wallpaperPresetNamesExistInEveryLocale() throws {
+        let keys = [
+            "wallpaper.aurora",
+            "wallpaper.sunset",
+            "wallpaper.ocean",
+            "wallpaper.lavender",
+            "wallpaper.forest",
+            "wallpaper.midnight",
+            "wallpaper.deepNavy",
+            "wallpaper.nightForest",
+            "wallpaper.inkViolet",
+            "wallpaper.peach",
+            "wallpaper.mint",
+            "wallpaper.spring",
+            "wallpaper.summer",
+            "wallpaper.autumn",
+            "wallpaper.winter",
+            "wallpaper.softStudioLight",
+            "wallpaper.quietMidnightDark",
+            "wallpaper.pixelPetBeige",
+            "wallpaper.pixelPetPattern",
+            "wallpaper.cozyPetRoom"
+        ]
+
+        for locale in try availableLocales() {
+            let table = try localizedStrings(for: locale)
+            for key in keys {
+                let value = try requiredValue(table, key: key, locale: locale)
+                #expect(!value.isEmpty, "\(locale) \(key) is empty")
+                #expect(!value.contains("wallpaper."), "\(locale) \(key) is showing a raw key")
             }
         }
     }

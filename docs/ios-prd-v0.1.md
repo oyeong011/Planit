@@ -83,7 +83,7 @@
 | **다일간 이벤트 가로 연결 bar** | 월 그리드에는 현재 유지, 주 시트 없으니 그리드용만. |
 | **AI 채팅 탭** | v0.1.1로 이월. |
 | **오늘 재계획** | v0.1.1. |
-| **위젯·Live Activity·Shortcuts** | v0.1.1 (feature-architect 제안 유지). |
+| **위젯·Live Activity·Shortcuts** | 홈/잠금화면 WidgetKit 위젯은 v0.1.1 범위. ActivityKit Live Activity와 Shortcuts는 다음 time-sensitive surface로 이월. |
 | **Hermes 메모리 RW** | v0.1.1 (현재 read-only 유지). |
 | **다중 Google 계정** | v0.2. |
 | **Apple Calendar / EventKit** | v0.2. |

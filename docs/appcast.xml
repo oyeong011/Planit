@@ -1445,5 +1445,31 @@ Sparkle이 자동으로 설치합니다. '지금 업데이트' 버튼을 누르�
                 type="application/octet-stream" />
             <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.4.66</h2><p style="color:#666;">이번 빌드의 세부 변경사항은 GitHub 릴리즈 페이지를 확인하세요.</p><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
         </item>
+                <item>
+            <title>v0.4.67</title>
+            <sparkle:version>467</sparkle:version>
+            <sparkle:shortVersionString>0.4.67</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <pubDate>Mon, 04 May 2026 02:29:08 +0000</pubDate>
+            <enclosure
+                url="https://github.com/oyeong011/Planit/releases/download/v0.4.67/Calen-0.4.67-universal.zip"
+                sparkle:edSignature="9OFvAmlG6MgIFgEW7jHMk26BzyodOjoASECqFKany2xXFpgLpJkd+mfqeOnuev/5YHjoVgpm/VlwSr0HNijZAQ=="
+                length="16604860"
+                type="application/octet-stream" />
+            <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.4.67</h2><p style="color:#666;">이번 빌드의 세부 변경사항은 GitHub 릴리즈 페이지를 확인하세요.</p><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
+        </item>
+                <item>
+            <title>v0.4.68</title>
+            <sparkle:version>468</sparkle:version>
+            <sparkle:shortVersionString>0.4.68</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <pubDate>Tue, 05 May 2026 07:07:31 +0000</pubDate>
+            <enclosure
+                url="https://github.com/oyeong011/Planit/releases/download/v0.4.68/Calen-0.4.68-universal.zip"
+                sparkle:edSignature="BSeGz+Amam2/I0IHnurKy5bEF37Xn6iSFRRIgicn+5PpmKySXQhOFHWfQZzUSQOQJ6tiCtLf4Cw7v5LaJPvBDg=="
+                length="16614261"
+                type="application/octet-stream" />
+            <description><![CDATA[<h2 style="margin:0 0 12px 0;font-size:18px;">Calen v0.4.68</h2><p style="color:#666;">이번 빌드의 세부 변경사항은 GitHub 릴리즈 페이지를 확인하세요.</p><hr style="margin:14px 0;border:none;border-top:1px solid #eee;"/><p style="color:#888;font-size:11px;margin:0;">업데이트는 자동으로 설치됩니다. Calen을 재실행하면 적용됩니다.</p>]]></description>
+        </item>
         </channel>
 </rss>

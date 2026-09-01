@@ -37,8 +37,8 @@ extension Font {
 
     // MARK: - v4 (TimeBlocks) Tokens
 
-    /// 월간 상단 타이틀 ("2026년 4월"). 24pt bold rounded.
-    static let calenMonthTitle = Font.system(size: 24, weight: .bold, design: .rounded)
+    /// 월간 상단 타이틀 ("2026년 4월"). v9 Planit 톤: 30pt bold default.
+    static let calenMonthTitle = Font.system(size: 30, weight: .bold, design: .default)
 
     /// 월 그리드 셀 내부 날짜 숫자. 13pt medium.
     static let calenDayCellNumber = Font.system(size: 13, weight: .medium)

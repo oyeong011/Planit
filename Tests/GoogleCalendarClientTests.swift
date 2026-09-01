@@ -76,6 +76,19 @@ final class MockURLProtocol: URLProtocol {
     override func stopLoading() {}
 }
 
+// MARK: - SeqCounter (responder closure 안에서 호출 순서 분기용)
+
+private final class SeqCounter: @unchecked Sendable {
+    private var value = 0
+    private let lock = NSLock()
+    func next() -> Int {
+        lock.lock(); defer { lock.unlock() }
+        let v = value
+        value += 1
+        return v
+    }
+}
+
 // MARK: - StubAuth
 
 final class StubAuth: CalendarAuthProviding, @unchecked Sendable {
@@ -390,6 +403,96 @@ struct GoogleCalendarClientTests {
             endDate: iso("2026-04-19T11:00:00Z")
         )
         try await client.deleteEvent(target)  // throw 없어야 함
+    }
+
+    // MARK: 5b — delete 자동 복구
+
+    @Test func deleteEvent_swallows_404_as_success() async throws {
+        MockURLProtocol.reset()
+
+        MockURLProtocol.responder = { req in
+            #expect(req.httpMethod == "DELETE")
+            return (makeHTTPResponse(url: req.url!, status: 404), Data())
+        }
+
+        let client = GoogleCalendarClient(
+            authProvider: StubAuth(token: "t"),
+            transport: MockURLProtocol.self
+        )
+        let target = CalendarEvent(
+            id: "evt-already-gone",
+            calendarId: "primary",
+            title: "이미 삭제됨",
+            startDate: iso("2026-04-19T10:00:00Z"),
+            endDate: iso("2026-04-19T11:00:00Z")
+        )
+        try await client.deleteEvent(target)  // throw 없어야 함
+        #expect(MockURLProtocol.capturedRequests.count == 1)
+    }
+
+    @Test func deleteEvent_retries_without_etag_on_412() async throws {
+        MockURLProtocol.reset()
+
+        let counter = SeqCounter()
+        MockURLProtocol.responder = { req in
+            let n = counter.next()
+            if n == 0 {
+                // 첫 요청 — If-Match 헤더에 etag 포함
+                #expect(req.value(forHTTPHeaderField: "If-Match") == "\"stale-etag\"")
+                return (makeHTTPResponse(url: req.url!, status: 412), Data())
+            } else {
+                // 재시도 — If-Match 없이
+                #expect(req.value(forHTTPHeaderField: "If-Match") == nil)
+                return (makeHTTPResponse(url: req.url!, status: 204), Data())
+            }
+        }
+
+        let client = GoogleCalendarClient(
+            authProvider: StubAuth(token: "t"),
+            transport: MockURLProtocol.self
+        )
+        let target = CalendarEvent(
+            id: "evt-conflict",
+            calendarId: "primary",
+            title: "충돌",
+            startDate: iso("2026-04-19T10:00:00Z"),
+            endDate: iso("2026-04-19T11:00:00Z"),
+            etag: "\"stale-etag\""
+        )
+        try await client.deleteEvent(target)
+        #expect(MockURLProtocol.capturedRequests.count == 2)
+    }
+
+    @Test func deleteEvent_retries_after_refresh_on_401() async throws {
+        MockURLProtocol.reset()
+
+        let counter = SeqCounter()
+        MockURLProtocol.responder = { req in
+            let n = counter.next()
+            if n == 0 {
+                return (makeHTTPResponse(url: req.url!, status: 401), Data())
+            } else {
+                return (makeHTTPResponse(url: req.url!, status: 204), Data())
+            }
+        }
+
+        let auth = StubAuth(token: "t")
+        let client = GoogleCalendarClient(
+            authProvider: auth,
+            transport: MockURLProtocol.self
+        )
+        let target = CalendarEvent(
+            id: "evt-stale-token",
+            calendarId: "primary",
+            title: "토큰 stale",
+            startDate: iso("2026-04-19T10:00:00Z"),
+            endDate: iso("2026-04-19T11:00:00Z")
+        )
+        try await client.deleteEvent(target)
+        #expect(MockURLProtocol.capturedRequests.count == 2)
+        // accessToken()이 매번 refreshIfNeeded()를 호출 + 401 catch 후 강제 refresh 1회 추가.
+        // 최소 2회는 호출됐어야 함.
+        #expect(auth.refreshCalls >= 2)
     }
 
     // MARK: 6

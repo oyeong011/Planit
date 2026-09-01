@@ -65,6 +65,54 @@ enum ScheduleCategory: String, Codable, CaseIterable {
         case .general:  return Color(red: 0.56, green: 0.56, blue: 0.58)  // gray
         }
     }
+
+    /// Planit 톤 옅은 fill 색 (월 그리드 막대, 카드 좌측 막대 등 배경용).
+    var fillColor: Color {
+        switch self {
+        case .work:     return .categoryFillWork
+        case .meeting:  return .categoryFillMeeting
+        case .meal:     return .categoryFillMeal
+        case .exercise: return .categoryFillExercise
+        case .personal: return .categoryFillPersonal
+        case .general:  return .categoryFillGeneral
+        }
+    }
+
+    /// fill 위에 얹는 짙은 텍스트 색 (가독성 위해 채도 더 깊게).
+    var textColor: Color {
+        switch self {
+        case .work:
+            return Color(
+                light: Color(red: 0.82, green: 0.20, blue: 0.40),
+                dark:  Color(red: 1.00, green: 0.62, blue: 0.72)
+            )
+        case .meeting:
+            return Color(
+                light: Color(red: 0.18, green: 0.38, blue: 0.85),
+                dark:  Color(red: 0.62, green: 0.72, blue: 1.00)
+            )
+        case .meal:
+            return Color(
+                light: Color(red: 0.72, green: 0.50, blue: 0.05),
+                dark:  Color(red: 1.00, green: 0.84, blue: 0.46)
+            )
+        case .exercise:
+            return Color(
+                light: Color(red: 0.15, green: 0.55, blue: 0.35),
+                dark:  Color(red: 0.55, green: 0.88, blue: 0.68)
+            )
+        case .personal:
+            return Color(
+                light: Color(red: 0.45, green: 0.25, blue: 0.75),
+                dark:  Color(red: 0.76, green: 0.66, blue: 1.00)
+            )
+        case .general:
+            return Color(
+                light: Color(red: 0.40, green: 0.40, blue: 0.45),
+                dark:  Color(red: 0.80, green: 0.80, blue: 0.86)
+            )
+        }
+    }
 }
 
 // MARK: - Schedule
@@ -82,6 +130,7 @@ final class Schedule {
     var travelTimeMinutes: Int?
     var summary: String?
     var createdAt: Date
+    var isCompleted: Bool = false
 
     init(
         title: String,
@@ -92,7 +141,8 @@ final class Schedule {
         notes: String? = nil,
         category: ScheduleCategory = .general,
         travelTimeMinutes: Int? = nil,
-        summary: String? = nil
+        summary: String? = nil,
+        isCompleted: Bool = false
     ) {
         self.id = UUID()
         self.title = title
@@ -105,6 +155,7 @@ final class Schedule {
         self.travelTimeMinutes = travelTimeMinutes
         self.summary = summary
         self.createdAt = Date()
+        self.isCompleted = isCompleted
     }
 }
 

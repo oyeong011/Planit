@@ -24,7 +24,6 @@ import Foundation
 //   - `PlanningAction`은 platform-neutral value type (iOS/macOS 모두 사용 가능).
 
 /// 오늘 재계획 한 번을 실행하기 위한 입력 컨텍스트.
-/// macOS `PlanningContext`와 달리 Todo/UserProfile은 제외 — 이벤트 + 빈 슬롯 + 기억만.
 public struct PlanningContext: Sendable {
 
     /// "지금" 기준 시각 — 검증에서 "이 시각보다 미래인 action만 허용"에 사용.
@@ -42,18 +41,22 @@ public struct PlanningContext: Sendable {
     /// Hermes 최근 기억 — 선호 시간대, 루틴 등을 프롬프트에 주입.
     public let memories: [MemoryFact]
 
+    public let allowedCreateSources: [ScheduleCreateSource]
+
     public init(
         currentDate: Date,
         targetDay: Date,
         todayEvents: [CalendarEvent],
         freeSlots: [FreeSlot],
-        memories: [MemoryFact]
+        memories: [MemoryFact],
+        allowedCreateSources: [ScheduleCreateSource] = []
     ) {
         self.currentDate = currentDate
         self.targetDay = targetDay
         self.todayEvents = todayEvents
         self.freeSlots = freeSlots
         self.memories = memories
+        self.allowedCreateSources = allowedCreateSources
     }
 
     /// 빈 시간 슬롯.
@@ -304,6 +307,23 @@ public final class PlanningOrchestrator {
                 }
                 guard validateTimeRange(start: start, end: end, now: context.currentDate) else {
                     warnings.append("create 거부: 시간 범위가 유효하지 않음 (\(sanitize(title, maxLength: 40)))")
+                    continue
+                }
+                let createDecision = ScheduleCreatePolicy.classify(
+                    .init(
+                        title: title,
+                        allowedCreateSources: context.allowedCreateSources,
+                        isConfirmed: false
+                    )
+                )
+                switch createDecision {
+                case .allowed:
+                    break
+                case .needsConfirmation:
+                    warnings.append("create 보류: 명시적 확인 필요 (\(sanitize(title, maxLength: 40)))")
+                    continue
+                case .denied:
+                    warnings.append("create 거부: 생성 정책상 허용되지 않음 (\(sanitize(title, maxLength: 40)))")
                     continue
                 }
 

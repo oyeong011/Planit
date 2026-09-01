@@ -1,6 +1,21 @@
 import Foundation
 @preconcurrency import UserNotifications
 
+enum EveningReviewOpenIntent {
+    static let key = "planit.pendingEveningReviewOpen"
+
+    static func mark(defaults: UserDefaults = .standard) {
+        defaults.set(true, forKey: key)
+    }
+
+    @discardableResult
+    static func consume(defaults: UserDefaults = .standard) -> Bool {
+        guard defaults.bool(forKey: key) else { return false }
+        defaults.removeObject(forKey: key)
+        return true
+    }
+}
+
 @MainActor
 final class NotificationService: NSObject, ObservableObject, UNUserNotificationCenterDelegate {
 
@@ -150,6 +165,8 @@ final class NotificationService: NSObject, ObservableObject, UNUserNotificationC
         content.title = "오늘 하루 리뷰"
         content.body = "완료한 일정을 확인하고 내일을 준비하세요"
         content.sound = .default
+        // 탭하면 AppDelegate가 popover를 열고 MainView가 review 패널로 전환.
+        content.userInfo = ["action": "evening_review"]
 
         let request = UNNotificationRequest(
             identifier: "calen.daily.evening",
@@ -199,5 +216,22 @@ final class NotificationService: NSObject, ObservableObject, UNUserNotificationC
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
         completionHandler([.banner, .sound])
+    }
+
+    /// 알림 탭(또는 액션) 응답 처리 — evening_review / midnight_rollover는
+    /// AppDelegate가 popover를 열고 MainView가 리뷰 패널로 전환하도록 신호 전송.
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        let action = response.notification.request.content.userInfo["action"] as? String
+        if action == "evening_review" || action == "midnight_rollover" {
+            EveningReviewOpenIntent.mark()
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .calenOpenEveningReview, object: nil)
+            }
+        }
+        completionHandler()
     }
 }

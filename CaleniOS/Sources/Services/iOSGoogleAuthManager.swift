@@ -173,8 +173,19 @@ public final class iOSGoogleAuthManager: NSObject, ObservableObject, CalendarAut
     // 진행 중 ASWebAuthenticationSession (강한 참조 유지 필요)
     private var webAuthSession: ASWebAuthenticationSession?
 
-    // MARK: Scope — 초기에는 macOS와 동일 범위
-    private let scopes = ["https://www.googleapis.com/auth/calendar"]
+    // MARK: Scope — macOS와 동일하게 sensitive-only 조합으로 축소.
+    //
+    // 풀 `calendar` 스코프는 Google에서 **restricted** 등급 — CASA Tier 2 보안 평가
+    // ($2K-$7.5K/년 + 연간 재평가) 없으면 OAuth 검증이 통과되지 않는다.
+    // Calen은 캘린더 자체 생성/삭제/공유는 하지 않으므로 다음 sensitive 스코프만으로 충분:
+    //   - calendar.events (이벤트 CRUD)
+    //   - calendar.calendarlist.readonly (사용자 캘린더 목록 표시)
+    //   - userinfo.email (계정 식별)
+    private let scopes = [
+        "https://www.googleapis.com/auth/calendar.events",
+        "https://www.googleapis.com/auth/calendar.calendarlist.readonly",
+        "https://www.googleapis.com/auth/userinfo.email"
+    ]
 
     public override init() {
         super.init()
@@ -444,19 +455,23 @@ public final class iOSGoogleAuthManager: NSObject, ObservableObject, CalendarAut
         let (data, resp) = try await URLSession.shared.data(for: req)
         try Task.checkCancellation()
 
-        if let http = resp as? HTTPURLResponse, http.statusCode != 200 {
-            if http.statusCode == 401 || http.statusCode == 403 {
-                logout()
-            }
-            throw IOSAuthError.tokenExchangeFailed("refresh HTTP \(http.statusCode)")
-        }
-        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            throw IOSAuthError.tokenExchangeFailed("refresh: bad JSON")
-        }
-        if let err = json["error"] as? String {
-            if err == "invalid_grant" { logout() }
-            let desc = (json["error_description"] as? String) ?? err
+        let status = (resp as? HTTPURLResponse)?.statusCode ?? 0
+        // JSON 파싱은 status와 무관하게 시도 — Google은 토큰 폐기 시 보통 HTTP 400 + error="invalid_grant"
+        // 를 함께 내려준다. status만 보고 logout()을 결정하면 일시적 401/403(rate-limit, 5xx 재시도 등)
+        // 에도 키체인 토큰을 날려 사용자가 매번 재로그인하게 된다.
+        let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+        let classification = OAuthRefreshErrorClassifier.classify(statusCode: status, body: data)
+        if let err = json?["error"] as? String {
+            if classification == .permanentRevocation { logout() }
+            let desc = (json?["error_description"] as? String) ?? err
             throw IOSAuthError.tokenExchangeFailed("refresh: \(desc)")
+        }
+        if status != 200 {
+            // error 키 없이 비-200 — 일시 오류로 간주, 토큰 보존.
+            throw IOSAuthError.tokenExchangeFailed("refresh HTTP \(status)")
+        }
+        guard let json = json else {
+            throw IOSAuthError.tokenExchangeFailed("refresh: bad JSON")
         }
         guard let newToken = json["access_token"] as? String else {
             throw IOSAuthError.tokenExchangeFailed("refresh: no access_token")

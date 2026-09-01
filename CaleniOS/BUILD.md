@@ -22,6 +22,13 @@ iOS Calen 앱(`com.oy.planit.ios`)의 로컬 .ipa 빌드 파이프라인.
 scripts/build-ios-app.sh 0.1.0
 ```
 
+```bash
+bash scripts/verify-ios-release-readiness.sh
+```
+
+위 명령은 릴리즈 전 `xcodegen`/번들 ID/앱그룹/iCloud entitlements/`DEVELOPMENT_TEAM` 가용성을 점검하고,
+TestFlight 업로드 갭(현재 수동 업로드)까지 함께 점검한다.
+
 스크립트가 수행하는 단계:
 1. `xcodegen generate` — `CaleniOS/CaleniOS.xcodeproj` 를 `CaleniOS/project.yml` 로부터 동적 생성.
 2. `xcodebuild archive` — Release 구성으로 generic iOS 아카이브 생성.

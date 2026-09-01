@@ -87,6 +87,7 @@ let package = Package(
                 // Info.plist + entitlements는 xcodebuild(.xcodeproj/project.yml)이 직접 사용.
                 // SwiftPM executableTarget에서는 unhandled resources가 되지 않도록 제외.
                 "Info.plist",
+                "Assets.xcassets",
                 "Resources/CaleniOS.entitlements"
             ],
             resources: [

@@ -234,7 +234,8 @@ public actor GoogleCalendarClient {
             isAllDay: event.isAllDay,
             location: event.location,
             description: event.description,
-            colorHex: event.colorHex
+            colorHex: event.colorHex,
+            isCompleted: event.isCompleted
         )
 
         var request = URLRequest(url: url)
@@ -270,8 +271,28 @@ public actor GoogleCalendarClient {
         }
     }
 
-    /// 이벤트 DELETE. 204 / 200 모두 성공 처리. 404는 notFound throw.
+    /// 이벤트 DELETE. 204/200 성공. 일시적 실패는 내부에서 자동 복구:
+    ///   - 404 → 이미 삭제됨, idempotent 성공
+    ///   - 412 → etag stale, If-Match 없이 1회 재시도 (사용자가 명시적으로 삭제 의도)
+    ///   - 401 → refreshIfNeeded 후 1회 재시도
     public func deleteEvent(_ event: CalendarEvent) async throws {
+        do {
+            try await performDelete(event: event, etag: event.etag)
+        } catch GoogleCalendarClientError.notFound {
+            return
+        } catch GoogleCalendarClientError.preconditionFailed {
+            do {
+                try await performDelete(event: event, etag: nil)
+            } catch GoogleCalendarClientError.notFound {
+                return
+            }
+        } catch GoogleCalendarClientError.unauthorized {
+            try? await authProvider.refreshIfNeeded()
+            try await performDelete(event: event, etag: event.etag)
+        }
+    }
+
+    private func performDelete(event: CalendarEvent, etag: String?) async throws {
         let token = try await accessToken()
         let encodedCal = Self.encodePathSegment(event.calendarId)
         let encodedId = Self.encodePathSegment(event.id)
@@ -288,7 +309,7 @@ public actor GoogleCalendarClient {
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         // Phase B HIGH #4 fix: DELETE도 etag 기반 conditional — 외부에서 수정된 이벤트를
         // 모르고 삭제하는 lost update 시나리오 방지.
-        if let etag = event.etag, !etag.isEmpty {
+        if let etag, !etag.isEmpty {
             request.setValue(etag, forHTTPHeaderField: "If-Match")
         }
 
@@ -509,7 +530,9 @@ public actor GoogleCalendarClient {
             source: .google,
             etag: dto.etag,
             updated: updated,
-            isReadOnly: readOnly
+            isReadOnly: readOnly,
+            isCompleted: dto.extendedProperties?.privateProperties?["calenCompleted"] == "true"
+                || CalendarEvent.completionValue(fromDescription: dto.description)
         )
     }
 
@@ -530,7 +553,8 @@ public actor GoogleCalendarClient {
         isAllDay: Bool,
         location: String?,
         description: String?,
-        colorHex: String?
+        colorHex: String?,
+        isCompleted: Bool = false
     ) -> GoogleEventWriteDTO {
         let start: EventDate
         let end: EventDate
@@ -574,7 +598,10 @@ public actor GoogleCalendarClient {
             description: description,
             start: start,
             end: end,
-            colorId: colorId
+            colorId: colorId,
+            extendedProperties: GoogleEventExtendedProperties(
+                privateProperties: isCompleted ? ["calenCompleted": "true"] : ["calenCompleted": nil]
+            )
         )
     }
 }
@@ -603,6 +630,7 @@ struct GoogleEventDTO: Decodable {
     let recurrence: [String]?
     let recurringEventId: String?
     let transparency: String?
+    let extendedProperties: GoogleEventExtendedProperties?
 }
 
 /// Google Calendar event (v3) — encode only.
@@ -613,6 +641,7 @@ struct GoogleEventWriteDTO: Encodable, Equatable {
     let start: EventDate
     let end: EventDate
     let colorId: String?
+    let extendedProperties: GoogleEventExtendedProperties?
 }
 
 /// Google event start/end. date(`yyyy-MM-dd`)가 있으면 all-day, dateTime이 있으면 timed.
@@ -620,4 +649,32 @@ struct EventDate: Codable, Equatable {
     let date: String?
     let dateTime: String?
     let timeZone: String?
+}
+
+struct GoogleEventExtendedProperties: Codable, Equatable {
+    enum CodingKeys: String, CodingKey {
+        case privateProperties = "private"
+    }
+
+    let privateProperties: [String: String?]?
+}
+
+// MARK: - LocalizedError
+
+extension GoogleCalendarClient.GoogleCalendarClientError: LocalizedError {
+    public var errorDescription: String? {
+        switch self {
+        case .unauthorized:        return "Google 로그인이 만료되었어요. 다시 로그인해 주세요."
+        case .forbidden:           return "이 일정을 변경할 권한이 없어요."
+        case .notFound:            return "이미 삭제된 일정이에요."
+        case .conflict:            return "다른 곳에서 수정 중이에요. 잠시 후 다시 시도해 주세요."
+        case .preconditionFailed:  return "다른 기기에서 먼저 수정되었어요. 새로고침 후 다시 시도해 주세요."
+        case .rateLimited:         return "요청이 많아요. 잠시 후 다시 시도해 주세요."
+        case .serverError:         return "Google 서버에 일시적인 문제가 있어요."
+        case .invalidResponse:     return "응답을 해석하지 못했어요."
+        case .decoding, .encoding: return "데이터 처리 중 오류가 발생했어요."
+        case .noAccessToken:       return "Google 로그인이 필요해요."
+        case .network:             return "네트워크 연결을 확인해 주세요."
+        }
+    }
 }

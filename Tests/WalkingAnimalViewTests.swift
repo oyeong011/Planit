@@ -14,9 +14,19 @@ struct WalkingAnimalViewTests {
             "cheetah",
             "duck",
             "rabbit",
-            "panda",
-            "turtle",
-            "squirrel"
+            "monkey",
+            "sheep",
+            "pig",
+            "cow",
+            "deer",
+            "bear",
+            "koala",
+            "hedgehog",
+            "owl",
+            "frog",
+            "elephant",
+            "horse",
+            "fox"
         ])
 
         for style in WalkingAnimalStyle.allCases {
@@ -27,6 +37,27 @@ struct WalkingAnimalViewTests {
             #expect(!mode.title.isEmpty)
             #expect(!mode.title.contains("settings.animal"))
         }
+        for category in WalkingAnimalCategory.allCases {
+            #expect(!category.title.isEmpty)
+            #expect(!category.title.contains("settings.animal"))
+        }
+    }
+
+    @Test("animal categories group existing and expanded styles")
+    func animalCategoriesGroupStyles() {
+        #expect(WalkingAnimalCategory.basic.styles.map(\.id) == ["cat", "dog", "cheetah", "duck", "rabbit", "monkey"])
+        #expect(WalkingAnimalCategory.farm.styles.map(\.id) == ["sheep", "pig", "cow", "horse"])
+        #expect(WalkingAnimalCategory.forest.styles.map(\.id) == [
+            "deer",
+            "bear",
+            "koala",
+            "hedgehog",
+            "owl",
+            "frog",
+            "elephant",
+            "fox"
+        ])
+        #expect(WalkingAnimalCategory.all.styles == WalkingAnimalStyle.allCases)
     }
 
     @Test("movement and sprite cadence are decoupled")
@@ -81,6 +112,19 @@ struct WalkingAnimalViewTests {
         #expect(source.contains("minificationFilter = .nearest"))
         #expect(source.components(separatedBy: "Timer(timeInterval:").count - 1 == 1,
                 "Parade mode must share one timer for all animals.")
+        #expect(!source.contains("let renderedFrames = AnimalSpriteImageCache.shared.renderedFrames"),
+                "Pet rebuilds must not decode and render all frames for every animal synchronously.")
+        #expect(source.contains("AnimalSpriteImageCache.shared.renderedFrame"),
+                "Animation should render only the frame it is about to display.")
+    }
+
+    @Test("settings animal previews load thumbnails lazily")
+    func settingsAnimalPreviewsLoadThumbnailsLazily() throws {
+        let source = try projectFile("Planit/Views/SettingsView.swift")
+
+        #expect(!source.contains("WalkingAnimalStyle.allCases.compactMap"),
+                "Settings must not decode every animal thumbnail before the grid is visible.")
+        #expect(source.contains("previewImageCache[style] = image"))
     }
 
     @Test("walking animal speed uses the restored faster default")
@@ -88,19 +132,87 @@ struct WalkingAnimalViewTests {
         #expect(WalkingAnimalView.speed == 90)
     }
 
-    @Test("pet parade returns capped visible styles")
-    func petParadeReturnsCappedVisibleStyles() {
+    @Test("pet parade returns selected visible styles")
+    func petParadeReturnsSelectedVisibleStyles() {
         #expect(WalkingAnimalView.visibleStyles(
             selectedStyle: .dog,
             displayMode: .parade,
-            paradeCount: 99
-        ).count == 3)
+            paradeStyles: [.cat, .rabbit, .duck, .monkey]
+        ).map(\.id) == ["cat", "rabbit", "duck", "monkey"])
 
         #expect(WalkingAnimalView.visibleStyles(
             selectedStyle: .dog,
             displayMode: .parade,
-            paradeCount: -2
-        ).count == 1)
+            paradeStyles: []
+        ).map(\.id) == ["dog"])
+    }
+
+    @Test("pet parade spaces excess animals offscreen instead of stacking them at the edge")
+    func petParadeSpacesExcessAnimalsOffscreen() {
+        let totalWidth: CGFloat = 240
+        let positions = (0..<8).map { index in
+            WalkingAnimalView.paradeInitialXPosition(for: index)
+        }
+
+        #expect(positions[4] > totalWidth)
+
+        let visiblePositions = positions.filter { position in
+            position >= 0 && position <= totalWidth
+        }
+        for index in visiblePositions.indices.dropFirst() {
+            #expect(visiblePositions[index] - visiblePositions[index - 1] >= WalkingAnimalView.animalSize)
+        }
+
+        #expect(WalkingAnimalView.displayXPosition(
+            positions[4],
+            totalWidth: totalWidth,
+            displayMode: .parade
+        ) == positions[4])
+        #expect(WalkingAnimalView.displayXPosition(
+            positions[4],
+            totalWidth: totalWidth,
+            displayMode: .selected
+        ) == totalWidth - WalkingAnimalView.animalSize - 6)
+        #expect(!WalkingAnimalView.shouldRenderFrame(
+            at: positions[4],
+            totalWidth: totalWidth,
+            displayMode: .parade
+        ))
+        #expect(WalkingAnimalView.shouldRenderFrame(
+            at: positions[4],
+            totalWidth: totalWidth,
+            displayMode: .selected
+        ))
+    }
+
+    @Test("pet parade wraps around a longer track without reversing")
+    func petParadeWrapsAroundLongerTrackWithoutReversing() throws {
+        let track = try #require(WalkingAnimalView.paradeTrack(totalWidth: 240, petCount: 8))
+        let state = WalkingAnimalView.MotionState(
+            xPos: 629.5,
+            isMovingRight: true,
+            frameIndex: 0,
+            frameElapsed: 0
+        )
+
+        let next = WalkingAnimalView.advancedParadeState(
+            from: state,
+            totalWidth: 240,
+            petCount: 8,
+            frameCount: 8,
+            tickDuration: 1.0 / WalkingAnimalView.speed
+        )
+        let reusableTrackNext = WalkingAnimalView.advancedParadeState(
+            from: state,
+            track: track,
+            frameCount: 8,
+            tickDuration: 1.0 / WalkingAnimalView.speed
+        )
+
+        #expect(next.xPos < 0)
+        #expect(next.isMovingRight)
+        #expect(reusableTrackNext.xPos == next.xPos)
+        #expect(reusableTrackNext.isMovingRight == next.isMovingRight)
     }
 
     @Test("all exposed animals use eight normalized CatSprites frames")
@@ -136,6 +248,17 @@ struct WalkingAnimalViewTests {
             #expect(first[index] === second[index])
         }
     }
+
+    @Test("single rendered animal frames are cached lazily")
+    func singleRenderedAnimalFramesAreCachedLazily() throws {
+        let cache = AnimalSpriteImageCache.shared
+        let first = try #require(cache.renderedFrame(style: .rabbit, frameIndex: 0, prefersRetina: true))
+        let second = try #require(cache.renderedFrame(style: .rabbit, frameIndex: 0, prefersRetina: true))
+        let standard = try #require(cache.renderedFrame(style: .rabbit, frameIndex: 0, prefersRetina: false))
+
+        #expect(first === second)
+        #expect(first !== standard)
+    }
 }
 
 @MainActor
@@ -146,7 +269,8 @@ struct WalkingAnimalViewTests {
     #expect(settings.isEnabled == true)
     #expect(settings.selectedStyle == .cat)
     #expect(settings.displayMode == .selected)
-    #expect(settings.paradeCount == 3)
+    #expect(settings.paradeCount == 1)
+    #expect(settings.selectedParadeStyles.map(\.id) == ["cat"])
 }
 
 @MainActor
@@ -173,8 +297,8 @@ struct WalkingAnimalViewTests {
 }
 
 @MainActor
-@Test func animalSettings_mapsRemovedFoxStyleToCat() {
-    for removedStyle in ["fox", "hamster", "penguin"] {
+@Test func animalSettings_mapsRemovedAnimalStylesToCat() {
+    for removedStyle in ["hamster", "penguin", "panda", "turtle", "squirrel"] {
         let defaults = makeAnimalDefaults()
         defaults.set(removedStyle, forKey: AnimalSettings.styleKey)
 
@@ -195,12 +319,53 @@ struct WalkingAnimalViewTests {
 
     #expect(settings.displayMode == .parade)
     #expect(defaults.string(forKey: AnimalSettings.displayModeKey) == "parade")
-    #expect(settings.paradeCount == 3)
-    #expect(defaults.integer(forKey: AnimalSettings.paradeCountKey) == 3)
+    #expect(settings.paradeCount == WalkingAnimalStyle.allCases.count)
+    #expect(defaults.integer(forKey: AnimalSettings.paradeCountKey) == WalkingAnimalStyle.allCases.count)
+    #expect(defaults.stringArray(forKey: AnimalSettings.paradeStylesKey) == WalkingAnimalStyle.allCases.map(\.id))
 
     settings.setParadeCount(-2)
     #expect(settings.paradeCount == 1)
     #expect(defaults.integer(forKey: AnimalSettings.paradeCountKey) == 1)
+    #expect(defaults.stringArray(forKey: AnimalSettings.paradeStylesKey) == ["cat"])
+}
+
+@MainActor
+@Test func animalSettings_persistsMultipleParadeStyles() {
+    let defaults = makeAnimalDefaults()
+    let settings = AnimalSettings(userDefaults: defaults)
+
+    settings.toggleParadeStyle(.dog)
+    settings.toggleParadeStyle(.rabbit)
+
+    #expect(settings.selectedParadeStyles.map(\.id) == ["cat", "dog", "rabbit"])
+    #expect(defaults.stringArray(forKey: AnimalSettings.paradeStylesKey) == ["cat", "dog", "rabbit"])
+    #expect(settings.paradeCount == 3)
+
+    settings.toggleParadeStyle(.dog)
+    #expect(settings.selectedParadeStyles.map(\.id) == ["cat", "rabbit"])
+    #expect(defaults.stringArray(forKey: AnimalSettings.paradeStylesKey) == ["cat", "rabbit"])
+}
+
+@MainActor
+@Test func animalSettings_migratesLegacyParadeCountToSelectedStyles() {
+    let defaults = makeAnimalDefaults()
+    defaults.set(3, forKey: AnimalSettings.paradeCountKey)
+
+    let settings = AnimalSettings(userDefaults: defaults)
+
+        #expect(settings.selectedParadeStyles.map(\.id) == ["cat", "dog", "cheetah"])
+    #expect(settings.paradeCount == 3)
+}
+
+@MainActor
+@Test func animalSettings_keepsOneParadeStyleSelected() {
+    let defaults = makeAnimalDefaults()
+    let settings = AnimalSettings(userDefaults: defaults)
+
+    settings.toggleParadeStyle(.cat)
+
+    #expect(settings.selectedParadeStyles.map(\.id) == ["cat"])
+    #expect(defaults.stringArray(forKey: AnimalSettings.paradeStylesKey) == nil)
 }
 
 @MainActor
@@ -208,9 +373,9 @@ struct WalkingAnimalViewTests {
     let defaults = makeAnimalDefaults()
     let settings = AnimalSettings(userDefaults: defaults)
 
-    settings.setParadeCount(3)
+    settings.setParadeCount(1)
 
-    #expect(settings.paradeCount == 3)
+    #expect(settings.paradeCount == 1)
     #expect(defaults.object(forKey: AnimalSettings.paradeCountKey) == nil)
 }
 

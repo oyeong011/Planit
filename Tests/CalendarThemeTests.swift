@@ -43,6 +43,24 @@ import Testing
     #expect(primaryHexById["pantone-cloud-dancer"] == "#F0EEE9")
 }
 
+@Test func wallpaperPresets_includeAdditionalDarkBackgrounds() {
+    let presets = WallpaperPreset.builtIn
+    let ids = presets.map(\.id)
+
+    #expect(ids.contains("deep-navy"))
+    #expect(ids.contains("night-forest"))
+    #expect(ids.contains("ink-violet"))
+    #expect(Set(ids).count == ids.count)
+
+    for id in ["deep-navy", "night-forest", "ink-violet"] {
+        let preset = presets.first { $0.id == id }
+        #expect(preset?.imageAssetName == nil)
+        #expect(preset?.thumbnailAssetName == nil)
+        #expect(preset?.colorHexes.count == 3)
+        #expect(preset?.colorHexes.allSatisfy { $0.hasPrefix("#") && $0.count == 7 } == true)
+    }
+}
+
 @MainActor
 @Test func calendarThemeService_usesClassicWhenNoThemeIsSaved() {
     let defaults = makeThemeDefaults()
