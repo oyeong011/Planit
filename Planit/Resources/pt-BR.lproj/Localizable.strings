@@ -430,6 +430,9 @@
 "auth.error.not.authenticated" = "Not signed in to Google.";
 "auth.error.state.mismatch" = "Auth state mismatch (CSRF protection triggered).";
 "auth.error.timeout" = "Authentication timed out. Please try again.";
+"auth.refresh.permanent_revocation" = "Google authorization expired. Sign in again to reconnect Calendar.";
+"auth.refresh.non_revocation_terminal" = "Google authorization is connected, but the OAuth configuration needs attention.";
+"auth.refresh.retryable_transient" = "Google Calendar sync could not refresh right now. Try again later.";
 "review.tab.title" = "Review";
 "review.category.title" = "By Calendar";
 "review.category.other" = "Other";

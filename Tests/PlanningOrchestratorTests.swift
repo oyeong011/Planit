@@ -51,13 +51,17 @@ private enum Fixtures {
     /// targetDay 시작(00:00Z)에 맞춰, 오전 이벤트/오후 이벤트 모두 "미래"가 되도록.
     static let now = date("2026-04-19T00:30:00Z")
 
-    static func todayContext(events: [CalendarEvent] = defaultEvents) -> PlanningContext {
+    static func todayContext(
+        events: [CalendarEvent]? = nil,
+        allowedCreateSources: [ScheduleCreateSource] = []
+    ) -> PlanningContext {
         PlanningContext(
             currentDate: now,
             targetDay: date("2026-04-19T00:00:00Z"),
-            todayEvents: events,
+            todayEvents: events ?? defaultEvents,
             freeSlots: [],
-            memories: []
+            memories: [],
+            allowedCreateSources: allowedCreateSources
         )
     }
 
@@ -182,7 +186,11 @@ struct PlanningOrchestrator_parseTests {
           "warnings": []
         }
         """
-        let ctx = Fixtures.todayContext()
+        let ctx = Fixtures.todayContext(
+            allowedCreateSources: [
+                ScheduleCreateSource(kind: .existingTodo, title: "딥 워크")
+            ]
+        )
         let result = PlanningOrchestrator.parseAndValidate(raw: raw, context: ctx)
 
         #expect(result.actions.count == 2)
@@ -245,6 +253,61 @@ struct PlanningOrchestrator_parseTests {
         #expect(result.warnings.contains(where: { $0.contains("시간 범위") }))
     }
 
+    @Test("parse: allowedCreateSources가 비어 있으면 FocusTime create는 warning으로 거부")
+    func parse_rejects_denied_create_with_warning() {
+        let raw = """
+        {
+          "actions": [
+            {
+              "kind": "create",
+              "title": "FocusTime",
+              "startDate": "2026-04-19T10:00:00Z",
+              "endDate": "2026-04-19T11:00:00Z"
+            }
+          ]
+        }
+        """
+
+        let result = PlanningOrchestrator.parseAndValidate(raw: raw, context: Fixtures.todayContext())
+
+        #expect(result.actions.isEmpty)
+        #expect(result.warnings.contains(where: { $0.contains("생성 정책상 허용되지 않음") }))
+        #expect(result.warnings.contains(where: { $0.contains("FocusTime") }))
+    }
+
+    @Test("parse: create 제목이 explicit allowed source와 일치하면 허용")
+    func parse_accepts_create_matching_allowed_source() {
+        let raw = """
+        {
+          "actions": [
+            {
+              "kind": "create",
+              "title": "문서 검토",
+              "startDate": "2026-04-19T10:00:00Z",
+              "endDate": "2026-04-19T11:00:00Z",
+              "reason": "기존 할 일 반영"
+            }
+          ]
+        }
+        """
+        let context = Fixtures.todayContext(
+            allowedCreateSources: [
+                ScheduleCreateSource(kind: .existingTodo, title: "문서 검토")
+            ]
+        )
+
+        let result = PlanningOrchestrator.parseAndValidate(raw: raw, context: context)
+
+        #expect(result.warnings.isEmpty)
+        #expect(result.actions.count == 1)
+        if case let .createEvent(_, draft, reason) = result.actions[0] {
+            #expect(draft.title == "문서 검토")
+            #expect(reason == "기존 할 일 반영")
+        } else {
+            Issue.record("action은 createEvent여야 합니다.")
+        }
+    }
+
     @Test("parse: 같은 이벤트에 두 action이면 두 번째는 warning으로 drop")
     func parse_dedup_same_event_action() {
         let raw = """
@@ -268,13 +331,16 @@ struct PlanningOrchestrator_parseTests {
     func parse_caps_at_max_actions() {
         // 6개 create 액션 — 모두 유효한 데이터로.
         var actions = ""
+        var allowedSources: [ScheduleCreateSource] = []
         for i in 0..<6 {
             if i > 0 { actions += "," }
             let startHour = 10 + i
+            let title = "일정-\(i)"
+            allowedSources.append(.init(kind: .existingTodo, title: title))
             actions += """
             {
               "kind": "create",
-              "title": "일정-\(i)",
+              "title": "\(title)",
               "startDate": "2026-04-19T\(String(format: "%02d", startHour)):00:00Z",
               "endDate": "2026-04-19T\(String(format: "%02d", startHour)):30:00Z"
             }
@@ -282,9 +348,47 @@ struct PlanningOrchestrator_parseTests {
         }
         let raw = "{\"actions\": [\(actions)]}"
 
-        let result = PlanningOrchestrator.parseAndValidate(raw: raw, context: Fixtures.todayContext())
+        let result = PlanningOrchestrator.parseAndValidate(
+            raw: raw,
+            context: Fixtures.todayContext(allowedCreateSources: allowedSources)
+        )
         #expect(result.actions.count <= PlanningOrchestrator.maxActions)
         #expect(result.actions.count == 5)
+    }
+
+    @Test("parse: denied create와 valid move가 함께 오면 move는 유지되고 denied warning이 남음")
+    func parse_keeps_valid_move_when_create_is_denied() {
+        let raw = """
+        {
+          "actions": [
+            {
+              "kind": "create",
+              "title": "FocusTime",
+              "startDate": "2026-04-19T10:00:00Z",
+              "endDate": "2026-04-19T11:00:00Z"
+            },
+            {
+              "kind": "move",
+              "eventID": "evt-2",
+              "startDate": "2026-04-19T05:00:00Z",
+              "endDate": "2026-04-19T06:00:00Z",
+              "reason": "점심 30분 미룸"
+            }
+          ]
+        }
+        """
+
+        let result = PlanningOrchestrator.parseAndValidate(raw: raw, context: Fixtures.todayContext())
+
+        #expect(result.actions.count == 1)
+        if case let .moveEvent(_, eventId, _, _, _, originalTitle, _, _) = result.actions[0] {
+            #expect(eventId == "evt-2")
+            #expect(originalTitle == "점심")
+        } else {
+            Issue.record("action은 moveEvent여야 합니다.")
+        }
+        #expect(result.warnings.contains(where: { $0.contains("FocusTime") }))
+        #expect(result.warnings.contains(where: { $0.contains("생성 정책상 허용되지 않음") }))
     }
 
     @Test("parse: extractJSON이 코드펜스 감쌈을 처리")

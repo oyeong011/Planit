@@ -1,3 +1,4 @@
+import CalenShared
 import Foundation
 
 // MARK: - Planned Item
@@ -31,22 +32,70 @@ struct TomorrowPlanResult {
 // MARK: - Tomorrow Planner Service
 
 @MainActor
+protocol TomorrowPlannerGoalProviding: AnyObject {
+    var profile: UserProfile { get }
+    var goals: [Goal] { get }
+    var completions: [String: CompletionRecord] { get }
+    func activeGoals() -> [Goal]
+    func daysUntilDeadline(_ goal: Goal) -> Int
+}
+
+@MainActor
+protocol TomorrowPlannerCalendarServicing: AnyObject {
+    func fetchEvents(for month: Date) async throws -> [CalendarEvent]
+    func createEvent(
+        title: String,
+        startDate: Date,
+        endDate: Date,
+        isAllDay: Bool,
+        recurrence: String?
+    ) async throws -> CalendarEvent?
+}
+
+extension GoalService: TomorrowPlannerGoalProviding {
+    func activeGoals() -> [Goal] {
+        activeGoals(level: nil)
+    }
+}
+extension GoogleCalendarService: TomorrowPlannerCalendarServicing {}
+
+@MainActor
 final class TomorrowPlannerService: ObservableObject {
     @Published var lastResult: TomorrowPlanResult?
     @Published var isPlanning: Bool = false
 
     /// Persisted date key to prevent duplicate planning across app restarts
     private var lastPlannedDateKey: String {
-        get { UserDefaults.standard.string(forKey: "planit.lastPlannedDate") ?? "" }
-        set { UserDefaults.standard.set(newValue, forKey: "planit.lastPlannedDate") }
+        get { defaults.string(forKey: "planit.lastPlannedDate") ?? "" }
+        set { defaults.set(newValue, forKey: "planit.lastPlannedDate") }
     }
 
-    private let goalService: GoalService
-    private let calendarService: GoogleCalendarService?
+    private let goalService: any TomorrowPlannerGoalProviding
+    private let calendarService: (any TomorrowPlannerCalendarServicing)?
+    private let defaults: UserDefaults
+    private let now: () -> Date
+    private let candidateCollector: ((Date) -> [PlannedItem])?
 
     init(goalService: GoalService, calendarService: GoogleCalendarService?) {
         self.goalService = goalService
         self.calendarService = calendarService
+        self.defaults = .standard
+        self.now = Date.init
+        self.candidateCollector = nil
+    }
+
+    init(
+        goalProvider: any TomorrowPlannerGoalProviding,
+        calendarService: (any TomorrowPlannerCalendarServicing)?,
+        defaults: UserDefaults = .standard,
+        now: @escaping () -> Date = Date.init,
+        candidateCollector: ((Date) -> [PlannedItem])? = nil
+    ) {
+        self.goalService = goalProvider
+        self.calendarService = calendarService
+        self.defaults = defaults
+        self.now = now
+        self.candidateCollector = candidateCollector
     }
 
     // MARK: - Main Entry Point
@@ -54,7 +103,8 @@ final class TomorrowPlannerService: ObservableObject {
     func generateTomorrowPlan() async {
         // Idempotency: check date-scoped persistent flag
         let cal = Calendar.current
-        let tomorrow = cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: Date()))!
+        let currentDate = now()
+        let tomorrow = cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: currentDate))!
         let tomorrowKey = GoalService.dateKey(tomorrow)
 
         guard lastPlannedDateKey != tomorrowKey else { return }
@@ -69,7 +119,7 @@ final class TomorrowPlannerService: ObservableObject {
         let capacityMinutes = isWeekend ? profile.weekendCapacityMinutes : profile.weekdayCapacityMinutes
 
         // 1. Collect candidates
-        var candidates = collectCandidates(for: tomorrow)
+        var candidates = candidateCollector?(tomorrow) ?? collectCandidates(for: tomorrow)
         guard !candidates.isEmpty else {
             lastResult = TomorrowPlanResult(created: [], suggested: [], totalMinutesPlanned: 0, capacityMinutes: capacityMinutes)
             lastPlannedDateKey = tomorrowKey
@@ -131,6 +181,8 @@ final class TomorrowPlannerService: ObservableObject {
         var created: [PlannedItem] = []
         var suggested: [PlannedItem] = []
         var hadCreateError = false
+        var deniedCount = 0
+        var confirmationCount = 0
 
         for var item in scheduled {
             let shouldAutoCreate: Bool
@@ -146,9 +198,35 @@ final class TomorrowPlannerService: ObservableObject {
             }
 
             if shouldAutoCreate, let start = item.assignedStart, let end = item.assignedEnd {
+                let decision = ScheduleCreatePolicy.classify(
+                    ScheduleCreateRequest(
+                        title: item.title,
+                        allowedCreateSources: allowedCreateSources(for: item),
+                        isConfirmed: false
+                    )
+                )
+
+                switch decision {
+                case .allowed:
+                    break
+                case .needsConfirmation:
+                    suggested.append(item)
+                    confirmationCount += 1
+                    continue
+                case .denied:
+                    suggested.append(item)
+                    deniedCount += 1
+                    continue
+                }
+
                 do {
                     let event = try await calendarService.createEvent(
-                        title: item.title, startDate: start, endDate: end, isAllDay: false)
+                        title: item.title,
+                        startDate: start,
+                        endDate: end,
+                        isAllDay: false,
+                        recurrence: nil
+                    )
                     if let event {
                         item.calendarEventId = event.id
                         item.autoCreated = true
@@ -172,7 +250,11 @@ final class TomorrowPlannerService: ObservableObject {
             suggested: suggested,
             totalMinutesPlanned: usedMinutes,
             capacityMinutes: capacityMinutes,
-            error: hadCreateError ? "일부 일정 생성 실패 — 아침 브리핑에서 수동 확인" : nil
+            error: buildResultSummary(
+                deniedCount: deniedCount,
+                confirmationCount: confirmationCount,
+                hadCreateError: hadCreateError
+            )
         )
 
         // Only mark as done if no fetch error (create errors are acceptable — items fall back to suggestions)
@@ -189,7 +271,7 @@ final class TomorrowPlannerService: ObservableObject {
         let seenGoalIds = NSMutableSet()
 
         // A. Carryover: today's incomplete tasks (from CompletionRecords)
-        let today = cal.startOfDay(for: Date())
+        let today = cal.startOfDay(for: now())
         let todayEnd = cal.date(byAdding: .day, value: 1, to: today)!
 
         let todayRecords = goalService.completions.values.filter {
@@ -278,11 +360,79 @@ final class TomorrowPlannerService: ObservableObject {
 
     private func countThisWeekSessions(goalId: String) -> Int {
         let cal = Calendar.current
-        let today = cal.startOfDay(for: Date())
+        let today = cal.startOfDay(for: now())
         let weekStart = cal.date(from: cal.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today))!
         return goalService.completions.values
             .filter { $0.goalId == goalId && $0.date >= weekStart && $0.status == .done }
             .count
+    }
+
+    private func allowedCreateSources(for item: PlannedItem) -> [ScheduleCreateSource] {
+        var sources: [ScheduleCreateSource] = []
+
+        if let goalId = item.goalId,
+           let goal = goalService.goals.first(where: { $0.id == goalId && $0.status == .active }) {
+            sources.append(ScheduleCreateSource(kind: .activeGoal, title: goal.title))
+        }
+
+        let matchingCompletions = goalService.completions.values.filter { record in
+            if let goalId = item.goalId, record.goalId == goalId {
+                return true
+            }
+
+            guard let eventTitle = record.eventTitle else { return false }
+            return normalizedTitle(eventTitle) == normalizedTitle(item.title)
+        }
+
+        for record in matchingCompletions {
+            if let eventTitle = record.eventTitle, !normalizedTitle(eventTitle).isEmpty {
+                sources.append(ScheduleCreateSource(kind: .existingEvent, title: eventTitle))
+            }
+        }
+
+        var deduped: [ScheduleCreateSource] = []
+        var seen = Set<String>()
+        for source in sources {
+            let key = "\(source.kind)|\(normalizedTitle(source.title))"
+            if seen.insert(key).inserted {
+                deduped.append(source)
+            }
+        }
+        return deduped
+    }
+
+    private func buildResultSummary(
+        deniedCount: Int,
+        confirmationCount: Int,
+        hadCreateError: Bool
+    ) -> String? {
+        var parts: [String] = []
+
+        if deniedCount > 0 || confirmationCount > 0 {
+            switch (deniedCount > 0, confirmationCount > 0) {
+            case (true, true):
+                parts.append("정책상 거부된 \(deniedCount)개와 확인이 필요한 \(confirmationCount)개 항목은 캘린더에 쓰지 않고 제안으로 남겼습니다")
+            case (true, false):
+                parts.append("정책상 거부된 \(deniedCount)개 항목은 캘린더에 쓰지 않고 제안으로 남겼습니다")
+            case (false, true):
+                parts.append("확인이 필요한 \(confirmationCount)개 항목은 캘린더에 쓰지 않고 제안으로 남겼습니다")
+            case (false, false):
+                break
+            }
+        }
+
+        if hadCreateError {
+            parts.append("일부 일정 생성 실패 — 아침 브리핑에서 수동 확인")
+        }
+
+        return parts.isEmpty ? nil : parts.joined(separator: " / ")
+    }
+
+    private func normalizedTitle(_ title: String) -> String {
+        title
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            .lowercased()
     }
 
     // MARK: - Free Slot Computation

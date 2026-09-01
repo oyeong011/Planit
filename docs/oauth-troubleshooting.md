@@ -43,6 +43,34 @@ log stream --predicate 'process == "Calen"' --info --debug
 `redirect_uri_mismatch` 또는 `400` 포함 시 사용자에게 한국어 안내 메시지가 표시된다
 (`auth.error.redirect.mismatch` 키).
 
+## 코드 수정 후에도 재로그인이 필요한 경우
+
+Google Calendar 연동은 앱이 refresh 실패를 더 정확히 분류하더라도 Google 쪽 정책이나 사용자
+조치 때문에 다시 로그인이 필요할 수 있다. Google 공식 문서는 refresh token이 다음과 같은
+이유로 더 이상 동작하지 않을 수 있다고 설명한다:
+
+- 사용자가 Google 계정에서 앱 접근 권한을 revoked 처리한 경우.
+- token이 장기간 사용되지 않았거나, 계정/관리자 정책/발급 한도/시간 제한 접근 정책의 영향을 받은 경우.
+- OAuth consent screen이 external 앱의 **Testing** 상태인 경우. 이 상태에서 발급된 refresh token은
+  요청 scope가 기본 프로필 scope만인 예외를 제외하면 **7-day** 만료가 적용될 수 있다.
+
+운영 판단 기준:
+
+- `permanentRevocation`으로 분류된 진짜 만료/철회(`invalid_grant` 등)는 앱이 복구할 수 없으므로
+  사용자가 다시 Google 로그인을 해야 한다.
+- retryable 또는 configuration-degraded 오류는 즉시 재로그인으로 몰지 말고 네트워크, Google 응답,
+  OAuth client 설정, consent screen 상태를 재시도/조사한다.
+- 버그 리포트에는 Console 로그의 에러 종류와 상태만 공유한다. 토큰, client credential, HTTP
+  Authorization 헤더, Keychain 값은 붙여 넣지 않는다.
+- 앱은 Google의 Testing-mode 7-day 만료, 사용자 revoked 처리, Google 계정/관리자 정책에 따른
+  refresh token 만료를 방지할 수 없다.
+
+공식 문서:
+
+- https://developers.google.com/identity/protocols/oauth2
+- https://developers.google.com/identity/protocols/oauth2/resources/best-practices
+- https://developers.google.com/google-ads/api/docs/get-started/common-errors
+
 ## 코드 변경이 필요한 시나리오
 
 위 1~4 모두 해당 없는데 여전히 실패하면 다음 점검:

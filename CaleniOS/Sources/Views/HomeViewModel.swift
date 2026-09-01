@@ -123,6 +123,7 @@ final class HomeViewModel: ObservableObject {
     /// Auth 관리자 — 로그인 상태 변화 구독.
     private let authManager: iOSGoogleAuthManager
     private var authCancellable: AnyCancellable?
+    private let widgetEventObserver: WidgetEventStreamObserver
 
     /// 현재 repo가 Google 기반인지 (= 로그인됨).
     var usingGoogleRepo: Bool { googleRepository != nil }
@@ -169,6 +170,7 @@ final class HomeViewModel: ObservableObject {
         self.modelContext = modelContext
         self.eventRepository = eventRepository ?? FakeEventRepository()
         self.authManager = authManager
+        self.widgetEventObserver = WidgetEventStreamObserver()
 
         // 오늘이 속한 주를 기본 확장
         self.expandedWeekStart = weekStart(for: selectedDate)
@@ -176,6 +178,8 @@ final class HomeViewModel: ObservableObject {
         // Phase B M4: 로그인 상태에 따라 Google repository 활성화.
         if !useFakeForPreview && authManager.isAuthenticated {
             activateGoogleRepo()
+        } else {
+            observeWidgetEvents(from: self.eventRepository)
         }
 
         // Phase B M4-2: 로그인 상태 변화 감지 → repo swap.
@@ -188,6 +192,7 @@ final class HomeViewModel: ObservableObject {
                     self.refreshEventsForCurrentMonth()
                 } else if !isAuthed {
                     self.googleRepository = nil
+                    self.observeWidgetEvents(from: self.eventRepository)
                 }
             }
 
@@ -209,7 +214,9 @@ final class HomeViewModel: ObservableObject {
     /// Phase B M4-2: auth manager로부터 GoogleCalendarClient를 조립해 repo 활성화.
     private func activateGoogleRepo() {
         let client = GoogleCalendarClient(authProvider: authManager)
-        self.googleRepository = GoogleCalendarRepository(client: client)
+        let repo = GoogleCalendarRepository(client: client)
+        self.googleRepository = repo
+        observeWidgetEvents(from: repo)
     }
 
     /// 현재 월에 대해 google repo로부터 이벤트를 가져와 `schedulesInMonth` 갱신.
@@ -748,6 +755,14 @@ final class HomeViewModel: ObservableObject {
         for (i, byte) in digest.enumerated() where i < 32 {
             out[i] = byte
         }
+    }
+
+    private func observeWidgetEvents(from repo: FakeEventRepository) {
+        widgetEventObserver.observe(repo.$events.eraseToAnyPublisher())
+    }
+
+    private func observeWidgetEvents(from repo: GoogleCalendarRepository) {
+        widgetEventObserver.observe(repo.$events.eraseToAnyPublisher())
     }
 }
 

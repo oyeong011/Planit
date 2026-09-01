@@ -15,9 +15,32 @@ ZIP_NAME="Calen-${VERSION}-universal.zip"
 # export NOTARIZE_APPLE_ID="you@example.com"
 # export NOTARIZE_PASSWORD="xxxx-xxxx-xxxx-xxxx"  # App-specific password
 SIGN="${DEVELOPER_ID:-}"
+SIGN_KIND="production"
 TEAM_ID="${NOTARIZE_TEAM_ID:-}"
 APPLE_ID="${NOTARIZE_APPLE_ID:-}"
 APP_PWD="${NOTARIZE_PASSWORD:-}"
+
+find_local_sign_identity() {
+    security find-identity -v -p codesigning 2>/dev/null |
+        grep 'Apple Development' |
+        head -1 |
+        sed 's/.*"\(.*\)"/\1/'
+}
+
+if [ -z "$SIGN" ]; then
+    SIGN="$(find_local_sign_identity)"
+    if [ -n "$SIGN" ]; then
+        SIGN_KIND="local-development"
+    fi
+fi
+
+codesign_runtime() {
+    if [ "$SIGN_KIND" = "production" ]; then
+        codesign --force --options runtime --timestamp "$@"
+    else
+        codesign --force --options runtime "$@"
+    fi
+}
 
 if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     echo "✗ VERSION must be X.Y.Z (got: $VERSION)" >&2
@@ -96,26 +119,25 @@ rm -f "$APP_BUNDLE/Contents/Resources/Planit.entitlements" \
 
 # 3. 코드 서명 (Sparkle은 inside-out 순서 필수)
 if [ -n "$SIGN" ]; then
-    echo "→ Code signing with: $SIGN"
+    echo "→ Code signing with ($SIGN_KIND): $SIGN"
     SPARKLE_FW="$APP_BUNDLE/Contents/Frameworks/Sparkle.framework"
     if [ -d "$SPARKLE_FW" ]; then
         # XPC services → Autoupdate → Updater.app → framework 순서
         for xpc in "$SPARKLE_FW/Versions/B/XPCServices"/*.xpc; do
-            [ -d "$xpc" ] && codesign --force --options runtime --timestamp \
+            [ -d "$xpc" ] && codesign_runtime \
                 --preserve-metadata=identifier,entitlements,flags \
                 --sign "$SIGN" "$xpc"
         done
-        codesign --force --options runtime --timestamp --sign "$SIGN" \
+        codesign_runtime --sign "$SIGN" \
             "$SPARKLE_FW/Versions/B/Autoupdate"
-        codesign --force --options runtime --timestamp --sign "$SIGN" \
+        codesign_runtime --sign "$SIGN" \
             "$SPARKLE_FW/Versions/B/Updater.app"
-        codesign --force --options runtime --timestamp --sign "$SIGN" "$SPARKLE_FW"
+        codesign_runtime --sign "$SIGN" "$SPARKLE_FW"
     fi
     # 메인 앱 마지막
-    codesign --force --options runtime \
+    codesign_runtime \
         --entitlements "$PROJECT_DIR/Planit/Planit.entitlements" \
         --sign "$SIGN" \
-        --timestamp \
         "$APP_BUNDLE"
     echo "→ Verifying signature..."
     codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE"
@@ -149,7 +171,7 @@ ditto -c -k --keepParent "$APP_NAME.app" "$ZIP_NAME"
 echo "→ Zip: $BUILD_DIR/$ZIP_NAME"
 
 # 5. 공증(Notarization)
-if [ -n "$SIGN" ] && [ -n "$TEAM_ID" ] && [ -n "$APPLE_ID" ] && [ -n "$APP_PWD" ]; then
+if [ "$SIGN_KIND" = "production" ] && [ -n "$SIGN" ] && [ -n "$TEAM_ID" ] && [ -n "$APPLE_ID" ] && [ -n "$APP_PWD" ]; then
     echo "→ Submitting for notarization..."
     xcrun notarytool submit "$BUILD_DIR/$ZIP_NAME" \
         --apple-id "$APPLE_ID" \

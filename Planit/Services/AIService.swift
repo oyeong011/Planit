@@ -2,6 +2,9 @@ import Foundation
 import PDFKit
 import ImageIO
 import CoreGraphics
+import enum CalenShared.ScheduleCreatePolicy
+import struct CalenShared.ScheduleCreateRequest
+import struct CalenShared.ScheduleCreateSource
 
 // MARK: - Provider
 
@@ -182,6 +185,14 @@ struct AIResponseWithActions: Codable {
 
 @MainActor
 final class AIService: ObservableObject {
+    struct EventCreateRequest: Sendable {
+        let title: String
+        let startDate: Date
+        let endDate: Date
+        let isAllDay: Bool
+        let recurrence: String?
+    }
+
     @Published var provider: AIProvider = .claude
     @Published var tone: AITone = .concise
     @Published var isLoading: Bool = false
@@ -200,7 +211,7 @@ final class AIService: ObservableObject {
     @Published var planningProgressText: String?
     @Published var planningLastError: String?
 
-    private let authManager: GoogleAuthManager
+    private let authManager: GoogleAuthManager?
     private let calendarService: GoogleCalendarService?
 
     /// Cached absolute paths for CLI tools (resolved once)
@@ -262,11 +273,33 @@ final class AIService: ObservableObject {
         }
     }
 
-    init(authManager: GoogleAuthManager, calendarService: GoogleCalendarService?) {
+    private init(
+        authManager: GoogleAuthManager?,
+        calendarService: GoogleCalendarService?,
+        loadRuntimeState: Bool
+    ) {
         self.authManager = authManager
         self.calendarService = calendarService
-        loadSettings()
-        checkCLIAvailability()
+        if loadRuntimeState {
+            loadSettings()
+            checkCLIAvailability()
+        }
+    }
+
+    convenience init(authManager: GoogleAuthManager, calendarService: GoogleCalendarService?) {
+        self.init(
+            authManager: authManager,
+            calendarService: calendarService,
+            loadRuntimeState: true
+        )
+    }
+
+    convenience init(calendarServiceForTesting calendarService: GoogleCalendarService? = nil) {
+        self.init(
+            authManager: nil,
+            calendarService: calendarService,
+            loadRuntimeState: false
+        )
     }
 
     // MARK: - CLI Detection (resolve absolute paths, no login shell)
@@ -882,7 +915,7 @@ final class AIService: ObservableObject {
         // the time the user sees the confirmation prompt and actually confirms.
         let (_, freshIds) = await buildCalendarContext()
         knownEventIds = freshIds
-        return await executeActions(actions)
+        return await executeActions(actions, userConfirmed: true)
     }
 
     /// Call this when user declines pending actions
@@ -902,11 +935,16 @@ final class AIService: ObservableObject {
 
     // MARK: - Execute Actions (with eventId validation)
 
-    private func executeActions(_ actions: [CalendarAction]) async -> [ChatMessage] {
+    private func executeActions(
+        _ actions: [CalendarAction],
+        userConfirmed: Bool = false,
+        createEventOverride: ((EventCreateRequest) async throws -> CalendarEvent?)? = nil
+    ) async -> [ChatMessage] {
         // createTodo는 Google 서비스 불필요 — guard 밖에서 먼저 처리
         // Google 서비스가 필요한 action(create/update/delete/findFreeSlot/blockTime)만 아래서 체크
         var results: [ChatMessage] = []
         let service = calendarService  // optional — nil이면 Google 관련 action만 실패
+        var confirmationActions: [CalendarAction] = []
 
         // 일괄 작업 안전장치: UI 확정(실행 버튼) 이후 호출되는 경로이므로 AI 단독 폭주는 막힌다.
         // 한 번에 50건 이상은 실수/프롬프트 인젝션 가능성 → 거부.
@@ -995,16 +1033,37 @@ final class AIService: ObservableObject {
                     continue
                 }
 
-                guard let svc = service else {
+                switch scheduleCreateAuthorization(
+                    action: action,
+                    title: rawTitle,
+                    userConfirmed: userConfirmed
+                ) {
+                case .allow:
+                    break
+                case let .needsConfirmation(message):
+                    confirmationActions.append(action)
+                    results.append(ChatMessage(role: .toolCall, content: message))
+                    continue
+                case let .denied(message):
+                    results.append(ChatMessage(role: .toolCall, content: message))
+                    continue
+                }
+
+                guard service != nil || createEventOverride != nil else {
                     results.append(ChatMessage(role: .toolCall, content: "\(action.action) 실패: Google 캘린더 미연결"))
                     continue
                 }
                 do {
-                    let created = try await svc.createEvent(
-                        title: rawTitle,
-                        startDate: slot.start,
-                        endDate: slot.end,
-                        isAllDay: false
+                    let created = try await createCalendarEvent(
+                        service: service,
+                        request: EventCreateRequest(
+                            title: rawTitle,
+                            startDate: slot.start,
+                            endDate: slot.end,
+                            isAllDay: false,
+                            recurrence: nil
+                        ),
+                        createEventOverride: createEventOverride
                     )
                     // 카테고리 적용
                     var slotCatLabel = ""
@@ -1071,12 +1130,39 @@ final class AIService: ObservableObject {
                     results.append(ChatMessage(role: .toolCall, content: "생성 실패: 종료 시간이 시작 시간보다 늦어야 합니다"))
                     continue
                 }
-                guard let svc = service else {
+
+                switch scheduleCreateAuthorization(
+                    action: action,
+                    title: rawTitle,
+                    userConfirmed: userConfirmed
+                ) {
+                case .allow:
+                    break
+                case let .needsConfirmation(message):
+                    confirmationActions.append(action)
+                    results.append(ChatMessage(role: .toolCall, content: message))
+                    continue
+                case let .denied(message):
+                    results.append(ChatMessage(role: .toolCall, content: message))
+                    continue
+                }
+
+                guard service != nil || createEventOverride != nil else {
                     results.append(ChatMessage(role: .toolCall, content: "생성 실패: Google 캘린더 미연결"))
                     continue
                 }
                 do {
-                    let created = try await svc.createEvent(title: rawTitle, startDate: start, endDate: end, isAllDay: action.isAllDay ?? false, recurrence: action.recurrence)
+                    let created = try await createCalendarEvent(
+                        service: service,
+                        request: EventCreateRequest(
+                            title: rawTitle,
+                            startDate: start,
+                            endDate: end,
+                            isAllDay: action.isAllDay ?? false,
+                            recurrence: action.recurrence
+                        ),
+                        createEventOverride: createEventOverride
+                    )
                     // 카테고리 이름 → UUID 매핑 후 콜백
                     var catLabel = ""
                     if let catName = action.categoryName {
@@ -1208,7 +1294,136 @@ final class AIService: ObservableObject {
                 break
             }
         }
+        if !confirmationActions.isEmpty {
+            pendingActions.append(contentsOf: confirmationActions)
+        }
         return results
+    }
+
+    func executeActionsForTesting(
+        _ actions: [CalendarAction],
+        userConfirmed: Bool = false,
+        createEvent: ((EventCreateRequest) async throws -> CalendarEvent?)? = nil
+    ) async -> [ChatMessage] {
+        await executeActions(
+            actions,
+            userConfirmed: userConfirmed,
+            createEventOverride: createEvent
+        )
+    }
+
+    enum ScheduleCreateAuthorization {
+        case allow
+        case needsConfirmation(String)
+        case denied(String)
+    }
+
+    nonisolated static func scheduleCreateAuthorization(
+        action: CalendarAction,
+        title: String,
+        userConfirmed: Bool,
+        cachedTodos: [TodoItem],
+        cachedCalendarEvents: [CalendarEvent]
+    ) -> ScheduleCreateAuthorization {
+        let needsExplicitConfirmation = action.action == "findFreeSlot"
+            || action.action == "blockTime"
+            || Self.looksLikeSyntheticBlockRequest(title)
+
+        var allowedCreateSources = cachedTodos.map {
+            ScheduleCreateSource(kind: .existingTodo, title: $0.title)
+        }
+        allowedCreateSources.append(contentsOf: cachedCalendarEvents.map {
+            ScheduleCreateSource(kind: .existingEvent, title: $0.title)
+        })
+
+        if needsExplicitConfirmation {
+            let kind: ScheduleCreateSource.Kind = userConfirmed
+                ? .explicitUserConfirmedBlock
+                : .explicitUserRequestedBlock
+            allowedCreateSources.append(.init(kind: kind, title: title))
+        } else if userConfirmed {
+            allowedCreateSources.append(.init(kind: .explicitUserConfirmedBlock, title: title))
+        }
+
+        let decision = ScheduleCreatePolicy.classify(
+            ScheduleCreateRequest(
+                title: title,
+                allowedCreateSources: allowedCreateSources,
+                isConfirmed: userConfirmed
+            )
+        )
+
+        switch decision {
+        case .allowed:
+            return .allow
+        case .needsConfirmation:
+            return .needsConfirmation(
+                "'\(title)' 일정은 자동으로 생성하지 않았습니다. 계속하려면 '확인'이라고 답해주세요."
+            )
+        case .denied:
+            return .denied(
+                "'\(title)' 일정은 안전 정책 때문에 바로 생성하지 않았습니다."
+            )
+        }
+    }
+
+    private func scheduleCreateAuthorization(
+        action: CalendarAction,
+        title: String,
+        userConfirmed: Bool
+    ) -> ScheduleCreateAuthorization {
+        Self.scheduleCreateAuthorization(
+            action: action,
+            title: title,
+            userConfirmed: userConfirmed,
+            cachedTodos: cachedTodos,
+            cachedCalendarEvents: cachedCalendarEvents
+        )
+    }
+
+    private func createCalendarEvent(
+        service: GoogleCalendarService?,
+        request: EventCreateRequest,
+        createEventOverride: ((EventCreateRequest) async throws -> CalendarEvent?)?
+    ) async throws -> CalendarEvent? {
+        if let createEventOverride {
+            return try await createEventOverride(request)
+        }
+        guard let service else { return nil }
+        return try await service.createEvent(
+            title: request.title,
+            startDate: request.startDate,
+            endDate: request.endDate,
+            isAllDay: request.isAllDay,
+            recurrence: request.recurrence
+        )
+    }
+
+    nonisolated private static func looksLikeSyntheticBlockRequest(_ title: String) -> Bool {
+        let normalized = title
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .replacingOccurrences(of: "\\s+", with: "", options: .regularExpression)
+            .replacingOccurrences(of: "-", with: "")
+            .replacingOccurrences(of: "_", with: "")
+
+        let riskyTokens = [
+            "focustime",
+            "focusblock",
+            "rest",
+            "resttime",
+            "break",
+            "breaktime",
+            "depresstime",
+            "deepwork",
+            "deepworkblock",
+            "휴식",
+            "휴식시간",
+            "딥워크",
+            "딥워크블록"
+        ]
+
+        return riskyTokens.contains { normalized.contains($0) }
     }
 
     nonisolated static func validatedActionDuration(_ minutes: Int?) -> Int? {
@@ -1479,7 +1694,7 @@ final class AIService: ObservableObject {
 
             // delete/update는 승인 카드
             if !riskyActions.isEmpty {
-                pendingActions = riskyActions
+                pendingActions.append(contentsOf: riskyActions)
                 pendingMessage = nil
                 let summary = riskyActions.map { "\($0.action): \($0.title ?? "?")" }.joined(separator: "\n")
                 results.append(ChatMessage(role: .toolCall, content: "아래 작업을 실행할까요?\n\(summary)"))

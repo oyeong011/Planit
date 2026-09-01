@@ -461,6 +461,9 @@
 "auth.error.not.authenticated" = "Google에 로그인되지 않았습니다.";
 "auth.error.state.mismatch" = "인증 상태 불일치 (CSRF 보호).";
 "auth.error.timeout" = "인증이 시간 초과되었습니다. 다시 시도하세요.";
+"auth.refresh.permanent_revocation" = "Google 인증이 만료되었습니다. 캘린더를 다시 연결하려면 로그인하세요.";
+"auth.refresh.non_revocation_terminal" = "Google 인증은 유지되었지만 OAuth 설정 확인이 필요합니다.";
+"auth.refresh.retryable_transient" = "지금은 Google 캘린더 동기화 토큰을 갱신하지 못했습니다. 잠시 후 다시 시도하세요.";
 "review.tab.title" = "리뷰";
 "review.category.title" = "캘린더별 달성률";
 "review.category.other" = "기타";

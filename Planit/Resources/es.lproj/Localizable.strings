@@ -429,6 +429,9 @@
 "auth.error.not.authenticated" = "No has iniciado sesión en Google.";
 "auth.error.state.mismatch" = "Discrepancia de estado de autenticación (protección CSRF).";
 "auth.error.timeout" = "La autenticación ha agotado el tiempo. Intenta de nuevo.";
+"auth.refresh.permanent_revocation" = "Google authorization expired. Sign in again to reconnect Calendar.";
+"auth.refresh.non_revocation_terminal" = "Google authorization is connected, but the OAuth configuration needs attention.";
+"auth.refresh.retryable_transient" = "Google Calendar sync could not refresh right now. Try again later.";
 "review.tab.title" = "Review";
 "review.category.title" = "By Calendar";
 "review.category.other" = "Other";

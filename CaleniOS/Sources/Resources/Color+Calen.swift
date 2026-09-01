@@ -49,17 +49,35 @@ extension Color {
     // MARK: - Planit-style category fills (v9 — 옅은 파스텔 background)
 
     /// Planit 톤 핑크 fill — `.work` (Dinner/Important 패턴)
-    static let categoryFillWork     = Color(red: 1.00, green: 0.87, blue: 0.90)
+    static let categoryFillWork     = Color(
+        light: Color(red: 1.00, green: 0.87, blue: 0.90),
+        dark:  Color(red: 0.36, green: 0.18, blue: 0.24)
+    )
     /// Planit 톤 옅은 파랑 fill — `.meeting` (Family/Meeting 패턴)
-    static let categoryFillMeeting  = Color(red: 0.86, green: 0.90, blue: 1.00)
+    static let categoryFillMeeting  = Color(
+        light: Color(red: 0.86, green: 0.90, blue: 1.00),
+        dark:  Color(red: 0.18, green: 0.24, blue: 0.40)
+    )
     /// Planit 톤 옅은 노랑 fill — `.meal` (Bank/Daily 패턴)
-    static let categoryFillMeal     = Color(red: 1.00, green: 0.93, blue: 0.78)
+    static let categoryFillMeal     = Color(
+        light: Color(red: 1.00, green: 0.93, blue: 0.78),
+        dark:  Color(red: 0.36, green: 0.30, blue: 0.16)
+    )
     /// Planit 톤 옅은 녹색 fill — `.exercise`
-    static let categoryFillExercise = Color(red: 0.84, green: 0.94, blue: 0.88)
+    static let categoryFillExercise = Color(
+        light: Color(red: 0.84, green: 0.94, blue: 0.88),
+        dark:  Color(red: 0.16, green: 0.32, blue: 0.24)
+    )
     /// Planit 톤 옅은 보라 fill — `.personal` (Work/Friends 패턴)
-    static let categoryFillPersonal = Color(red: 0.88, green: 0.85, blue: 0.97)
+    static let categoryFillPersonal = Color(
+        light: Color(red: 0.88, green: 0.85, blue: 0.97),
+        dark:  Color(red: 0.24, green: 0.20, blue: 0.40)
+    )
     /// Planit 톤 옅은 베이지/회색 fill — `.general` (Cafe 패턴)
-    static let categoryFillGeneral  = Color(red: 0.92, green: 0.91, blue: 0.92)
+    static let categoryFillGeneral  = Color(
+        light: Color(red: 0.92, green: 0.91, blue: 0.92),
+        dark:  Color(red: 0.24, green: 0.24, blue: 0.26)
+    )
 
     // MARK: - Backgrounds (v9 라벤더 톤)
 

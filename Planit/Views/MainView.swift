@@ -159,6 +159,7 @@ struct MainCalendarView: View {
         }
         .onAppear {
             checkLeftPanelMode()
+            consumePendingEveningReviewOpenIfNeeded()
             scheduleNotifications()
             // 초개인화: aiService에 컨텍스트 서비스 주입
             aiService.userContextService = userContextService
@@ -190,6 +191,7 @@ struct MainCalendarView: View {
         }
         // 저녁 리뷰 / 자정 롤오버 알림 탭 → review 패널로 전환
         .onReceive(NotificationCenter.default.publisher(for: .calenOpenEveningReview)) { _ in
+            EveningReviewOpenIntent.consume()
             handleOpenEveningReviewNotification()
         }
     }
@@ -398,20 +400,12 @@ struct MainCalendarView: View {
 
     private func runAutomaticEveningReviewIfNeeded(now: Date = Date()) {
         let calendar = Calendar.current
-        guard ReviewService.shouldRunAutomaticEveningReschedule(
+        guard let run = reviewService.beginAutomaticEveningCorrection(
             lastRunKey: lastAutoRescheduleKey,
             now: now,
-            profile: goalService.profile,
             calendar: calendar
         ) else { return }
 
-        let todayKey = ReviewService.automaticEveningRescheduleKey(
-            for: now,
-            reviewHour: goalService.profile.eveningReviewHour,
-            calendar: calendar
-        )
-        lastAutoRescheduleKey = todayKey
-        reviewService.currentMode = .evening
         reviewService.refreshEveningReschedulePlan(
             todos: viewModel.todos,
             events: viewModel.calendarEvents,
@@ -419,13 +413,19 @@ struct MainCalendarView: View {
         )
 
         let items = reviewService.eveningReschedulePlan.items
-        if goalService.profile.eveningReviewAutoApply && !items.isEmpty {
+        let outcome = reviewService.completeAutomaticEveningCorrection(
+            run,
+            itemCount: items.count
+        ) {
             // 사용자가 자동 적용 모드 명시 선택 — 즉시 이동 + Google sync (viewModel 경로)
             for item in items {
                 viewModel.moveTodoBySystem(id: item.todoId, toDate: item.targetDate)
             }
             reviewService.clearEveningReschedulePlan()
             viewModel.refreshEvents()
+        }
+        if outcome.shouldBurnDayKey {
+            lastAutoRescheduleKey = outcome.reviewDateKey
         }
 
         // 모드와 무관하게 리뷰 패널을 열어 결과/추천을 확인할 수 있도록.
@@ -444,6 +444,11 @@ struct MainCalendarView: View {
         )
         showLeftPanel = true
         leftPanelMode = .review
+    }
+
+    private func consumePendingEveningReviewOpenIfNeeded() {
+        guard EveningReviewOpenIntent.consume() else { return }
+        handleOpenEveningReviewNotification()
     }
 
     // MARK: - Notifications

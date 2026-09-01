@@ -81,12 +81,36 @@ enum ScheduleCategory: String, Codable, CaseIterable {
     /// fill 위에 얹는 짙은 텍스트 색 (가독성 위해 채도 더 깊게).
     var textColor: Color {
         switch self {
-        case .work:     return Color(red: 0.82, green: 0.20, blue: 0.40)
-        case .meeting:  return Color(red: 0.18, green: 0.38, blue: 0.85)
-        case .meal:     return Color(red: 0.72, green: 0.50, blue: 0.05)
-        case .exercise: return Color(red: 0.15, green: 0.55, blue: 0.35)
-        case .personal: return Color(red: 0.45, green: 0.25, blue: 0.75)
-        case .general:  return Color(red: 0.40, green: 0.40, blue: 0.45)
+        case .work:
+            return Color(
+                light: Color(red: 0.82, green: 0.20, blue: 0.40),
+                dark:  Color(red: 1.00, green: 0.62, blue: 0.72)
+            )
+        case .meeting:
+            return Color(
+                light: Color(red: 0.18, green: 0.38, blue: 0.85),
+                dark:  Color(red: 0.62, green: 0.72, blue: 1.00)
+            )
+        case .meal:
+            return Color(
+                light: Color(red: 0.72, green: 0.50, blue: 0.05),
+                dark:  Color(red: 1.00, green: 0.84, blue: 0.46)
+            )
+        case .exercise:
+            return Color(
+                light: Color(red: 0.15, green: 0.55, blue: 0.35),
+                dark:  Color(red: 0.55, green: 0.88, blue: 0.68)
+            )
+        case .personal:
+            return Color(
+                light: Color(red: 0.45, green: 0.25, blue: 0.75),
+                dark:  Color(red: 0.76, green: 0.66, blue: 1.00)
+            )
+        case .general:
+            return Color(
+                light: Color(red: 0.40, green: 0.40, blue: 0.45),
+                dark:  Color(red: 0.80, green: 0.80, blue: 0.86)
+            )
         }
     }
 }

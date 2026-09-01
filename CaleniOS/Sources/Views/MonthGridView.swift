@@ -33,6 +33,8 @@ struct MonthGridView: View {
     private let weekRowHeight: CGFloat = 56
     private let dateAreaHeight: CGFloat = 24
     private let barHeight: CGFloat = 12
+    private let barSpacing: CGFloat = 2
+    private let maxVisibleLanes: Int = 2
     private let cellHPadding: CGFloat = 2
 
     // MARK: - Body
@@ -73,9 +75,10 @@ struct MonthGridView: View {
         let result = WeekEventLayout.layout(
             events: multiDayInputs,
             weekStart: weekStart,
-            maxVisibleLanes: 1,   // 막대는 한 줄만 — 다일간이 많으면 두 번째는 점에 흡수
+            maxVisibleLanes: maxVisibleLanes,
             calendar: cal
         )
+        let visibleLaneCount = result.placements.map(\.lane).max().map { min($0 + 1, maxVisibleLanes) } ?? 0
 
         GeometryReader { geo in
             let columnWidth = geo.size.width / 7.0
@@ -90,9 +93,10 @@ struct MonthGridView: View {
                             isSelected: cal.isDate(date, inSameDayAs: selectedDate),
                             columnIndex: idx,
                             singleDayItems: singleDayItems(for: date),
+                            hiddenMultiDayCount: result.hiddenByColumn[idx] ?? 0,
                             rowHeight: weekRowHeight,
                             dateAreaHeight: dateAreaHeight,
-                            barReserved: !result.placements.isEmpty,
+                            barReservedHeight: CGFloat(visibleLaneCount) * (barHeight + barSpacing),
                             onTap: { onTapDate(date) }
                         )
                         .frame(width: columnWidth)
@@ -114,7 +118,9 @@ struct MonthGridView: View {
                         )
                         .position(
                             x: columnWidth * (CGFloat(placement.startColumn) + CGFloat(placement.spanColumns) / 2),
-                            y: dateAreaHeight + 2 + barHeight / 2
+                            y: dateAreaHeight + 2
+                                + CGFloat(placement.lane) * (barHeight + barSpacing)
+                                + barHeight / 2
                         )
                         .onTapGesture { onTapEvent(item) }
                     }
@@ -182,10 +188,10 @@ private struct DayCellShell: View {
     let isSelected: Bool
     let columnIndex: Int
     let singleDayItems: [ScheduleDisplayItem]
+    let hiddenMultiDayCount: Int
     let rowHeight: CGFloat
     let dateAreaHeight: CGFloat
-    /// 이 weekRow에 다일간 막대가 있는지 — 점 위치를 그 아래로 내리기 위해.
-    let barReserved: Bool
+    let barReservedHeight: CGFloat
     let onTap: () -> Void
 
     private let maxDots = 3
@@ -227,7 +233,7 @@ private struct DayCellShell: View {
             .padding(.top, 3)
 
             Spacer(minLength: 0)
-                .frame(height: barReserved ? 14 : 0)
+                .frame(height: barReservedHeight)
 
             dotsRow
 
@@ -246,7 +252,7 @@ private struct DayCellShell: View {
 
     private var dotsRow: some View {
         let visible = singleDayItems.prefix(maxDots)
-        let extra = max(0, singleDayItems.count - maxDots)
+        let extra = max(0, singleDayItems.count - maxDots) + hiddenMultiDayCount
         return HStack(spacing: 3) {
             ForEach(Array(visible.enumerated()), id: \.offset) { _, item in
                 Circle()
@@ -265,7 +271,7 @@ private struct DayCellShell: View {
     }
 
     private var accessibilityText: String {
-        let count = singleDayItems.count
+        let count = singleDayItems.count + hiddenMultiDayCount
         let fmt = DateFormatter()
         fmt.locale = Locale(identifier: "ko_KR")
         fmt.dateFormat = "M월 d일"

@@ -7,9 +7,9 @@ import SwiftUI
 // HomeView에서 월 그리드 아래 위치. 선택된 주(월요일~일요일)의 요일별 일정 카드를 나열.
 //
 // 디자인:
-//  - 섹션 헤더: "4월 17일 월요일" 같은 형식. 일정 없는 요일은 `빈` 플레이스홀더 한 줄.
-//  - 일정 카드: 좌측 색상 바(4pt) + VStack{제목, 시간}
-//  - 전체를 ScrollView로 감싸되, 부모가 결정한 높이 내에서 스크롤.
+//  - 선택일 이후 7일을 고정 시간열 + 블록 카드로 표시.
+//  - 일정 없는 요일도 얇은 빈 슬롯으로 보여 타임블록 리듬을 유지.
+//  - 전체를 ScrollView로 감싸되, 하단 탭/FAB와 겹치지 않도록 여백을 확보.
 
 struct WeekExpansionView: View {
 
@@ -43,7 +43,8 @@ struct WeekExpansionView: View {
                 }
             }
             .padding(.horizontal, 20)
-            .padding(.vertical, 12)
+            .padding(.top, 12)
+            .padding(.bottom, 112)
         }
     }
 }
@@ -58,12 +59,12 @@ private struct WeekDayGroup: View {
     let onToggleCompletion: (ScheduleDisplayItem) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             headerRow
             if items.isEmpty {
                 emptyRow
             } else {
-                VStack(spacing: 6) {
+                VStack(spacing: 8) {
                     ForEach(items) { item in
                         EventCard(
                             item: item,
@@ -79,23 +80,23 @@ private struct WeekDayGroup: View {
     private var headerRow: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text(naturalHeader)
-                .font(.system(size: 17, weight: .bold))
+                .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(isToday ? Color.calenBlue : Color.primary)
 
             Text(secondaryDateString)
                 .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.primary.opacity(0.56))
 
             Spacer()
 
             if !items.isEmpty {
                 Text("\(items.count)개")
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.primary.opacity(0.62))
                     .padding(.horizontal, 8)
-                    .padding(.vertical, 2)
+                    .padding(.vertical, 3)
                     .background(
-                        Color.secondary.opacity(0.10),
+                        Color.calenCardSurface.opacity(0.9),
                         in: Capsule()
                     )
             }
@@ -103,10 +104,34 @@ private struct WeekDayGroup: View {
     }
 
     private var emptyRow: some View {
-        Text("일정 없음")
-            .font(.system(size: 12))
-            .foregroundStyle(Color(.tertiaryLabel))
-            .padding(.leading, 2)
+        HStack(spacing: 12) {
+            Text("비어 있음")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color.primary.opacity(0.45))
+                .monospacedDigit()
+                .frame(width: 54, alignment: .trailing)
+
+            RoundedRectangle(cornerRadius: 3, style: .continuous)
+                .fill(Color.primary.opacity(0.12))
+                .frame(width: 3)
+
+            Text("새 블록을 추가할 수 있어요")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(Color.primary.opacity(0.42))
+                .lineLimit(1)
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 42)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color.calenCardSurface.opacity(0.55))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.05), lineWidth: 1)
+        )
     }
 
     private var isToday: Bool { Calendar.current.isDateInToday(day) }
@@ -145,67 +170,81 @@ private struct EventCard: View {
     let onToggleCompletion: () -> Void
 
     var body: some View {
-        // Planit 패턴: 카드 전체 ZStack — 좌측 카테고리 fill rect가 카드 좌측 절반을 채우고,
-        // 그 위에 제목 + 카테고리 라벨 + 우측 체크박스. fill은 둥근 모서리로 카드와 통합.
-        HStack(spacing: 0) {
-            // 카테고리 색 fill 영역 (카드 전체 좌측 — Planit Today list 패턴)
-            ZStack(alignment: .leading) {
-                Rectangle()
-                    .fill(item.category.fillColor)
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(startTimeString)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Color.primary.opacity(0.78))
+                    .monospacedDigit()
+                Text(endTimeString)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Color.primary.opacity(0.38))
+                    .monospacedDigit()
+            }
+            .frame(width: 54, alignment: .trailing)
+            .padding(.top, 2)
 
-                VStack(alignment: .leading, spacing: 2) {
+            RoundedRectangle(cornerRadius: 3, style: .continuous)
+                .fill(item.category.swiftUIColor)
+                .frame(width: 4, height: blockHeight - 20)
+                .padding(.vertical, 10)
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text(item.title)
                         .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(item.isCompleted ? Color.secondary : item.category.textColor)
+                        .foregroundStyle(item.isCompleted ? Color.secondary : Color.primary)
                         .strikethrough(item.isCompleted)
                         .lineLimit(1)
 
+                    Spacer(minLength: 0)
+
                     Text(categorySubLabel)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(item.category.textColor.opacity(0.75))
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(item.category.textColor.opacity(0.72))
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(item.category.fillColor.opacity(0.72), in: Capsule())
                 }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 10)
-            }
 
-            // 우측 흰 영역 — 시간 + 체크박스
-            HStack(spacing: 10) {
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text(timeRangeString)
+                if let location = item.location, !location.isEmpty {
+                    Text(location)
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.secondary)
-                        .monospacedDigit()
-                    if let location = item.location, !location.isEmpty {
-                        Text(location)
-                            .font(.system(size: 11))
-                            .foregroundStyle(Color(.tertiaryLabel))
-                            .lineLimit(1)
-                    }
+                        .foregroundStyle(Color.primary.opacity(0.48))
+                        .lineLimit(1)
                 }
-
-                Button(action: onToggleCompletion) {
-                    Image(systemName: item.isCompleted ? "checkmark.square.fill" : "square")
-                        .font(.system(size: 19, weight: .regular))
-                        .foregroundStyle(item.isCompleted ? item.category.textColor : item.category.textColor.opacity(0.4))
-                        .frame(width: 28, height: 28)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(item.isCompleted ? "완료 취소" : "완료")
             }
-            .padding(.horizontal, 12)
-            .frame(maxHeight: .infinity)
-            .background(Color.calenCardSurface)
+            .padding(.vertical, 12)
+            .padding(.trailing, 2)
+
+            Button(action: onToggleCompletion) {
+                Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 19, weight: .regular))
+                    .foregroundStyle(item.isCompleted ? item.category.textColor : Color.primary.opacity(0.22))
+                    .frame(width: 28, height: 28)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(item.isCompleted ? "완료 취소" : "완료")
+            .padding(.top, 8)
         }
-        .frame(minHeight: 56)
+        .padding(.horizontal, 12)
+        .frame(minHeight: blockHeight, alignment: .top)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.calenCardSurface)
         .opacity(item.isCompleted ? 0.6 : 1.0)
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(Color.primary.opacity(0.04), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(Color.primary.opacity(0.05), lineWidth: 1)
         )
-        .calenCardShadow()
         .dynamicTypeSize(.xSmall ... .accessibility1)
+    }
+
+    private var blockHeight: CGFloat {
+        guard let end = item.endTime else { return 58 }
+        let minutes = max(15, end.timeIntervalSince(item.startTime) / 60)
+        return min(96, max(58, CGFloat(minutes) * 0.72))
     }
 
     private var categorySubLabel: String {
@@ -219,14 +258,17 @@ private struct EventCard: View {
         }
     }
 
-    private var timeRangeString: String {
+    private var startTimeString: String {
         let fmt = DateFormatter()
         fmt.dateFormat = "HH:mm"
-        let start = fmt.string(from: item.startTime)
-        if let end = item.endTime {
-            return "\(start)–\(fmt.string(from: end))"
-        }
-        return start
+        return fmt.string(from: item.startTime)
+    }
+
+    private var endTimeString: String {
+        guard let end = item.endTime else { return "시작" }
+        let fmt = DateFormatter()
+        fmt.dateFormat = "HH:mm"
+        return fmt.string(from: end)
     }
 }
 

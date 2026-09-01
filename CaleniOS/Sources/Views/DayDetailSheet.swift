@@ -297,6 +297,10 @@ private struct EventCard: View {
                 Rectangle().fill(fillColor)
 
                 HStack(alignment: .center, spacing: 8) {
+                    if canAdjustTime {
+                        moveHandle
+                    }
+
                     VStack(alignment: .leading, spacing: 3) {
                         Text(event.title)
                             .font(.system(size: 15, weight: .semibold))
@@ -355,7 +359,6 @@ private struct EventCard: View {
         .offset(y: dragOffset)
         .contentShape(Rectangle())
         .onTapGesture { onTap() }
-        .gesture(moveGesture)
     }
 
     private var canAdjustTime: Bool {
@@ -382,6 +385,22 @@ private struct EventCard: View {
                 updated.endDate = moved.end
                 onMove(updated)
             }
+    }
+
+    private var moveHandle: some View {
+        HStack(spacing: 3) {
+            Capsule()
+                .frame(width: 2, height: 18)
+            Capsule()
+                .frame(width: 2, height: 18)
+            Capsule()
+                .frame(width: 2, height: 18)
+        }
+        .foregroundStyle(fillTextColor.opacity(0.45))
+        .frame(width: 26, height: 36)
+        .contentShape(Rectangle())
+        .gesture(moveGesture)
+        .accessibilityLabel("시간 이동")
     }
 
     private var resizeHandle: some View {

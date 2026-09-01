@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 import Testing
 import CalenShared
 @testable import CaleniOS
@@ -14,6 +15,57 @@ import CalenShared
 
 @Suite("WidgetDataPublisher")
 struct WidgetDataPublisherTests {
+
+    @MainActor
+    final class TestWidgetEventRepository: ObservableObject {
+        @Published private(set) var events: [CalendarEvent]
+
+        init(events: [CalendarEvent] = []) {
+            self.events = events
+        }
+
+        func simulateFetch(_ events: [CalendarEvent]) {
+            self.events = events
+        }
+
+        func create(_ event: CalendarEvent) {
+            events.append(event)
+        }
+
+        func moveEvent(
+            id: String,
+            calendarId: String,
+            startDate: Date,
+            endDate: Date
+        ) {
+            guard let index = events.firstIndex(where: {
+                $0.id == id && $0.calendarId == calendarId
+            }) else { return }
+            var event = events[index]
+            event.startDate = startDate
+            event.endDate = endDate
+            events[index] = event
+        }
+
+        func updateTitle(
+            id: String,
+            calendarId: String,
+            title: String
+        ) {
+            guard let index = events.firstIndex(where: {
+                $0.id == id && $0.calendarId == calendarId
+            }) else { return }
+            var event = events[index]
+            event.title = title
+            events[index] = event
+        }
+
+        func delete(id: String, calendarId: String) {
+            events.removeAll {
+                $0.id == id && $0.calendarId == calendarId
+            }
+        }
+    }
 
     // MARK: - (1) CalendarEvent → snapshot 변환
 
@@ -76,6 +128,83 @@ struct WidgetDataPublisherTests {
         #expect(snapshots.last?.id == "cal::e4")
     }
 
+    @MainActor
+    @Test("WidgetEventStreamObserver publishes after fetch, mutations, and login repo swap")
+    func widgetEventStreamObserverPublishesForSixTriggers() {
+        let now = Date(timeIntervalSince1970: 1_700_000_000)
+        let fetched = CalendarEvent(
+            id: "fetched",
+            calendarId: "cal-a",
+            title: "초기 로드",
+            startDate: now.addingTimeInterval(600),
+            endDate: now.addingTimeInterval(3600),
+            colorHex: "#3B82F6"
+        )
+        let created = CalendarEvent(
+            id: "created",
+            calendarId: "cal-a",
+            title: "새 일정",
+            startDate: now.addingTimeInterval(4200),
+            endDate: now.addingTimeInterval(5400),
+            colorHex: "#F56691"
+        )
+        let swapped = CalendarEvent(
+            id: "swapped",
+            calendarId: "cal-b",
+            title: "로그인 후 일정",
+            startDate: now.addingTimeInterval(7200),
+            endDate: now.addingTimeInterval(8100),
+            colorHex: "#40C786"
+        )
+
+        let repository = TestWidgetEventRepository()
+        var published: [[CalendarEvent]] = []
+        let observer = WidgetEventStreamObserver { events in
+            published.append(events)
+        }
+
+        observer.observe(repository.$events.eraseToAnyPublisher())
+        #expect(published.count == 1)
+        #expect(published.last == [])
+
+        repository.simulateFetch([fetched])
+        #expect(published.count == 2)
+        #expect(published.last == [fetched])
+
+        repository.create(created)
+        #expect(published.count == 3)
+        #expect(published.last?.map(\.id) == ["fetched", "created"])
+
+        let movedStart = now.addingTimeInterval(1800)
+        let movedEnd = now.addingTimeInterval(4800)
+        repository.moveEvent(
+            id: fetched.id,
+            calendarId: fetched.calendarId,
+            startDate: movedStart,
+            endDate: movedEnd
+        )
+        #expect(published.count == 4)
+        #expect(published.last?.first?.startDate == movedStart)
+        #expect(published.last?.first?.endDate == movedEnd)
+
+        repository.updateTitle(
+            id: created.id,
+            calendarId: created.calendarId,
+            title: "업데이트된 일정"
+        )
+        #expect(published.count == 5)
+        #expect(published.last?.last?.title == "업데이트된 일정")
+
+        repository.delete(id: created.id, calendarId: created.calendarId)
+        #expect(published.count == 6)
+        #expect(published.last?.map(\.id) == ["fetched"])
+
+        let swappedRepository = TestWidgetEventRepository(events: [swapped])
+        observer.observe(swappedRepository.$events.eraseToAnyPublisher())
+        #expect(published.count == 7)
+        #expect(published.last == [swapped])
+    }
+
     // MARK: - (2) Codable round-trip
 
     @Test("EventSnapshotPayload encodes and decodes losslessly")
@@ -114,26 +243,9 @@ struct WidgetDataPublisherTests {
         // Portal 등록된 환경이라면 .json 으로 끝나는 URL 반환.
         let url = WidgetDataPublisher.fileURL()
         if let url {
+            #expect(url.isFileURL)
             #expect(url.lastPathComponent == "widget-events.json")
-        } else {
-            #expect(Bool(true)) // nil 허용
+            #expect(url.pathExtension == "json")
         }
-    }
-
-    @Test("publish does not throw when group container is missing")
-    func publishIsSafeWithoutContainer() {
-        // App Group entitlement 없는 환경에서 publish 호출해도 crash / throw 없어야 함
-        let now = Date(timeIntervalSince1970: 1_700_000_000)
-        let event = CalendarEvent(
-            id: "safety",
-            calendarId: "cal",
-            title: "safety net",
-            startDate: now.addingTimeInterval(60),
-            endDate: now.addingTimeInterval(3600),
-            colorHex: "#3B82F6"
-        )
-        WidgetDataPublisher.publish(events: [event], now: now)
-        // 도달하면 성공.
-        #expect(true)
     }
 }

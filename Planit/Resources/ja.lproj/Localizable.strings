@@ -429,6 +429,9 @@
 "auth.error.not.authenticated" = "Googleにサインインしていません。";
 "auth.error.state.mismatch" = "認証状態の不一致（CSRF保護）。";
 "auth.error.timeout" = "認証がタイムアウトしました。再試行してください。";
+"auth.refresh.permanent_revocation" = "Google authorization expired. Sign in again to reconnect Calendar.";
+"auth.refresh.non_revocation_terminal" = "Google authorization is connected, but the OAuth configuration needs attention.";
+"auth.refresh.retryable_transient" = "Google Calendar sync could not refresh right now. Try again later.";
 "review.tab.title" = "レビュー";
 "review.category.title" = "カレンダー別達成率";
 "review.category.other" = "その他";

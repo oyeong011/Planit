@@ -460,12 +460,9 @@ public final class iOSGoogleAuthManager: NSObject, ObservableObject, CalendarAut
         // 를 함께 내려준다. status만 보고 logout()을 결정하면 일시적 401/403(rate-limit, 5xx 재시도 등)
         // 에도 키체인 토큰을 날려 사용자가 매번 재로그인하게 된다.
         let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+        let classification = OAuthRefreshErrorClassifier.classify(statusCode: status, body: data)
         if let err = json?["error"] as? String {
-            // 진짜 폐기/만료/취소 신호일 때만 토큰 폐기.
-            //  - invalid_grant: refresh token 만료/철회/재인증 필요
-            //  - unauthorized_client / invalid_client: 클라이언트 설정 자체가 잘못 — 재인증 불가능
-            let permanent: Set<String> = ["invalid_grant", "unauthorized_client", "invalid_client"]
-            if permanent.contains(err) { logout() }
+            if classification == .permanentRevocation { logout() }
             let desc = (json?["error_description"] as? String) ?? err
             throw IOSAuthError.tokenExchangeFailed("refresh: \(desc)")
         }

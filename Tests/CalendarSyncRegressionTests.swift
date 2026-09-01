@@ -110,6 +110,35 @@ private struct CalendarSyncRegressionFailure: Error, CustomStringConvertible {
             "deleteItem must treat both success and not-found as successful deletion.")
 }
 
+@Test func launchPath_doesNotRequestApplePrivacyAccessAutomatically() throws {
+    let source = try CalendarSyncRegressionSource.read("Planit/ViewModels/CalendarViewModel.swift")
+    let initBody = try CalendarSyncRegressionSource.segment(
+        from: "init(authManager: GoogleAuthManager)",
+        to: "deinit",
+        in: source
+    )
+
+    #expect(!initBody.contains("requestCalendarAccess()"))
+    #expect(!initBody.contains("enableAppleCalendar()"))
+    #expect(!initBody.contains("enableAppleReminders()"))
+    #expect(initBody.contains("restoreLocalCalendarIfAuthorized()"))
+    #expect(initBody.contains("restoreAppleCalendarIfAuthorized()"))
+    #expect(initBody.contains("restoreAppleRemindersIfAuthorized()"))
+}
+
+@Test func appleRestorePathsOnlyUseExistingAuthorizationState() throws {
+    let source = try CalendarSyncRegressionSource.read("Planit/ViewModels/CalendarViewModel.swift")
+    let calendarRestore = try CalendarSyncRegressionSource.body(of: "restoreAppleCalendarIfAuthorized", in: source)
+    let remindersRestore = try CalendarSyncRegressionSource.body(of: "restoreAppleRemindersIfAuthorized", in: source)
+    let localRestore = try CalendarSyncRegressionSource.body(of: "restoreLocalCalendarIfAuthorized", in: source)
+
+    let combined = calendarRestore + remindersRestore + localRestore
+    #expect(combined.contains("hasReadableEventKitAccess"))
+    #expect(!combined.contains("requestFullAccessToEvents"))
+    #expect(!combined.contains("requestFullAccessToReminders"))
+    #expect(!combined.contains("requestAccess(to:"))
+}
+
 @Test func pendingCalendarEdit_decodesLegacyPayloadWithoutCalendarID() throws {
     let id = UUID()
     let json = """

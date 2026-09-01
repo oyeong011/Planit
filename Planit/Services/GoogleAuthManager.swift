@@ -3,6 +3,7 @@ import SwiftUI
 import CommonCrypto
 import Combine
 import os
+import CalenShared
 
 // double-close 방지용 경량 mutex
 private final class UnfairLock: @unchecked Sendable {
@@ -46,11 +47,36 @@ enum AuthError: LocalizedError {
     }
 }
 
+enum GoogleAuthHealth: Equatable {
+    case signedOut
+    case healthy
+    case retryableDegraded
+    case terminalDegraded
+    case revoked
+}
+
+struct GoogleAuthTokenStore {
+    var loadCredentials: () -> KeychainHelper.OAuthCredentials?
+    var saveCredentials: (KeychainHelper.OAuthCredentials) -> Bool
+    var loadAuthTokens: () -> KeychainHelper.AuthTokens
+    var saveAuthTokens: (KeychainHelper.AuthTokens) -> Bool
+    var deleteAuthTokens: () -> Bool
+
+    static let keychain = GoogleAuthTokenStore(
+        loadCredentials: { KeychainHelper.loadCredentials() },
+        saveCredentials: { KeychainHelper.saveCredentials($0) },
+        loadAuthTokens: { KeychainHelper.loadAuthTokens() },
+        saveAuthTokens: { KeychainHelper.saveAuthTokens($0) },
+        deleteAuthTokens: { KeychainHelper.deleteAuthTokens() }
+    )
+}
+
 @MainActor
 final class GoogleAuthManager: ObservableObject {
     @Published var isAuthenticated = false
     @Published var userEmail: String?
     @Published var errorMessage: String?
+    @Published private(set) var authHealth: GoogleAuthHealth = .signedOut
     /// OAuth 완료(토큰 발급)마다 발행 — isAuthenticated 변화 없어도 발행 (재연결 포함)
     let authSucceeded = PassthroughSubject<Void, Never>()
 
@@ -64,19 +90,50 @@ final class GoogleAuthManager: ObservableObject {
     private var refreshToken: String?
     private var tokenExpiry: Date?
     private var refreshTask: Task<String, Error>?
+    private let requestRunner: (URLRequest) async throws -> (Data, URLResponse)
+    private let tokenStore: GoogleAuthTokenStore
+    private let now: () -> Date
 
     init() {
+        self.requestRunner = { request in try await URLSession.shared.data(for: request) }
+        self.tokenStore = .keychain
+        self.now = { Date() }
         signal(SIGPIPE, SIG_IGN)
         KeychainHelper.migrateIfNeeded()
         loadCredentials()
         loadTokens()
     }
 
+    init(
+        tokenStore: GoogleAuthTokenStore,
+        requestRunner: @escaping (URLRequest) async throws -> (Data, URLResponse),
+        now: @escaping () -> Date = { Date() },
+        clientID: String = "test-client-id",
+        clientSecret: String = "test-client-secret"
+    ) {
+        self.tokenStore = tokenStore
+        self.requestRunner = requestRunner
+        self.now = now
+        self.clientID = clientID
+        self.clientSecret = clientSecret
+        loadCredentials()
+        loadTokens()
+    }
+
+    var authTokenSnapshot: KeychainHelper.AuthTokens {
+        KeychainHelper.AuthTokens(
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+            tokenExpiry: tokenExpiry.map { $0.timeIntervalSince1970 },
+            userEmail: userEmail
+        )
+    }
+
     // MARK: - Credentials
 
     private func loadCredentials() {
         // 1. Consolidated Keychain entry — 빈 값이면 무시 (삭제 후 재설치 시 stale entry 방지)
-        if let creds = KeychainHelper.loadCredentials(),
+        if let creds = tokenStore.loadCredentials(),
            !creds.clientID.isEmpty, !creds.clientSecret.isEmpty {
             clientID = creds.clientID
             clientSecret = creds.clientSecret
@@ -92,7 +149,7 @@ final class GoogleAuthManager: ObservableObject {
             clientID = id
             clientSecret = secret
             let creds = KeychainHelper.OAuthCredentials(clientID: id, clientSecret: secret)
-            if KeychainHelper.saveCredentials(creds) {
+            if tokenStore.saveCredentials(creds) {
                 try? FileManager.default.removeItem(at: legacyPath)
             }
             return
@@ -106,7 +163,7 @@ final class GoogleAuthManager: ObservableObject {
            let id = json["client_id"], let secret = json["client_secret"] {
             clientID = id
             clientSecret = secret
-            KeychainHelper.saveCredentials(KeychainHelper.OAuthCredentials(clientID: id, clientSecret: secret))
+            _ = tokenStore.saveCredentials(KeychainHelper.OAuthCredentials(clientID: id, clientSecret: secret))
         }
         #endif
     }
@@ -117,7 +174,7 @@ final class GoogleAuthManager: ObservableObject {
               !clientSecret.trimmingCharacters(in: .whitespaces).isEmpty else { return }
         self.clientID = clientID
         self.clientSecret = clientSecret
-        KeychainHelper.saveCredentials(KeychainHelper.OAuthCredentials(clientID: clientID, clientSecret: clientSecret))
+        _ = tokenStore.saveCredentials(KeychainHelper.OAuthCredentials(clientID: clientID, clientSecret: clientSecret))
     }
 
     var hasCredentials: Bool { !clientID.isEmpty && !clientSecret.isEmpty }
@@ -125,12 +182,13 @@ final class GoogleAuthManager: ObservableObject {
     // MARK: - Token Management
 
     private func loadTokens() {
-        let tokens = KeychainHelper.loadAuthTokens()
+        let tokens = tokenStore.loadAuthTokens()
         accessToken  = tokens.accessToken
         refreshToken = tokens.refreshToken
         userEmail    = tokens.userEmail
         if let t = tokens.tokenExpiry { tokenExpiry = Date(timeIntervalSince1970: t) }
         isAuthenticated = refreshToken != nil
+        authHealth = isAuthenticated ? .healthy : .signedOut
     }
 
     private func saveTokens() {
@@ -140,11 +198,11 @@ final class GoogleAuthManager: ObservableObject {
             tokenExpiry:  tokenExpiry.map { $0.timeIntervalSince1970 },
             userEmail:    userEmail
         )
-        KeychainHelper.saveAuthTokens(tokens)
+        _ = tokenStore.saveAuthTokens(tokens)
     }
 
     func getValidToken() async throws -> String {
-        if let token = accessToken, let expiry = tokenExpiry, expiry > Date().addingTimeInterval(60) {
+        if let token = accessToken, let expiry = tokenExpiry, expiry > now().addingTimeInterval(60) {
             return token
         }
         if let existing = refreshTask {
@@ -241,7 +299,9 @@ final class GoogleAuthManager: ObservableObject {
         tokenExpiry = nil
         userEmail = nil
         isAuthenticated = false
-        KeychainHelper.deleteAuthTokens()
+        authHealth = .signedOut
+        errorMessage = nil
+        _ = tokenStore.deleteAuthTokens()
     }
 
     // MARK: - Loopback Server
@@ -394,7 +454,7 @@ final class GoogleAuthManager: ObservableObject {
         }.joined(separator: "&")
         request.httpBody = body.data(using: .utf8)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await requestRunner(request)
         if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
             throw AuthError.tokenExchangeFailed("HTTP \(httpResponse.statusCode)")
         }
@@ -411,8 +471,10 @@ final class GoogleAuthManager: ObservableObject {
         accessToken = json["access_token"] as? String
         refreshToken = json["refresh_token"] as? String ?? refreshToken
         if let expiresIn = json["expires_in"] as? Int {
-            tokenExpiry = Date().addingTimeInterval(Double(expiresIn))
+            tokenExpiry = now().addingTimeInterval(Double(expiresIn))
         }
+        authHealth = .healthy
+        errorMessage = nil
         saveTokens()
     }
 
@@ -433,36 +495,60 @@ final class GoogleAuthManager: ObservableObject {
         }.joined(separator: "&")
         request.httpBody = body.data(using: .utf8)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await requestRunner(request)
+        } catch {
+            try Task.checkCancellation()
+            markRefreshFailure(.retryableTransient)
+            throw AuthError.tokenExchangeFailed("Refresh: retryableTransient")
+        }
         // 네트워크 응답 대기 중 logout()이 호출됐으면 토큰 저장을 중단
         try Task.checkCancellation()
 
-        if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
-            // 401/403은 refresh token이 폐기/만료됨 → 자동 로그아웃
-            if httpResponse.statusCode == 401 || httpResponse.statusCode == 403 {
-                logout()
-            }
-            throw AuthError.tokenExchangeFailed("Refresh HTTP \(httpResponse.statusCode)")
+        let statusCode = (response as? HTTPURLResponse)?.statusCode
+        let classification = OAuthRefreshErrorClassifier.classify(statusCode: statusCode, body: data)
+        guard classification == .success else {
+            markRefreshFailure(classification)
+            throw AuthError.tokenExchangeFailed("Refresh: \(classification)")
         }
 
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            markRefreshFailure(.retryableTransient)
             throw AuthError.tokenExchangeFailed("Refresh failed")
         }
-        if let error = json["error"] as? String {
-            // invalid_grant도 refresh token 폐기를 의미
-            if error == "invalid_grant" { logout() }
-            let desc = json["error_description"] as? String ?? error
-            throw AuthError.tokenExchangeFailed("Refresh: \(desc)")
-        }
+
         guard let newToken = json["access_token"] as? String else {
+            markRefreshFailure(.retryableTransient)
             throw AuthError.tokenExchangeFailed("Refresh failed")
         }
 
         accessToken = newToken
         if let expiresIn = json["expires_in"] as? Int {
-            tokenExpiry = Date().addingTimeInterval(Double(expiresIn))
+            tokenExpiry = now().addingTimeInterval(Double(expiresIn))
         }
+        authHealth = .healthy
+        errorMessage = nil
         saveTokens()
+    }
+
+    private func markRefreshFailure(_ classification: OAuthRefreshClassification) {
+        switch classification {
+        case .success:
+            authHealth = .healthy
+            errorMessage = nil
+        case .permanentRevocation:
+            logout()
+            authHealth = .revoked
+            errorMessage = String(localized: "auth.refresh.permanent_revocation", bundle: .module)
+        case .nonRevocationTerminal:
+            authHealth = .terminalDegraded
+            errorMessage = String(localized: "auth.refresh.non_revocation_terminal", bundle: .module)
+        case .retryableTransient:
+            authHealth = .retryableDegraded
+            errorMessage = String(localized: "auth.refresh.retryable_transient", bundle: .module)
+        }
     }
 
     private func fetchUserEmail() async {
@@ -471,7 +557,7 @@ final class GoogleAuthManager: ObservableObject {
         var request = URLRequest(url: url)
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         do {
-            let (data, _) = try await URLSession.shared.data(for: request)
+            let (data, _) = try await requestRunner(request)
             if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
                let email = json["email"] as? String {
                 userEmail = email

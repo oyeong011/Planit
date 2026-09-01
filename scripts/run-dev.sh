@@ -64,8 +64,14 @@ DEV_VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$A
 echo "   Info.plist version: $DEV_VERSION"
 
 # 개발 빌드 서명 (키체인 프롬프트 방지)
-# DEVELOPER_ID 환경변수 없으면 로컬 키체인에서 자동 감지
-DEV_SIGN="${DEVELOPER_ID:-$(security find-identity -v -p codesigning 2>/dev/null | grep 'Developer ID Application' | head -1 | sed 's/.*"\(.*\)"/\1/')}"
+find_dev_sign_identity() {
+    security find-identity -v -p codesigning 2>/dev/null |
+        grep -E 'Developer ID Application|Apple Development' |
+        head -1 |
+        sed 's/.*"\(.*\)"/\1/'
+}
+
+DEV_SIGN="${DEVELOPER_ID:-$(find_dev_sign_identity)}"
 if [ -n "$DEV_SIGN" ]; then
     echo "✍️  Signing with: $DEV_SIGN"
     SPARKLE_FW="$APP/Contents/Frameworks/Sparkle.framework"

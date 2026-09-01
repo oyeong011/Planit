@@ -264,18 +264,15 @@ final class CalendarViewModel: ObservableObject {
 
         if authManager.isAuthenticated {
             fetchEventsFromGoogle(for: currentMonth, force: true)
-            // Apple Calendar도 활성화되어 있으면 병합
             if appleCalendarEnabled {
-                enableAppleCalendar()
+                restoreAppleCalendarIfAuthorized()
             }
         } else {
-            requestCalendarAccess()
-            observeCalendarChanges()
+            restoreLocalCalendarIfAuthorized()
         }
 
-        // Apple Reminders 활성화되어 있으면 접근 요청
         if appleRemindersEnabled {
-            enableAppleReminders()
+            restoreAppleRemindersIfAuthorized()
         }
 
         // 네트워크 복구 감지 → pending edits 자동 플러시
@@ -554,6 +551,31 @@ final class CalendarViewModel: ObservableObject {
         }
     }
 
+    private nonisolated static func hasReadableEventKitAccess(for entityType: EKEntityType) -> Bool {
+        let status = EKEventStore.authorizationStatus(for: entityType)
+        if #available(iOS 17.0, macOS 14.0, *) {
+            return status == .fullAccess
+        }
+        return status.rawValue == 3
+    }
+
+    private func restoreAppleCalendarIfAuthorized() {
+        guard Self.hasReadableEventKitAccess(for: .event) else {
+            appleCalendarEnabled = false
+            appleCalendarAccessGranted = false
+            return
+        }
+        appleCalendarAccessGranted = true
+        observeCalendarChanges()
+        mergeAppleCalendarEvents(for: currentMonth)
+    }
+
+    private func restoreLocalCalendarIfAuthorized() {
+        guard Self.hasReadableEventKitAccess(for: .event) else { return }
+        observeCalendarChanges()
+        fetchEventsFromEventKit(for: currentMonth)
+    }
+
     func enableAppleCalendar() {
         requestAppleCalendarAccess()
     }
@@ -825,6 +847,17 @@ final class CalendarViewModel: ObservableObject {
         removeReminderObserver()
         appleReminders = []
         appleRemindersAccessGranted = false
+    }
+
+    private func restoreAppleRemindersIfAuthorized() {
+        guard Self.hasReadableEventKitAccess(for: .reminder) else {
+            appleRemindersEnabled = false
+            appleRemindersAccessGranted = false
+            return
+        }
+        appleRemindersAccessGranted = true
+        observeReminderChanges()
+        fetchAppleReminders(for: selectedDate)
     }
 
     /// Apple Reminders 접근 권한 요청
